@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Netstar HW Roadmap FY26 — Editable</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --navy:#1a1464;--blue:#2563a8;--accent:#4a90d9;
+  --bg:#f4f7fc;--white:#fff;--border:#c5d5ea;
+  --text:#1a1464;--muted:#7b8db0;
+  --g1:#16a34a;--g2:#22c55e;
+  --b1:#1d4ed8;--b2:#3b82f6;
+  --o1:#d97706;--o2:#f59e0b;
+  --s1:#475569;--s2:#64748b;
+  --r1:#dc2626;--r2:#ef4444;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Barlow',sans-serif;background:var(--bg);min-height:100vh}
+button,input,select,textarea{font-family:'Barlow',sans-serif}
+
+/* ── TOOLBAR ── */
+.toolbar{background:var(--navy);padding:10px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.toolbar-title{color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;letter-spacing:.05em;margin-right:8px;white-space:nowrap}
+.btn{padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn:hover{background:rgba(255,255,255,.25)}
+.btn.green{background:#16a34a;border-color:#16a34a}
+.btn.green:hover{background:#15803d}
+.btn.red{background:#dc2626;border-color:#dc2626}
+.btn.red:hover{background:#b91c1c}
+.btn.accent{background:var(--accent);border-color:var(--accent)}
+.btn.accent:hover{background:#357ab8}
+.sep{width:1px;height:24px;background:rgba(255,255,255,.2);margin:0 4px}
+
+/* ── PAGE ── */
+.page{padding:20px 24px 60px}
+
+/* ── HEADER ── */
+.header{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--accent);padding-bottom:14px;margin-bottom:16px}
+.logo{background:var(--navy);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;padding:3px 14px;border-radius:4px;letter-spacing:.05em}
+.hdr-center h1{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:.04em;text-align:center}
+.hdr-center p{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-top:3px;text-align:center}
+.badge{background:var(--navy);color:#fff;font-weight:700;font-size:11px;padding:5px 14px;border-radius:20px;letter-spacing:.08em;text-transform:uppercase}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.tab{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid var(--border);background:var(--white);color:var(--muted);transition:all .15s}
+.tab.active{background:var(--navy);border-color:var(--navy);color:#fff}
+
+/* ── LEGEND ── */
+.legend{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px 14px;margin-bottom:12px;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:6px;font-size:11px;color:#3a3a6e;font-weight:500}
+.swatch{width:28px;height:11px;border-radius:4px;flex-shrink:0}
+
+/* ── TABLE WRAP ── */
+.table-wrap{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:auto;box-shadow:0 2px 12px rgba(26,20,100,.07)}
+table{border-collapse:collapse;table-layout:fixed;min-width:1100px;width:100%}
+
+/* headers */
+th.th-lbl{background:var(--navy);color:rgba(255,255,255,.45);font-size:9px;font-weight:600;letter-spacing:.1em;padding:8px 10px;text-align:left;border-right:1px solid rgba(255,255,255,.1);width:220px}
+th.qh{color:#fff;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-align:center;padding:8px 4px;border-right:2px solid rgba(255,255,255,.2)}
+th.mh{background:#2563a8;color:#fff;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-align:center;padding:5px 2px;width:42px}
+th.mh.qb{border-right:2px solid rgba(255,255,255,.3)}
+
+/* section header */
+tr.sec-hdr td{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#fff;padding:5px 10px;border-bottom:1px solid rgba(255,255,255,.15)}
+tr.sec-hdr td .sec-actions{float:right;display:flex;gap:4px}
+tr.sec-hdr td .sec-actions button{padding:1px 7px;border-radius:4px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.15);color:#fff;font-size:10px;cursor:pointer}
+tr.sec-hdr td .sec-actions button:hover{background:rgba(255,255,255,.35)}
+
+/* data row */
+tr.data-row td{border-bottom:1px solid #e8edf7;border-right:1px solid #e8edf7;height:34px;padding:0;vertical-align:middle;position:relative}
+tr.data-row td.td-lbl{padding:0;border-right:2px solid var(--accent);background:#f4f7fc;width:220px}
+tr.data-row td.td-lbl .lbl-inner{display:flex;align-items:center;padding:0 8px;gap:6px;height:34px}
+tr.data-row td.td-lbl .drag-handle{cursor:grab;color:var(--muted);font-size:14px;flex-shrink:0;user-select:none;opacity:.5}
+tr.data-row td.td-lbl .drag-handle:hover{opacity:1}
+tr.data-row td.td-lbl .lbl-text{flex:1;min-width:0}
+tr.data-row td.td-lbl .lbl-text .name{font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+tr.data-row td.td-lbl .lbl-text .name:hover{text-decoration:underline}
+tr.data-row td.td-lbl .lbl-text .sub{font-size:9px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+tr.data-row td.td-lbl .row-btns{display:flex;gap:2px;flex-shrink:0;opacity:0;transition:opacity .15s}
+tr.data-row:hover td.td-lbl .row-btns{opacity:1}
+tr.data-row td.td-lbl .row-btns button{padding:1px 5px;border-radius:3px;border:1px solid var(--border);background:#fff;font-size:9px;cursor:pointer;color:var(--muted)}
+tr.data-row td.td-lbl .row-btns button:hover{background:#fee2e2;color:#dc2626;border-color:#fca5a5}
+tr.data-row td.td-mo{width:42px}
+tr.data-row td.td-mo.qb{border-right:2px solid var(--border) !important}
+tr.data-row.dragging{opacity:.4}
+tr.data-row.drag-over td{background:#eff6ff !important}
+tr.data-row:nth-child(even) td.td-mo{background:#f8faff}
+tr.data-row:nth-child(odd) td.td-mo{background:#fff}
+tr.data-row:hover td.td-mo{background:#f0f5ff !important}
+
+/* bars */
+.bar-wrap{padding:3px 2px;height:100%;display:flex;align-items:center}
+.bar{border-radius:4px;height:22px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:8px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:ew-resize;user-select:none;position:relative;overflow:visible;white-space:nowrap;padding:0 6px}
+.bar .bar-txt{overflow:hidden;text-overflow:ellipsis;max-width:100%;pointer-events:none}
+.bar .bar-resize-r{position:absolute;right:-3px;top:0;bottom:0;width:7px;cursor:ew-resize;border-radius:0 4px 4px 0;background:rgba(255,255,255,.3)}
+.bar.g{background:linear-gradient(90deg,var(--g1),var(--g2))}
+.bar.b{background:linear-gradient(90deg,var(--b1),var(--b2))}
+.bar.o{background:linear-gradient(90deg,var(--o1),var(--o2))}
+.bar.s{background:linear-gradient(90deg,var(--s1),var(--s2))}
+.bar.r{background:linear-gradient(90deg,var(--r1),var(--r2))}
+.bar:hover{filter:brightness(1.1)}
+.bar.selected{box-shadow:0 0 0 2px #fff,0 0 0 4px #fbbf24}
+
+/* ── DELIVERABLES tooltip ── */
+.deliv-badge{position:absolute;bottom:2px;right:3px;background:rgba(0,0,0,.45);color:#fff;font-size:7px;font-weight:700;padding:1px 4px;border-radius:3px;cursor:pointer;pointer-events:all;z-index:2}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:#fff;border-radius:12px;width:520px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-hdr{background:var(--navy);color:#fff;padding:16px 20px;border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between}
+.modal-hdr h2{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;letter-spacing:.04em}
+.modal-hdr .close{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;opacity:.7;line-height:1}
+.modal-hdr .close:hover{opacity:1}
+.modal-body{padding:20px}
+.form-row{margin-bottom:14px}
+.form-row label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+.form-row input,.form-row select,.form-row textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--text);outline:none;transition:border .15s}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--accent)}
+.form-row textarea{height:70px;resize:vertical}
+.form-row .color-row{display:flex;gap:8px;flex-wrap:wrap}
+.color-opt{width:32px;height:32px;border-radius:6px;border:3px solid transparent;cursor:pointer;transition:all .15s}
+.color-opt.sel{border-color:var(--navy);transform:scale(1.1)}
+.bar-timeline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.bar-timeline select{flex:1;min-width:80px}
+.deliv-list{list-style:none;margin-bottom:8px}
+.deliv-list li{display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:13px}
+.deliv-list li input{flex:1;border:none;outline:none;font-size:12px;color:var(--text);background:transparent}
+.deliv-list li button{background:none;border:none;color:#dc2626;cursor:pointer;font-size:14px;flex-shrink:0}
+.priority-list{margin-bottom:8px}
+.priority-item{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.priority-item input{flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px}
+.priority-item select{padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:#fff}
+.priority-item button{background:none;border:none;color:#dc2626;cursor:pointer;font-size:14px}
+.modal-footer{padding:14px 20px;border-top:1px solid #f0f0f0;display:flex;justify-content:flex-end;gap:8px}
+.modal-footer .btn-save{background:var(--navy);color:#fff;border:none;padding:8px 20px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer}
+.modal-footer .btn-save:hover{background:#140f50}
+.modal-footer .btn-cancel{background:#fff;color:var(--muted);border:1px solid var(--border);padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer}
+
+/* ── ADD SECTION FORM ── */
+.add-sec-form{background:#e8f4fd;border:1px dashed var(--accent);border-radius:8px;padding:12px 14px;margin-bottom:10px;display:none;gap:8px;align-items:center;flex-wrap:wrap}
+.add-sec-form.open{display:flex}
+.add-sec-form input{padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;flex:1;min-width:160px}
+.add-sec-form select{padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:#fff}
+
+/* footer */
+.footer{margin-top:14px;display:flex;justify-content:space-between;font-size:10px;color:var(--muted);padding:0 4px}
+.footer span:first-child{font-weight:700;color:var(--navy)}
+
+
+/* ── SAVE STATUS ── */
+#saveStatus{font-size:11px;font-weight:600;padding:4px 10px;border-radius:12px;transition:all .3s}
+#saveStatus.saved{color:#22c55e}
+#saveStatus.saving{color:#f59e0b}
+#saveStatus.error{color:#ef4444}
+.btn.backup{background:#0f766e;border-color:#0f766e}
+.btn.backup:hover{background:#0d5f59}
+
+
+/* ── PREVIEW MODAL ── */
+#previewOverlay{position:fixed;inset:0;background:rgba(10,10,40,.85);z-index:2000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px}
+#previewOverlay.open{display:flex}
+#previewBar{width:100%;max-width:1200px;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+#previewBar span{color:#fff;font-weight:700;font-size:14px;letter-spacing:.04em}
+#previewBar .pbtn{padding:7px 18px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:none;margin-left:8px}
+#previewBar .pbtn.close-btn{background:rgba(255,255,255,.15);color:#fff}
+#previewBar .pbtn.close-btn:hover{background:rgba(255,255,255,.3)}
+#previewBar .pbtn.dl-btn{background:#16a34a;color:#fff}
+#previewBar .pbtn.dl-btn:hover{background:#15803d}
+#previewFrame{width:100%;max-width:1200px;flex:1;border:none;border-radius:8px;background:#fff;min-height:0}
+
+/* no-display */
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <span class="toolbar-title">NETSTAR Roadmap Editor</span>
+  <div class="sep"></div>
+  <button class="btn green" onclick="openAddRowModal(null)">+ Add Row</button>
+  <button class="btn accent" onclick="toggleAddSection()">+ Add Section</button>
+  <button class="btn" onclick="exportHTML()">⬇ Export HTML</button>
+  <button class="btn" style="background:#1d6f42;border-color:#1d6f42" onclick="exportExcel()">⬇ Export Excel</button>
+  <button class="btn" style="background:#b91c1c;border-color:#b91c1c" onclick="exportPDF()">⬇ Export PDF</button>
+  <div class="sep"></div>
+  <span style="color:rgba(255,255,255,.5);font-size:11px">Click a bar to edit · Drag bar edge to resize · Drag row handle to reorder</span>
+  <div class="sep"></div>
+  <button class="btn backup" onclick="exportBackup()">💾 Backup</button>
+  <button class="btn" onclick="importBackup()">📂 Import</button>
+  <span id="saveStatus" class="saved">● Saved</span>
+</div>
+
+<!-- ADD SECTION FORM -->
+<div class="page" style="padding-bottom:0;padding-top:12px">
+<div class="add-sec-form" id="addSecForm">
+  <input id="newSecName" placeholder="Section name e.g. New Feature Track" />
+  <input id="newSecColor" type="color" value="#1a1464" style="width:42px;height:36px;padding:2px;border:1px solid #c5d5ea;border-radius:6px;cursor:pointer">
+  <button class="btn green" onclick="addSection()">Add Section</button>
+  <button class="btn" onclick="toggleAddSection()">Cancel</button>
+</div>
+</div>
+
+<div class="page">
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">NETSTAR</div>
+  <div class="hdr-center">
+    <h1>Product Strategy Roadmap — Hardware</h1>
+    <p>FY26 · Combined High Level Overview</p>
+  </div>
+  <div class="badge">HW Portfolio</div>
+</div>
+
+<!-- TABS -->
+<div class="tabs" id="tabs"></div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-right:4px">Legend</span>
+  <span class="leg"><span class="swatch" style="background:linear-gradient(90deg,#16a34a,#22c55e)"></span>Released</span>
+  <span class="leg"><span class="swatch" style="background:linear-gradient(90deg,#1d4ed8,#3b82f6)"></span>In Progress</span>
+  <span class="leg"><span class="swatch" style="background:linear-gradient(90deg,#d97706,#f59e0b)"></span>Delayed</span>
+  <span class="leg"><span class="swatch" style="background:linear-gradient(90deg,#475569,#64748b)"></span>Strategy</span>
+  <span class="leg"><span class="swatch" style="background:linear-gradient(90deg,#dc2626,#ef4444)"></span>At Risk</span>
+  <span style="margin-left:auto;color:var(--muted);font-size:10px">APR 2025 → FEB 2026 (FY26)</span>
+</div>
+
+<!-- TABLE -->
+<div class="table-wrap">
+<table id="roadmap">
+<colgroup>
+  <col style="width:220px">
+  <col style="width:42px"><col style="width:42px"><col style="width:42px">
+  <col style="width:42px"><col style="width:42px"><col style="width:42px">
+  <col style="width:42px"><col style="width:42px"><col style="width:42px">
+  <col style="width:42px"><col style="width:42px"><col style="width:42px">
+  <col style="width:42px"><col style="width:42px"><col style="width:42px">
+  <col style="width:42px"><col style="width:42px"><col style="width:42px">
+  <col style="width:42px"><col style="width:42px"><col style="width:42px">
+  <col style="width:42px"><col style="width:42px">
+</colgroup>
+<thead>
+<tr>
+  <th class="th-lbl">INITIATIVE</th>
+  <th class="qh" colspan="3" style="background:#1a1464">Q1 · 2025</th>
+  <th class="qh" colspan="3" style="background:#1e3478">Q2 · 2025</th>
+  <th class="qh" colspan="3" style="background:#1a3a8c">Q3 · 2025</th>
+  <th class="qh" colspan="3" style="background:#1544a0">Q4 · 2025</th>
+  <th class="qh" colspan="3" style="background:#1a1464">Q1 · 2026</th>
+  <th class="qh" colspan="3" style="background:#1e3478">Q2 · 2026</th>
+  <th class="qh" colspan="3" style="background:#1a3a8c">Q3 · 2026</th>
+  <th class="qh" colspan="2" style="background:#1544a0">Q4 · 2026</th>
+</tr>
+<tr>
+  <th class="th-lbl">MONTH</th>
+  <th class="mh">APR</th><th class="mh">MAY</th><th class="mh qb">JUN</th>
+  <th class="mh">JUL</th><th class="mh">AUG</th><th class="mh qb">SEP</th>
+  <th class="mh">OCT</th><th class="mh">NOV</th><th class="mh qb">DEC</th>
+  <th class="mh">JAN</th><th class="mh">FEB</th><th class="mh qb">MAR</th>
+  <th class="mh">APR</th><th class="mh">MAY</th><th class="mh qb">JUN</th>
+  <th class="mh">JUL</th><th class="mh">AUG</th><th class="mh qb">SEP</th>
+  <th class="mh">OCT</th><th class="mh">NOV</th><th class="mh qb">DEC</th>
+  <th class="mh">JAN</th><th class="mh">FEB</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
+
+<div class="footer">
+  <span>Netstar · Hardware Portfolio · FY26 Roadmap</span>
+  <span>Confidential — Internal Use Only</span>
+  <span>March 2026</span>
+</div>
+</div>
+
+<!-- PREVIEW OVERLAY -->
+<div id="previewOverlay">
+  <div id="previewBar">
+    <span id="previewTitle">Preview</span>
+    <div>
+      <button class="pbtn dl-btn" id="previewDlBtn">⬇ Download</button>
+      <button class="pbtn close-btn" onclick="closePreview()">✕ Close</button>
+    </div>
+  </div>
+  <iframe id="previewFrame"></iframe>
+</div>
+
+<!-- EDIT/ADD ROW MODAL -->
+<div class="modal-overlay hidden" id="rowModal">
+<div class="modal">
+  <div class="modal-hdr">
+    <h2 id="modalTitle">Edit Row</h2>
+    <button class="close" onclick="closeModal()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="form-row">
+      <label>Row Label</label>
+      <input id="fName" placeholder="e.g. VBU850">
+    </div>
+    <div class="form-row">
+      <label>Sub-label / Description</label>
+      <input id="fSub" placeholder="e.g. POC · FW Updates · TCA Release">
+    </div>
+    <div class="form-row">
+      <label>Section</label>
+      <select id="fSection"></select>
+    </div>
+
+    <hr style="border:none;border-top:1px solid #e8edf7;margin:16px 0">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Timeline Bars</label>
+      <button class="btn accent" style="padding:4px 10px;font-size:11px" onclick="addBar()">+ Add Bar</button>
+    </div>
+    <div id="barsContainer"></div>
+
+    <hr style="border:none;border-top:1px solid #e8edf7;margin:16px 0">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Key Priorities</label>
+      <button class="btn accent" style="padding:4px 10px;font-size:11px" onclick="addPriority()">+ Add</button>
+    </div>
+    <div id="prioritiesContainer" class="priority-list"></div>
+
+    <hr style="border:none;border-top:1px solid #e8edf7;margin:16px 0">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Deliverables</label>
+      <button class="btn accent" style="padding:4px 10px;font-size:11px" onclick="addDeliverable()">+ Add</button>
+    </div>
+    <ul id="delivContainer" class="deliv-list"></ul>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+    <button class="btn-save" onclick="saveRow()">Save</button>
+  </div>
+</div>
+</div>
+
+<script>
+var QB=[2,5,8,11,14,17,20];
+var NM=23;
+var MONTHS=["APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC","JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC","JAN","FEB"];
+var PORTFOLIOS=["Hardware","MyNetstar","Fleet","Surveillance","Mining","Big Data"];
+var BAR_COLORS={g:"Released",b:"In Progress",o:"Delayed",s:"Strategy",r:"At Risk"};
+var GRADIENTS={g:"linear-gradient(90deg,#16a34a,#22c55e)",b:"linear-gradient(90deg,#1d4ed8,#3b82f6)",o:"linear-gradient(90deg,#d97706,#f59e0b)",s:"linear-gradient(90deg,#475569,#64748b)",r:"linear-gradient(90deg,#dc2626,#ef4444)"};
+
+// ── DATA ─────────────────────────────────────────────────────────────────────
+var sections=[
+  {id:"s1",name:"Overarching Strategy",color:"#7c3aed"},
+  {id:"s2",name:"Stability",color:"#0369a1"},
+  {id:"s3",name:"Key Priorities",color:"#1a1464"},
+  {id:"s4",name:"Globalization · Malaysia",color:"#0f766e"},
+  {id:"s5",name:"Globalization · Australia",color:"#b45309"},
+];
+
+var rows=[
+  {id:"r1",sec:"s1",name:"Consolidate HW Positioning",sub:"Feature Parity & Portfolio",bars:[{s:0,e:17,c:"s",t:"Consolidate HW positioning — reduce to strategic portfolio"}],priorities:[],deliverables:[]},
+  {id:"r2",sec:"s2",name:"Stabilize Existing Products",sub:"FW · Feature · Connectivity",bars:[{s:0,e:8,c:"b",t:"FW stability · Feature stability · Connectivity stability"}],priorities:["FW stability","Feature stability","Connectivity stability"],deliverables:[]},
+  {id:"r3",sec:"s3",name:"VBU850",sub:"POC · FW Updates · TCA Release",bars:[{s:0,e:2,c:"b",t:"POC (TCA Ghana)"},{s:2,e:5,c:"b",t:"FW Updates"},{s:19,e:22,c:"g",t:"TCA Release"}],priorities:["POC in Ghana (TCA)","FW update rollout"],deliverables:["TCA Release by NOV 2026"]},
+  {id:"r4",sec:"s3",name:"VBU888",sub:"Custom FW · Field Trials · Release",bars:[{s:0,e:2,c:"b",t:"Custom Firmware"},{s:2,e:5,c:"b",t:"Field Trials"},{s:5,e:8,c:"g",t:"Release"},{s:8,e:11,c:"b",t:"EV Integration"}],priorities:["Custom firmware build","Field trials completion","EV Integration"],deliverables:["Release by SEP 2025","EV Integration by DEC 2025"]},
+  {id:"r5",sec:"s3",name:"VBU444",sub:"Field Trials → Release",bars:[{s:0,e:2,c:"b",t:"Field Trials"},{s:5,e:8,c:"g",t:"Release"}],priorities:[],deliverables:["Release by SEP 2025"]},
+  {id:"r6",sec:"s3",name:"VBU446 / 444 / 443",sub:"Release",bars:[{s:5,e:8,c:"g",t:"Release"}],priorities:[],deliverables:[]},
+  {id:"r7",sec:"s3",name:"VBU401",sub:"FW Updates · BT Early Warning · FW Release",bars:[{s:0,e:2,c:"b",t:"FW Updates"},{s:2,e:5,c:"b",t:"BT Early Warning"},{s:17,e:20,c:"g",t:"FW Release"}],priorities:["BT Early Warning feature"],deliverables:["FW Release by SEP 2026"]},
+  {id:"r8",sec:"s3",name:"VBU580",sub:"Release (OEM) · Productize · FW Release",bars:[{s:0,e:2,c:"g",t:"Release (OEM)"},{s:5,e:11,c:"b",t:"Productize VBU580/581"},{s:17,e:20,c:"g",t:"FW Release"}],priorities:["OEM fitments","Productize strategy"],deliverables:["Productize complete by MAR 2026"]},
+  {id:"r9",sec:"s3",name:"VBU581",sub:"Release (OEM) · Productize",bars:[{s:2,e:5,c:"g",t:"Release (OEM)"},{s:5,e:11,c:"b",t:"Productize VBU580/581"}],priorities:[],deliverables:[]},
+  {id:"r10",sec:"s3",name:"USB to FSK",sub:"Release",bars:[{s:2,e:5,c:"g",t:"Release"}],priorities:[],deliverables:[]},
+  {id:"r11",sec:"s3",name:"StarTag Models",sub:"Panic · Keyring · Portable — Prototypes",bars:[{s:8,e:11,c:"b",t:"Prototypes (Panic, Keyring, Portable)"}],priorities:["Panic button prototype","Keyring prototype","Portable tracker prototype"],deliverables:["Prototypes by MAR 2026"]},
+  {id:"r12",sec:"s3",name:"VBU856",sub:"Boomerang Release",bars:[{s:11,e:14,c:"g",t:"Boomerang Release"}],priorities:[],deliverables:[]},
+  {id:"r13",sec:"s3",name:"VBU884",sub:"Release",bars:[{s:12,e:15,c:"g",t:"Release"}],priorities:[],deliverables:[]},
+  {id:"r14",sec:"s3",name:"VBU889",sub:"FW Release",bars:[{s:14,e:17,c:"g",t:"FW Release"}],priorities:[],deliverables:[]},
+  {id:"r15",sec:"s3",name:"VBU703 / 705 / 706 / 708",sub:"Release",bars:[{s:15,e:18,c:"g",t:"Release"}],priorities:[],deliverables:[]},
+  {id:"r16",sec:"s3",name:"VBU590",sub:"FW Release",bars:[{s:16,e:19,c:"g",t:"FW Release"},{s:20,e:23,c:"g",t:"FW Release (Q4)"}],priorities:[],deliverables:[]},
+  {id:"r17",sec:"s3",name:"VBU872 / 873",sub:"HINO Connect Release",bars:[{s:16,e:19,c:"g",t:"HINO Connect Release"}],priorities:["HINO Connect integration"],deliverables:["HINO Connect Release by SEP 2026"]},
+  {id:"r18",sec:"s3",name:"VBU713 / 709 / 707",sub:"Release",bars:[{s:20,e:22,c:"g",t:"Release"}],priorities:[],deliverables:[]},
+  {id:"r19",sec:"s4",name:"VBU595 (Malaysia)",sub:"Antenna & ST · FW Release",bars:[{s:0,e:2,c:"b",t:"Antenna and ST"},{s:16,e:19,c:"g",t:"FW Release"}],priorities:["Antenna certification","ST compliance"],deliverables:["FW Release by AUG 2026"]},
+  {id:"r20",sec:"s4",name:"VBU44X (Malaysia)",sub:"Frequency · Release",bars:[{s:0,e:2,c:"b",t:"Frequency"},{s:2,e:5,c:"g",t:"Release"}],priorities:[],deliverables:[]},
+  {id:"r21",sec:"s4",name:"VBU537 (Malaysia)",sub:"FW Release",bars:[{s:14,e:17,c:"g",t:"FW Release"}],priorities:[],deliverables:[]},
+  {id:"r22",sec:"s5",name:"VBU595 (Australia)",sub:"Hardware & ST",bars:[{s:0,e:2,c:"b",t:"Hardware and ST"}],priorities:["Hardware certification (AUS)"],deliverables:[]},
+  {id:"r23",sec:"s5",name:"VBU44X (Australia)",sub:"Frequency · Release",bars:[{s:0,e:2,c:"b",t:"Frequency"},{s:2,e:5,c:"g",t:"Release"}],priorities:[],deliverables:[]},
+];
+
+var DEFAULT_ROWS = rows.map(function(r){ return JSON.parse(JSON.stringify(r)); });
+var editingRowId=null;
+var dragSrcRow=null;
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render(){
+  var tbody=document.getElementById('tbody');
+  tbody.innerHTML='';
+  var lastSec=null;
+  var ri=0;
+  rows.forEach(function(row){
+    var sec=sections.find(function(s){return s.id===row.sec});
+    if(!sec) return;
+    if(row.sec!==lastSec){
+      lastSec=row.sec;
+      var sh=document.createElement('tr');
+      sh.className='sec-hdr';
+      var std=document.createElement('td');
+      std.colSpan=NM+1;
+      std.style.background=sec.color;
+      std.innerHTML=sec.name+
+        '<span class="sec-actions">'+
+        '<button onclick="openAddRowModal(\''+sec.id+'\')">+ Row</button>'+
+        '</span>';
+      sh.appendChild(std);
+      tbody.appendChild(sh);
+    }
+
+    var tr=document.createElement('tr');
+    tr.className='data-row';
+    tr.draggable=true;
+    tr.dataset.id=row.id;
+    tr.addEventListener('dragstart',onDragStart);
+    tr.addEventListener('dragover',onDragOver);
+    tr.addEventListener('dragend',onDragEnd);
+    tr.addEventListener('drop',onDrop);
+
+    // label cell
+    var lbl=document.createElement('td');
+    lbl.className='td td-lbl';
+    var nc=sec?sec.color:'#1a1464';
+    var hasDelivOrPrio=(row.deliverables&&row.deliverables.length)||(row.priorities&&row.priorities.length);
+    lbl.innerHTML='<div class="lbl-inner">'+
+      '<span class="drag-handle" title="Drag to reorder">⠿</span>'+
+      '<div class="lbl-text">'+
+        '<div class="name" style="color:'+nc+'" onclick="openEditModal(\''+row.id+'\')">'+row.name+'</div>'+
+        '<div class="sub">'+row.sub+(hasDelivOrPrio?' <span style="color:'+nc+';font-weight:700">·'+(row.priorities.length?' '+row.priorities.length+' priority':'')+( row.deliverables.length?' '+row.deliverables.length+' deliverable':'')+' </span>':'')+'</div>'+
+      '</div>'+
+      '<div class="row-btns">'+
+        '<button onclick="openEditModal(\''+row.id+'\')" title="Edit">✎</button>'+
+        '<button onclick="deleteRow(\''+row.id+'\')" title="Delete" style="color:#dc2626">✕</button>'+
+      '</div>'+
+    '</div>';
+    tr.appendChild(lbl);
+
+    // Build bar map
+    var barMap={};
+    row.bars.forEach(function(bar){ if(!barMap[bar.s]) barMap[bar.s]=bar; });
+
+    var skip=0;
+    for(var mi=0;mi<NM;mi++){
+      if(skip>0){skip--;continue;}
+      var isQB=QB.indexOf(mi)>=0;
+      var bar=barMap[mi];
+      var td=document.createElement('td');
+      td.className='td td-mo'+(isQB?' qb':'');
+      if(bar){
+        var span=Math.min(bar.e-bar.s,NM-mi);
+        td.colSpan=span;
+        td.style.padding='3px 2px';
+        td.style.position='relative';
+        var div=document.createElement('div');
+        div.className='bar '+bar.c;
+        div.title=bar.t+'\nClick to edit · Drag edge to resize';
+        div.style.background=GRADIENTS[bar.c];
+        div.dataset.rowId=row.id;
+        div.dataset.barStart=bar.s;
+        div.innerHTML='<span class="bar-txt">'+bar.t+'</span><span class="bar-resize-r" title="Drag to resize"></span>';
+        // click to edit bar
+        div.addEventListener('mousedown',onBarMouseDown);
+        td.appendChild(div);
+        skip=span-1;
+      }
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+    ri++;
+  });
+}
+
+// ── MODAL HELPERS ─────────────────────────────────────────────────────────────
+function openEditModal(rowId){
+  editingRowId=rowId;
+  var row=rows.find(function(r){return r.id===rowId});
+  document.getElementById('modalTitle').textContent='Edit Row';
+  document.getElementById('fName').value=row.name;
+  document.getElementById('fSub').value=row.sub;
+  populateSectionSelect(row.sec);
+  renderBarsForm(row.bars);
+  renderPrioritiesForm(row.priorities||[]);
+  renderDeliverablesForm(row.deliverables||[]);
+  document.getElementById('rowModal').classList.remove('hidden');
+}
+
+function openAddRowModal(secId){
+  editingRowId=null;
+  document.getElementById('modalTitle').textContent='Add New Row';
+  document.getElementById('fName').value='';
+  document.getElementById('fSub').value='';
+  populateSectionSelect(secId||sections[0].id);
+  renderBarsForm([{s:0,e:3,c:'b',t:'New Item'}]);
+  renderPrioritiesForm([]);
+  renderDeliverablesForm([]);
+  document.getElementById('rowModal').classList.remove('hidden');
+}
+
+function closeModal(){ document.getElementById('rowModal').classList.add('hidden'); }
+
+function populateSectionSelect(selId){
+  var sel=document.getElementById('fSection');
+  sel.innerHTML='';
+  sections.forEach(function(s){
+    var opt=document.createElement('option');
+    opt.value=s.id; opt.textContent=s.name;
+    if(s.id===selId) opt.selected=true;
+    sel.appendChild(opt);
+  });
+}
+
+function renderBarsForm(bars){
+  var c=document.getElementById('barsContainer');
+  c.innerHTML='';
+  bars.forEach(function(bar,i){ c.appendChild(barFormRow(bar,i)); });
+}
+function barFormRow(bar,i){
+  var div=document.createElement('div');
+  div.className='form-row';
+  div.style.cssText='background:#f8faff;border:1px solid #e8edf7;border-radius:6px;padding:10px;margin-bottom:8px';
+  div.innerHTML=
+    '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">'+
+      '<input placeholder="Bar label" value="'+bar.t+'" data-bi="'+i+'" data-field="t" style="flex:1;padding:6px 8px;border:1px solid #c5d5ea;border-radius:4px;font-size:12px">'+
+      '<select data-bi="'+i+'" data-field="c" style="padding:6px 8px;border:1px solid #c5d5ea;border-radius:4px;font-size:12px;background:#fff">'+
+        Object.keys(BAR_COLORS).map(function(k){return'<option value="'+k+'"'+(bar.c===k?' selected':'')+'>'+BAR_COLORS[k]+'</option>'}).join('')+
+      '</select>'+
+      '<button onclick="removeBarRow(this)" data-bi="'+i+'" style="background:none;border:none;color:#dc2626;font-size:16px;cursor:pointer;line-height:1">✕</button>'+
+    '</div>'+
+    '<div style="display:flex;gap:8px;align-items:center">'+
+      '<label style="font-size:10px;color:#7b8db0;white-space:nowrap">From:</label>'+
+      '<select data-bi="'+i+'" data-field="s" style="flex:1;padding:5px 6px;border:1px solid #c5d5ea;border-radius:4px;font-size:11px;background:#fff">'+
+        MONTHS.map(function(m,mi){return'<option value="'+mi+'"'+(mi===bar.s?' selected':'')+'>'+m+(mi<12?' 2025':' 2026')+'</option>'}).join('')+
+      '</select>'+
+      '<label style="font-size:10px;color:#7b8db0;white-space:nowrap">To:</label>'+
+      '<select data-bi="'+i+'" data-field="e" style="flex:1;padding:5px 6px;border:1px solid #c5d5ea;border-radius:4px;font-size:11px;background:#fff">'+
+        MONTHS.map(function(m,mi){return'<option value="'+(mi+1)+'"'+((mi+1)===bar.e?' selected':'')+'>'+m+(mi<12?' 2025':' 2026')+'</option>'}).join('')+
+      '</select>'+
+    '</div>';
+  return div;
+}
+function removeBarRow(btn){
+  btn.closest('.form-row').remove();
+}
+function addBar(){
+  var c=document.getElementById('barsContainer');
+  var count=c.querySelectorAll('.form-row').length;
+  c.appendChild(barFormRow({s:0,e:3,c:'b',t:'New Bar'},count));
+}
+
+function renderPrioritiesForm(priorities){
+  var c=document.getElementById('prioritiesContainer');
+  c.innerHTML='';
+  priorities.forEach(function(p,i){ c.appendChild(priorityRow(p,i)); });
+}
+function priorityRow(p,i){
+  var div=document.createElement('div');
+  div.className='priority-item';
+  div.innerHTML=
+    '<input value="'+p+'" placeholder="Key priority..." data-pi="'+i+'">'+
+    '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:#dc2626;font-size:16px;cursor:pointer">✕</button>';
+  return div;
+}
+function addPriority(){
+  var c=document.getElementById('prioritiesContainer');
+  var i=c.querySelectorAll('.priority-item').length;
+  c.appendChild(priorityRow('',i));
+}
+
+function renderDeliverablesForm(deliverables){
+  var c=document.getElementById('delivContainer');
+  c.innerHTML='';
+  deliverables.forEach(function(d,i){ c.appendChild(delivRow(d,i)); });
+}
+function delivRow(d,i){
+  var li=document.createElement('li');
+  li.innerHTML=
+    '<span style="font-size:12px;color:#7c3aed">◆</span>'+
+    '<input value="'+d+'" placeholder="Deliverable..." data-di="'+i+'">'+
+    '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:#dc2626;font-size:16px;cursor:pointer">✕</button>';
+  return li;
+}
+function addDeliverable(){
+  var c=document.getElementById('delivContainer');
+  var i=c.querySelectorAll('li').length;
+  c.appendChild(delivRow('',i));
+}
+
+function saveRow(){
+  var name=document.getElementById('fName').value.trim();
+  if(!name){alert('Please enter a row label');return;}
+  var sub=document.getElementById('fSub').value.trim();
+  var secId=document.getElementById('fSection').value;
+
+  // Collect bars
+  var bars=[];
+  var barRows=document.getElementById('barsContainer').querySelectorAll('.form-row');
+  barRows.forEach(function(br){
+    var t=br.querySelector('[data-field="t"]').value.trim()||'Item';
+    var c=br.querySelector('[data-field="c"]').value;
+    var s=parseInt(br.querySelector('[data-field="s"]').value);
+    var e=parseInt(br.querySelector('[data-field="e"]').value);
+    if(e<=s) e=s+1;
+    bars.push({s:s,e:Math.min(e,23),c:c,t:t});
+  });
+
+  // Collect priorities
+  var priorities=[];
+  document.getElementById('prioritiesContainer').querySelectorAll('input').forEach(function(inp){
+    if(inp.value.trim()) priorities.push(inp.value.trim());
+  });
+
+  // Collect deliverables
+  var deliverables=[];
+  document.getElementById('delivContainer').querySelectorAll('input').forEach(function(inp){
+    if(inp.value.trim()) deliverables.push(inp.value.trim());
+  });
+
+  if(editingRowId){
+    var row=rows.find(function(r){return r.id===editingRowId});
+    row.name=name; row.sub=sub; row.sec=secId;
+    row.bars=bars; row.priorities=priorities; row.deliverables=deliverables;
+  } else {
+    rows.push({id:'r'+Date.now(),sec:secId,name:name,sub:sub,bars:bars,priorities:priorities,deliverables:deliverables});
+  }
+  closeModal();
+  render();
+  persistData();
+}
+
+function deleteRow(rowId){
+  if(!confirm('Delete this row?')) return;
+  rows=rows.filter(function(r){return r.id!==rowId});
+  render();
+  persistData();
+}
+
+// ── SECTION ───────────────────────────────────────────────────────────────────
+function toggleAddSection(){
+  var f=document.getElementById('addSecForm');
+  f.classList.toggle('open');
+}
+function addSection(){
+  var name=document.getElementById('newSecName').value.trim();
+  if(!name){alert('Enter a section name');return;}
+  var color=document.getElementById('newSecColor').value;
+  sections.push({id:'s'+Date.now(),name:name,color:color});
+  document.getElementById('newSecName').value='';
+  toggleAddSection();
+  render();
+  persistData();
+}
+
+// ── BAR DRAG/RESIZE ──────────────────────────────────────────────────────────
+var barDrag={active:false,rowId:null,barStart:null,mode:null,startX:null,origS:null,origE:null,colW:42};
+
+function onBarMouseDown(e){
+  var bar=e.currentTarget;
+  var isResize=e.target.classList.contains('bar-resize-r');
+  barDrag.rowId=bar.dataset.rowId;
+  barDrag.barStart=parseInt(bar.dataset.barStart);
+  barDrag.mode=isResize?'resize':'move';
+  barDrag.startX=e.clientX;
+  var row=rows.find(function(r){return r.id===barDrag.rowId});
+  var b=row.bars.find(function(b){return b.s===barDrag.barStart});
+  barDrag.origS=b.s; barDrag.origE=b.e;
+  barDrag.active=true;
+  e.preventDefault();
+  e.stopPropagation();
+  document.addEventListener('mousemove',onBarMouseMove);
+  document.addEventListener('mouseup',onBarMouseUp);
+}
+function onBarMouseMove(e){
+  if(!barDrag.active) return;
+  var dx=e.clientX-barDrag.startX;
+  var dcols=Math.round(dx/barDrag.colW);
+  var row=rows.find(function(r){return r.id===barDrag.rowId});
+  var b=row.bars.find(function(b){return b.s===barDrag.barStart});
+  if(barDrag.mode==='resize'){
+    b.e=Math.min(23,Math.max(b.s+1,barDrag.origE+dcols));
+  } else {
+    var len=barDrag.origE-barDrag.origS;
+    var ns=Math.max(0,Math.min(23-len,barDrag.origS+dcols));
+    b.s=ns; b.e=ns+len;
+    barDrag.barStart=b.s;
+  }
+  render();
+}
+function onBarMouseUp(){
+  barDrag.active=false;
+  document.removeEventListener('mousemove',onBarMouseMove);
+  document.removeEventListener('mouseup',onBarMouseUp);
+  persistData();
+}
+
+// ── ROW DRAG & DROP ───────────────────────────────────────────────────────────
+function onDragStart(e){
+  dragSrcRow=this;
+  this.classList.add('dragging');
+  e.dataTransfer.effectAllowed='move';
+  e.dataTransfer.setData('text/plain',this.dataset.id);
+}
+function onDragOver(e){
+  if(e.preventDefault) e.preventDefault();
+  e.dataTransfer.dropEffect='move';
+  document.querySelectorAll('.data-row').forEach(function(r){r.classList.remove('drag-over')});
+  this.classList.add('drag-over');
+  return false;
+}
+function onDrop(e){
+  if(e.stopPropagation) e.stopPropagation();
+  var targetId=this.dataset.id;
+  var srcId=dragSrcRow&&dragSrcRow.dataset.id;
+  if(srcId&&targetId&&srcId!==targetId){
+    var si=rows.findIndex(function(r){return r.id===srcId});
+    var ti=rows.findIndex(function(r){return r.id===targetId});
+    var moved=rows.splice(si,1)[0];
+    rows.splice(ti,0,moved);
+    render();
+    persistData();
+  }
+  return false;
+}
+function onDragEnd(){
+  document.querySelectorAll('.data-row').forEach(function(r){r.classList.remove('dragging','drag-over')});
+  dragSrcRow=null;
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+var tabsEl=document.getElementById('tabs');
+PORTFOLIOS.forEach(function(t){
+  var btn=document.createElement('button');
+  btn.className='tab'+(t==='Hardware'?' active':'');
+  btn.textContent=t;
+  btn.onclick=function(){document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('active')});btn.classList.add('active');};
+  tabsEl.appendChild(btn);
+});
+
+// ── EXPORT HTML ───────────────────────────────────────────────────────────────
+function exportHTML(){
+  var content=document.documentElement.outerHTML;
+  var blob=new Blob([content],{type:'text/html'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url; a.download='netstar_hw_roadmap_edited.html';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},1000);
+}
+
+// ── EXPORT EXCEL (styled HTML → .xls, opens perfectly in Excel) ──────────────
+function exportExcel(){
+  var BAR_HEX={g:'#16a34a',b:'#1d4ed8',o:'#d97706',s:'#475569',r:'#dc2626'};
+  var BAR_LABEL={g:'Released',b:'In Progress',o:'Delayed',s:'Strategy',r:'At Risk'};
+
+  // ── Build bar maps ──
+  var barMaps={};
+  rows.forEach(function(row){
+    var bmap={};
+    row.bars.forEach(function(bar){
+      for(var m=bar.s;m<Math.min(bar.e,NM);m++) bmap[m]={bar:bar,isStart:m===bar.s,span:bar.e-bar.s};
+    });
+    barMaps[row.id]=bmap;
+  });
+
+  var MONTH_LABELS=MONTHS.map(function(m,i){return m+(i<12?' 25':' 26');});
+
+  var t='';
+  t+='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
+  t+='<head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets>';
+  t+='<x:ExcelWorksheet><x:Name>HW Roadmap FY26</x:Name><x:WorksheetOptions>';
+  t+='<x:DisplayGridlines/><x:FreezePanes/><x:FrozenNoSplit/><x:SplitHorizontal>2</x:SplitHorizontal><x:TopRowBottomPane>2</x:TopRowBottomPane>';
+  t+='<x:SplitVertical>1</x:SplitVertical><x:LeftColumnRightPane>1</x:LeftColumnRightPane>';
+  t+='</x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->';
+  t+='<style>td,th{font-family:Calibri,Arial,sans-serif;font-size:10pt;white-space:nowrap;border:1px solid #d0d8e8;padding:3px 6px;vertical-align:middle}';
+  t+='.th-init{background:#1a1464;color:#fff;font-weight:700;font-size:9pt;min-width:200px;width:200px}';
+  t+='.qh{background:#1a1464;color:#fff;font-weight:700;font-size:9pt;text-align:center;border-right:3px solid rgba(255,255,255,0.3)}';
+  t+='.mh{background:#2563a8;color:#fff;font-weight:700;font-size:8pt;text-align:center;width:38px;min-width:38px}';
+  t+='.sec{font-weight:700;font-size:9pt;color:#fff;letter-spacing:.05em}';
+  t+='.lbl{background:#f4f7fc;font-weight:700;font-size:9pt}';
+  t+='.sub{background:#f4f7fc;color:#7b8db0;font-size:8pt}';
+  t+='.empty{background:#fff}';
+  t+='.bar-cell{color:#fff;font-weight:700;font-size:8pt;text-align:center}';
+  t+='.alt{background:#f8faff}';
+  t+='.prio{background:#f5f0ff;color:#6d28d9;font-size:8pt;font-style:italic}';
+  t+='.deliv{background:#f0f9ff;color:#0369a1;font-size:8pt;font-style:italic}';
+  t+='</style></head><body>';
+  t+='<table style="border-collapse:collapse;table-layout:fixed">';
+
+  // ── Header row 1: Logo + Quarters ──
+  t+='<tr>';
+  t+='<th class="th-init" rowspan="2" style="font-size:13pt;letter-spacing:.05em;width:200px">NETSTAR<br><span style="font-size:8pt;font-weight:400;color:#a0aec0">HW ROADMAP FY26</span></th>';
+  var quarters=[
+    {label:'Q1 · 2025',span:3,bg:'#1a1464'},
+    {label:'Q2 · 2025',span:3,bg:'#1e3478'},
+    {label:'Q3 · 2025',span:3,bg:'#1a3a8c'},
+    {label:'Q4 · 2025',span:3,bg:'#1544a0'},
+    {label:'Q1 · 2026',span:3,bg:'#1a1464'},
+    {label:'Q2 · 2026',span:3,bg:'#1e3478'},
+    {label:'Q3 · 2026',span:3,bg:'#1a3a8c'},
+    {label:'Q4 · 2026',span:2,bg:'#1544a0'},
+  ];
+  quarters.forEach(function(q){
+    t+='<th class="qh" colspan="'+q.span+'" style="background:'+q.bg+';border-right:3px solid rgba(255,255,255,0.4)">'+q.label+'</th>';
+  });
+  t+='</tr>';
+
+  // ── Header row 2: months ──
+  t+='<tr>';
+  MONTH_LABELS.forEach(function(m,i){
+    var qb=QB.indexOf(i)>=0;
+    t+='<th class="mh"'+(qb?' style="border-right:3px solid rgba(255,255,255,0.4)"':'')+'>'+m+'</th>';
+  });
+  t+='</tr>';
+
+  // ── Data rows ──
+  var lastSec=null; var ri=0;
+  rows.forEach(function(row){
+    var sec=sections.find(function(s){return s.id===row.sec});
+    if(!sec) return;
+    var bmap=barMaps[row.id];
+
+    // Section header
+    if(row.sec!==lastSec){
+      lastSec=row.sec;
+      t+='<tr>';
+      t+='<td class="sec" colspan="'+(NM+1)+'" style="background:'+sec.color+';border-bottom:2px solid rgba(255,255,255,0.3)">'+sec.name+'</td>';
+      t+='</tr>';
+    }
+
+    // Data row
+    var isAlt=ri%2===1;
+    t+='<tr>';
+    t+='<td class="lbl" style="border-left:4px solid '+sec.color+';color:'+sec.color+'">'+
+       row.name+'<br><span class="sub" style="color:#7b8db0;font-weight:400">'+row.sub+'</span></td>';
+
+    var skip=0;
+    for(var mi=0;mi<NM;mi++){
+      if(skip>0){skip--;continue;}
+      var qb=QB.indexOf(mi)>=0;
+      var borderR=qb?'border-right:3px solid #c5d5ea;':'';
+      var entry=bmap[mi];
+      if(entry&&entry.isStart){
+        var bcolor=BAR_HEX[entry.bar.c]||BAR_HEX.b;
+        var bspan=Math.min(entry.bar.e,NM)-entry.bar.s;
+        t+='<td class="bar-cell" colspan="'+bspan+'" style="background:'+bcolor+';'+borderR+'">'+entry.bar.t+'</td>';
+        skip=bspan-1;
+      } else if(entry&&!entry.isStart){
+        // already handled by colspan skip
+      } else {
+        t+='<td class="'+(isAlt?'alt':'empty')+'" style="'+borderR+'"></td>';
+      }
+    }
+    t+='</tr>';
+
+    // Key priorities sub-row
+    if(row.priorities&&row.priorities.length){
+      t+='<tr>';
+      t+='<td class="prio" style="padding-left:16px;border-left:4px solid '+sec.color+'">▸ KEY PRIORITIES: '+row.priorities.join('  ·  ')+'</td>';
+      t+='<td colspan="'+NM+'" class="prio"></td>';
+      t+='</tr>';
+    }
+    // Deliverables sub-row
+    if(row.deliverables&&row.deliverables.length){
+      t+='<tr>';
+      t+='<td class="deliv" style="padding-left:16px;border-left:4px solid '+sec.color+'">◆ DELIVERABLES: '+row.deliverables.join('  ·  ')+'</td>';
+      t+='<td colspan="'+NM+'" class="deliv"></td>';
+      t+='</tr>';
+    }
+
+    ri++;
+  });
+
+  // ── Legend row ──
+  t+='<tr><td colspan="'+(NM+1)+'" style="background:#f4f7fc;font-size:8pt;color:#7b8db0;padding:5px 10px">';
+  t+='<b>LEGEND:</b> ';
+  Object.keys(BAR_HEX).forEach(function(k){
+    t+='<span style="background:'+BAR_HEX[k]+';color:#fff;padding:2px 8px;border-radius:3px;margin-right:6px;font-size:8pt">'+BAR_LABEL[k]+'</span>';
+  });
+  t+='&nbsp;&nbsp;Netstar · Hardware Portfolio · FY26 · Confidential</td></tr>';
+
+  t+='</table></body></html>';
+
+  if(window.electronAPI){
+    window.electronAPI.saveFile({content:t,defaultName:'Netstar_HW_Roadmap_FY26.xls',ext:'xls',label:'Excel Spreadsheet'})
+      .then(function(res){ if(res&&res.ok) console.log('Excel saved'); });
+  } else {
+    openPreview(t, 'Excel Preview — Right-click table → Copy to paste into Excel', 'xls', t);
+  }
+}
+
+// ── EXPORT PDF (Electron native printToPDF) ───────────────────────────────────
+function exportPDF(){
+  // Build a self-contained print-optimised HTML page from current data
+  var BAR_HEX={g:'#16a34a',b:'#1d4ed8',o:'#d97706',s:'#475569',r:'#dc2626'};
+  var BAR_LABEL={g:'Released',b:'In Progress',o:'Delayed',s:'Strategy',r:'At Risk'};
+
+  var barMaps={};
+  rows.forEach(function(row){
+    var bmap={};
+    row.bars.forEach(function(bar){
+      for(var m=bar.s;m<Math.min(bar.e,NM);m++) bmap[m]={bar:bar,isStart:m===bar.s,span:bar.e-bar.s};
+    });
+    barMaps[row.id]=bmap;
+  });
+
+  var MONTH_LABELS=MONTHS.map(function(m,i){return m+'\''+(i<12?'25':'26');});
+
+  var p='<!DOCTYPE html><html><head><meta charset="UTF-8">';
+  p+='<style>';
+  p+='@page{size:A3 landscape;margin:8mm}';
+  p+='*{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}';
+  p+='body{font-family:Arial,sans-serif;font-size:8pt;background:#fff}';
+  // Header
+  p+='.hdr{display:flex;align-items:center;justify-content:space-between;background:#1a1464;color:#fff;padding:6px 12px;border-radius:4px 4px 0 0;margin-bottom:0}';
+  p+='.hdr .logo{font-size:16pt;font-weight:900;letter-spacing:.05em}';
+  p+='.hdr .title{text-align:center;font-size:11pt;font-weight:700;letter-spacing:.04em}';
+  p+='.hdr .sub{font-size:7pt;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.1em;margin-top:2px}';
+  p+='.hdr .badge{background:#4a90d9;padding:3px 10px;border-radius:10px;font-size:7pt;font-weight:700}';
+  // Legend
+  p+='.legend{display:flex;align-items:center;gap:10px;background:#f4f7fc;border:1px solid #c5d5ea;padding:4px 10px;margin-bottom:0;flex-wrap:wrap}';
+  p+='.leg{display:flex;align-items:center;gap:4px;font-size:7pt;color:#3a3a6e}';
+  p+='.swatch{width:18px;height:8px;border-radius:2px}';
+  // Table
+  p+='table{border-collapse:collapse;width:100%;table-layout:fixed}';
+  p+='.th-lbl{background:#1a1464;color:rgba(255,255,255,.5);font-size:7pt;font-weight:700;letter-spacing:.1em;padding:5px 8px;text-align:left;width:160px}';
+  p+='.qh{color:#fff;font-size:8pt;font-weight:700;letter-spacing:.06em;text-align:center;padding:5px 2px}';
+  p+='.mh{background:#2563a8;color:#fff;font-size:6.5pt;font-weight:700;letter-spacing:.08em;text-align:center;padding:3px 1px}';
+  p+='.mh.qb{border-right:2px solid rgba(255,255,255,.3)}';
+  p+='.sec-hdr td{font-size:7pt;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#fff;padding:3px 8px}';
+  p+='.data-row td{border-bottom:1px solid #e8edf7;border-right:1px solid #e8edf7;height:22px;padding:0;vertical-align:middle}';
+  p+='.td-lbl{padding:0 6px;border-right:2px solid var(--sec-color,#4a90d9);background:#f4f7fc;width:160px}';
+  p+='.lbl-name{font-size:7.5pt;font-weight:700;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}';
+  p+='.lbl-sub{font-size:6pt;color:#7b8db0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}';
+  p+='.td-mo{width:28px}';
+  p+='.td-mo.qb{border-right:2px solid #c5d5ea!important}';
+  p+='.bar{border-radius:3px;height:16px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:6pt;font-weight:700;margin:2px;overflow:hidden;white-space:nowrap;padding:0 3px}';
+  p+='.prio-row td{background:#f5f0ff;font-size:6.5pt;color:#6d28d9;padding:1px 8px}';
+  p+='.deliv-row td{background:#f0f9ff;font-size:6.5pt;color:#0369a1;padding:1px 8px}';
+  p+='.footer{margin-top:4px;display:flex;justify-content:space-between;font-size:7pt;color:#7b8db0;padding:0 4px}';
+  p+='</style></head><body>';
+
+  // Header
+  p+='<div class="hdr">';
+  p+='<div class="logo">NETSTAR</div>';
+  p+='<div style="text-align:center"><div class="title">PRODUCT STRATEGY ROADMAP — HARDWARE</div><div class="sub">FY26 · Combined High Level Overview</div></div>';
+  p+='<div class="badge">HW PORTFOLIO</div>';
+  p+='</div>';
+
+  // Legend
+  p+='<div class="legend">';
+  p+='<span style="font-size:7pt;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#7b8db0;margin-right:4px">LEGEND</span>';
+  [['g','Released'],['b','In Progress'],['o','Delayed'],['s','Strategy'],['r','At Risk']].forEach(function(item){
+    p+='<span class="leg"><span class="swatch" style="background:'+BAR_HEX[item[0]]+'"></span>'+item[1]+'</span>';
+  });
+  p+='<span style="margin-left:auto;color:#7b8db0;font-size:7pt">APR 2025 → FEB 2026 (FY26)</span>';
+  p+='</div>';
+
+  // Table
+  p+='<table>';
+  p+='<colgroup><col style="width:160px">';
+  for(var ci=0;ci<NM;ci++) p+='<col style="width:28px">';
+  p+='</colgroup>';
+  p+='<thead><tr>';
+  p+='<th class="th-lbl">INITIATIVE</th>';
+  var quarters=[
+    {label:'Q1 · 2025',span:3,bg:'#1a1464'},{label:'Q2 · 2025',span:3,bg:'#1e3478'},
+    {label:'Q3 · 2025',span:3,bg:'#1a3a8c'},{label:'Q4 · 2025',span:3,bg:'#1544a0'},
+    {label:'Q1 · 2026',span:3,bg:'#1a1464'},{label:'Q2 · 2026',span:3,bg:'#1e3478'},
+    {label:'Q3 · 2026',span:3,bg:'#1a3a8c'},{label:'Q4 · 2026',span:2,bg:'#1544a0'},
+  ];
+  quarters.forEach(function(q){
+    p+='<th class="qh" colspan="'+q.span+'" style="background:'+q.bg+';border-right:2px solid rgba(255,255,255,.3)">'+q.label+'</th>';
+  });
+  p+='</tr><tr>';
+  p+='<th class="th-lbl">MONTH</th>';
+  MONTH_LABELS.forEach(function(m,i){
+    p+='<th class="mh'+(QB.indexOf(i)>=0?' qb':'')+'" style="'+(QB.indexOf(i)>=0?'border-right:2px solid rgba(255,255,255,.3)':'')+'">'+m+'</th>';
+  });
+  p+='</tr></thead><tbody>';
+
+  var lastSec2=null; var ri2=0;
+  rows.forEach(function(row){
+    var sec=sections.find(function(s){return s.id===row.sec});
+    if(!sec) return;
+    var bmap=barMaps[row.id];
+
+    if(row.sec!==lastSec2){
+      lastSec2=row.sec;
+      p+='<tr class="sec-hdr"><td colspan="'+(NM+1)+'" style="background:'+sec.color+';border-bottom:1px solid rgba(255,255,255,.2)">'+sec.name+'</td></tr>';
+    }
+
+    var isAlt=ri2%2===1;
+    p+='<tr class="data-row">';
+    p+='<td class="td-lbl" style="--sec-color:'+sec.color+';border-left:3px solid '+sec.color+'">';
+    p+='<div class="lbl-name" style="color:'+sec.color+'">'+row.name+'</div>';
+    p+='<div class="lbl-sub">'+row.sub+'</div></td>';
+
+    var skip=0;
+    for(var mi=0;mi<NM;mi++){
+      if(skip>0){skip--;continue;}
+      var qb=QB.indexOf(mi)>=0;
+      var entry=bmap[mi];
+      if(entry&&entry.isStart){
+        var bspan=Math.min(entry.bar.e,NM)-entry.bar.s;
+        p+='<td class="td-mo'+(qb?' qb':'')+'" colspan="'+bspan+'" style="padding:2px">';
+        p+='<div class="bar" style="background:'+BAR_HEX[entry.bar.c]+'">'+entry.bar.t+'</div></td>';
+        skip=bspan-1;
+      } else {
+        p+='<td class="td-mo'+(qb?' qb':'')+'" style="background:'+(isAlt?'#f8faff':'#fff')+'"></td>';
+      }
+    }
+    p+='</tr>';
+
+    if(row.priorities&&row.priorities.length){
+      p+='<tr class="prio-row"><td style="padding-left:12px;border-left:3px solid '+sec.color+'">▸ KEY PRIORITIES: '+row.priorities.join('  ·  ')+'</td>';
+      p+='<td colspan="'+NM+'"></td></tr>';
+    }
+    if(row.deliverables&&row.deliverables.length){
+      p+='<tr class="deliv-row"><td style="padding-left:12px;border-left:3px solid '+sec.color+'">◆ DELIVERABLES: '+row.deliverables.join('  ·  ')+'</td>';
+      p+='<td colspan="'+NM+'"></td></tr>';
+    }
+    ri2++;
+  });
+
+  p+='</tbody></table>';
+  p+='<div class="footer"><span><b>Netstar · Hardware Portfolio · FY26 Roadmap</b></span><span>Confidential — Internal Use Only</span><span>March 2026</span></div>';
+  p+='</body></html>';
+
+  if(window.electronAPI){
+    window.electronAPI.printPDF(p).then(function(res){
+      if(res&&res.ok) console.log('PDF saved to',res.path);
+      else if(res&&res.error) alert('PDF error: '+res.error);
+    });
+  } else {
+    openPreview(p, 'PDF Preview  ·  Download as HTML → open in browser → Ctrl+P to print/save as PDF', 'html', p);
+  }
+}
+
+// ── IN-PAGE PREVIEW (browser/sandbox fallback) ───────────────────────────────
+var _previewContent = null;
+var _previewExt = 'txt';
+function openPreview(iframeContent, title, ext, downloadContent){
+  _previewContent = downloadContent;
+  _previewExt = ext;
+  document.getElementById('previewTitle').textContent = title;
+  var frame = document.getElementById('previewFrame');
+  frame.srcdoc = iframeContent;
+  // Download via Blob URL on the <a> element — this is allowed in sandboxes (only window.open was blocked)
+  document.getElementById('previewDlBtn').onclick = function(){
+    var mimeMap = {xls:'application/vnd.ms-excel', pdf:'text/html', html:'text/html'};
+    var mime = mimeMap[ext] || 'text/plain';
+    try {
+      var blob = new Blob([downloadContent], {type: mime});
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'Netstar_HW_Roadmap_FY26.' + ext;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    } catch(e) {
+      // Last resort fallback — copy to clipboard
+      if(navigator.clipboard) {
+        navigator.clipboard.writeText(downloadContent).then(function(){
+          alert('Content copied to clipboard — paste into a text editor and save as .' + ext);
+        });
+      } else {
+        alert('Download not available in this environment. Use the Electron desktop app to export files.');
+      }
+    }
+  };
+  // Update download button label based on type
+  var dlBtn = document.getElementById('previewDlBtn');
+  dlBtn.textContent = ext === 'html' ? '⬇ Download HTML (print to PDF in browser)' : '⬇ Download .' + ext;
+  document.getElementById('previewOverlay').classList.add('open');
+}
+function closePreview(){
+  document.getElementById('previewOverlay').classList.remove('open');
+  document.getElementById('previewFrame').srcdoc = '';
+}
+
+// ── PERSIST ─────────────────────────────────────────────────────────────────
+var _saveTimer = null;
+function persistData() {
+  if (!window.electronAPI) return;
+  var el = document.getElementById('saveStatus');
+  if (el) { el.textContent = '◌ Saving…'; el.className = 'saving'; }
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(function() {
+    window.electronAPI.saveData({ sections: sections, rows: rows }).then(function(res) {
+      if (!el) return;
+      if (res && res.ok) {
+        el.textContent = '● Saved'; el.className = 'saved';
+      } else {
+        el.textContent = '✕ Error'; el.className = 'error';
+      }
+    });
+  }, 400);
+}
+
+// ── BACKUP / IMPORT ────────────────────────────────────────────────────────────
+function exportBackup() {
+  if (!window.electronAPI) return;
+  window.electronAPI.exportBackup().then(function(res) {
+    if (res && res.ok) alert('Backup saved to:\n' + res.path);
+  });
+}
+function importBackup() {
+  if (!window.electronAPI) return;
+  if (!confirm('Import a backup? This will replace all current data.')) return;
+  window.electronAPI.importBackup().then(function(res) {
+    if (res && res.ok) {
+      sections = res.data.sections || sections;
+      rows = res.data.rows || rows;
+      render();
+      var el = document.getElementById('saveStatus');
+      if (el) { el.textContent = '● Saved'; el.className = 'saved'; }
+    } else if (res && !res.ok && !res.error) {
+      // cancelled
+    } else {
+      alert('Import failed: ' + (res && res.error || 'Unknown error'));
+    }
+  });
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+async function init() {
+  if (window.electronAPI) {
+    // Listen for menu-triggered reset
+    window.electronAPI.onResetData(function() {
+      if (confirm('Reset to default data? All changes will be lost.')) {
+        // Clear saved data by saving defaults
+        // Re-assign defaults inline
+        sections = [
+          {id:"s1",name:"Overarching Strategy",color:"#7c3aed"},
+          {id:"s2",name:"Stability",color:"#0369a1"},
+          {id:"s3",name:"Key Priorities",color:"#1a1464"},
+          {id:"s4",name:"Globalization · Malaysia",color:"#0f766e"},
+          {id:"s5",name:"Globalization · Australia",color:"#b45309"},
+        ];
+        rows = DEFAULT_ROWS.map(function(r){ return JSON.parse(JSON.stringify(r)); });
+        persistData();
+        render();
+      }
+    });
+
+    // Try loading saved data
+    var res = await window.electronAPI.loadData();
+    if (res && res.ok && res.data) {
+      if (res.data.sections && res.data.sections.length) sections = res.data.sections;
+      if (res.data.rows && res.data.rows.length) rows = res.data.rows;
+    }
+  }
+  render();
+}
+
+init();
+</script>
+</body>
+</html>
