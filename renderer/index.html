@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Netstar HW Roadmap FY26 — Editable</title>
+<title>PM Roadmapper</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -38,7 +38,7 @@ button,input,select,textarea{font-family:'Barlow',sans-serif}
 
 /* ── HEADER ── */
 .header{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--accent);padding-bottom:14px;margin-bottom:16px}
-.logo{background:var(--navy);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;padding:3px 14px;border-radius:4px;letter-spacing:.05em}
+.logo{height:48px;min-width:48px;display:flex;align-items:center;justify-content:center;border-radius:6px;overflow:hidden;cursor:pointer;position:relative;border:2px dashed transparent;transition:border .2s}.logo:hover{border-color:var(--accent)}.logo img{height:100%;width:auto;max-width:160px;object-fit:contain;display:block}.logo .logo-text{background:var(--navy);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;padding:4px 14px;border-radius:4px;letter-spacing:.05em;white-space:nowrap}.logo .logo-hint{position:absolute;inset:0;background:rgba(0,0,0,.5);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;letter-spacing:.05em;text-align:center}.logo:hover .logo-hint{opacity:1}
 .hdr-center h1{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:.04em;text-align:center}
 .hdr-center p{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-top:3px;text-align:center}
 .badge{background:var(--navy);color:#fff;font-weight:700;font-size:11px;padding:5px 14px;border-radius:20px;letter-spacing:.08em;text-transform:uppercase}
@@ -150,6 +150,12 @@ tr.data-row:hover td.td-mo{background:#f0f5ff !important}
 .footer span:first-child{font-weight:700;color:var(--navy)}
 
 
+
+/* ── EDITABLE HEADER ── */
+#roadmapTitle[contenteditable],#roadmapSubtitle[contenteditable],#roadmapBadge[contenteditable]{outline:none;cursor:text}
+#roadmapTitle[contenteditable]:hover,#roadmapSubtitle[contenteditable]:hover,#roadmapBadge[contenteditable]:hover{background:rgba(255,255,255,.15);border-radius:3px}
+#roadmapTitle[contenteditable]:focus,#roadmapSubtitle[contenteditable]:focus,#roadmapBadge[contenteditable]:focus{background:rgba(255,255,255,.2);border-radius:3px;padding:1px 4px}
+
 /* ── SAVE STATUS ── */
 #saveStatus{font-size:11px;font-weight:600;padding:4px 10px;border-radius:12px;transition:all .3s}
 #saveStatus.saved{color:#22c55e}
@@ -179,7 +185,7 @@ tr.data-row:hover td.td-mo{background:#f0f5ff !important}
 
 <!-- TOOLBAR -->
 <div class="toolbar">
-  <span class="toolbar-title">NETSTAR Roadmap Editor</span>
+  <span class="toolbar-title">PM Roadmapper</span>
   <div class="sep"></div>
   <button class="btn green" onclick="openAddRowModal(null)">+ Add Row</button>
   <button class="btn accent" onclick="toggleAddSection()">+ Add Section</button>
@@ -208,12 +214,17 @@ tr.data-row:hover td.td-mo{background:#f0f5ff !important}
 
 <!-- HEADER -->
 <div class="header">
-  <div class="logo">NETSTAR</div>
-  <div class="hdr-center">
-    <h1>Product Strategy Roadmap — Hardware</h1>
-    <p>FY26 · Combined High Level Overview</p>
+  <div class="logo" id="logoZone" onclick="triggerLogoUpload()" title="Click to upload your logo">
+    <span class="logo-text" id="logoText">PM</span>
+    <img id="logoImg" src="" style="display:none">
+    <span class="logo-hint">📷 Upload<br>Logo</span>
+    <input type="file" id="logoFileInput" accept="image/*" style="display:none" onchange="handleLogoUpload(event)">
   </div>
-  <div class="badge">HW Portfolio</div>
+  <div class="hdr-center">
+    <h1 id="roadmapTitle" contenteditable="true" spellcheck="false" title="Click to edit title">Product Roadmap</h1>
+    <p id="roadmapSubtitle" contenteditable="true" spellcheck="false" title="Click to edit subtitle">FY26 · Combined High Level Overview</p>
+  </div>
+  <div class="badge" id="roadmapBadge" contenteditable="true" spellcheck="false" title="Click to edit badge">Portfolio</div>
 </div>
 
 <!-- TABS -->
@@ -273,7 +284,7 @@ tr.data-row:hover td.td-mo{background:#f0f5ff !important}
 </div>
 
 <div class="footer">
-  <span>Netstar · Hardware Portfolio · FY26 Roadmap</span>
+  <span>PM Roadmapper · FY26 Roadmap</span>
   <span>Confidential — Internal Use Only</span>
   <span>March 2026</span>
 </div>
@@ -344,7 +355,7 @@ tr.data-row:hover td.td-mo{background:#f0f5ff !important}
 var QB=[2,5,8,11,14,17,20];
 var NM=23;
 var MONTHS=["APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC","JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC","JAN","FEB"];
-var PORTFOLIOS=["Hardware","MyNetstar","Fleet","Surveillance","Mining","Big Data"];
+var PORTFOLIOS=["Hardware","Software","Fleet","Surveillance","Mining","Big Data"];
 var BAR_COLORS={g:"Released",b:"In Progress",o:"Delayed",s:"Strategy",r:"At Risk"};
 var GRADIENTS={g:"linear-gradient(90deg,#16a34a,#22c55e)",b:"linear-gradient(90deg,#1d4ed8,#3b82f6)",o:"linear-gradient(90deg,#d97706,#f59e0b)",s:"linear-gradient(90deg,#475569,#64748b)",r:"linear-gradient(90deg,#dc2626,#ef4444)"};
 
@@ -744,7 +755,7 @@ function exportHTML(){
   var blob=new Blob([content],{type:'text/html'});
   var url=URL.createObjectURL(blob);
   var a=document.createElement('a');
-  a.href=url; a.download='netstar_hw_roadmap_edited.html';
+  a.href=url; a.download='pm_roadmapper_edited.html';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(function(){URL.revokeObjectURL(url);},1000);
 }
@@ -790,7 +801,7 @@ function exportExcel(){
 
   // ── Header row 1: Logo + Quarters ──
   t+='<tr>';
-  t+='<th class="th-init" rowspan="2" style="font-size:13pt;letter-spacing:.05em;width:200px">NETSTAR<br><span style="font-size:8pt;font-weight:400;color:#a0aec0">HW ROADMAP FY26</span></th>';
+  t+='<th class="th-init" rowspan="2" style="font-size:13pt;letter-spacing:.05em;width:200px">PM ROADMAPPER<br><span style="font-size:8pt;font-weight:400;color:#a0aec0">FY26 ROADMAP</span></th>';
   var quarters=[
     {label:'Q1 · 2025',span:3,bg:'#1a1464'},
     {label:'Q2 · 2025',span:3,bg:'#1e3478'},
@@ -878,12 +889,12 @@ function exportExcel(){
   Object.keys(BAR_HEX).forEach(function(k){
     t+='<span style="background:'+BAR_HEX[k]+';color:#fff;padding:2px 8px;border-radius:3px;margin-right:6px;font-size:8pt">'+BAR_LABEL[k]+'</span>';
   });
-  t+='&nbsp;&nbsp;Netstar · Hardware Portfolio · FY26 · Confidential</td></tr>';
+  t+='&nbsp;&nbsp;PM Roadmapper · FY26 · Confidential</td></tr>';
 
   t+='</table></body></html>';
 
   if(window.electronAPI){
-    window.electronAPI.saveFile({content:t,defaultName:'Netstar_HW_Roadmap_FY26.xls',ext:'xls',label:'Excel Spreadsheet'})
+    window.electronAPI.saveFile({content:t,defaultName:'PM_Roadmapper_FY26.xls',ext:'xls',label:'Excel Spreadsheet'})
       .then(function(res){ if(res&&res.ok) console.log('Excel saved'); });
   } else {
     openPreview(t, 'Excel Preview — Right-click table → Copy to paste into Excel', 'xls', t);
@@ -943,7 +954,7 @@ function exportPDF(){
 
   // Header
   p+='<div class="hdr">';
-  p+='<div class="logo">NETSTAR</div>';
+  p+='<div class="logo" style="font-size:16pt;font-weight:900;letter-spacing:.05em;background:#1a1464;color:#fff;padding:4px 12px;border-radius:4px">'+(window._logoDataUrl?'<img src="'+window._logoDataUrl+'" style="height:36px;max-width:120px;object-fit:contain">':'PM Roadmapper')+'</div>';
   p+='<div style="text-align:center"><div class="title">PRODUCT STRATEGY ROADMAP — HARDWARE</div><div class="sub">FY26 · Combined High Level Overview</div></div>';
   p+='<div class="badge">HW PORTFOLIO</div>';
   p+='</div>';
@@ -1025,7 +1036,7 @@ function exportPDF(){
   });
 
   p+='</tbody></table>';
-  p+='<div class="footer"><span><b>Netstar · Hardware Portfolio · FY26 Roadmap</b></span><span>Confidential — Internal Use Only</span><span>March 2026</span></div>';
+  p+='<div class="footer"><span><b>PM Roadmapper · FY26 Roadmap</b></span><span>Confidential — Internal Use Only</span><span>March 2026</span></div>';
   p+='</body></html>';
 
   if(window.electronAPI){
@@ -1056,7 +1067,7 @@ function openPreview(iframeContent, title, ext, downloadContent){
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a');
       a.href = url;
-      a.download = 'Netstar_HW_Roadmap_FY26.' + ext;
+      a.download = 'PM_Roadmapper_FY26.' + ext;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -1080,6 +1091,46 @@ function openPreview(iframeContent, title, ext, downloadContent){
 function closePreview(){
   document.getElementById('previewOverlay').classList.remove('open');
   document.getElementById('previewFrame').srcdoc = '';
+}
+
+// ── LOGO UPLOAD ──────────────────────────────────────────────────────────────
+window._logoDataUrl = null;
+
+function triggerLogoUpload(){
+  document.getElementById('logoFileInput').click();
+}
+function handleLogoUpload(e){
+  var file = e.target.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    var dataUrl = ev.target.result;
+    window._logoDataUrl = dataUrl;
+    // Show image, hide text
+    var img = document.getElementById('logoImg');
+    var txt = document.getElementById('logoText');
+    img.src = dataUrl;
+    img.style.display = 'block';
+    txt.style.display = 'none';
+    // Persist logo in localStorage for browser, or save via electron
+    try{ localStorage.setItem('pm_roadmapper_logo', dataUrl); }catch(ex){}
+  };
+  reader.readAsDataURL(file);
+  // Reset input so same file can be re-selected
+  e.target.value = '';
+}
+function loadSavedLogo(){
+  try{
+    var saved = localStorage.getItem('pm_roadmapper_logo');
+    if(saved){
+      window._logoDataUrl = saved;
+      var img = document.getElementById('logoImg');
+      var txt = document.getElementById('logoText');
+      img.src = saved;
+      img.style.display = 'block';
+      txt.style.display = 'none';
+    }
+  }catch(ex){}
 }
 
 // ── PERSIST ─────────────────────────────────────────────────────────────────
@@ -1154,6 +1205,7 @@ async function init() {
       if (res.data.rows && res.data.rows.length) rows = res.data.rows;
     }
   }
+  loadSavedLogo();
   render();
 }
 
