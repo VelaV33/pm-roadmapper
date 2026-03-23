@@ -22,7 +22,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);min-height:100vh}
 button,input,select,textarea{font-family:'Barlow',sans-serif}
 
 /* ── TOOLBAR ── */
-.toolbar{background:var(--navy);position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.3)}.toolbar-top{display:flex;align-items:center;padding:9px 20px;border-bottom:1px solid rgba(255,255,255,.08)}.toolbar-btns{display:flex;align-items:center;gap:6px;padding:6px 20px;flex-wrap:wrap;background:rgba(0,0,0,.15)}.tbg{display:flex;align-items:center;gap:5px;padding:0 8px;border-right:1px solid rgba(255,255,255,.12)}.tbg:last-child{border-right:none;margin-left:auto}.tbg-label{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.28);display:block;margin-bottom:2px;text-align:left;padding-left:1px}.tbg-wrap{display:flex;flex-direction:column}
+.toolbar{background:var(--navy);position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.3)}.toolbar-top{display:flex;align-items:center;padding:9px 20px;border-bottom:1px solid rgba(255,255,255,.08);flex-wrap:wrap;gap:4px}.toolbar-btns{display:flex;align-items:center;gap:6px;padding:6px 20px;flex-wrap:wrap;background:rgba(0,0,0,.15)}.tbg{display:flex;align-items:center;gap:5px;padding:0 8px;border-right:1px solid rgba(255,255,255,.12)}.tbg:last-child{border-right:none;margin-left:auto}.tbg-label{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.28);display:block;margin-bottom:2px;text-align:left;padding-left:1px}.tbg-wrap{display:flex;flex-direction:column}
 .toolbar-title{color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;letter-spacing:.05em;margin-right:8px;white-space:nowrap}
 .btn{padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap}
 .btn:hover{background:rgba(255,255,255,.25)}
@@ -337,6 +337,54 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .share-chip .chip-revoke:hover{background:#fee2e2}
 .shared-badge{font-size:9px;background:#2563a8;color:#fff;border-radius:8px;padding:1px 6px;margin-left:5px;font-weight:700;letter-spacing:.03em;vertical-align:middle}
 
+/* ── COMPETITIVE ANALYSIS ── */
+.comp-panel{width:860px;max-width:98vw;max-height:94vh;overflow-y:auto}
+.comp-input-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.comp-chip{display:inline-flex;align-items:center;gap:5px;background:#e8f4fd;border:1px solid var(--accent);border-radius:16px;padding:4px 10px 4px 12px;font-size:12px;font-weight:600;color:var(--navy)}
+.comp-chip button{background:none;border:none;color:#dc2626;cursor:pointer;font-size:13px;padding:0;line-height:1}
+.comp-checkbox-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.comp-checkbox-grid label{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text);cursor:pointer;padding:8px 10px;border:1px solid var(--border);border-radius:6px;transition:all .15s;user-select:none}
+.comp-checkbox-grid label:hover{border-color:var(--accent);background:#f0f5ff}
+.comp-checkbox-grid label.checked{border-color:var(--accent);background:#e8f4fd}
+.comp-card{border:1px solid var(--border);border-radius:10px;margin-bottom:16px;overflow:hidden}
+.comp-card-hdr{background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+.comp-card-hdr h3{margin:0;font-size:15px;font-weight:700}
+.comp-card-body{padding:16px}
+.comp-section{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #f0f3f8}
+.comp-section:last-child{border-bottom:none}
+.comp-section h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
+.comp-section p{font-size:12px;color:var(--text);line-height:1.5;margin:0 0 6px}
+.comp-section ul{margin:0;padding-left:18px;font-size:12px;color:var(--text);line-height:1.6}
+.comp-swot{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.comp-swot-cell{padding:10px;border-radius:6px;font-size:11px;line-height:1.5}
+.comp-swot-cell h4{font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;font-weight:700}
+.comp-swot-cell ul{margin:0;padding-left:14px}
+.comp-swot-cell.sw-s{background:#dcfce7;color:#166534}
+.comp-swot-cell.sw-w{background:#fee2e2;color:#991b1b}
+.comp-swot-cell.sw-o{background:#dbeafe;color:#1e40af}
+.comp-swot-cell.sw-t{background:#fef3c7;color:#92400e}
+.comp-threat-badge{padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;color:#fff}
+.comp-threat-low{background:#16a34a}
+.comp-threat-med{background:#d97706}
+.comp-threat-high{background:#dc2626}
+.comp-loading{text-align:center;padding:40px}
+.comp-loading .spinner{width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:comp-spin 1s linear infinite;margin:0 auto 16px}
+@keyframes comp-spin{to{transform:rotate(360deg)}}
+.comp-rec{background:#f8faff;border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;display:flex;align-items:flex-start;gap:12px}
+.comp-rec-body{flex:1}
+.comp-rec-body h5{margin:0 0 4px;font-size:13px;color:var(--navy)}
+.comp-rec-body p{margin:0;font-size:11px;color:var(--muted);line-height:1.4}
+.comp-add-btn{background:none;border:1px dashed var(--accent);color:var(--accent);border-radius:6px;padding:6px 12px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s}
+.comp-add-btn:hover{background:#e8f4fd}
+.comp-tab{padding:6px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--muted);transition:all .15s}
+.comp-tab.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.comp-history-item{padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:background .15s;background:#fff}
+.comp-history-item:hover{background:#f0f5ff}
+.premium-gate{text-align:center;padding:40px 30px}
+.premium-gate h3{font-size:18px;color:var(--navy);margin-bottom:8px}
+.premium-gate p{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6}
+.premium-badge{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:8px;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:.1em;vertical-align:middle;margin-left:4px}
+
 .auth-card{
   background:#fff;border-radius:16px;padding:40px 36px;
   width:380px;max-width:94vw;
@@ -457,8 +505,10 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
       </svg>
       <span style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;letter-spacing:.05em">PM Roadmapper</span>
     </span>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:4px">
-      <span style="color:rgba(255,255,255,.28);font-size:10px;letter-spacing:.06em;text-transform:uppercase;margin-right:10px">Product Strategy Tool</span>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+      <!-- Competitive Intel -->
+      <button id="compIntelBtn" onclick="openCompetitiveAnalysis()" title="AI-powered Competitive Analysis" style="background:linear-gradient(135deg,rgba(124,58,237,.4),rgba(37,99,168,.4));border:1px solid rgba(124,58,237,.5);color:#fff;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">🔍 CI<span class="premium-badge">PRO</span></button>
+      <div style="width:1px;height:18px;background:rgba(255,255,255,.15);margin:0 4px"></div>
       <!-- Collaboration -->
       <button onclick="openShare()" title="Share roadmap with your team" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.85);border-radius:6px;padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.1)'"><span style="font-size:13px">🔗</span> Share</button>
       <div style="width:1px;height:18px;background:rgba(255,255,255,.15);margin:0 4px"></div>
@@ -746,6 +796,16 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 </div>
 
 <script>
+// ── GLOBAL ERROR HANDLER — prevent unhandled errors from crashing the page ──
+window.onerror=function(msg,src,line,col,err){
+  console.error('[GLOBAL ERROR]',msg,'at',src+':'+line+':'+col,err);
+  return true; // prevent default error handling that could break the page
+};
+window.onunhandledrejection=function(e){
+  console.error('[UNHANDLED PROMISE]',e.reason);
+  e.preventDefault(); // prevent crash
+};
+
 // ── DYNAMIC TABS ─────────────────────────────────────────────
 // Each tab: { id, name, stacked:bool, sections?, rows?, quarters? }
 // stacked=true → tab's content renders BELOW the active tab's table
@@ -3192,7 +3252,7 @@ function onAuthSuccess(user){
     if(user.user_metadata.avatar_url) userProfile.avatarUrl=user.user_metadata.avatar_url;
   }
   saveProfileSettings(); applyProfileToUI(); enableSync();
-  setTimeout(function(){ loadAllCommentBadges(); loadSharedToMe(); }, 800);
+  setTimeout(function(){ loadAllCommentBadges(); loadSharedToMe(); loadUserTier(); }, 800);
   console.log('Signed in:', user.email);
 }
 async function signOut(){
@@ -4245,6 +4305,776 @@ function renderSharedList(wrap){
     };
     chip.appendChild(left); chip.appendChild(revoke); wrap.appendChild(chip);
   });
+}
+
+
+// ── PREMIUM TIER ─────────────────────────────────────────────────────────────
+var _userTier='basic';
+
+// Premium admin emails — these users always get premium access
+var PREMIUM_EMAILS=['velasabelo.com@gmail.com'];
+
+async function loadUserTier(){
+  if(!_currentUser||!_accessToken){_userTier='basic';return;}
+  // Check admin whitelist first
+  if(_currentUser.email&&PREMIUM_EMAILS.indexOf(_currentUser.email.toLowerCase())>=0){
+    _userTier='premium';return;
+  }
+  try{
+    var r=await _dbReq('/rest/v1/user_profiles?select=tier,tier_expires_at&user_id=eq.'+_currentUser.id);
+    if(r.ok&&Array.isArray(r.data)&&r.data.length>0){
+      var p=r.data[0];
+      if(p.tier==='premium'&&p.tier_expires_at&&new Date(p.tier_expires_at)<new Date()){_userTier='basic';}
+      else{_userTier=p.tier||'basic';}
+    } else {
+      // Create basic profile row
+      await _dbReq('/rest/v1/user_profiles','POST',{user_id:_currentUser.id,tier:'basic'});
+      _userTier='basic';
+    }
+  }catch(e){_userTier='basic';}
+}
+function isPremium(){return _userTier==='premium';}
+
+function showPremiumGate(container){
+  container.innerHTML='';
+  var g=document.createElement('div');g.className='premium-gate';
+  g.innerHTML='<div style="font-size:48px;margin-bottom:16px">🔒</div>'+
+    '<h3>Premium Feature</h3>'+
+    '<p>AI-powered Competitive Analysis is available for Premium users.<br>'+
+    'Upgrade to unlock intelligent market research, SWOT analysis, threat scoring,<br>'+
+    'and one-click roadmap initiative creation — all powered by Claude AI.</p>'+
+    '<button class="btn green" style="padding:10px 28px;font-size:14px;border-radius:8px" onclick="alert(\'Contact your administrator or visit pmroadmapper.com/premium to upgrade.\')">Learn About Premium</button>';
+  container.appendChild(g);
+}
+
+// ── COMPETITIVE ANALYSIS ─────────────────────────────────────────────────────
+var _compTimer=null;
+var RESEARCH_AREAS=[
+  {key:'hardware_platform',label:'Hardware Platform Comparison',icon:'🔧'},
+  {key:'software_platform',label:'Software Platform Comparison',icon:'💻'},
+  {key:'pricing',label:'Pricing Comparison',icon:'💰'},
+  {key:'suppliers_partnerships',label:'Suppliers & Strategic Partnerships',icon:'🤝'},
+  {key:'market_insights',label:'Market Insights (Acquisitions, Execs, Share Price)',icon:'📈'},
+  {key:'regions_markets',label:'Regions & Markets',icon:'🌍'},
+  {key:'esg',label:'ESG (Environmental, Social, Governance)',icon:'🌱'},
+  {key:'strengths_weaknesses',label:'Strengths & Weaknesses',icon:'⚖️'},
+  {key:'market_share',label:'Market Share Analysis',icon:'📊'},
+  {key:'marketing_tactics',label:'Marketing Tactics',icon:'📣'},
+  {key:'customer_insights',label:'Customer Insights',icon:'👥'}
+];
+
+var _compCompetitors=[];
+
+function openCompetitiveAnalysis(){
+  console.log('[CompAnalysis] Opening modal, isPremium:',isPremium(),'tier:',_userTier,'user:',_currentUser&&_currentUser.email);
+  var ex=document.getElementById('compModal');if(ex)ex.remove();
+  if(_compTimer){clearInterval(_compTimer);_compTimer=null;}
+  _compCompetitors=[];
+
+  var ov=document.createElement('div');
+  ov.id='compModal';ov.className='modal-overlay';ov.style.zIndex='1700';
+  // Prevent closing when clicking the overlay background
+  ov.onclick=function(e){if(e.target===ov)e.stopPropagation();};
+
+  var modal=document.createElement('div');
+  modal.className='modal comp-panel';
+  modal.onclick=function(e){e.stopPropagation();}; // prevent clicks bubbling to overlay
+
+  // Header
+  var hdr=document.createElement('div');hdr.className='modal-hdr';
+  hdr.innerHTML='<h2>🔍 Competitive Analysis <span class="premium-badge">PRO</span></h2>';
+  var cx=document.createElement('button');cx.className='close';cx.innerHTML='✕';
+  cx.onclick=function(){if(_compTimer)clearInterval(_compTimer);ov.remove();};
+  hdr.appendChild(cx);
+  modal.appendChild(hdr);
+
+  var body=document.createElement('div');body.className='modal-body';
+
+  if(!isPremium()){
+    showPremiumGate(body);
+    modal.appendChild(body);ov.appendChild(modal);document.body.appendChild(ov);return;
+  }
+
+  // Tab bar
+  var tabBar=document.createElement('div');
+  tabBar.style.cssText='display:flex;gap:8px;margin-bottom:16px';
+  var tabNew=document.createElement('button');tabNew.className='comp-tab active';tabNew.textContent='New Analysis';
+  var tabHist=document.createElement('button');tabHist.className='comp-tab';tabHist.textContent='History';
+  var content=document.createElement('div');content.id='compContent';
+
+  tabNew.onclick=function(){tabNew.className='comp-tab active';tabHist.className='comp-tab';buildNewAnalysisView(content);};
+  tabHist.onclick=function(){tabHist.className='comp-tab active';tabNew.className='comp-tab';buildHistoryView(content);};
+  tabBar.appendChild(tabNew);tabBar.appendChild(tabHist);
+  body.appendChild(tabBar);
+  body.appendChild(content);
+  modal.appendChild(body);
+  ov.appendChild(modal);
+  document.body.appendChild(ov);
+
+  buildNewAnalysisView(content);
+}
+
+function buildNewAnalysisView(container){
+  container.innerHTML='';
+
+  // Competitor input
+  var secLabel=document.createElement('label');
+  secLabel.style.cssText='display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px';
+  secLabel.textContent='Competitors';
+  container.appendChild(secLabel);
+
+  var chipWrap=document.createElement('div');chipWrap.id='compChips';chipWrap.className='comp-input-row';
+  container.appendChild(chipWrap);
+
+  var inputRow=document.createElement('div');inputRow.style.cssText='display:flex;gap:8px;margin-bottom:18px';
+  var inp=document.createElement('input');inp.id='compNameInput';inp.placeholder='Enter competitor name...';
+  inp.style.cssText='flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--text);outline:none';
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();addCompetitorFromInput();}});
+  var addBtn=document.createElement('button');addBtn.className='btn accent';addBtn.style.cssText='padding:8px 16px;font-size:12px;border:1px solid var(--accent);color:var(--accent);background:#fff;border-radius:6px;font-weight:700;cursor:pointer';
+  addBtn.textContent='+ Add';addBtn.onclick=addCompetitorFromInput;
+  inputRow.appendChild(inp);inputRow.appendChild(addBtn);
+  container.appendChild(inputRow);
+
+  // Research areas
+  var areaLabel=document.createElement('label');
+  areaLabel.style.cssText='display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px';
+  areaLabel.textContent='Research Areas';
+  container.appendChild(areaLabel);
+
+  var selAllRow=document.createElement('div');selAllRow.style.cssText='display:flex;justify-content:flex-end;margin-bottom:6px';
+  var selAllBtn=document.createElement('button');selAllBtn.style.cssText='background:none;border:none;color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;padding:2px 6px';
+  selAllBtn.textContent='Select All';
+  selAllBtn.onclick=function(){
+    var cbs=container.querySelectorAll('.comp-checkbox-grid input[type="checkbox"]');
+    var allChecked=true;cbs.forEach(function(c){if(!c.checked)allChecked=false;});
+    cbs.forEach(function(c){c.checked=!allChecked;c.parentElement.className=c.checked?'checked':'';});
+    selAllBtn.textContent=allChecked?'Select All':'Deselect All';
+  };
+  selAllRow.appendChild(selAllBtn);container.appendChild(selAllRow);
+
+  var grid=document.createElement('div');grid.className='comp-checkbox-grid';
+  RESEARCH_AREAS.forEach(function(area){
+    var lbl=document.createElement('label');
+    var cb=document.createElement('input');cb.type='checkbox';cb.value=area.key;cb.checked=true;
+    lbl.className='checked';
+    cb.onchange=function(){lbl.className=cb.checked?'checked':'';};
+    var txt=document.createElement('span');txt.textContent=area.icon+' '+area.label;
+    lbl.appendChild(cb);lbl.appendChild(txt);
+    grid.appendChild(lbl);
+  });
+  container.appendChild(grid);
+
+  // Research engine selector
+  var hr2=document.createElement('hr');hr2.style.cssText='border:none;border-top:1px solid #e8edf7;margin:16px 0';
+  container.appendChild(hr2);
+
+  var engLabel=document.createElement('label');
+  engLabel.style.cssText='display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px';
+  engLabel.textContent='Research Engine';
+  container.appendChild(engLabel);
+
+  var engRow=document.createElement('div');engRow.style.cssText='display:flex;gap:10px;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap';
+
+  var engSel=document.createElement('select');engSel.id='compEngine';
+  engSel.style.cssText='padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--text);min-width:200px';
+  engSel.innerHTML='<option value="claude">Claude AI + Web Search (Default)</option><option value="gemini">Google Gemini + Search</option><option value="openai">OpenAI GPT-4o</option>';
+  // Restore saved selection
+  var savedEngine=localStorage.getItem('pmr_comp_engine');
+  if(savedEngine)engSel.value=savedEngine;
+
+  var keyWrap=document.createElement('div');keyWrap.id='compKeyWrap';
+  keyWrap.style.cssText='flex:1;min-width:200px;display:'+(engSel.value==='claude'?'none':'block');
+  var keyInp=document.createElement('input');keyInp.id='compApiKey';keyInp.type='password';
+  keyInp.placeholder='Paste your API key here...';
+  keyInp.style.cssText='width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text)';
+  // Restore saved key (stored locally, never sent to our servers except the Edge Function)
+  var savedKey=localStorage.getItem('pmr_comp_apikey_'+engSel.value);
+  if(savedKey)keyInp.value=savedKey;
+  var keyNote=document.createElement('div');
+  keyNote.style.cssText='font-size:10px;color:var(--muted);margin-top:4px';
+  keyNote.textContent='Your key is stored locally and only sent to the selected AI provider via our secure Edge Function.';
+  keyWrap.appendChild(keyInp);keyWrap.appendChild(keyNote);
+
+  engSel.onchange=function(){
+    localStorage.setItem('pmr_comp_engine',engSel.value);
+    keyWrap.style.display=engSel.value==='claude'?'none':'block';
+    var sk=localStorage.getItem('pmr_comp_apikey_'+engSel.value);
+    keyInp.value=sk||'';
+  };
+  keyInp.onchange=function(){localStorage.setItem('pmr_comp_apikey_'+engSel.value,keyInp.value);};
+
+  engRow.appendChild(engSel);engRow.appendChild(keyWrap);
+  container.appendChild(engRow);
+
+  // Analyze button
+  var analyzeRow=document.createElement('div');analyzeRow.style.cssText='text-align:center;margin-top:20px';
+  var analyzeBtn=document.createElement('button');
+  analyzeBtn.className='btn green';
+  analyzeBtn.style.cssText='padding:12px 36px;font-size:14px;border-radius:8px;font-weight:700';
+  analyzeBtn.innerHTML='🚀 Deep Research & Analyze';
+  analyzeBtn.onclick=function(){runCompetitiveAnalysis(container);};
+  analyzeRow.appendChild(analyzeBtn);
+  container.appendChild(analyzeRow);
+
+  renderCompetitorChips();
+}
+
+function addCompetitorFromInput(){
+  var inp=document.getElementById('compNameInput');
+  var name=inp.value.trim();
+  if(!name)return;
+  if(_compCompetitors.indexOf(name)===-1)_compCompetitors.push(name);
+  inp.value='';inp.focus();
+  renderCompetitorChips();
+}
+
+function removeCompetitor(name){
+  _compCompetitors=_compCompetitors.filter(function(c){return c!==name;});
+  renderCompetitorChips();
+}
+
+function renderCompetitorChips(){
+  var wrap=document.getElementById('compChips');if(!wrap)return;
+  wrap.innerHTML='';
+  if(_compCompetitors.length===0){
+    wrap.innerHTML='<span style="font-size:12px;color:var(--muted);font-style:italic">No competitors added yet</span>';return;
+  }
+  _compCompetitors.forEach(function(name){
+    var chip=document.createElement('span');chip.className='comp-chip';
+    chip.innerHTML=name+' <button onclick="removeCompetitor(\''+name.replace(/'/g,"\\'")+'\')">✕</button>';
+    wrap.appendChild(chip);
+  });
+}
+
+function getExternalApiConfig(){
+  var eng=document.getElementById('compEngine');
+  if(!eng||eng.value==='claude')return null;
+  var key=document.getElementById('compApiKey');
+  if(!key||!key.value.trim())return null;
+  return {provider:eng.value,key:key.value.trim()};
+}
+
+function getSelectedAreas(){
+  var areas=[];
+  var cbs=document.querySelectorAll('.comp-checkbox-grid input[type="checkbox"]:checked');
+  cbs.forEach(function(cb){areas.push(cb.value);});
+  return areas;
+}
+
+function getDemoResults(competitors,areas){
+  return {
+    overall_summary:'This competitive analysis examines '+competitors.join(', ')+' across '+areas.length+' key dimensions. The competitive landscape is dynamic with each player leveraging unique strengths. Key themes include accelerating digital transformation, strategic acquisitions to expand market share, and increasing focus on ESG compliance. Companies that can balance innovation speed with operational efficiency will be best positioned for growth.',
+    market_trends:['Accelerating shift toward IoT and connected device platforms','Strategic M&A activity increasing across the sector','ESG and sustainability becoming key differentiators for enterprise buyers','AI integration into hardware and software platforms becoming table stakes','Regional expansion into Africa and Southeast Asia intensifying'],
+    competitors:competitors.map(function(name,i){
+      var res={};
+      areas.forEach(function(a){
+        var info=RESEARCH_AREAS.find(function(r){return r.key===a;});
+        res[a]={summary:'Analysis of '+name+'\'s '+(info?info.label:a)+'. This company shows notable activity in this area with both strengths and areas for improvement.',details:['Strong investment in R&D with year-over-year growth','Partnerships with key industry players expanding reach','Customer acquisition costs trending downward','Market positioning evolving to address enterprise segment']};
+      });
+      return {
+        name:name,threat_score:Math.min(10,Math.max(3,6+i)),
+        research:res,
+        swot:{
+          strengths:['Strong brand recognition in core markets','Established distribution and partner network','Significant IP portfolio and R&D investment'],
+          weaknesses:['Slower product iteration cycle vs startups','Legacy technology debt in core platform','High customer concentration risk'],
+          opportunities:['Untapped growth in emerging African markets','AI/ML integration into product line','Strategic acquisition targets available'],
+          threats:['New entrants with disruptive pricing models','Regulatory changes in key markets','Supply chain vulnerabilities']
+        },
+        key_insights:['Recently appointed new CTO focused on platform modernization','Employee count grew 15% YoY, signaling aggressive expansion','Secured Series D funding / share price up 22% this quarter','Launching new IoT hardware platform targeting fleet management','Key partnership announced with major telco for distribution'],
+        recommendations:[
+          {title:'Launch competitive feature parity initiative',description:'Identify and close the top 5 feature gaps versus '+name+'\'s platform within the next quarter. Focus on the features most requested by shared enterprise prospects.',suggested_timeline_months:3},
+          {title:'Develop strategic partnership counter-strategy',description:'Target '+name+'\'s key partners with co-marketing proposals and integration incentives to weaken their distribution advantage.',suggested_timeline_months:6},
+          {title:'Accelerate regional expansion',description:'Fast-track market entry in regions where '+name+' has weak presence, particularly in underserved African markets with growing demand.',suggested_timeline_months:4}
+        ]
+      };
+    })
+  };
+}
+
+async function runCompetitiveAnalysis(container){
+  try{
+  if(_compCompetitors.length===0){alert('Add at least one competitor.');return;}
+  var areas=getSelectedAreas();
+  if(areas.length===0){alert('Select at least one research area.');return;}
+  if(_compCompetitors.length>5){alert('Maximum 5 competitors per analysis.');return;}
+
+  // Capture API config BEFORE destroying the DOM with loading screen
+  var extApi=getExternalApiConfig();
+  console.log('[CompAnalysis] Starting — competitors:',_compCompetitors,'areas:',areas,'engine:',extApi?extApi.provider:'claude');
+  showAnalysisLoading(container);
+
+  // Create analysis record in DB (non-blocking, ok if it fails)
+  var createRes;
+  try{
+    createRes=await _dbReq('/rest/v1/competitive_analyses','POST',{
+      user_id:_currentUser.id,
+      competitors:_compCompetitors,
+      research_areas:areas,
+      status:'pending'
+    });
+    console.log('[CompAnalysis] DB record created:',createRes);
+  }catch(dbErr){console.warn('[CompAnalysis] DB record failed (non-critical):',dbErr);}
+
+  var analysisId=(createRes&&createRes.ok&&createRes.data&&createRes.data[0])?createRes.data[0].id:null;
+
+  // Call Edge Function
+  var _callStart=Date.now();
+  try{
+    var r=await window.electronAPI.supaRequest({
+      path:'/functions/v1/competitive-analysis',
+      method:'POST',
+      body:{
+        analysis_id:analysisId,
+        competitors:_compCompetitors,
+        research_areas:areas,
+        external_api:extApi
+      },
+      token:_accessToken
+    });
+    var elapsed=Math.round((Date.now()-_callStart)/1000);
+    if(_compTimer){clearInterval(_compTimer);_compTimer=null;}
+
+    console.log('[CompAnalysis] Response:',r.status,JSON.stringify(r.data).substring(0,300));
+
+    if(r.data&&r.data.results){
+      renderAnalysisResults(container,r.data.results);
+      showToast('Analysis complete in '+elapsed+'s');
+    } else {
+      // Show the actual error from the Edge Function
+      var errMsg=r.data&&r.data.error?r.data.error:'Unknown error';
+      var hint='';
+      if(r.status===429) hint='\n\nSupabase Edge Function rate limit. Wait 30 seconds.';
+      else if(r.status===504) hint='\n\nRequest timed out. Try 1 competitor + 2-3 areas only.';
+      else if(errMsg.indexOf('rate_limit')>=0||errMsg.indexOf('Rate limit')>=0) hint='\n\nWait 60 seconds for the API rate limit to reset.';
+      showAnalysisError(container,errMsg+' (HTTP '+r.status+', '+elapsed+'s)'+hint);
+    }
+  }catch(e){
+    var elapsed=Math.round((Date.now()-_callStart)/1000);
+    if(_compTimer){clearInterval(_compTimer);_compTimer=null;}
+    showAnalysisError(container,'Network error after '+elapsed+'s: '+(e.message||'Connection failed'));
+  }
+  }catch(outerErr){
+    console.error('[CompAnalysis] FATAL ERROR:',outerErr);
+    if(_compTimer){clearInterval(_compTimer);_compTimer=null;}
+    try{showAnalysisError(container,'Unexpected error: '+(outerErr.message||outerErr));}catch(e2){alert('Analysis error: '+outerErr.message);}
+  }
+}
+
+function showAnalysisLoading(container){
+  container.innerHTML='';
+  var wrap=document.createElement('div');wrap.className='comp-loading';
+  wrap.innerHTML='<div class="spinner"></div>'+
+    '<p style="font-size:14px;font-weight:600;color:var(--navy)">Researching competitors...</p>'+
+    '<p style="font-size:12px;color:var(--muted)">AI is searching the web and analyzing data. This may take 30–60 seconds.</p>'+
+    '<p id="compElapsed" style="font-size:11px;color:var(--muted);margin-top:8px">0s elapsed</p>';
+  container.appendChild(wrap);
+  var start=Date.now();
+  _compTimer=setInterval(function(){
+    var el=document.getElementById('compElapsed');
+    if(el)el.textContent=Math.round((Date.now()-start)/1000)+'s elapsed';
+  },1000);
+}
+
+function showAnalysisError(container,msg){
+  container.innerHTML='';
+  var wrap=document.createElement('div');wrap.style.cssText='text-align:center;padding:40px';
+  wrap.innerHTML='<div style="font-size:36px;margin-bottom:12px">⚠️</div>'+
+    '<p style="font-size:14px;font-weight:600;color:#dc2626;margin-bottom:8px">Analysis Failed</p>'+
+    '<p style="font-size:12px;color:var(--muted);margin-bottom:20px;max-width:500px;margin-left:auto;margin-right:auto">'+msg+'</p>'+
+    '<div style="display:flex;gap:10px;justify-content:center">'+
+    '<button class="btn accent" style="padding:8px 20px;font-size:12px;border:1px solid var(--accent);color:var(--accent);background:#fff;border-radius:6px;cursor:pointer;font-weight:700" onclick="buildNewAnalysisView(document.getElementById(\'compContent\'))">← Back to Setup</button>'+
+    '<button class="btn" style="padding:8px 20px;font-size:12px;border:1px solid var(--border);color:var(--muted);background:#fff;border-radius:6px;cursor:pointer;font-weight:700" onclick="renderAnalysisResults(document.getElementById(\'compContent\'),getDemoResults(window._compCompetitors||[\'Competitor\'],getSelectedAreas()||[\'strengths_weaknesses\']))">Try Demo Mode</button>'+
+    '</div>';
+  container.appendChild(wrap);
+  window._compCompetitors=_compCompetitors;
+}
+
+function renderAnalysisResults(container,results){
+  try{
+  console.log('[CompAnalysis] Rendering results:',JSON.stringify(results).substring(0,200));
+  container.innerHTML='';
+  window._lastCompResults=results; // store for export
+
+  // Top bar: back + export buttons
+  var topBar=document.createElement('div');topBar.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px';
+  var backBtn=document.createElement('button');
+  backBtn.style.cssText='background:none;border:none;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;padding:0';
+  backBtn.textContent='← New Analysis';
+  backBtn.onclick=function(){buildNewAnalysisView(container);};
+  topBar.appendChild(backBtn);
+
+  var exportRow=document.createElement('div');exportRow.style.cssText='display:flex;gap:6px';
+  var expWord=document.createElement('button');expWord.className='comp-add-btn';expWord.style.cssText='border-style:solid;padding:5px 12px';
+  expWord.innerHTML='📄 Export Word';expWord.onclick=function(){exportCompToWord(results);};
+  var expExcel=document.createElement('button');expExcel.className='comp-add-btn';expExcel.style.cssText='border-style:solid;padding:5px 12px';
+  expExcel.innerHTML='📊 Export Excel';expExcel.onclick=function(){exportCompToExcel(results);};
+  exportRow.appendChild(expWord);exportRow.appendChild(expExcel);
+  topBar.appendChild(exportRow);
+  container.appendChild(topBar);
+
+  // Overall summary
+  if(results.overall_summary){
+    var sumCard=document.createElement('div');sumCard.className='comp-card';
+    sumCard.innerHTML='<div class="comp-card-hdr"><h3>Executive Summary</h3></div>';
+    var sumBody=document.createElement('div');sumBody.className='comp-card-body';
+    sumBody.innerHTML='<p style="font-size:13px;color:var(--text);line-height:1.6;white-space:pre-line">'+results.overall_summary+'</p>';
+    sumCard.appendChild(sumBody);container.appendChild(sumCard);
+  }
+
+  // Comparison matrix
+  if(results.comparison_matrix&&results.comparison_matrix.categories){
+    var mx=results.comparison_matrix;
+    var mxCard=document.createElement('div');mxCard.className='comp-card';
+    mxCard.innerHTML='<div class="comp-card-hdr" style="background:#0f766e"><h3>Comparison Matrix</h3></div>';
+    var mxBody=document.createElement('div');mxBody.className='comp-card-body';mxBody.style.overflowX='auto';
+    var tbl='<table style="width:100%;border-collapse:collapse;font-size:11px"><tr style="background:#f0f5ff"><th style="padding:8px;border:1px solid #e0e7f0;text-align:left">Category</th>';
+    var compNames=Object.keys(mx.data||{});
+    compNames.forEach(function(n){tbl+='<th style="padding:8px;border:1px solid #e0e7f0;text-align:center;font-weight:700;color:var(--navy)">'+n+'</th>';});
+    tbl+='</tr>';
+    mx.categories.forEach(function(cat,ci){
+      tbl+='<tr style="background:'+(ci%2?'#f8faff':'#fff')+'"><td style="padding:8px;border:1px solid #e0e7f0;font-weight:600">'+cat+'</td>';
+      compNames.forEach(function(n){
+        var val=(mx.data[n]&&mx.data[n][cat])||'—';
+        tbl+='<td style="padding:8px;border:1px solid #e0e7f0;text-align:center">'+val+'</td>';
+      });
+      tbl+='</tr>';
+    });
+    tbl+='</table>';
+    mxBody.innerHTML=tbl;mxCard.appendChild(mxBody);container.appendChild(mxCard);
+  }
+
+  // Market trends
+  if(results.market_trends&&results.market_trends.length){
+    var tCard=document.createElement('div');tCard.className='comp-card';
+    tCard.innerHTML='<div class="comp-card-hdr" style="background:#7c3aed"><h3>Market Trends</h3></div>';
+    var tBody=document.createElement('div');tBody.className='comp-card-body';
+    var tUl=document.createElement('ul');tUl.style.cssText='margin:0;padding-left:18px;font-size:12px;line-height:1.8;color:var(--text)';
+    results.market_trends.forEach(function(t){var li=document.createElement('li');li.textContent=t;tUl.appendChild(li);});
+    tBody.appendChild(tUl);tCard.appendChild(tBody);container.appendChild(tCard);
+  }
+
+  // Per-competitor cards
+  if(results.competitors&&results.competitors.length){
+    results.competitors.forEach(function(comp){
+      var card=document.createElement('div');card.className='comp-card';
+
+      // Header with threat score
+      var hdr=document.createElement('div');hdr.className='comp-card-hdr';
+      var h3=document.createElement('h3');h3.textContent=comp.name;
+      var badge=document.createElement('span');
+      var ts=comp.threat_score||0;
+      badge.className='comp-threat-badge '+(ts<=3?'comp-threat-low':ts<=6?'comp-threat-med':'comp-threat-high');
+      badge.textContent='Threat: '+ts+'/10';
+      hdr.appendChild(h3);hdr.appendChild(badge);
+      card.appendChild(hdr);
+
+      var body=document.createElement('div');body.className='comp-card-body';
+
+      // Company overview
+      if(comp.overview){
+        var ovSec=document.createElement('div');ovSec.className='comp-section';
+        var ovH4=document.createElement('h4');ovH4.textContent='🏢 Company Overview';ovSec.appendChild(ovH4);
+        var ovP=document.createElement('p');ovP.style.whiteSpace='pre-line';ovP.textContent=comp.overview;ovSec.appendChild(ovP);
+        body.appendChild(ovSec);
+      }
+
+      // Research sections with source links
+      if(comp.research){
+        Object.keys(comp.research).forEach(function(key){
+          var area=comp.research[key];
+          var areaInfo=RESEARCH_AREAS.find(function(a){return a.key===key;});
+          var sec=document.createElement('div');sec.className='comp-section';
+          var h4=document.createElement('h4');h4.textContent=(areaInfo?areaInfo.icon+' ':'')+
+            (areaInfo?areaInfo.label:key);
+          sec.appendChild(h4);
+          if(area.summary){var p=document.createElement('p');p.style.whiteSpace='pre-line';p.textContent=area.summary;sec.appendChild(p);}
+          if(area.details&&area.details.length){
+            var ul=document.createElement('ul');
+            area.details.forEach(function(d){
+              var li=document.createElement('li');
+              // Detect inline source URLs and make them clickable
+              var txt=d.replace(/(https?:\/\/[^\s,)]+)/g,'<a href="#" onclick="if(window.electronAPI&&window.electronAPI.openExternal)window.electronAPI.openExternal(\'$1\');else window.open(\'$1\');return false;" style="color:var(--accent);font-size:10px">source</a>');
+              li.innerHTML=txt;
+              ul.appendChild(li);
+            });
+            sec.appendChild(ul);
+          }
+          // Per-area source links
+          if(area.sources&&area.sources.length){
+            var srcDiv=document.createElement('div');srcDiv.style.cssText='margin-top:6px;display:flex;flex-wrap:wrap;gap:4px';
+            area.sources.forEach(function(url){
+              var a=document.createElement('a');a.href='#';a.style.cssText='font-size:9px;color:var(--accent);background:#e8f4fd;padding:2px 6px;border-radius:3px;text-decoration:none;display:inline-block';
+              try{a.textContent=new URL(url).hostname;}catch(e){a.textContent='source';}
+              a.onclick=function(ev){ev.preventDefault();if(window.electronAPI&&window.electronAPI.openExternal)window.electronAPI.openExternal(url);else window.open(url);};
+              srcDiv.appendChild(a);
+            });
+            sec.appendChild(srcDiv);
+          }
+          body.appendChild(sec);
+        });
+      }
+
+      // SWOT
+      if(comp.swot){
+        var swotSec=document.createElement('div');swotSec.className='comp-section';
+        var swotH4=document.createElement('h4');swotH4.textContent='SWOT Analysis';swotSec.appendChild(swotH4);
+        var swotGrid=document.createElement('div');swotGrid.className='comp-swot';
+        [{cls:'sw-s',title:'Strengths',data:comp.swot.strengths},
+         {cls:'sw-w',title:'Weaknesses',data:comp.swot.weaknesses},
+         {cls:'sw-o',title:'Opportunities',data:comp.swot.opportunities},
+         {cls:'sw-t',title:'Threats',data:comp.swot.threats}
+        ].forEach(function(c){
+          var cell=document.createElement('div');cell.className='comp-swot-cell '+c.cls;
+          var ch=document.createElement('h4');ch.textContent=c.title;cell.appendChild(ch);
+          if(c.data&&c.data.length){var ul=document.createElement('ul');c.data.forEach(function(item){var li=document.createElement('li');li.textContent=item;ul.appendChild(li);});cell.appendChild(ul);}
+          swotGrid.appendChild(cell);
+        });
+        swotSec.appendChild(swotGrid);body.appendChild(swotSec);
+      }
+
+      // Key insights
+      if(comp.key_insights&&comp.key_insights.length){
+        var insSec=document.createElement('div');insSec.className='comp-section';
+        var insH4=document.createElement('h4');insH4.textContent='💡 Key Insights';insSec.appendChild(insH4);
+        var insUl=document.createElement('ul');
+        comp.key_insights.forEach(function(ins){var li=document.createElement('li');li.textContent=ins;insUl.appendChild(li);});
+        insSec.appendChild(insUl);body.appendChild(insSec);
+      }
+
+      // Recommendations with "Add to Roadmap"
+      if(comp.recommendations&&comp.recommendations.length){
+        var recSec=document.createElement('div');recSec.className='comp-section';
+        var recH4=document.createElement('h4');recH4.textContent='🎯 Strategic Recommendations';recSec.appendChild(recH4);
+        comp.recommendations.forEach(function(rec){
+          var recDiv=document.createElement('div');recDiv.className='comp-rec';
+          var recBody=document.createElement('div');recBody.className='comp-rec-body';
+          var prioColor=rec.priority==='high'?'#dc2626':rec.priority==='medium'?'#d97706':'#16a34a';
+          recBody.innerHTML='<h5>'+rec.title+(rec.priority?' <span style="font-size:9px;background:'+prioColor+';color:#fff;padding:1px 5px;border-radius:3px;text-transform:uppercase;letter-spacing:.05em">'+rec.priority+'</span>':'')+'</h5><p>'+rec.description+
+            (rec.suggested_timeline_months?' <strong>(~'+rec.suggested_timeline_months+' months)</strong>':'')+
+            '</p>';
+          var addBtn=document.createElement('button');addBtn.className='comp-add-btn';
+          addBtn.textContent='+ Add to Roadmap';
+          addBtn.onclick=(function(r,n){return function(){addCompetitiveInitiative(r,n);addBtn.textContent='✓ Added';addBtn.style.color='#16a34a';addBtn.style.borderColor='#16a34a';addBtn.disabled=true;};})(rec,comp.name);
+          recDiv.appendChild(recBody);recDiv.appendChild(addBtn);
+          recSec.appendChild(recDiv);
+        });
+        body.appendChild(recSec);
+      }
+
+      card.appendChild(body);container.appendChild(card);
+    });
+  }
+
+  // Global sources section
+  if(results.sources&&results.sources.length){
+    var srcCard=document.createElement('div');srcCard.className='comp-card';
+    srcCard.innerHTML='<div class="comp-card-hdr" style="background:#475569"><h3>📚 Sources ('+results.sources.length+')</h3></div>';
+    var srcBody=document.createElement('div');srcBody.className='comp-card-body';
+    var srcList=document.createElement('div');srcList.style.cssText='display:flex;flex-wrap:wrap;gap:6px';
+    results.sources.forEach(function(url){
+      var a=document.createElement('a');a.href='#';
+      a.style.cssText='font-size:10px;color:var(--accent);background:#f0f5ff;padding:4px 8px;border-radius:4px;text-decoration:none;display:inline-block;border:1px solid #e0e7f0;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+      try{a.textContent=new URL(url).hostname+new URL(url).pathname.substring(0,40);}catch(e){a.textContent=url.substring(0,50);}
+      a.title=url;
+      a.onclick=function(ev){ev.preventDefault();if(window.electronAPI&&window.electronAPI.openExternal)window.electronAPI.openExternal(url);else window.open(url);};
+      srcList.appendChild(a);
+    });
+    srcBody.appendChild(srcList);srcCard.appendChild(srcBody);container.appendChild(srcCard);
+  }
+  }catch(renderErr){
+    console.error('[CompAnalysis] RENDER ERROR:',renderErr);
+    container.innerHTML='<div style="text-align:center;padding:30px;color:#dc2626"><p><strong>Error rendering results</strong></p><p style="font-size:11px;color:var(--muted)">'+renderErr.message+'</p><pre style="text-align:left;font-size:10px;max-height:200px;overflow:auto;background:#f8f8f8;padding:10px;border-radius:6px;margin-top:10px">'+JSON.stringify(results,null,2).substring(0,2000)+'</pre></div>';
+  }
+}
+
+// ── EXPORT: Word (.docx as HTML) ──
+function exportCompToWord(results){
+  var html='<html><head><meta charset="utf-8"><style>body{font-family:Calibri,sans-serif;font-size:11pt;color:#1a1464}h1{font-size:18pt;color:#1a1464}h2{font-size:14pt;color:#2563a8;border-bottom:1px solid #c5d5ea;padding-bottom:4px}h3{font-size:12pt;color:#7c3aed}table{border-collapse:collapse;width:100%}th,td{border:1px solid #c5d5ea;padding:6px 8px;font-size:10pt}th{background:#f0f5ff;font-weight:bold}.threat-high{color:#dc2626}.threat-med{color:#d97706}.threat-low{color:#16a34a}</style></head><body>';
+  html+='<h1>Competitive Analysis Report</h1>';
+  html+='<p style="color:#7b8db0">Generated: '+new Date().toLocaleDateString()+'</p>';
+  if(results.overall_summary) html+='<h2>Executive Summary</h2><p>'+results.overall_summary+'</p>';
+  if(results.comparison_matrix&&results.comparison_matrix.categories){
+    var mx=results.comparison_matrix;var cn=Object.keys(mx.data||{});
+    html+='<h2>Comparison Matrix</h2><table><tr><th>Category</th>';
+    cn.forEach(function(n){html+='<th>'+n+'</th>';});html+='</tr>';
+    mx.categories.forEach(function(cat){html+='<tr><td><b>'+cat+'</b></td>';cn.forEach(function(n){html+='<td>'+((mx.data[n]&&mx.data[n][cat])||'—')+'</td>';});html+='</tr>';});
+    html+='</table>';
+  }
+  if(results.market_trends&&results.market_trends.length){html+='<h2>Market Trends</h2><ul>';results.market_trends.forEach(function(t){html+='<li>'+t+'</li>';});html+='</ul>';}
+  if(results.competitors){results.competitors.forEach(function(comp){
+    var ts=comp.threat_score||0;var tc=ts<=3?'threat-low':ts<=6?'threat-med':'threat-high';
+    html+='<h2>'+comp.name+' <span class="'+tc+'">(Threat: '+ts+'/10)</span></h2>';
+    if(comp.overview)html+='<p>'+comp.overview+'</p>';
+    if(comp.research){Object.keys(comp.research).forEach(function(key){
+      var area=comp.research[key];var ai=RESEARCH_AREAS.find(function(a){return a.key===key;});
+      html+='<h3>'+(ai?ai.label:key)+'</h3>';
+      if(area.summary)html+='<p>'+area.summary+'</p>';
+      if(area.details){html+='<ul>';area.details.forEach(function(d){html+='<li>'+d+'</li>';});html+='</ul>';}
+    });}
+    if(comp.swot){
+      html+='<h3>SWOT Analysis</h3><table><tr><th style="background:#dcfce7">Strengths</th><th style="background:#fee2e2">Weaknesses</th></tr><tr><td><ul>';
+      (comp.swot.strengths||[]).forEach(function(s){html+='<li>'+s+'</li>';});html+='</ul></td><td><ul>';
+      (comp.swot.weaknesses||[]).forEach(function(w){html+='<li>'+w+'</li>';});html+='</ul></td></tr>';
+      html+='<tr><th style="background:#dbeafe">Opportunities</th><th style="background:#fef3c7">Threats</th></tr><tr><td><ul>';
+      (comp.swot.opportunities||[]).forEach(function(o){html+='<li>'+o+'</li>';});html+='</ul></td><td><ul>';
+      (comp.swot.threats||[]).forEach(function(t){html+='<li>'+t+'</li>';});html+='</ul></td></tr></table>';
+    }
+    if(comp.key_insights){html+='<h3>Key Insights</h3><ul>';comp.key_insights.forEach(function(ins){html+='<li>'+ins+'</li>';});html+='</ul>';}
+    if(comp.recommendations){html+='<h3>Strategic Recommendations</h3><table><tr><th>Action</th><th>Description</th><th>Timeline</th><th>Priority</th></tr>';
+      comp.recommendations.forEach(function(r){html+='<tr><td><b>'+r.title+'</b></td><td>'+r.description+'</td><td>~'+(r.suggested_timeline_months||3)+' months</td><td>'+(r.priority||'medium')+'</td></tr>';});
+      html+='</table>';}
+  });}
+  if(results.sources&&results.sources.length){html+='<h2>Sources</h2><ol>';results.sources.forEach(function(u){html+='<li><a href="'+u+'">'+u+'</a></li>';});html+='</ol>';}
+  html+='</body></html>';
+  window.electronAPI.saveFile({content:html,defaultName:'Competitive_Analysis_'+new Date().toISOString().slice(0,10)+'.doc',ext:'doc',label:'Word Document'});
+}
+
+// ── EXPORT: Excel (.xlsx via SheetJS) ──
+function exportCompToExcel(results){
+  if(typeof XLSX==='undefined'){alert('Excel export library not loaded');return;}
+  var wb=XLSX.utils.book_new();
+
+  // Sheet 1: Comparison Matrix
+  if(results.comparison_matrix&&results.comparison_matrix.categories){
+    var mx=results.comparison_matrix;var cn=Object.keys(mx.data||{});
+    var rows=[['Category'].concat(cn)];
+    mx.categories.forEach(function(cat){var row=[cat];cn.forEach(function(n){row.push((mx.data[n]&&mx.data[n][cat])||'');});rows.push(row);});
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Comparison Matrix');
+  }
+
+  // Sheet 2: SWOT per competitor
+  var swotRows=[['Competitor','Strengths','Weaknesses','Opportunities','Threats']];
+  (results.competitors||[]).forEach(function(c){
+    if(c.swot)swotRows.push([c.name,(c.swot.strengths||[]).join('\n'),(c.swot.weaknesses||[]).join('\n'),(c.swot.opportunities||[]).join('\n'),(c.swot.threats||[]).join('\n')]);
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(swotRows),'SWOT Analysis');
+
+  // Sheet 3: Threat Scores
+  var tsRows=[['Competitor','Threat Score','Key Insights']];
+  (results.competitors||[]).forEach(function(c){tsRows.push([c.name,c.threat_score||0,(c.key_insights||[]).join('\n')]);});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(tsRows),'Threat Scores');
+
+  // Sheet 4: Recommendations
+  var recRows=[['Competitor','Recommendation','Description','Timeline (months)','Priority']];
+  (results.competitors||[]).forEach(function(c){(c.recommendations||[]).forEach(function(r){recRows.push([c.name,r.title,r.description,r.suggested_timeline_months||3,r.priority||'medium']);});});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(recRows),'Recommendations');
+
+  // Sheet 5: Sources
+  if(results.sources&&results.sources.length){
+    var srcRows=[['#','Source URL']];results.sources.forEach(function(u,i){srcRows.push([i+1,u]);});
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(srcRows),'Sources');
+  }
+
+  var xlsData=XLSX.write(wb,{bookType:'xlsx',type:'binary'});
+  // Convert to base64 for saving
+  var buf='';for(var i=0;i<xlsData.length;i++)buf+=String.fromCharCode(xlsData.charCodeAt(i)&0xFF);
+  var b64=btoa(buf);
+  // Use Electron save dialog
+  var content=atob(b64);var arr=new Uint8Array(content.length);for(var j=0;j<content.length;j++)arr[j]=content.charCodeAt(j);
+  var blob=new Blob([arr],{type:'application/octet-stream'});
+  var reader=new FileReader();
+  reader.onload=function(){
+    var dataUrl=reader.result;
+    // Extract raw binary and save via electronAPI
+    window.electronAPI.saveFile({content:xlsData,defaultName:'Competitive_Analysis_'+new Date().toISOString().slice(0,10)+'.xlsx',ext:'xlsx',label:'Excel Spreadsheet'});
+  };
+  reader.readAsDataURL(blob);
+}
+
+function addCompetitiveInitiative(rec,competitorName){
+  // Find or create Competitive Initiatives section
+  var ciSec=sections.find(function(s){return s.name==='Competitive Initiatives';});
+  if(!ciSec){
+    ciSec={id:'sec_ci_'+Date.now(),name:'Competitive Initiatives',color:'#7c3aed'};
+    sections.push(ciSec);
+  }
+
+  // Calculate timeline from current month
+  var startIdx=getCurrentMonthIdx();
+  var duration=rec.suggested_timeline_months||3;
+  var endIdx=Math.min(startIdx+duration,NM);
+
+  var newRow={
+    id:'r_ci_'+Date.now()+'_'+Math.random().toString(36).substr(2,4),
+    sec:ciSec.id,
+    name:rec.title,
+    sub:'vs '+competitorName,
+    bars:[{s:startIdx,e:endIdx,c:'b',t:rec.title,desc:rec.description}],
+    deliverables:[],links:[],attachments:[],priorities:[]
+  };
+
+  // Insert after last row in this section
+  var lastIdx=-1;
+  rows.forEach(function(r,i){if(r.sec===ciSec.id)lastIdx=i;});
+  if(lastIdx>=0){rows.splice(lastIdx+1,0,newRow);}
+  else{rows.push(newRow);}
+
+  render();persistData();
+  showToast('Added to roadmap: '+rec.title);
+}
+
+function getCurrentMonthIdx(){
+  var now=new Date();
+  var names=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  var curName=names[now.getMonth()];
+  var curYear=now.getFullYear();
+  var col=0;
+  for(var qi=0;qi<quarters.length;qi++){
+    var q=quarters[qi];
+    for(var mi=0;mi<q.months.length;mi++){
+      var mName=q.months[mi];
+      var mYear=(q.q===4&&['JAN','FEB','MAR'].indexOf(mName)>=0)?q.year+1:q.year;
+      if(mName===curName&&mYear===curYear)return col;
+      col++;
+    }
+  }
+  return 0;
+}
+
+function showToast(msg){
+  var t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.3);transition:opacity .3s';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(function(){t.style.opacity='0';setTimeout(function(){t.remove();},300);},2500);
+}
+
+// ── History View ──
+async function buildHistoryView(container){
+  container.innerHTML='<div class="comp-loading"><div class="spinner"></div><p style="font-size:13px;color:var(--muted)">Loading past analyses...</p></div>';
+  var r;
+  try{
+    r=await _dbReq('/rest/v1/competitive_analyses?select=id,competitors,research_areas,status,created_at&user_id=eq.'+_currentUser.id+'&order=created_at.desc&limit=20');
+  }catch(e){}
+  container.innerHTML='';
+  if(!r||!r.ok||!r.data||r.data.length===0){
+    container.innerHTML='<p style="text-align:center;color:var(--muted);padding:30px;font-size:13px">No past analyses yet. Run your first competitive analysis above.</p>';
+    return;
+  }
+  r.data.forEach(function(a){
+    var item=document.createElement('div');item.className='comp-history-item';
+    var statusColor=a.status==='complete'?'#16a34a':a.status==='error'?'#dc2626':'#d97706';
+    item.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center">'+
+      '<div><strong style="font-size:13px;color:var(--navy)">'+a.competitors.join(', ')+'</strong>'+
+      '<div style="font-size:10px;color:var(--muted);margin-top:2px">'+a.research_areas.length+' areas researched</div></div>'+
+      '<div style="text-align:right"><div style="font-size:11px;color:var(--muted)">'+new Date(a.created_at).toLocaleDateString()+'</div>'+
+      '<div style="font-size:10px;font-weight:700;color:'+statusColor+'">'+a.status+'</div></div></div>';
+    item.onclick=function(){loadPastAnalysis(a.id,container);};
+    container.appendChild(item);
+  });
+}
+
+async function loadPastAnalysis(id,container){
+  container.innerHTML='<div class="comp-loading"><div class="spinner"></div><p style="font-size:13px;color:var(--muted)">Loading analysis...</p></div>';
+  var r;
+  try{
+    r=await _dbReq('/rest/v1/competitive_analyses?select=*&id=eq.'+id);
+  }catch(e){}
+  if(r&&r.ok&&r.data&&r.data.length>0&&r.data[0].results){
+    renderAnalysisResults(container,r.data[0].results);
+  } else {
+    container.innerHTML='<p style="color:#dc2626;text-align:center;padding:30px">Failed to load analysis.</p>';
+  }
 }
 
 
