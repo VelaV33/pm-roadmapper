@@ -270,6 +270,23 @@ ipcMain.handle('open-external', async (_event, url) => {
   }
 });
 
+// Save binary file (e.g. XLSX) from base64
+ipcMain.handle('save-binary-file', async (_event, { base64, defaultName, ext, label }) => {
+  const { filePath, canceled } = await dialog.showSaveDialog(win, {
+    title: 'Save ' + label,
+    defaultPath: defaultName,
+    filters: [{ name: label, extensions: [ext] }],
+  });
+  if (canceled || !filePath) return { ok: false };
+  try {
+    const buf = Buffer.from(base64, 'base64');
+    fs.writeFileSync(filePath, buf);
+    return { ok: true, path: filePath };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
+
 // ── App lifecycle ──────────────────────────────────────────────────────────────
 app.whenReady().then(() => {
   createWindow();

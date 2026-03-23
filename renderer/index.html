@@ -4373,12 +4373,8 @@ function openCompetitiveAnalysis(){
 
   var ov=document.createElement('div');
   ov.id='compModal';ov.className='modal-overlay';ov.style.zIndex='1700';
-  // Prevent closing when clicking the overlay background
-  ov.onclick=function(e){if(e.target===ov)e.stopPropagation();};
-
   var modal=document.createElement('div');
   modal.className='modal comp-panel';
-  modal.onclick=function(e){e.stopPropagation();}; // prevent clicks bubbling to overlay
 
   // Header
   var hdr=document.createElement('div');hdr.className='modal-hdr';
@@ -4483,25 +4479,58 @@ function buildNewAnalysisView(container){
   if(savedEngine)engSel.value=savedEngine;
 
   var keyWrap=document.createElement('div');keyWrap.id='compKeyWrap';
-  keyWrap.style.cssText='flex:1;min-width:200px;display:'+(engSel.value==='claude'?'none':'block');
+  keyWrap.style.cssText='flex:1;min-width:200px;display:block';
+
+  var keyRow=document.createElement('div');keyRow.style.cssText='display:flex;gap:6px;align-items:center';
   var keyInp=document.createElement('input');keyInp.id='compApiKey';keyInp.type='password';
   keyInp.placeholder='Paste your API key here...';
-  keyInp.style.cssText='width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text)';
-  // Restore saved key (stored locally, never sent to our servers except the Edge Function)
+  keyInp.style.cssText='flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text)';
+
+  var saveKeyBtn=document.createElement('button');
+  saveKeyBtn.style.cssText='padding:8px 14px;border:1px solid var(--accent);background:#fff;color:var(--accent);border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap';
+  saveKeyBtn.textContent='Save Key';
+  saveKeyBtn.onclick=function(){
+    localStorage.setItem('pmr_comp_apikey_'+engSel.value,keyInp.value);
+    saveKeyBtn.textContent='✓ Saved';saveKeyBtn.style.color='#16a34a';saveKeyBtn.style.borderColor='#16a34a';
+    setTimeout(function(){saveKeyBtn.textContent='Save Key';saveKeyBtn.style.color='var(--accent)';saveKeyBtn.style.borderColor='var(--accent)';},2000);
+  };
+
+  var toggleBtn=document.createElement('button');
+  toggleBtn.style.cssText='padding:8px 10px;border:1px solid var(--border);background:#fff;border-radius:6px;font-size:13px;cursor:pointer';
+  toggleBtn.textContent='👁';toggleBtn.title='Show/hide key';
+  toggleBtn.onclick=function(){keyInp.type=keyInp.type==='password'?'text':'password';};
+
+  keyRow.appendChild(keyInp);keyRow.appendChild(saveKeyBtn);keyRow.appendChild(toggleBtn);
+
+  // Restore saved key
   var savedKey=localStorage.getItem('pmr_comp_apikey_'+engSel.value);
   if(savedKey)keyInp.value=savedKey;
+
   var keyNote=document.createElement('div');
   keyNote.style.cssText='font-size:10px;color:var(--muted);margin-top:4px';
-  keyNote.textContent='Your key is stored locally and only sent to the selected AI provider via our secure Edge Function.';
-  keyWrap.appendChild(keyInp);keyWrap.appendChild(keyNote);
+  keyNote.textContent='Your key is saved locally on your device and only sent to the selected AI provider.';
+
+  // Show saved keys status
+  var keysStatus=document.createElement('div');keysStatus.style.cssText='font-size:10px;margin-top:6px;display:flex;gap:10px';
+  ['claude','gemini','openai'].forEach(function(p){
+    var hasKey=!!localStorage.getItem('pmr_comp_apikey_'+p);
+    var lbl=p==='claude'?'Claude':p==='gemini'?'Gemini':p==='openai'?'OpenAI':'';
+    var span=document.createElement('span');
+    span.style.cssText='color:'+(hasKey?'#16a34a':'#dc2626')+';font-weight:600';
+    span.textContent=(hasKey?'✓ ':'✗ ')+lbl;
+    keysStatus.appendChild(span);
+  });
+
+  keyWrap.appendChild(keyRow);keyWrap.appendChild(keyNote);keyWrap.appendChild(keysStatus);
 
   engSel.onchange=function(){
     localStorage.setItem('pmr_comp_engine',engSel.value);
-    keyWrap.style.display=engSel.value==='claude'?'none':'block';
+    keyWrap.style.display='block';
     var sk=localStorage.getItem('pmr_comp_apikey_'+engSel.value);
     keyInp.value=sk||'';
   };
-  keyInp.onchange=function(){localStorage.setItem('pmr_comp_apikey_'+engSel.value,keyInp.value);};
+  // Also auto-save on blur
+  keyInp.onblur=function(){if(keyInp.value.trim())localStorage.setItem('pmr_comp_apikey_'+engSel.value,keyInp.value);};
 
   engRow.appendChild(engSel);engRow.appendChild(keyWrap);
   container.appendChild(engRow);
@@ -4548,10 +4577,17 @@ function renderCompetitorChips(){
 
 function getExternalApiConfig(){
   var eng=document.getElementById('compEngine');
-  if(!eng||eng.value==='claude')return null;
+  if(!eng) return null;
+  // For Claude, check if user has their own key saved
+  if(eng.value==='claude'){
+    var ck=localStorage.getItem('pmr_comp_apikey_claude');
+    if(ck&&ck.trim()) return {provider:'claude_user',key:ck.trim()};
+    return null; // use server-side key
+  }
   var key=document.getElementById('compApiKey');
-  if(!key||!key.value.trim())return null;
-  return {provider:eng.value,key:key.value.trim()};
+  var keyVal=key&&key.value.trim()?key.value.trim():localStorage.getItem('pmr_comp_apikey_'+eng.value);
+  if(!keyVal||!keyVal.trim()) return null;
+  return {provider:eng.value,key:keyVal.trim()};
 }
 
 function getSelectedAreas(){
@@ -4708,7 +4744,9 @@ function renderAnalysisResults(container,results){
   expWord.innerHTML='📄 Export Word';expWord.onclick=function(){exportCompToWord(results);};
   var expExcel=document.createElement('button');expExcel.className='comp-add-btn';expExcel.style.cssText='border-style:solid;padding:5px 12px';
   expExcel.innerHTML='📊 Export Excel';expExcel.onclick=function(){exportCompToExcel(results);};
-  exportRow.appendChild(expWord);exportRow.appendChild(expExcel);
+  var expSave=document.createElement('button');expSave.className='comp-add-btn';expSave.style.cssText='border-style:solid;padding:5px 12px';
+  expSave.innerHTML='💾 Save Analysis';expSave.onclick=function(){saveAnalysisLocally(results);expSave.innerHTML='✓ Saved';expSave.style.color='#16a34a';expSave.style.borderColor='#16a34a';};
+  exportRow.appendChild(expWord);exportRow.appendChild(expExcel);exportRow.appendChild(expSave);
   topBar.appendChild(exportRow);
   container.appendChild(topBar);
 
@@ -4758,14 +4796,10 @@ function renderAnalysisResults(container,results){
     results.competitors.forEach(function(comp){
       var card=document.createElement('div');card.className='comp-card';
 
-      // Header with threat score
+      // Header
       var hdr=document.createElement('div');hdr.className='comp-card-hdr';
       var h3=document.createElement('h3');h3.textContent=comp.name;
-      var badge=document.createElement('span');
-      var ts=comp.threat_score||0;
-      badge.className='comp-threat-badge '+(ts<=3?'comp-threat-low':ts<=6?'comp-threat-med':'comp-threat-high');
-      badge.textContent='Threat: '+ts+'/10';
-      hdr.appendChild(h3);hdr.appendChild(badge);
+      hdr.appendChild(h3);
       card.appendChild(hdr);
 
       var body=document.createElement('div');body.className='comp-card-body';
@@ -4792,23 +4826,31 @@ function renderAnalysisResults(container,results){
             var ul=document.createElement('ul');
             area.details.forEach(function(d){
               var li=document.createElement('li');
-              // Detect inline source URLs and make them clickable
-              var txt=d.replace(/(https?:\/\/[^\s,)]+)/g,'<a href="#" onclick="if(window.electronAPI&&window.electronAPI.openExternal)window.electronAPI.openExternal(\'$1\');else window.open(\'$1\');return false;" style="color:var(--accent);font-size:10px">source</a>');
-              li.innerHTML=txt;
-              ul.appendChild(li);
+              // Make inline URLs clickable — show domain name, filter Google cache URLs
+              var txt=d.replace(/(https?:\/\/[^\s,)"]+)/g,function(url){
+                if(url.indexOf('vertexaisearch.cloud.google.com')>=0||url.indexOf('webcache.googleusercontent.com')>=0) return '';
+                try{var host=new URL(url).hostname.replace('www.','');return ' <a href="#" onclick="if(window.electronAPI&&window.electronAPI.openExternal)window.electronAPI.openExternal(\''+url.replace(/'/g,'')+'\');return false;" style="color:var(--accent);font-size:10px;background:#e8f4fd;padding:1px 4px;border-radius:3px;text-decoration:none">'+host+'</a>';}
+                catch(e){return url;}
+              });
+              // Clean up "— source:" prefix if URL was removed
+              txt=txt.replace(/\s*—?\s*source:\s*$/i,'').replace(/\s*—?\s*$/,'');
+              if(txt.trim()) { li.innerHTML=txt; ul.appendChild(li); }
             });
             sec.appendChild(ul);
           }
           // Per-area source links
           if(area.sources&&area.sources.length){
-            var srcDiv=document.createElement('div');srcDiv.style.cssText='margin-top:6px;display:flex;flex-wrap:wrap;gap:4px';
-            area.sources.forEach(function(url){
-              var a=document.createElement('a');a.href='#';a.style.cssText='font-size:9px;color:var(--accent);background:#e8f4fd;padding:2px 6px;border-radius:3px;text-decoration:none;display:inline-block';
-              try{a.textContent=new URL(url).hostname;}catch(e){a.textContent='source';}
-              a.onclick=function(ev){ev.preventDefault();if(window.electronAPI&&window.electronAPI.openExternal)window.electronAPI.openExternal(url);else window.open(url);};
-              srcDiv.appendChild(a);
-            });
-            sec.appendChild(srcDiv);
+            var filteredSrc=area.sources.filter(function(u){return u.indexOf('vertexaisearch.cloud.google.com')<0&&u.indexOf('webcache.googleusercontent.com')<0&&u.indexOf('google.com/search')<0;});
+            if(filteredSrc.length){
+              var srcDiv=document.createElement('div');srcDiv.style.cssText='margin-top:6px;display:flex;flex-wrap:wrap;gap:4px';
+              filteredSrc.forEach(function(url){
+                var a=document.createElement('a');a.href='#';a.style.cssText='font-size:9px;color:var(--accent);background:#e8f4fd;padding:2px 6px;border-radius:3px;text-decoration:none;display:inline-block';
+                try{a.textContent=new URL(url).hostname.replace('www.','');}catch(e){a.textContent='source';}
+                a.onclick=function(ev){ev.preventDefault();if(window.electronAPI&&window.electronAPI.openExternal)window.electronAPI.openExternal(url);else window.open(url);};
+                srcDiv.appendChild(a);
+              });
+              sec.appendChild(srcDiv);
+            }
           }
           body.appendChild(sec);
         });
@@ -4866,15 +4908,16 @@ function renderAnalysisResults(container,results){
   }
 
   // Global sources section
-  if(results.sources&&results.sources.length){
+  var globalSrc=(results.sources||[]).filter(function(u){return u.indexOf('vertexaisearch.cloud.google.com')<0&&u.indexOf('webcache.googleusercontent.com')<0&&u.indexOf('google.com/search')<0;});
+  if(globalSrc.length){
     var srcCard=document.createElement('div');srcCard.className='comp-card';
-    srcCard.innerHTML='<div class="comp-card-hdr" style="background:#475569"><h3>📚 Sources ('+results.sources.length+')</h3></div>';
+    srcCard.innerHTML='<div class="comp-card-hdr" style="background:#475569"><h3>📚 Sources ('+globalSrc.length+')</h3></div>';
     var srcBody=document.createElement('div');srcBody.className='comp-card-body';
     var srcList=document.createElement('div');srcList.style.cssText='display:flex;flex-wrap:wrap;gap:6px';
-    results.sources.forEach(function(url){
+    globalSrc.forEach(function(url){
       var a=document.createElement('a');a.href='#';
-      a.style.cssText='font-size:10px;color:var(--accent);background:#f0f5ff;padding:4px 8px;border-radius:4px;text-decoration:none;display:inline-block;border:1px solid #e0e7f0;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
-      try{a.textContent=new URL(url).hostname+new URL(url).pathname.substring(0,40);}catch(e){a.textContent=url.substring(0,50);}
+      a.style.cssText='font-size:10px;color:var(--accent);background:#f0f5ff;padding:4px 8px;border-radius:4px;text-decoration:none;display:inline-block;border:1px solid #e0e7f0;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+      try{a.textContent=new URL(url).hostname.replace('www.','')+new URL(url).pathname.substring(0,50);}catch(e){a.textContent=url.substring(0,60);}
       a.title=url;
       a.onclick=function(ev){ev.preventDefault();if(window.electronAPI&&window.electronAPI.openExternal)window.electronAPI.openExternal(url);else window.open(url);};
       srcList.appendChild(a);
@@ -4902,8 +4945,7 @@ function exportCompToWord(results){
   }
   if(results.market_trends&&results.market_trends.length){html+='<h2>Market Trends</h2><ul>';results.market_trends.forEach(function(t){html+='<li>'+t+'</li>';});html+='</ul>';}
   if(results.competitors){results.competitors.forEach(function(comp){
-    var ts=comp.threat_score||0;var tc=ts<=3?'threat-low':ts<=6?'threat-med':'threat-high';
-    html+='<h2>'+comp.name+' <span class="'+tc+'">(Threat: '+ts+'/10)</span></h2>';
+    html+='<h2>'+comp.name+'</h2>';
     if(comp.overview)html+='<p>'+comp.overview+'</p>';
     if(comp.research){Object.keys(comp.research).forEach(function(key){
       var area=comp.research[key];var ai=RESEARCH_AREAS.find(function(a){return a.key===key;});
@@ -4949,36 +4991,44 @@ function exportCompToExcel(results){
   });
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(swotRows),'SWOT Analysis');
 
-  // Sheet 3: Threat Scores
-  var tsRows=[['Competitor','Threat Score','Key Insights']];
-  (results.competitors||[]).forEach(function(c){tsRows.push([c.name,c.threat_score||0,(c.key_insights||[]).join('\n')]);});
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(tsRows),'Threat Scores');
+  // Sheet 3: Key Insights
+  var insRows=[['Competitor','Key Insights']];
+  (results.competitors||[]).forEach(function(c){insRows.push([c.name,(c.key_insights||[]).join('\n')]);});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(insRows),'Key Insights');
 
-  // Sheet 4: Recommendations
+  // Sheet 4: Detailed Research per area
+  (results.competitors||[]).forEach(function(c){
+    if(!c.research) return;
+    var resRows=[['Research Area','Details']];
+    Object.keys(c.research).forEach(function(key){
+      var area=c.research[key];
+      var ai=RESEARCH_AREAS.find(function(a){return a.key===key;});
+      resRows.push([(ai?ai.label:key),(area.details||[]).join('\n')]);
+    });
+    var sheetName=(c.name||'Competitor').substring(0,28);
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(resRows),sheetName);
+  });
+
+  // Sheet: Recommendations
   var recRows=[['Competitor','Recommendation','Description','Timeline (months)','Priority']];
   (results.competitors||[]).forEach(function(c){(c.recommendations||[]).forEach(function(r){recRows.push([c.name,r.title,r.description,r.suggested_timeline_months||3,r.priority||'medium']);});});
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(recRows),'Recommendations');
 
-  // Sheet 5: Sources
-  if(results.sources&&results.sources.length){
-    var srcRows=[['#','Source URL']];results.sources.forEach(function(u,i){srcRows.push([i+1,u]);});
+  // Sheet: Sources
+  var allSrc=(results.sources||[]).filter(function(u){return u.indexOf('vertexaisearch')<0&&u.indexOf('webcache.google')<0;});
+  if(allSrc.length){
+    var srcRows=[['#','Source URL']];allSrc.forEach(function(u,i){srcRows.push([i+1,u]);});
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(srcRows),'Sources');
   }
 
-  var xlsData=XLSX.write(wb,{bookType:'xlsx',type:'binary'});
-  // Convert to base64 for saving
-  var buf='';for(var i=0;i<xlsData.length;i++)buf+=String.fromCharCode(xlsData.charCodeAt(i)&0xFF);
-  var b64=btoa(buf);
-  // Use Electron save dialog
-  var content=atob(b64);var arr=new Uint8Array(content.length);for(var j=0;j<content.length;j++)arr[j]=content.charCodeAt(j);
-  var blob=new Blob([arr],{type:'application/octet-stream'});
-  var reader=new FileReader();
-  reader.onload=function(){
-    var dataUrl=reader.result;
-    // Extract raw binary and save via electronAPI
-    window.electronAPI.saveFile({content:xlsData,defaultName:'Competitive_Analysis_'+new Date().toISOString().slice(0,10)+'.xlsx',ext:'xlsx',label:'Excel Spreadsheet'});
-  };
-  reader.readAsDataURL(blob);
+  // Write as base64 and save via IPC
+  var b64=XLSX.write(wb,{bookType:'xlsx',type:'base64'});
+  window.electronAPI.saveBinaryFile({
+    base64:b64,
+    defaultName:'Competitive_Analysis_'+new Date().toISOString().slice(0,10)+'.xlsx',
+    ext:'xlsx',
+    label:'Excel Spreadsheet'
+  });
 }
 
 function addCompetitiveInitiative(rec,competitorName){
@@ -5039,29 +5089,90 @@ function showToast(msg){
   setTimeout(function(){t.style.opacity='0';setTimeout(function(){t.remove();},300);},2500);
 }
 
+// ── Save/Load Analysis Locally ──
+function saveAnalysisLocally(results){
+  var saved=JSON.parse(localStorage.getItem('pmr_saved_analyses')||'[]');
+  var entry={
+    id:'ca_'+Date.now(),
+    competitors:(results.competitors||[]).map(function(c){return c.name;}),
+    date:new Date().toISOString(),
+    results:results
+  };
+  saved.unshift(entry);
+  if(saved.length>20) saved=saved.slice(0,20); // keep last 20
+  localStorage.setItem('pmr_saved_analyses',JSON.stringify(saved));
+  showToast('Analysis saved locally');
+}
+
+function getSavedAnalyses(){
+  return JSON.parse(localStorage.getItem('pmr_saved_analyses')||'[]');
+}
+
 // ── History View ──
 async function buildHistoryView(container){
-  container.innerHTML='<div class="comp-loading"><div class="spinner"></div><p style="font-size:13px;color:var(--muted)">Loading past analyses...</p></div>';
+  container.innerHTML='';
+
+  // Locally saved analyses
+  var saved=getSavedAnalyses();
+  if(saved.length){
+    var localLabel=document.createElement('label');
+    localLabel.style.cssText='display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px';
+    localLabel.textContent='Saved Analyses ('+saved.length+')';
+    container.appendChild(localLabel);
+
+    saved.forEach(function(a){
+      var item=document.createElement('div');item.className='comp-history-item';
+      item.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center">'+
+        '<div><strong style="font-size:13px;color:var(--navy)">'+a.competitors.join(', ')+'</strong>'+
+        '<div style="font-size:10px;color:var(--muted);margin-top:2px">Saved locally</div></div>'+
+        '<div style="text-align:right;display:flex;align-items:center;gap:8px">'+
+        '<div><div style="font-size:11px;color:var(--muted)">'+new Date(a.date).toLocaleDateString()+'</div>'+
+        '<div style="font-size:10px;font-weight:700;color:#16a34a">saved</div></div>'+
+        '<button onclick="event.stopPropagation();loadSavedCompetitors(\''+a.id+'\')" style="background:var(--accent);color:#fff;border:none;border-radius:4px;padding:4px 8px;font-size:10px;font-weight:700;cursor:pointer" title="Load these competitors into a new analysis">Re-analyze</button>'+
+        '</div></div>';
+      item.onclick=function(){renderAnalysisResults(container,a.results);};
+      container.appendChild(item);
+    });
+  }
+
+  // Cloud analyses
   var r;
   try{
     r=await _dbReq('/rest/v1/competitive_analyses?select=id,competitors,research_areas,status,created_at&user_id=eq.'+_currentUser.id+'&order=created_at.desc&limit=20');
   }catch(e){}
-  container.innerHTML='';
-  if(!r||!r.ok||!r.data||r.data.length===0){
-    container.innerHTML='<p style="text-align:center;color:var(--muted);padding:30px;font-size:13px">No past analyses yet. Run your first competitive analysis above.</p>';
-    return;
+
+  if(r&&r.ok&&r.data&&r.data.length>0){
+    var cloudLabel=document.createElement('label');
+    cloudLabel.style.cssText='display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 8px';
+    cloudLabel.textContent='Cloud History';
+    container.appendChild(cloudLabel);
+
+    r.data.forEach(function(a){
+      var item=document.createElement('div');item.className='comp-history-item';
+      var statusColor=a.status==='complete'?'#16a34a':a.status==='error'?'#dc2626':'#d97706';
+      item.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center">'+
+        '<div><strong style="font-size:13px;color:var(--navy)">'+(a.competitors||[]).join(', ')+'</strong>'+
+        '<div style="font-size:10px;color:var(--muted);margin-top:2px">'+(a.research_areas||[]).length+' areas</div></div>'+
+        '<div style="text-align:right"><div style="font-size:11px;color:var(--muted)">'+new Date(a.created_at).toLocaleDateString()+'</div>'+
+        '<div style="font-size:10px;font-weight:700;color:'+statusColor+'">'+a.status+'</div></div></div>';
+      item.onclick=function(){loadPastAnalysis(a.id,container);};
+      container.appendChild(item);
+    });
   }
-  r.data.forEach(function(a){
-    var item=document.createElement('div');item.className='comp-history-item';
-    var statusColor=a.status==='complete'?'#16a34a':a.status==='error'?'#dc2626':'#d97706';
-    item.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center">'+
-      '<div><strong style="font-size:13px;color:var(--navy)">'+a.competitors.join(', ')+'</strong>'+
-      '<div style="font-size:10px;color:var(--muted);margin-top:2px">'+a.research_areas.length+' areas researched</div></div>'+
-      '<div style="text-align:right"><div style="font-size:11px;color:var(--muted)">'+new Date(a.created_at).toLocaleDateString()+'</div>'+
-      '<div style="font-size:10px;font-weight:700;color:'+statusColor+'">'+a.status+'</div></div></div>';
-    item.onclick=function(){loadPastAnalysis(a.id,container);};
-    container.appendChild(item);
-  });
+
+  if(!saved.length&&(!r||!r.ok||!r.data||r.data.length===0)){
+    container.innerHTML='<p style="text-align:center;color:var(--muted);padding:30px;font-size:13px">No past analyses yet. Run your first competitive analysis and click "Save Analysis" to store it here.</p>';
+  }
+}
+
+function loadSavedCompetitors(savedId){
+  var saved=getSavedAnalyses();
+  var entry=saved.find(function(s){return s.id===savedId;});
+  if(!entry)return;
+  _compCompetitors=entry.competitors.slice();
+  var content=document.getElementById('compContent');
+  if(content) buildNewAnalysisView(content);
+  showToast('Loaded '+_compCompetitors.length+' competitors — modify and re-analyze');
 }
 
 async function loadPastAnalysis(id,container){

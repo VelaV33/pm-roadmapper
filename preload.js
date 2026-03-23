@@ -13,4 +13,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   pickAttachments: ()          => ipcRenderer.invoke('pick-attachments'),
   openAttachment:  (name)      => ipcRenderer.invoke('open-attachment', name),
   openExternal:    (url)       => ipcRenderer.invoke('open-external', url),
+  saveBinaryFile:  (opts)      => ipcRenderer.invoke('save-binary-file', opts),
 });
