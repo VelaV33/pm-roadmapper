@@ -59,7 +59,9 @@ button,input,select,textarea{font-family:'Barlow',sans-serif}
 .swatch{width:28px;height:11px;border-radius:4px;flex-shrink:0}
 
 /* ── TABLE WRAP ── */
-.table-wrap{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:auto;box-shadow:0 2px 12px rgba(26,20,100,.07)}
+.table-wrap{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:auto;box-shadow:0 2px 12px rgba(26,20,100,.07);position:relative}
+.today-line{position:absolute;top:0;bottom:0;width:2px;background:#dc2626;z-index:90;pointer-events:none}
+.today-line::before{content:'Today';position:absolute;top:0;left:50%;transform:translateX(-50%);background:#dc2626;color:#fff;font-size:8px;font-weight:700;padding:1px 5px;border-radius:0 0 4px 4px;white-space:nowrap;letter-spacing:.04em;text-transform:uppercase}
 table{border-collapse:collapse;table-layout:fixed;min-width:1100px;width:100%}
 
 /* headers */
@@ -1126,6 +1128,51 @@ function editQuarterLabel(qi, el){
   inp.onkeydown=function(e){if(e.key==='Enter')inp.blur();if(e.key==='Escape'){inp.value=cur;inp.blur();}};
 }
 
+// ── TODAY LINE ───────────────────────────────────────────────────────────────
+var MONTH_NAME_MAP={JAN:0,FEB:1,MAR:2,APR:3,MAY:4,JUN:5,JUL:6,AUG:7,SEP:8,OCT:9,NOV:10,DEC:11};
+function drawTodayLine(){
+  var wrap=document.querySelector('.table-wrap');
+  if(!wrap) return;
+  var old=wrap.querySelector('.today-line');
+  if(old) old.remove();
+
+  var now=new Date();
+  var todayYear=now.getFullYear();
+  var todayMonth=now.getMonth(); // 0-based
+  var todayDay=now.getDate();
+  var todayMonthName=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][todayMonth];
+
+  // Find today's month index in the timeline
+  var targetIdx=-1;
+  var col=0;
+  for(var qi=0;qi<quarters.length;qi++){
+    var q=quarters[qi];
+    for(var mi=0;mi<q.months.length;mi++){
+      var mName=q.months[mi];
+      var mYear=(q.q===4 && ['JAN','FEB','MAR'].indexOf(mName)>=0) ? q.year+1 : q.year;
+      if(mName===todayMonthName && mYear===todayYear){ targetIdx=col; break; }
+      col++;
+    }
+    if(targetIdx>=0) break;
+  }
+  if(targetIdx<0) return; // today is outside the timeline range
+
+  // Calculate fractional position within the month
+  var dim=DAYS_IN_MONTH[todayMonthName]||30;
+  var frac=(todayDay-1)/dim; // 0..~1
+
+  // Position: label column (220px) + targetIdx * 42px + frac * 42px
+  var table=document.getElementById('roadmap');
+  if(!table) return;
+  var labelColWidth=table.querySelector('.td-lbl, .th-lbl');
+  var lcw=labelColWidth?labelColWidth.offsetWidth:220;
+  var px=lcw + targetIdx*42 + frac*42;
+
+  var line=document.createElement('div');
+  line.className='today-line';
+  line.style.left=Math.round(px)+'px';
+  wrap.appendChild(line);
+}
 
 // ── DAY-PRECISION HELPERS ────────────────────────────────────────────────────
 var DAYS_IN_MONTH={JAN:31,FEB:28,MAR:31,APR:30,MAY:31,JUN:30,JUL:31,AUG:31,SEP:30,OCT:31,NOV:30,DEC:31};
@@ -1320,6 +1367,7 @@ function render(){
 
     ri++;
   });
+  drawTodayLine();
 }
 
 // ── MODAL HELPERS ─────────────────────────────────────────────────────────────
