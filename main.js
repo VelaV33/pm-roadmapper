@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -11,12 +11,14 @@ function getDataPath() {
 let win;
 
 function createWindow() {
+  const iconPath = path.join(__dirname, 'assets', process.platform === 'win32' ? 'icon.ico' : 'icon.png');
   win = new BrowserWindow({
     width: 1440,
     height: 900,
     minWidth: 900,
     minHeight: 600,
-    title: 'Netstar HW Roadmap',
+    title: 'PM Roadmapper',
+    icon: iconPath,
     backgroundColor: '#f4f7fc',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -88,29 +90,38 @@ function createWindow() {
 
 // ── IPC Handlers ───────────────────────────────────────────────────────────────
 
-// Load data from disk
+// Load data — tries main file, then .bak, then falls back to built-in defaults
 ipcMain.handle('load-data', () => {
   const filePath = getDataPath();
-  try {
-    if (fs.existsSync(filePath)) {
-      const raw = fs.readFileSync(filePath, 'utf-8');
-      return { ok: true, data: JSON.parse(raw) };
-    }
-    return { ok: false }; // No saved data — use defaults
-  } catch (e) {
-    console.error('load-data error:', e);
-    return { ok: false };
-  }
+  const backupPath = filePath + '.bak';
+  const tryLoad = (p) => {
+    try {
+      if (!fs.existsSync(p)) return null;
+      const raw = fs.readFileSync(p, 'utf-8').trim();
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      if (!data || (!data.rows && !data.sections)) return null;
+      return data;
+    } catch (e) { console.error('load error', p, e.message); return null; }
+  };
+  const data = tryLoad(filePath) || tryLoad(backupPath);
+  return data ? { ok: true, data } : { ok: false };
 });
 
-// Save data to disk
+// Save data — atomic write (tmp then rename) + .bak rotation
 ipcMain.handle('save-data', (_event, payload) => {
   const filePath = getDataPath();
+  const tmpPath  = filePath + '.tmp';
+  const bakPath  = filePath + '.bak';
   try {
-    fs.writeFileSync(filePath, JSON.stringify(payload, null, 2), 'utf-8');
+    const json = JSON.stringify(payload, null, 2);
+    fs.writeFileSync(tmpPath, json, 'utf-8');
+    if (fs.existsSync(filePath)) fs.copyFileSync(filePath, bakPath);
+    fs.renameSync(tmpPath, filePath);
     return { ok: true };
   } catch (e) {
     console.error('save-data error:', e);
+    try { if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath); } catch (_) {}
     return { ok: false, error: e.message };
   }
 });
@@ -201,11 +212,145 @@ ipcMain.handle('save-file', async (_event, { content, defaultName, ext, label })
   }
 });
 
+// ── Attachments ────────────────────────────────────────────────────────────────
+function getAttachmentsDir() {
+  const dir = path.join(app.getPath('userData'), 'attachments');
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+// Pick files and copy them into the app's attachments folder
+ipcMain.handle('pick-attachments', async () => {
+  const { filePaths, canceled } = await dialog.showOpenDialog(win, {
+    title: 'Attach Documents',
+    properties: ['openFile', 'multiSelections'],
+    filters: [
+      { name: 'Documents', extensions: ['pdf','doc','docx','xls','xlsx','ppt','pptx','txt','csv','png','jpg','jpeg','gif','svg','zip','rar'] },
+      { name: 'All Files', extensions: ['*'] }
+    ],
+  });
+  if (canceled || !filePaths.length) return { ok: false };
+  const results = [];
+  const dir = getAttachmentsDir();
+  for (const src of filePaths) {
+    const origName = path.basename(src);
+    // Unique stored name to avoid collisions
+    const storedName = Date.now() + '_' + origName;
+    const dest = path.join(dir, storedName);
+    try {
+      fs.copyFileSync(src, dest);
+      results.push({ name: origName, storedName: storedName });
+    } catch (e) {
+      console.error('attach copy error:', e.message);
+    }
+  }
+  return { ok: true, files: results };
+});
+
+// Open an attachment with the system default app
+ipcMain.handle('open-attachment', async (_event, storedName) => {
+  const filePath = path.join(getAttachmentsDir(), storedName);
+  if (!fs.existsSync(filePath)) return { ok: false, error: 'File not found' };
+  try {
+    await shell.openPath(filePath);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
+
+// Open an external URL in the default browser
+ipcMain.handle('open-external', async (_event, url) => {
+  try {
+    await shell.openExternal(url);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
+
 // ── App lifecycle ──────────────────────────────────────────────────────────────
 app.whenReady().then(() => {
   createWindow();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+});
+
+
+// ── Supabase Auth IPC (runs in Node — no CORS restrictions) ──────────────────
+const https = require('https');
+
+const SUPA_URL  = 'nigusoyssktoebzscbwe.supabase.co';
+const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZ3Vzb3lzc2t0b2VienNjYndlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4Mzg4MDEsImV4cCI6MjA4OTQxNDgwMX0.RhMTy0kL5LuEhxPb3R6SSxUTHGauouudCWlPHWteTtI';
+
+function supaFetch(path, method, body, token) {
+  return new Promise((resolve) => {
+    const payload = body ? JSON.stringify(body) : null;
+    const opts = {
+      hostname: SUPA_URL,
+      path: path,
+      method: method || 'GET',
+      headers: {
+        'Content-Type':  'application/json',
+        'apikey':        SUPA_ANON,
+        'Authorization': 'Bearer ' + (token || SUPA_ANON),
+        ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {})
+      }
+    };
+    const req = https.request(opts, (res) => {
+      let data = '';
+      res.on('data', (chunk) => data += chunk);
+      res.on('end', () => {
+        try { resolve({ ok: res.statusCode < 300, status: res.statusCode, data: JSON.parse(data) }); }
+        catch(e) { resolve({ ok: false, status: res.statusCode, data: {} }); }
+      });
+    });
+    req.on('error', (e) => resolve({ ok: false, status: 0, data: { error_description: e.message } }));
+    if (payload) req.write(payload);
+    req.end();
+  });
+}
+
+ipcMain.handle('supa-request', async (_event, { path, method, body, token }) => {
+  return supaFetch(path, method, body, token);
+});
+
+ipcMain.handle('supa-db-request', async (_event, { path, method, body, token }) => {
+  return new Promise((resolve) => {
+    const m = (method || 'GET').toUpperCase();
+    const payload = body ? JSON.stringify(body) : null;
+    // Only send Prefer on writes — GET requests reject it
+    const preferHeader = m === 'GET' || m === 'DELETE'
+      ? {}
+      : { 'Prefer': 'return=representation' };
+    const opts = {
+      hostname: SUPA_URL,
+      path: path,
+      method: m,
+      headers: {
+        'Content-Type':  'application/json',
+        'apikey':        SUPA_ANON,
+        'Authorization': 'Bearer ' + (token || SUPA_ANON),
+        ...preferHeader,
+        ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {})
+      }
+    };
+    const req = https.request(opts, (res) => {
+      let data = '';
+      res.on('data', (chunk) => data += chunk);
+      res.on('end', () => {
+        try {
+          const parsed = data.trim() ? JSON.parse(data) : (m === 'DELETE' ? [] : {});
+          resolve({ ok: res.statusCode < 300, status: res.statusCode, data: parsed });
+        } catch(e) {
+          resolve({ ok: false, status: res.statusCode, data: { message: 'Parse error: '+data.slice(0,100) } });
+        }
+      });
+    });
+    req.on('error', (e) => resolve({ ok: false, status: 0, data: { message: e.message } }));
+    if (payload) req.write(payload);
+    req.end();
   });
 });
 
