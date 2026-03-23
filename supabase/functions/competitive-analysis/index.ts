@@ -7,42 +7,60 @@ const corsHeaders = {
 };
 
 const AREA_LABELS: Record<string, string> = {
-  hardware_platform: "Hardware platforms, products, specs",
-  software_platform: "Software platforms, SDKs, APIs, ecosystem",
-  pricing: "Exact pricing in ZAR and USD for every product/tier — link to pricing page. Include monthly, annual, enterprise tiers",
-  suppliers_partnerships: "Suppliers, strategic partners, alliances, JVs",
-  market_insights: "Acquisitions, share price, exec changes, employee count, revenue",
-  regions_markets: "Regions, countries, market entry, geographic presence",
-  esg: "ESG initiatives, sustainability, governance, ratings",
-  strengths_weaknesses: "Strengths and weaknesses with evidence",
-  market_share: "Market share %, industry ranking, growth rate",
-  marketing_tactics: "Marketing channels, campaigns, positioning",
-  customer_insights: "Target segments, major customers, satisfaction, reviews",
+  // Fleet Management — aligned with industry feature tables
+  driver_behaviour: "Driver Behaviour — Driver Monitoring ABCs, Driver Scoring (RAG), Real-time driver feedback, Fatigue/Distraction/Smoking/Seatbelt/Phone detection, Driver & Vehicle License Management, Vehicle Immobilisation, Breathalyser, Impact Detection, Share my Journey, Driver coaching, Score cards, Leaderboards",
+  canbus_fuel: "CANBUS & Fuel Monitoring — CAN connected devices, OBD port devices, Engine warnings, Brake level warnings, TPMS integration, RPM & Idling, Fuel level monitoring (CAN/probe), Fuel theft/siphoning detection, Fuel trend analysis, Fuel cap sensors, Anti-siphoning devices, Fuel reconciliation, Route costing, Fuel consumption reports, Cost-per-km, Fuel card integration, Fuel receipt matching with location",
+  svr_jamming: "SVR & Jamming — Stolen Vehicle Recovery capability, 24/7 call centre, Signal jamming detection, Anti-jamming technology, CME device, National coverage, Recovery success rate, Response time SLA",
+  alarms_alerts: "Alarms & Alerts — Engine fault alerts, Brake pad warnings, Oil/water fluctuation alerts, Geo-fence alerts, Crash alerts & analysis, Battery tampering alerts, Low battery alerts, Towing alerts, High risk area alerts, Impact alerts, Device health alerts, No-go zone alerts, Speed alerts",
+  job_scheduling: "Job Scheduling — Job dispatching, Route planning & scheduling, Task management via app, Field services management, Electronic proof of delivery (EPOD), Dispatch IQ",
+  mobile_apps: "Mobile Apps — Fleet manager app, Driver app, Consumer/SVR app, Insurance app, EPOD app, Navigation app, Vehicle inspection app, Driver messaging, Voice calls, App store ratings (iOS/Android), Offline capability. List each app by name.",
+  geofencing: "Geofencing — Geo-fence creation, No-go zones, Border alerts, Zone management, Geo-zone reporting, Zone-based alerts",
+  green_driving_co2: "Green Driving & CO2 — CO2 emissions monitoring, EV fleet management, Driver behaviour linked green driving scores, Engine diagnostics linked efficiency",
+  cameras_dashcams: "Cameras & AI Dashcams — AI dashcam models, Resolution, Front/rear/in-cab/side channels, ADAS (collision avoidance), Fatigue detection, Distraction detection, Smoking/phone/seatbelt detection, Night vision/infrared, LTE live streaming, Video storage, Video download, Video analysis, MobileEye integration, Number of camera channels (1/2/4)",
+  peripherals: "Peripherals — Panic buttons, Driver ID (iButton/RFID/BLE tag), Driver feedback buzzer, Voice kit & keypad, Temperature sensors, Door sensors, Cement mixer sensors, Seat pressure sensors, Cargo door sensors, Fuel cap/flap sensors, Tamper sensors, Power take-off, Taxi metre, Ruggedised RFID reader",
+  fis_bureau: "FIS/Bureau & AARTO — 24/7 bureau/control room service, FIS track and react service, AARTO compliance, Speeding data for infringements, Camera surveillance, Driver control, Smart bureau, Smart control room",
+  asset_lifecycle: "Asset Lifecycle — Asset monitoring, Scheduled downtime, Maintenance scheduling, Preventive maintenance alerts, Maintenance cycles, Driver advance warnings via app, Service history tracking",
+  vas_services: "VAS — Roadside assistance, Medical assistance, Emergency evacuation (EVAC), Towing assistance, Recovery warranty, Car insurance brokerage, Personal computer tracking, Hospital cover, Disability cover, Armed response via WhatsApp, Device protection/replacement plans, Legal solutions",
+  route_management: "Route Management — Route planning, Route optimisation, Route costing, Route replay, Planned vs actual route comparison",
+  bi_dashboards: "BI Dashboards & Reports — KPI dashboards, Trip reports, In/out of location reports, Driver scores, Event violations, Cost analysis, Distance/driving time/idle time/parking time, Data integration API, Custom report builder, Scheduled reports, Power BI/Tableau integration, E-toll reports, Speed buffer reports, Site visits, Unit list, Message log, Incidents, Score cards, Battery trend, Trip logs, Hours worked, ABCs reports",
+  trailer_tracking: "Trailer & Cargo Tracking — Wireless trailer trackers, Battery life (years), Temperature sensors, Cargo monitoring, Geo-fence for trailers, Trailer grouping, Maintenance cycle alerts, Cold chain monitoring",
+  in_cab_device: "In-Cab Device — AI driving coach with visual alerts, In-cab screen/display, Navigation, Driver behaviour display, SMS position request, Traffic info, Impact detection alerts",
+  vehicle_inspections: "Vehicle Inspections — Electronic road inspection forms, Pre-trip vehicle inspection, Inspection checklists via app",
+  remote_door: "Remote Door & Access — Vehicle access control, Remote door unlock/lock, Door open/close sensors",
+  mining_features: "Mining Features — Collision avoidance sensors, Onboard weighing, Tip sensors, Mining sector specific tracking, Underground tracking",
+  fixed_assets_devices: "Fixed Assets & Devices — Wired devices, Wireless devices, Battery-powered trackers (battery life years), Rechargeable devices, Plug & Play OBD, IP ratings, Accelerometer, GPS accuracy, Supported asset types (bikes, golf carts, containers, boats, cars, trucks, equipment)",
+  white_label_api: "White-Label & API — White-label app, REST API, Webhooks, SDK, Integration partners (ERP, TMS, insurance), Data sharing, SatComms for remote areas",
+  // Generic areas
+  hardware_platform: "Hardware platforms — all product lines with model numbers, specs, pricing per unit",
+  software_platform: "Software platform — complete feature list, architecture, tech stack, integrations",
+  pricing: "Exact pricing in ZAR and USD — device cost, monthly subscription per vehicle, setup fees, contract terms, volume discounts",
+  suppliers_partnerships: "Strategic partnerships, OEM deals, distribution partners, technology alliances",
+  market_insights: "Acquisitions, share price, CEO/CTO/exec changes, employee count, revenue, funding",
+  regions_markets: "Geographic presence, countries, HQ, offices, market entry, key verticals",
+  esg: "ESG initiatives, sustainability, carbon tracking, governance",
+  strengths_weaknesses: "Competitive strengths and weaknesses with evidence",
+  market_share: "Market share %, industry ranking, installed base, vehicles managed",
+  marketing_tactics: "Marketing channels, trade shows, thought leadership, social media",
+  customer_insights: "Target segments, major customers, case studies, reviews",
 };
 
-function buildPrompt(competitors: string[], areas: string[]): string {
-  const areaList = areas.map(a => AREA_LABELS[a] || a).join("; ");
-  return `You are a competitive intelligence researcher. Research: ${competitors.join(", ")}
+function buildPrompt(competitors: string[], areas: string[], guidance?: string): string {
+  // Keep prompt concise — use short labels for many areas, full descriptions for few
+  const useShort = areas.length > 6;
+  const areaList = areas.map(a => {
+    const full = AREA_LABELS[a] || a;
+    return useShort ? full.split("—")[0].trim() : full;
+  }).join("\n- ");
 
-Areas: ${areaList}
+  return `You are a fleet management competitive intelligence researcher. Research: ${competitors.join(", ")}
 
-RULES:
-- Search the ACTUAL company websites, product pages, pricing pages, investor relations pages, LinkedIn, Crunchbase, Wikipedia
-- Every single bullet point MUST end with a direct URL to the ACTUAL source page (e.g. https://company.com/pricing, https://company.com/products/device-name) — NOT search engine URLs, NOT Google cache URLs
-- Use SHORT bullet points, not paragraphs. Max 1-2 sentences per bullet
-- Include exact model names, exact prices (with currency), exact dates, exact employee numbers
-- For pricing: link to the actual pricing page URL
-- For hardware: link to the actual product spec page URL
-- For software: link to the actual feature/platform page URL
-- For partnerships: link to the press release or announcement URL
-- Comparison matrix must have 15+ categories covering: specific product models, software features, pricing tiers, geographic reach, employee count, revenue, market share
+Areas to compare:
+- ${areaList}
 
-CRITICAL RULES:
-1. Respond with ONLY a JSON object. Start with { end with }. No other text.
-2. Do NOT include any vertexaisearch.cloud.google.com URLs — only use direct URLs to the actual company/source websites.
-3. Keep each detail bullet to 1-2 sentences max. Be concise but specific.
-4. You MUST complete the entire JSON — do not stop mid-way. If running long, reduce detail per bullet rather than omitting sections.
-{"competitors":[{"name":"X","threat_score":7,"overview":"Short company description","research":{"area_key":{"summary":"2-3 sentence overview","details":["Short fact — https://actual-source-url.com/page","Another fact — https://actual-source-url.com/page"],"sources":["https://company.com/relevant-page"]}},"swot":{"strengths":["specific strength — https://source"],"weaknesses":["specific weakness — https://source"],"opportunities":["opportunity"],"threats":["threat"]},"key_insights":["insight with data — https://source"],"recommendations":[{"title":"action","description":"why and how","suggested_timeline_months":3,"priority":"high"}]}],"overall_summary":"Executive summary","market_trends":["trend — https://source"],"comparison_matrix":{"categories":["Product Line A","Product Line B","Entry Price","Enterprise Price","API Available","Cloud Platform","Mobile App","Employee Count","Revenue","HQ Location","Founded","Key Markets","Latest Product","CEO"],"data":{"CompanyA":{"Product Line A":"Model X — $999","Entry Price":"$199/mo"}}},"sources":["https://url1.com","https://url2.com"]}`;
+RULES: Use short bullets (1 sentence each). Include real URLs to company websites (NOT google/vertexaisearch URLs). Prices in ZAR and USD. Be concise — complete the full JSON.
+${guidance ? `USER GUIDANCE: ${guidance}\n` : ''}
+Respond with ONLY JSON. Start with { end with }.
+{"competitors":[{"name":"X","overview":"Short description","research":{"area_key":{"summary":"overview","details":["fact — https://company.com/page"],"sources":["https://url"]}},"swot":{"strengths":["s"],"weaknesses":["w"],"opportunities":["o"],"threats":["t"]},"key_insights":["insight"],"recommendations":[{"title":"action","description":"detail","suggested_timeline_months":3,"priority":"high"}]}],"overall_summary":"summary","market_trends":["trend"],"comparison_matrix":{"categories":["Cat1","Cat2"],"data":{"Co":{"Cat1":"val"}}},"sources":["https://url"]}`;
 }
 
 function extractJSON(text: string): unknown {
@@ -140,7 +158,7 @@ serve(async (req) => {
 
   const t0 = Date.now();
   try {
-    const { competitors, research_areas, analysis_id, external_api } = await req.json();
+    const { competitors, research_areas, analysis_id, external_api, guidance } = await req.json();
     log(`START — competitors: ${competitors?.join(", ")}, areas: ${research_areas?.length}, engine: ${external_api?.provider || "claude"}`);
 
     if (!competitors?.length) return errResp(400, "Add at least one competitor");
@@ -169,8 +187,10 @@ serve(async (req) => {
 
     if (analysis_id) await supabase.from("competitive_analyses").update({ status: "processing" }).eq("id", analysis_id);
 
-    const prompt = buildPrompt(competitors, research_areas);
-    log(`Prompt built — ${prompt.length} chars`);
+    const prompt = buildPrompt(competitors, research_areas, guidance);
+    // Scale web searches: fewer areas = more searches per area, more areas = fewer to stay in time
+    const webSearches = Math.max(3, Math.min(10, Math.floor(20 / (competitors.length * Math.max(1, research_areas.length / 3)))));
+    log(`Prompt built — ${prompt.length} chars, webSearches: ${webSearches}`);
 
     let results: unknown;
     const useExt = external_api?.provider && external_api?.key;
@@ -212,11 +232,11 @@ serve(async (req) => {
       log("Using user-provided Claude API key...");
       const API_KEY = external_api.key;
       // Falls through to the same Claude logic below but with user's key
-      const prompt = buildPrompt(competitors, research_areas);
+      const prompt = buildPrompt(competitors, research_areas, guidance);
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: { "x-api-key": API_KEY, "content-type": "application/json", "anthropic-version": "2023-06-01" },
-        body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 10000, tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 10 }], messages: [{ role: "user", content: prompt }] }),
+        body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 10000, tools: [{ type: "web_search_20250305", name: "web_search", max_uses: webSearches }], messages: [{ role: "user", content: prompt }] }),
       });
       log(`User Claude responded — ${res.status} in ${Date.now() - t0}ms`);
       if (!res.ok) { const e = await res.text(); return errResp(502, "Claude error " + res.status + ": " + e.substring(0, 300)); }
@@ -241,7 +261,7 @@ serve(async (req) => {
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 10000,
-          tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 10 }],
+          tools: [{ type: "web_search_20250305", name: "web_search", max_uses: webSearches }],
           messages: [{ role: "user", content: prompt }],
         }),
       });

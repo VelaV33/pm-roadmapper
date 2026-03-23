@@ -506,9 +506,6 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
       <span style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;letter-spacing:.05em">PM Roadmapper</span>
     </span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-      <!-- Competitive Intel -->
-      <button id="compIntelBtn" onclick="openCompetitiveAnalysis()" title="AI-powered Competitive Analysis" style="background:linear-gradient(135deg,rgba(124,58,237,.4),rgba(37,99,168,.4));border:1px solid rgba(124,58,237,.5);color:#fff;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">🔍 CI<span class="premium-badge">PRO</span></button>
-      <div style="width:1px;height:18px;background:rgba(255,255,255,.15);margin:0 4px"></div>
       <!-- Collaboration -->
       <button onclick="openShare()" title="Share roadmap with your team" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.85);border-radius:6px;padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.1)'"><span style="font-size:13px">🔗</span> Share</button>
       <div style="width:1px;height:18px;background:rgba(255,255,255,.15);margin:0 4px"></div>
@@ -521,6 +518,9 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 
   <!-- Row 2: Dropdown groups -->
   <div class="toolbar-btns">
+
+    <!-- Competitive Intel — permanently visible -->
+    <button id="compIntelBtn" onclick="openCompetitiveAnalysis()" title="AI-powered Competitive Analysis" style="background:linear-gradient(135deg,#7c3aed,#2563a8);border:1px solid rgba(124,58,237,.6);color:#fff;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;margin-right:6px">🔍 Competitive Intel <span class="premium-badge">PRO</span></button>
 
     <!-- Content dropdown -->
     <div class="tb-dropdown">
@@ -4349,19 +4349,50 @@ function showPremiumGate(container){
 
 // ── COMPETITIVE ANALYSIS ─────────────────────────────────────────────────────
 var _compTimer=null;
-var RESEARCH_AREAS=[
+var _compPreset='fleet'; // default industry preset
+
+var FLEET_RESEARCH_AREAS=[
+  {key:'driver_behaviour',label:'Driver Behaviour & Scoring',icon:'🚗'},
+  {key:'canbus_fuel',label:'CANBUS & Fuel Monitoring',icon:'⛽'},
+  {key:'svr_jamming',label:'SVR & Jamming Detection',icon:'🔒'},
+  {key:'alarms_alerts',label:'Alarms & Alerts',icon:'🔔'},
+  {key:'job_scheduling',label:'Job Scheduling & Dispatch',icon:'📋'},
+  {key:'mobile_apps',label:'Mobile Apps',icon:'📱'},
+  {key:'geofencing',label:'Geofencing & Zones',icon:'📍'},
+  {key:'green_driving_co2',label:'Green Driving & CO2',icon:'🌱'},
+  {key:'cameras_dashcams',label:'Cameras & AI Dashcams',icon:'📹'},
+  {key:'peripherals',label:'Peripherals (Panic, Driver ID, Sensors)',icon:'🔧'},
+  {key:'fis_bureau',label:'FIS / Bureau Service & AARTO',icon:'🏢'},
+  {key:'asset_lifecycle',label:'Asset Lifecycle & Maintenance',icon:'🔄'},
+  {key:'vas_services',label:'VAS (Roadside, Medical, Insurance)',icon:'🚑'},
+  {key:'route_management',label:'Route Management & Optimisation',icon:'🗺️'},
+  {key:'bi_dashboards',label:'BI Dashboards & Reports',icon:'📊'},
+  {key:'trailer_tracking',label:'Trailer & Cargo Tracking',icon:'🚛'},
+  {key:'in_cab_device',label:'In-Cab Device / Screen',icon:'🖥️'},
+  {key:'vehicle_inspections',label:'Vehicle Inspections',icon:'✅'},
+  {key:'remote_door',label:'Remote Door & Access Control',icon:'🚪'},
+  {key:'mining_features',label:'Mining Features',icon:'⛏️'},
+  {key:'fixed_assets_devices',label:'Fixed Assets & Device Types',icon:'📦'},
+  {key:'white_label_api',label:'White-Label & API/SDK',icon:'🏷️'},
+  {key:'pricing',label:'Pricing (ZAR & USD)',icon:'💰'},
+  {key:'market_insights',label:'Market Insights & Exec Changes',icon:'📈'}
+];
+
+var GENERIC_RESEARCH_AREAS=[
   {key:'hardware_platform',label:'Hardware Platform Comparison',icon:'🔧'},
   {key:'software_platform',label:'Software Platform Comparison',icon:'💻'},
   {key:'pricing',label:'Pricing Comparison',icon:'💰'},
   {key:'suppliers_partnerships',label:'Suppliers & Strategic Partnerships',icon:'🤝'},
-  {key:'market_insights',label:'Market Insights (Acquisitions, Execs, Share Price)',icon:'📈'},
+  {key:'market_insights',label:'Market Insights',icon:'📈'},
   {key:'regions_markets',label:'Regions & Markets',icon:'🌍'},
-  {key:'esg',label:'ESG (Environmental, Social, Governance)',icon:'🌱'},
+  {key:'esg',label:'ESG',icon:'🌱'},
   {key:'strengths_weaknesses',label:'Strengths & Weaknesses',icon:'⚖️'},
   {key:'market_share',label:'Market Share Analysis',icon:'📊'},
   {key:'marketing_tactics',label:'Marketing Tactics',icon:'📣'},
   {key:'customer_insights',label:'Customer Insights',icon:'👥'}
 ];
+
+var RESEARCH_AREAS=FLEET_RESEARCH_AREAS;
 
 var _compCompetitors=[];
 
@@ -4413,6 +4444,29 @@ function openCompetitiveAnalysis(){
 function buildNewAnalysisView(container){
   container.innerHTML='';
 
+  // Industry presets — add right after container.innerHTML=''
+  var presetLabel=document.createElement('label');
+  presetLabel.style.cssText='display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px';
+  presetLabel.textContent='Industry Preset';
+  container.appendChild(presetLabel);
+
+  var presetRow=document.createElement('div');presetRow.style.cssText='display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap';
+  var presets=[
+    {id:'fleet',label:'🚛 Fleet Management',desc:'Telematics, GPS tracking, driver behavior, fuel, cameras'},
+    {id:'generic',label:'📊 Generic',desc:'General competitive analysis'}
+  ];
+  presets.forEach(function(p){
+    var btn=document.createElement('button');
+    btn.className='comp-tab'+(p.id===(_compPreset||'fleet')?' active':'');
+    btn.textContent=p.label;btn.title=p.desc;
+    btn.onclick=function(){
+      _compPreset=p.id;
+      buildNewAnalysisView(container);
+    };
+    presetRow.appendChild(btn);
+  });
+  container.appendChild(presetRow);
+
   // Competitor input
   var secLabel=document.createElement('label');
   secLabel.style.cssText='display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px';
@@ -4449,7 +4503,8 @@ function buildNewAnalysisView(container){
   selAllRow.appendChild(selAllBtn);container.appendChild(selAllRow);
 
   var grid=document.createElement('div');grid.className='comp-checkbox-grid';
-  RESEARCH_AREAS.forEach(function(area){
+  var activeAreas=_compPreset==='fleet'?FLEET_RESEARCH_AREAS:GENERIC_RESEARCH_AREAS;
+  activeAreas.forEach(function(area){
     var lbl=document.createElement('label');
     var cb=document.createElement('input');cb.type='checkbox';cb.value=area.key;cb.checked=true;
     lbl.className='checked';
@@ -4459,6 +4514,29 @@ function buildNewAnalysisView(container){
     grid.appendChild(lbl);
   });
   container.appendChild(grid);
+
+  // Guidance section
+  var hr1=document.createElement('hr');hr1.style.cssText='border:none;border-top:1px solid #e8edf7;margin:16px 0';
+  container.appendChild(hr1);
+
+  var guidLabel=document.createElement('label');
+  guidLabel.style.cssText='display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px';
+  guidLabel.textContent='Custom Guidance (Optional)';
+  container.appendChild(guidLabel);
+
+  var guidNote=document.createElement('div');
+  guidNote.style.cssText='font-size:10px;color:var(--muted);margin-bottom:6px';
+  guidNote.textContent='Add specific instructions, context, or paste content from your existing analysis to guide the AI research.';
+  container.appendChild(guidNote);
+
+  var guidTa=document.createElement('textarea');guidTa.id='compGuidance';
+  guidTa.placeholder='e.g. Focus on South African market pricing in ZAR. Compare driver behavior scoring algorithms. Our company is Netstar, exclude us from competitors. Include specific device model numbers...';
+  guidTa.style.cssText='width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text);height:80px;resize:vertical;box-sizing:border-box';
+  // Restore saved guidance
+  var savedGuid=localStorage.getItem('pmr_comp_guidance');
+  if(savedGuid)guidTa.value=savedGuid;
+  guidTa.onblur=function(){localStorage.setItem('pmr_comp_guidance',guidTa.value);};
+  container.appendChild(guidTa);
 
   // Research engine selector
   var hr2=document.createElement('hr');hr2.style.cssText='border:none;border-top:1px solid #e8edf7;margin:16px 0';
@@ -4636,6 +4714,9 @@ async function runCompetitiveAnalysis(container){
 
   // Capture API config BEFORE destroying the DOM with loading screen
   var extApi=getExternalApiConfig();
+  var guidance=document.getElementById('compGuidance');
+  var guidanceText=guidance?guidance.value.trim():'';
+  if(guidanceText) localStorage.setItem('pmr_comp_guidance',guidanceText);
   console.log('[CompAnalysis] Starting — competitors:',_compCompetitors,'areas:',areas,'engine:',extApi?extApi.provider:'claude');
   showAnalysisLoading(container);
 
@@ -4663,7 +4744,8 @@ async function runCompetitiveAnalysis(container){
         analysis_id:analysisId,
         competitors:_compCompetitors,
         research_areas:areas,
-        external_api:extApi
+        external_api:extApi,
+        guidance:guidanceText
       },
       token:_accessToken
     });
@@ -5180,11 +5262,11 @@ async function loadPastAnalysis(id,container){
   var r;
   try{
     r=await _dbReq('/rest/v1/competitive_analyses?select=*&id=eq.'+id);
-  }catch(e){}
+  }catch(e){console.error('[CompAnalysis] History load error:',e);}
   if(r&&r.ok&&r.data&&r.data.length>0&&r.data[0].results){
     renderAnalysisResults(container,r.data[0].results);
   } else {
-    container.innerHTML='<p style="color:#dc2626;text-align:center;padding:30px">Failed to load analysis.</p>';
+    container.innerHTML='<p style="color:#dc2626;text-align:center;padding:30px">Failed to load analysis. The analysis may still be processing or may have failed.</p><button class="comp-tab" onclick="buildHistoryView(this.parentElement)" style="margin:0 auto;display:block">\u2190 Back to History</button>';
   }
 }
 
