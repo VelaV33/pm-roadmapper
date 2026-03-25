@@ -452,13 +452,19 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
     <!-- Password (hidden on forgot-password view) -->
     <div class="auth-field" id="authPassField">
       <label>Password</label>
-      <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password">
+      <div style="position:relative;display:flex;align-items:center">
+        <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" style="padding-right:36px">
+        <button type="button" id="toggleAuthPass" onclick="togglePasswordVisibility('authPassword','toggleAuthPass')" style="position:absolute;right:6px;background:none;border:none;cursor:pointer;font-size:16px;padding:2px 4px;line-height:1;color:#7b8db0" title="Show password">&#x1F441;</button>
+      </div>
     </div>
 
     <!-- Confirm password (signup only) -->
     <div class="auth-field" id="authConfirmField" style="display:none">
       <label>Confirm password</label>
-      <input type="password" id="authConfirm" placeholder="••••••••" autocomplete="new-password">
+      <div style="position:relative;display:flex;align-items:center">
+        <input type="password" id="authConfirm" placeholder="••••••••" autocomplete="new-password" style="padding-right:36px">
+        <button type="button" id="toggleAuthConfirm" onclick="togglePasswordVisibility('authConfirm','toggleAuthConfirm')" style="position:absolute;right:6px;background:none;border:none;cursor:pointer;font-size:16px;padding:2px 4px;line-height:1;color:#7b8db0" title="Show password">&#x1F441;</button>
+      </div>
     </div>
 
     <!-- Forgot password link (login view only) -->
@@ -478,11 +484,6 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 
     <div class="auth-toggle" id="authToggle">
       Don't have an account? <a onclick="switchToSignup()">Create account</a>
-    </div>
-    <div style="margin-top:18px;padding-top:14px;border-top:1px solid #e8edf7">
-      <button onclick="enterPreviewMode()" style="width:100%;padding:9px;background:transparent;border:1px dashed #c5d5ea;border-radius:8px;color:#7b8db0;font-size:12px;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='#4a90d9';this.style.color='#4a90d9'" onmouseout="this.style.borderColor='#c5d5ea';this.style.color='#7b8db0'">
-        Enter Preview Mode (no login required)
-      </button>
     </div>
   </div>
   <div class="auth-version">v1.1.0</div>
@@ -3145,17 +3146,20 @@ _supabase = {
 };
 
 // ── Auth UI ──────────────────────────────────────────────────────────────────
-function enterPreviewMode(){
-  // Bypass auth for preview/demo — data stays local only
-  hideAuthOverlay();
-  var badge = document.getElementById('cloudSyncStatus');
-  if(badge){ badge.textContent=''; }
-  // Show a small preview banner
-  var banner = document.createElement('div');
-  banner.style.cssText='position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:#1a1464;color:#fff;font-size:11px;font-weight:700;padding:6px 16px;border-radius:20px;z-index:500;opacity:.85;letter-spacing:.04em';
-  banner.textContent='PREVIEW MODE — Changes will not be saved to cloud';
-  document.body.appendChild(banner);
-  setTimeout(function(){ banner.style.transition='opacity 1s'; banner.style.opacity='0'; setTimeout(function(){ banner.remove(); },1000); }, 4000);
+
+function togglePasswordVisibility(inputId, btnId){
+  var inp = document.getElementById(inputId);
+  var btn = document.getElementById(btnId);
+  if(!inp || !btn) return;
+  if(inp.type === 'password'){
+    inp.type = 'text';
+    btn.innerHTML = '\uD83D\uDC41\u200D\uD83D\uDDE8';
+    btn.title = 'Hide password';
+  } else {
+    inp.type = 'password';
+    btn.innerHTML = '\uD83D\uDC41';
+    btn.title = 'Show password';
+  }
 }
 
 async function checkExistingSession(){

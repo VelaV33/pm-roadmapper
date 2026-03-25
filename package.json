@@ -32,7 +32,10 @@
       "preload.js",
       "renderer/**/*",
       "assets/**/*",
-      "node_modules/@supabase/**/*"
+      "node_modules/@supabase/**/*",
+      "node_modules/pdf-parse-new/**/*",
+      "node_modules/mammoth/**/*",
+      "node_modules/adm-zip/**/*"
     ]
   },
   "devDependencies": {
