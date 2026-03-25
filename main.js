@@ -1,6 +1,9 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
+let pdfParse, mammoth;
+try { pdfParse = require('pdf-parse-new'); } catch(e) { try { pdfParse = require('pdf-parse'); } catch(e2) { console.warn('pdf-parse not available:', e2.message); } }
+try { mammoth = require('mammoth'); } catch(e) { console.warn('mammoth not available:', e.message); }
 
 // ── Data file path (stored in OS user data dir) ───────────────────────────────
 function getDataPath() {
@@ -265,6 +268,76 @@ ipcMain.handle('open-external', async (_event, url) => {
   try {
     await shell.openExternal(url);
     return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
+
+// Read file contents (for document parsing)
+ipcMain.handle('read-file', async (_event, opts) => {
+  const { filePaths, canceled } = await dialog.showOpenDialog(win, {
+    title: opts?.title || 'Select Document',
+    properties: ['openFile'],
+    filters: opts?.filters || [
+      { name: 'Documents', extensions: ['pdf', 'xlsx', 'xls', 'csv', 'txt', 'doc', 'docx', 'pptx'] },
+      { name: 'All Files', extensions: ['*'] }
+    ],
+  });
+  if (canceled || !filePaths.length) return { ok: false };
+  try {
+    const filePath = filePaths[0];
+    const ext = path.extname(filePath).toLowerCase();
+    const name = path.basename(filePath);
+    const buf = fs.readFileSync(filePath);
+
+    // PDF — extract text
+    if (ext === '.pdf' && pdfParse) {
+      const data = await pdfParse(buf);
+      return { ok: true, name, ext, text: data.text || '' };
+    }
+
+    // Word (.docx) — extract text
+    if (ext === '.docx' && mammoth) {
+      const result = await mammoth.extractRawText({ buffer: buf });
+      return { ok: true, name, ext, text: result.value || '' };
+    }
+
+    // Excel — return base64 for SheetJS in renderer
+    if (['.xlsx', '.xls'].includes(ext)) {
+      return { ok: true, name, ext, base64: buf.toString('base64') };
+    }
+
+    // PowerPoint (.pptx) — basic XML text extraction
+    if (ext === '.pptx') {
+      try {
+        const AdmZip = require('adm-zip');
+        const zip = new AdmZip(buf);
+        let text = '';
+        zip.getEntries().forEach(entry => {
+          if (entry.entryName.match(/ppt\/slides\/slide\d+\.xml/)) {
+            const xml = entry.getData().toString('utf-8');
+            // Extract text from <a:t> tags
+            const matches = xml.match(/<a:t>([^<]*)<\/a:t>/g) || [];
+            matches.forEach(m => { text += m.replace(/<\/?a:t>/g, '') + ' '; });
+            text += '\n';
+          }
+        });
+        return { ok: true, name, ext, text: text.trim() };
+      } catch (e) {
+        // If adm-zip not available, return base64 as fallback
+        return { ok: true, name, ext, base64: buf.toString('base64') };
+      }
+    }
+
+    // Old Word (.doc) — return base64, can't easily parse
+    if (ext === '.doc') {
+      // Try to extract readable ASCII text from binary
+      const rawText = buf.toString('utf-8').replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/\s{3,}/g, '\n');
+      return { ok: true, name, ext, text: rawText };
+    }
+
+    // CSV, TXT and others — read as text
+    return { ok: true, name, ext, text: buf.toString('utf-8') };
   } catch (e) {
     return { ok: false, error: e.message };
   }

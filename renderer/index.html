@@ -4350,6 +4350,7 @@ function showPremiumGate(container){
 // ── COMPETITIVE ANALYSIS ─────────────────────────────────────────────────────
 var _compTimer=null;
 var _compPreset='fleet'; // default industry preset
+var _customPresetAreas=null; // when a custom preset is active, holds its areas
 
 var FLEET_RESEARCH_AREAS=[
   {key:'driver_behaviour',label:'Driver Behaviour & Scoring',icon:'🚗'},
@@ -4425,13 +4426,21 @@ function openCompetitiveAnalysis(){
   // Tab bar
   var tabBar=document.createElement('div');
   tabBar.style.cssText='display:flex;gap:8px;margin-bottom:16px';
+  var tabMyco=document.createElement('button');tabMyco.className='comp-tab';tabMyco.textContent='My Company';
   var tabNew=document.createElement('button');tabNew.className='comp-tab active';tabNew.textContent='New Analysis';
   var tabHist=document.createElement('button');tabHist.className='comp-tab';tabHist.textContent='History';
   var content=document.createElement('div');content.id='compContent';
 
-  tabNew.onclick=function(){tabNew.className='comp-tab active';tabHist.className='comp-tab';buildNewAnalysisView(content);};
-  tabHist.onclick=function(){tabHist.className='comp-tab active';tabNew.className='comp-tab';buildHistoryView(content);};
-  tabBar.appendChild(tabNew);tabBar.appendChild(tabHist);
+  // Show setup prompt if no company profile yet
+  var hasProfile=!!localStorage.getItem('pmr_my_company');
+  if(!hasProfile){tabMyco.style.cssText+=';animation:comp-spin 1s ease-in-out 3;border-color:#d97706;color:#d97706';tabMyco.textContent='⚠ My Company (Setup)';}
+  else{tabMyco.textContent='🏢 My Company';}
+
+  function setActiveTab(active){[tabMyco,tabNew,tabHist].forEach(function(t){t.className='comp-tab'+(t===active?' active':'');});}
+  tabMyco.onclick=function(){setActiveTab(tabMyco);buildMyCompanyView(content);};
+  tabNew.onclick=function(){setActiveTab(tabNew);buildNewAnalysisView(content);};
+  tabHist.onclick=function(){setActiveTab(tabHist);buildHistoryView(content);};
+  tabBar.appendChild(tabMyco);tabBar.appendChild(tabNew);tabBar.appendChild(tabHist);
   body.appendChild(tabBar);
   body.appendChild(content);
   modal.appendChild(body);
@@ -4439,6 +4448,276 @@ function openCompetitiveAnalysis(){
   document.body.appendChild(ov);
 
   buildNewAnalysisView(content);
+}
+
+// ── MY COMPANY PROFILE ──
+function getMyCompany(){
+  try{return JSON.parse(localStorage.getItem('pmr_my_company')||'null');}catch(e){return null;}
+}
+
+function buildMyCompanyView(container){
+  container.innerHTML='';
+  var profile=getMyCompany()||{name:'',description:'',products:'',features:'',pricing:'',markets:'',strengths:'',notes:''};
+
+  var intro=document.createElement('p');
+  intro.style.cssText='font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5';
+  intro.textContent='Set up your company profile to ground all competitive analyses. The AI will compare competitors against your company\'s products and features.';
+  container.appendChild(intro);
+
+  // Upload document section
+  var uploadBox=document.createElement('div');
+  uploadBox.style.cssText='border:2px dashed var(--accent);border-radius:10px;padding:16px;margin-bottom:16px;text-align:center;background:#f8faff;cursor:pointer;transition:all .15s';
+  uploadBox.onmouseover=function(){uploadBox.style.borderColor='#7c3aed';uploadBox.style.background='#f0f0ff';};
+  uploadBox.onmouseout=function(){uploadBox.style.borderColor='var(--accent)';uploadBox.style.background='#f8faff';};
+  uploadBox.innerHTML='<div style="font-size:24px;margin-bottom:6px">📄</div>'+
+    '<div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:4px">Upload Existing Analysis Document</div>'+
+    '<div style="font-size:10px;color:var(--muted)">PDF, Word, Excel, PowerPoint, CSV — AI will extract your company info and auto-fill the fields below</div>';
+  uploadBox.onclick=function(){parseDocForProfile(container);};
+  container.appendChild(uploadBox);
+
+  // Uploaded docs list
+  var uploadStatus=document.createElement('div');uploadStatus.id='mycoUploadStatus';
+  uploadStatus.style.cssText='margin-bottom:12px;font-size:11px;color:var(--muted);display:none';
+  container.appendChild(uploadStatus);
+
+  var fields=[
+    {key:'name',label:'Company Name',placeholder:'e.g. Netstar',type:'input'},
+    {key:'description',label:'Company Description',placeholder:'Brief description of what your company does, target market, key differentiators...',type:'textarea',h:'60px'},
+    {key:'products',label:'Products & Hardware',placeholder:'List your hardware products with model names, specs, key features...\ne.g. Netstar SVR unit, Netstar Fleet tracker (GPS/GSM, 10s reporting, 4 digital inputs, CAN bus, driver ID via iButton)...',type:'textarea',h:'100px'},
+    {key:'features',label:'Software & Platform Features',placeholder:'List your software features across all platforms...\ne.g. Live tracking, geofencing, driver behaviour scoring (ABCs), fuel monitoring, BI dashboards, mobile fleet app, driver app, API, job dispatch, EPOD...',type:'textarea',h:'100px'},
+    {key:'pricing',label:'Pricing (ZAR)',placeholder:'Your pricing tiers...\ne.g. Basic tracking R99/mo, Fleet Pro R199/mo, Enterprise R349/mo, Device cost R1,500-R3,500...',type:'textarea',h:'80px'},
+    {key:'markets',label:'Markets & Regions',placeholder:'Where you operate, key verticals...\ne.g. South Africa, Namibia, Botswana. Verticals: Fleet, Insurance, Consumer SVR, Mining...',type:'textarea',h:'60px'},
+    {key:'strengths',label:'Key Strengths & Differentiators',placeholder:'What makes your company unique...\ne.g. Largest SVR network in SA, proprietary CME jamming detection, 24/7 control room, 2M+ vehicles managed...',type:'textarea',h:'80px'},
+    {key:'notes',label:'Additional Notes',placeholder:'Any other context the AI should know about your company...',type:'textarea',h:'60px'}
+  ];
+
+  fields.forEach(function(f){
+    var row=document.createElement('div');row.style.cssText='margin-bottom:12px';
+    var lbl=document.createElement('label');
+    lbl.style.cssText='display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px';
+    lbl.textContent=f.label;
+    row.appendChild(lbl);
+
+    var inp;
+    if(f.type==='textarea'){
+      inp=document.createElement('textarea');
+      inp.style.cssText='width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text);resize:vertical;box-sizing:border-box;height:'+(f.h||'70px');
+    } else {
+      inp=document.createElement('input');
+      inp.style.cssText='width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--text);box-sizing:border-box';
+    }
+    inp.placeholder=f.placeholder;
+    inp.value=profile[f.key]||'';
+    inp.setAttribute('data-myco-field',f.key);
+    row.appendChild(inp);
+    container.appendChild(row);
+  });
+
+  // Save button
+  var btnRow=document.createElement('div');btnRow.style.cssText='display:flex;gap:10px;margin-top:16px';
+  var saveBtn=document.createElement('button');
+  saveBtn.className='btn green';saveBtn.style.cssText='padding:10px 28px;font-size:13px;border-radius:8px;font-weight:700';
+  saveBtn.textContent='Save Company Profile';
+  saveBtn.onclick=function(){
+    var data={};
+    container.querySelectorAll('[data-myco-field]').forEach(function(el){data[el.getAttribute('data-myco-field')]=el.value;});
+    localStorage.setItem('pmr_my_company',JSON.stringify(data));
+    saveBtn.textContent='✓ Saved!';saveBtn.style.background='#16a34a';
+    setTimeout(function(){saveBtn.textContent='Save Company Profile';saveBtn.style.background='';},2000);
+    showToast('Company profile saved — analyses will now compare against '+data.name);
+  };
+
+  var clearBtn=document.createElement('button');
+  clearBtn.style.cssText='padding:10px 20px;font-size:13px;border-radius:8px;font-weight:700;background:#fff;border:1px solid var(--border);color:var(--muted);cursor:pointer';
+  clearBtn.textContent='Clear Profile';
+  clearBtn.onclick=function(){
+    if(!confirm('Clear your company profile?'))return;
+    localStorage.removeItem('pmr_my_company');
+    buildMyCompanyView(container);
+    showToast('Company profile cleared');
+  };
+
+  btnRow.appendChild(saveBtn);btnRow.appendChild(clearBtn);
+  container.appendChild(btnRow);
+}
+
+async function parseDocForProfile(container){
+  if(!window.electronAPI||!window.electronAPI.readFile){alert('File reading not available');return;}
+  var res=await window.electronAPI.readFile({title:'Select your competitive analysis or company document'});
+  if(!res||!res.ok)return;
+
+  var statusEl=document.getElementById('mycoUploadStatus');
+  if(statusEl){statusEl.style.display='block';statusEl.innerHTML='<strong>'+res.name+'</strong> — extracting text...';}
+
+  // Extract text content from the file
+  var extractedText='';
+  try{
+    if(res.ext==='.csv'||res.ext==='.txt'){
+      extractedText=res.text||'';
+    } else if((res.ext==='.xlsx'||res.ext==='.xls')&&typeof XLSX!=='undefined'&&res.base64){
+      // Parse Excel with SheetJS
+      var wb=XLSX.read(res.base64,{type:'base64'});
+      wb.SheetNames.forEach(function(name){
+        extractedText+='=== Sheet: '+name+' ===\n';
+        var sheet=wb.Sheets[name];
+        extractedText+=XLSX.utils.sheet_to_csv(sheet)+'\n\n';
+      });
+    } else if(res.text){
+      extractedText=res.text;
+    } else {
+      if(statusEl) statusEl.innerHTML='<span style="color:#dc2626">Cannot read this file format. Supported: PDF, Word (.docx), Excel (.xlsx), PowerPoint (.pptx), CSV, TXT</span>';
+      return;
+    }
+  }catch(e){
+    if(statusEl) statusEl.innerHTML='<span style="color:#dc2626">Error reading file: '+e.message+'</span>';
+    return;
+  }
+
+  if(!extractedText.trim()){
+    if(statusEl) statusEl.innerHTML='<span style="color:#dc2626">No text content found in file.</span>';
+    return;
+  }
+
+  // Truncate to avoid massive prompts
+  if(extractedText.length>15000) extractedText=extractedText.substring(0,15000)+'...[truncated]';
+
+  if(statusEl) statusEl.innerHTML='<strong>'+res.name+'</strong> — sending to AI for parsing... (this may take 15-30 seconds)';
+
+  // Send to AI to extract company profile
+  try{
+    var extApi=getExternalApiConfig();
+    var r=await window.electronAPI.supaRequest({
+      path:'/functions/v1/competitive-analysis',
+      method:'POST',
+      body:{
+        competitors:['__PROFILE_PARSE__'],
+        research_areas:['__PROFILE_PARSE__'],
+        guidance:'SPECIAL MODE: Do NOT research competitors. Parse this document and extract ALL company profile information. Be thorough — extract every product name, feature, price, region, and detail you can find.\n\nReturn JSON (start with { end with }):\n{"profile":{"name":"The company name found in the document","description":"2-3 sentences about what the company does, their market position, and core business","products":"List ALL hardware products mentioned with model names, specs, and capabilities. Format as bullet points separated by newlines. e.g.:\\nModel A — GPS tracker, 10s reporting, CAN bus, IP67\\nModel B — AI dashcam, dual channel, ADAS, fatigue detection","features":"List ALL software features mentioned. Format as bullet points separated by newlines. e.g.:\\nLive tracking\\nGeofencing & zone alerts\\nDriver behaviour scoring (ABCs)\\nFuel monitoring & theft detection\\nBI dashboards & custom reports","pricing":"ALL pricing info found — device costs, monthly fees, tiers, contract terms. Include currency (ZAR/USD). If no pricing found, say Not found in document","markets":"ALL regions, countries, verticals mentioned","strengths":"Key competitive advantages, differentiators, unique capabilities mentioned","notes":"Any other relevant info: partnerships, certifications, employee count, awards, executive names"}}\n\nIMPORTANT: Extract as much detail as possible. If a field has lots of data, include ALL of it — do not summarize. Long lists are better than short summaries.\n\nDocument content:\n\n'+extractedText,
+        external_api:extApi
+      },
+      token:_accessToken
+    });
+
+    console.log('[MyCompany] AI response:',r.status,JSON.stringify(r.data).substring(0,500));
+
+    // Try to find profile data in response — could be at results.profile, results directly, or nested
+    var parsed=null;
+    if(r.data&&r.data.results){
+      var res2=r.data.results;
+      if(res2.profile) parsed=res2.profile;
+      else if(res2.name||res2.description||res2.products||res2.features) parsed=res2;
+    }
+
+    if(parsed){
+      // Auto-fill the form fields — overwrite empty, append to existing
+      var filled=0,total=0;
+      ['name','description','products','features','pricing','markets','strengths','notes'].forEach(function(key){
+        total++;
+        var el=container.querySelector('[data-myco-field="'+key+'"]');
+        if(!el) return;
+        if(parsed[key]&&parsed[key].trim&&parsed[key].trim()){
+          filled++;
+          if(!el.value.trim()){
+            // Empty field — fill directly
+            el.value=parsed[key];
+          } else {
+            // Has content — append from document
+            el.value=el.value+'\n\n--- Extracted from '+res.name+' ---\n'+parsed[key];
+          }
+          // Highlight filled fields briefly
+          el.style.borderColor='#16a34a';el.style.background='#f0fdf4';
+          setTimeout(function(){el.style.borderColor='';el.style.background='';},3000);
+        }
+      });
+      // Auto-save the profile
+      var data={};
+      container.querySelectorAll('[data-myco-field]').forEach(function(el){data[el.getAttribute('data-myco-field')]=el.value;});
+      localStorage.setItem('pmr_my_company',JSON.stringify(data));
+
+      if(statusEl) statusEl.innerHTML='<span style="color:#16a34a">✓ <strong>'+res.name+'</strong> — '+filled+'/'+total+' fields auto-filled and saved! Review below.</span>';
+      showToast(filled+' fields auto-filled from '+res.name);
+    } else {
+      // Show actual error if available
+      var errMsg=r.data&&r.data.error?r.data.error:'No profile data in AI response';
+      console.warn('[MyCompany] Parse failed:',errMsg);
+      var notesEl=container.querySelector('[data-myco-field="notes"]');
+      if(notesEl) notesEl.value=(notesEl.value?notesEl.value+'\n\n':'')+extractedText.substring(0,3000);
+      if(statusEl) statusEl.innerHTML='<span style="color:#d97706">⚠ '+errMsg+' — raw text added to Notes field. Edit manually.</span>';
+    }
+  }catch(e){
+    console.error('[MyCompany] Exception:',e);
+    var notesEl=container.querySelector('[data-myco-field="notes"]');
+    if(notesEl) notesEl.value=(notesEl.value?notesEl.value+'\n\n':'')+extractedText.substring(0,3000);
+    if(statusEl) statusEl.innerHTML='<span style="color:#d97706">⚠ AI parsing failed: '+(e.message||e)+' — raw text added to Notes field.</span>';
+  }
+}
+
+function showCreatePresetDialog(parentContainer){
+  parentContainer.innerHTML='';
+  var title=document.createElement('div');
+  title.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:16px';
+  title.innerHTML='<label style="font-size:14px;font-weight:700;color:var(--navy)">Create Custom Industry Preset</label>';
+  var backBtn=document.createElement('button');
+  backBtn.style.cssText='background:none;border:none;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer';
+  backBtn.textContent='← Back';backBtn.onclick=function(){buildNewAnalysisView(parentContainer);};
+  title.appendChild(backBtn);
+  parentContainer.appendChild(title);
+
+  // Preset name
+  var nameRow=document.createElement('div');nameRow.style.cssText='margin-bottom:12px';
+  nameRow.innerHTML='<label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Preset Name</label>';
+  var nameInp=document.createElement('input');nameInp.placeholder='e.g. Insurance Telematics, Mining Fleet, Logistics...';
+  nameInp.style.cssText='width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--text);box-sizing:border-box';
+  nameRow.appendChild(nameInp);parentContainer.appendChild(nameRow);
+
+  // Emoji/icon
+  var emojiRow=document.createElement('div');emojiRow.style.cssText='margin-bottom:12px';
+  emojiRow.innerHTML='<label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Icon (emoji)</label>';
+  var emojiInp=document.createElement('input');emojiInp.value='🏭';emojiInp.style.cssText='width:60px;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:18px;text-align:center';
+  emojiRow.appendChild(emojiInp);parentContainer.appendChild(emojiRow);
+
+  // Research areas — user adds their own
+  var areasLabel=document.createElement('label');
+  areasLabel.style.cssText='display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px';
+  areasLabel.textContent='Research Areas (one per line)';
+  parentContainer.appendChild(areasLabel);
+
+  var areasNote=document.createElement('div');areasNote.style.cssText='font-size:10px;color:var(--muted);margin-bottom:6px';
+  areasNote.textContent='Enter each research area on its own line. These become the checkboxes in your analysis.';
+  parentContainer.appendChild(areasNote);
+
+  var areasTa=document.createElement('textarea');
+  areasTa.placeholder='e.g.\nDriver Behaviour & Scoring\nCANBUS & Fuel Monitoring\nDash Cameras & AI\nPricing (ZAR & USD)\nMobile Apps\nBI Dashboards & Reporting\nAsset Tracking';
+  areasTa.style.cssText='width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text);height:160px;resize:vertical;box-sizing:border-box;line-height:1.6';
+  parentContainer.appendChild(areasTa);
+
+  // Save button
+  var btnRow=document.createElement('div');btnRow.style.cssText='display:flex;gap:10px;margin-top:16px';
+  var saveBtn=document.createElement('button');
+  saveBtn.className='btn green';saveBtn.style.cssText='padding:10px 28px;font-size:13px;border-radius:8px;font-weight:700';
+  saveBtn.textContent='Save Preset';
+  saveBtn.onclick=function(){
+    var name=nameInp.value.trim();
+    if(!name){alert('Enter a preset name');return;}
+    var lines=areasTa.value.split('\n').filter(function(l){return l.trim();});
+    if(lines.length<1){alert('Add at least one research area');return;}
+    var emoji=emojiInp.value.trim()||'📋';
+    var id='custom_'+Date.now();
+    var areas=lines.map(function(line,i){
+      var key='custom_'+i+'_'+line.trim().toLowerCase().replace(/[^a-z0-9]+/g,'_').substring(0,30);
+      return {key:key,label:line.trim(),icon:''};
+    });
+    var preset={id:id,label:emoji+' '+name,desc:name,areas:areas};
+    var saved=JSON.parse(localStorage.getItem('pmr_custom_presets')||'[]');
+    saved.push(preset);
+    localStorage.setItem('pmr_custom_presets',JSON.stringify(saved));
+    _compPreset=id;
+    _customPresetAreas=areas;
+    showToast('Preset "'+name+'" saved!');
+    buildNewAnalysisView(parentContainer);
+  };
+  btnRow.appendChild(saveBtn);
+  parentContainer.appendChild(btnRow);
 }
 
 function buildNewAnalysisView(container){
@@ -4450,21 +4729,34 @@ function buildNewAnalysisView(container){
   presetLabel.textContent='Industry Preset';
   container.appendChild(presetLabel);
 
-  var presetRow=document.createElement('div');presetRow.style.cssText='display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap';
-  var presets=[
+  var presetRow=document.createElement('div');presetRow.style.cssText='display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center';
+  var builtInPresets=[
     {id:'fleet',label:'🚛 Fleet Management',desc:'Telematics, GPS tracking, driver behavior, fuel, cameras'},
     {id:'generic',label:'📊 Generic',desc:'General competitive analysis'}
   ];
-  presets.forEach(function(p){
+  // Load custom presets from localStorage
+  var customPresets=JSON.parse(localStorage.getItem('pmr_custom_presets')||'[]');
+  var allPresets=builtInPresets.concat(customPresets);
+
+  allPresets.forEach(function(p){
     var btn=document.createElement('button');
     btn.className='comp-tab'+(p.id===(_compPreset||'fleet')?' active':'');
-    btn.textContent=p.label;btn.title=p.desc;
+    btn.textContent=p.label;btn.title=p.desc||'';
     btn.onclick=function(){
       _compPreset=p.id;
+      if(p.areas) _customPresetAreas=p.areas; // store custom areas for rendering
       buildNewAnalysisView(container);
     };
     presetRow.appendChild(btn);
   });
+
+  // + Add Preset button
+  var addPresetBtn=document.createElement('button');
+  addPresetBtn.style.cssText='padding:4px 10px;border:1px dashed var(--accent);background:none;color:var(--accent);border-radius:16px;font-size:11px;font-weight:700;cursor:pointer';
+  addPresetBtn.textContent='+ New Preset';
+  addPresetBtn.onclick=function(){showCreatePresetDialog(container);};
+  presetRow.appendChild(addPresetBtn);
+
   container.appendChild(presetRow);
 
   // Competitor input
@@ -4503,7 +4795,11 @@ function buildNewAnalysisView(container){
   selAllRow.appendChild(selAllBtn);container.appendChild(selAllRow);
 
   var grid=document.createElement('div');grid.className='comp-checkbox-grid';
-  var activeAreas=_compPreset==='fleet'?FLEET_RESEARCH_AREAS:GENERIC_RESEARCH_AREAS;
+  var activeAreas;
+  if(_compPreset==='fleet') activeAreas=FLEET_RESEARCH_AREAS;
+  else if(_compPreset==='generic') activeAreas=GENERIC_RESEARCH_AREAS;
+  else if(_customPresetAreas) activeAreas=_customPresetAreas;
+  else activeAreas=FLEET_RESEARCH_AREAS;
   activeAreas.forEach(function(area){
     var lbl=document.createElement('label');
     var cb=document.createElement('input');cb.type='checkbox';cb.value=area.key;cb.checked=true;
@@ -4514,6 +4810,25 @@ function buildNewAnalysisView(container){
     grid.appendChild(lbl);
   });
   container.appendChild(grid);
+
+  // My Company comparison toggle
+  var myco=getMyCompany();
+  if(myco&&myco.name){
+    var mycoRow=document.createElement('div');mycoRow.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f0f5ff;border:1px solid var(--accent);border-radius:8px;margin-top:12px';
+    var mycoCb=document.createElement('input');mycoCb.type='checkbox';mycoCb.id='compVsMyCo';mycoCb.checked=localStorage.getItem('pmr_comp_vs_myco')!=='false';
+    mycoCb.onchange=function(){localStorage.setItem('pmr_comp_vs_myco',mycoCb.checked);};
+    var mycoLbl=document.createElement('label');mycoLbl.htmlFor='compVsMyCo';
+    mycoLbl.style.cssText='font-size:12px;font-weight:600;color:var(--navy);cursor:pointer;flex:1';
+    mycoLbl.textContent='Compare against '+myco.name+' (your company)';
+    var mycoNote=document.createElement('span');mycoNote.style.cssText='font-size:10px;color:var(--muted)';
+    mycoNote.textContent='AI will compare competitors to your products & features';
+    mycoRow.appendChild(mycoCb);mycoRow.appendChild(mycoLbl);mycoRow.appendChild(mycoNote);
+    container.appendChild(mycoRow);
+  } else {
+    var mycoHint=document.createElement('div');mycoHint.style.cssText='padding:8px 12px;background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;margin-top:12px;font-size:11px;color:#92400e';
+    mycoHint.innerHTML='💡 <strong>Tip:</strong> Set up your company profile in the "My Company" tab to get comparative analysis against your own products.';
+    container.appendChild(mycoHint);
+  }
 
   // Guidance section
   var hr1=document.createElement('hr');hr1.style.cssText='border:none;border-top:1px solid #e8edf7;margin:16px 0';
@@ -4654,18 +4969,21 @@ function renderCompetitorChips(){
 }
 
 function getExternalApiConfig(){
+  // Read from DOM if available, otherwise fall back to localStorage
   var eng=document.getElementById('compEngine');
-  if(!eng) return null;
+  var provider=eng?eng.value:(localStorage.getItem('pmr_comp_engine')||'claude');
+
   // For Claude, check if user has their own key saved
-  if(eng.value==='claude'){
+  if(provider==='claude'){
     var ck=localStorage.getItem('pmr_comp_apikey_claude');
     if(ck&&ck.trim()) return {provider:'claude_user',key:ck.trim()};
     return null; // use server-side key
   }
+  // For Gemini/OpenAI, read from DOM input or localStorage
   var key=document.getElementById('compApiKey');
-  var keyVal=key&&key.value.trim()?key.value.trim():localStorage.getItem('pmr_comp_apikey_'+eng.value);
+  var keyVal=key&&key.value.trim()?key.value.trim():localStorage.getItem('pmr_comp_apikey_'+provider);
   if(!keyVal||!keyVal.trim()) return null;
-  return {provider:eng.value,key:keyVal.trim()};
+  return {provider:provider,key:keyVal.trim()};
 }
 
 function getSelectedAreas(){
@@ -4711,13 +5029,20 @@ async function runCompetitiveAnalysis(container){
   var areas=getSelectedAreas();
   if(areas.length===0){alert('Select at least one research area.');return;}
   if(_compCompetitors.length>5){alert('Maximum 5 competitors per analysis.');return;}
+  if(areas.length>8&&_compCompetitors.length>1){
+    if(!confirm('You selected '+areas.length+' areas and '+_compCompetitors.length+' competitors. This may timeout.\n\nRecommended: max 6 areas with 2+ competitors, or up to 12 areas with 1 competitor.\n\nContinue anyway?'))return;
+  }
 
-  // Capture API config BEFORE destroying the DOM with loading screen
+  // Capture all config BEFORE destroying the DOM with loading screen
   var extApi=getExternalApiConfig();
   var guidance=document.getElementById('compGuidance');
   var guidanceText=guidance?guidance.value.trim():'';
   if(guidanceText) localStorage.setItem('pmr_comp_guidance',guidanceText);
-  console.log('[CompAnalysis] Starting — competitors:',_compCompetitors,'areas:',areas,'engine:',extApi?extApi.provider:'claude');
+  // My Company comparison
+  var vsMyco=document.getElementById('compVsMyCo');
+  var includeMyCompany=vsMyco?vsMyco.checked:false;
+  var myCompanyProfile=includeMyCompany?getMyCompany():null;
+  console.log('[CompAnalysis] Starting — competitors:',_compCompetitors,'areas:',areas,'engine:',extApi?extApi.provider:'claude','vsMyCompany:',!!myCompanyProfile);
   showAnalysisLoading(container);
 
   // Create analysis record in DB (non-blocking, ok if it fails)
@@ -4745,7 +5070,8 @@ async function runCompetitiveAnalysis(container){
         competitors:_compCompetitors,
         research_areas:areas,
         external_api:extApi,
-        guidance:guidanceText
+        guidance:guidanceText,
+        my_company:myCompanyProfile
       },
       token:_accessToken
     });

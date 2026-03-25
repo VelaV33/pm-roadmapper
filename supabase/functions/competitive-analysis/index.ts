@@ -44,23 +44,35 @@ const AREA_LABELS: Record<string, string> = {
   customer_insights: "Target segments, major customers, case studies, reviews",
 };
 
-function buildPrompt(competitors: string[], areas: string[], guidance?: string): string {
-  // Keep prompt concise — use short labels for many areas, full descriptions for few
+function buildPrompt(competitors: string[], areas: string[], guidance?: string, myCompany?: Record<string, string> | null): string {
   const useShort = areas.length > 6;
   const areaList = areas.map(a => {
     const full = AREA_LABELS[a] || a;
     return useShort ? full.split("—")[0].trim() : full;
   }).join("\n- ");
 
-  return `You are a fleet management competitive intelligence researcher. Research: ${competitors.join(", ")}
+  // Build my company context — truncate each field to keep prompt small
+  let myCoContext = '';
+  if (myCompany && myCompany.name) {
+    const trunc = (s: string, max = 300) => s && s.length > max ? s.substring(0, max) + '...' : (s || '');
+    myCoContext = `\nMY COMPANY (baseline): ${myCompany.name}
+${trunc(myCompany.description, 200)}
+Products: ${trunc(myCompany.products, 500)}
+Features: ${trunc(myCompany.features, 500)}
+${myCompany.pricing ? 'Pricing: ' + trunc(myCompany.pricing, 200) : ''}
+${myCompany.markets ? 'Markets: ' + trunc(myCompany.markets, 150) : ''}
+Compare competitors AGAINST ${myCompany.name}. Include ${myCompany.name} in comparison_matrix.\n`;
+  }
 
+  return `You are a fleet management competitive intelligence researcher. Research: ${competitors.join(", ")}
+${myCoContext}
 Areas to compare:
 - ${areaList}
 
-RULES: Use short bullets (1 sentence each). Include real URLs to company websites (NOT google/vertexaisearch URLs). Prices in ZAR and USD. Be concise — complete the full JSON.
+RULES: Short bullets (1 sentence). Real URLs (NOT google/vertexaisearch). Prices in ZAR+USD. Complete the full JSON.${myCompany?.name ? ' Include ' + myCompany.name + ' in comparison_matrix data.' : ''}
 ${guidance ? `USER GUIDANCE: ${guidance}\n` : ''}
-Respond with ONLY JSON. Start with { end with }.
-{"competitors":[{"name":"X","overview":"Short description","research":{"area_key":{"summary":"overview","details":["fact — https://company.com/page"],"sources":["https://url"]}},"swot":{"strengths":["s"],"weaknesses":["w"],"opportunities":["o"],"threats":["t"]},"key_insights":["insight"],"recommendations":[{"title":"action","description":"detail","suggested_timeline_months":3,"priority":"high"}]}],"overall_summary":"summary","market_trends":["trend"],"comparison_matrix":{"categories":["Cat1","Cat2"],"data":{"Co":{"Cat1":"val"}}},"sources":["https://url"]}`;
+Respond with ONLY JSON. Start { end }.
+{"competitors":[{"name":"X","overview":"desc","research":{"area_key":{"summary":"overview","details":["fact — https://url"],"sources":["https://url"]}},"swot":{"strengths":["s"],"weaknesses":["w"],"opportunities":["o"],"threats":["t"]},"key_insights":["insight"],"recommendations":[{"title":"action","description":"detail","suggested_timeline_months":3,"priority":"high"}]}],"overall_summary":"summary","market_trends":["trend"],"comparison_matrix":{"categories":["Cat1"],"data":{"Co":{"Cat1":"val"}${myCompany?.name ? ',"' + myCompany.name + '":{"Cat1":"val"}' : ''}}},"sources":["https://url"]}`;
 }
 
 function extractJSON(text: string): unknown {
@@ -158,11 +170,16 @@ serve(async (req) => {
 
   const t0 = Date.now();
   try {
-    const { competitors, research_areas, analysis_id, external_api, guidance } = await req.json();
+    const { competitors, research_areas, analysis_id, external_api, guidance, my_company } = await req.json();
     log(`START — competitors: ${competitors?.join(", ")}, areas: ${research_areas?.length}, engine: ${external_api?.provider || "claude"}`);
 
-    if (!competitors?.length) return errResp(400, "Add at least one competitor");
-    if (!research_areas?.length) return errResp(400, "Select at least one research area");
+    // Special mode: document parsing for company profile
+    const isProfileParse = competitors?.[0] === '__PROFILE_PARSE__';
+
+    if (!isProfileParse) {
+      if (!competitors?.length) return errResp(400, "Add at least one competitor");
+      if (!research_areas?.length) return errResp(400, "Select at least one research area");
+    }
 
     const SUPA_URL = Deno.env.get("SUPABASE_URL");
     const SUPA_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -185,9 +202,55 @@ serve(async (req) => {
     if (!isPremium) return errResp(403, "Premium subscription required");
     log("Premium OK");
 
+    // Profile parse mode — use guidance as the document text, skip normal flow
+    if (isProfileParse && guidance) {
+      const provider = external_api?.provider || "claude";
+      log(`Profile parse mode — provider: ${provider}, hasKey: ${!!external_api?.key}`);
+      const parsePrompt = guidance;
+      let parseResult: unknown;
+
+      if (provider === "gemini" && external_api?.key) {
+        log("Using Gemini for profile parse");
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${external_api.key}`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents: [{ parts: [{ text: parsePrompt }] }], generationConfig: { maxOutputTokens: 4000, temperature: 0.1 } }),
+        });
+        log(`Gemini profile parse response: ${res.status}`);
+        if (!res.ok) { const e = await res.text(); return errResp(502, "Gemini error " + res.status + ": " + e.substring(0, 200)); }
+        const data = await res.json();
+        parseResult = extractJSON(data.candidates?.[0]?.content?.parts?.[0]?.text || "");
+      } else if (provider === "openai" && external_api?.key) {
+        log("Using OpenAI for profile parse");
+        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST", headers: { Authorization: `Bearer ${external_api.key}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ model: "gpt-4o", max_tokens: 4000, temperature: 0.1, messages: [{ role: "user", content: parsePrompt }] }),
+        });
+        if (!res.ok) { const e = await res.text(); return errResp(502, "OpenAI error " + res.status + ": " + e.substring(0, 200)); }
+        const data = await res.json();
+        parseResult = extractJSON(data.choices?.[0]?.message?.content || "");
+      } else {
+        // Claude — user key or server key
+        const API_KEY = (provider === "claude_user" && external_api?.key) ? external_api.key : Deno.env.get("ANTHROPIC_API_KEY");
+        if (!API_KEY) return errResp(500, "No API key available. Save a Gemini or Claude key in the New Analysis tab first.");
+        log("Using Claude for profile parse, userKey: " + (provider === "claude_user"));
+        const res = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: { "x-api-key": API_KEY, "content-type": "application/json", "anthropic-version": "2023-06-01" },
+          body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 4000, messages: [{ role: "user", content: parsePrompt }] }),
+        });
+        if (!res.ok) { const e = await res.text(); log("Claude profile parse error: " + e.substring(0, 200)); return errResp(502, "Claude error " + res.status + ". Try switching to Gemini engine in New Analysis tab."); }
+        const data = await res.json();
+        const text = data.content?.find((b: { type: string }) => b.type === "text")?.text || "";
+        parseResult = extractJSON(text);
+      }
+
+      log("Profile parse complete");
+      return new Response(JSON.stringify({ ok: true, results: parseResult }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     if (analysis_id) await supabase.from("competitive_analyses").update({ status: "processing" }).eq("id", analysis_id);
 
-    const prompt = buildPrompt(competitors, research_areas, guidance);
+    const prompt = buildPrompt(competitors, research_areas, guidance, my_company);
     // Scale web searches: fewer areas = more searches per area, more areas = fewer to stay in time
     const webSearches = Math.max(3, Math.min(10, Math.floor(20 / (competitors.length * Math.max(1, research_areas.length / 3)))));
     log(`Prompt built — ${prompt.length} chars, webSearches: ${webSearches}`);
@@ -203,7 +266,7 @@ serve(async (req) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 65536, temperature: 0.2 },
+          generationConfig: { maxOutputTokens: 16000, temperature: 0.2 },
           tools: [{ google_search: {} }],
         }),
       });
@@ -232,7 +295,7 @@ serve(async (req) => {
       log("Using user-provided Claude API key...");
       const API_KEY = external_api.key;
       // Falls through to the same Claude logic below but with user's key
-      const prompt = buildPrompt(competitors, research_areas, guidance);
+      const prompt = buildPrompt(competitors, research_areas, guidance, my_company);
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: { "x-api-key": API_KEY, "content-type": "application/json", "anthropic-version": "2023-06-01" },

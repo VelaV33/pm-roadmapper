@@ -1,7 +1,7 @@
 {
   "name": "netstar-roadmap",
-  "version": "1.0.0",
-  "description": "Netstar HW Roadmap — Desktop App",
+  "version": "1.1.0",
+  "description": "PM Roadmapper — Product Strategy & Roadmap Tool",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -10,16 +10,40 @@
     "build:linux": "electron-builder --linux"
   },
   "build": {
-    "appId": "com.netstar.roadmap",
-    "productName": "Netstar Roadmap",
-    "directories": { "output": "dist" },
-    "win": { "target": "nsis", "icon": "assets/icon.ico" },
-    "mac": { "target": "dmg", "icon": "assets/icon.icns" },
-    "linux": { "target": "AppImage" },
-    "files": ["main.js", "preload.js", "renderer/**/*"]
+    "appId": "com.pmroadmapper.app",
+    "productName": "PM Roadmapper",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "assets/**/*",
+      "node_modules/@supabase/**/*"
+    ]
   },
   "devDependencies": {
     "electron": "^28.3.3",
     "electron-builder": "^24.13.3"
+  },
+  "productName": "PM Roadmapper",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "adm-zip": "^0.5.16",
+    "mammoth": "^1.12.0",
+    "pdf-parse-new": "^2.0.0"
   }
 }
