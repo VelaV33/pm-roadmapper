@@ -188,7 +188,7 @@ ipcMain.handle('print-pdf', async (_event, htmlContent) => {
 
     const { filePath, canceled } = await dialog.showSaveDialog(win, {
       title: 'Save PDF',
-      defaultPath: 'Netstar_HW_Roadmap_FY26.pdf',
+      defaultPath: 'PM_Roadmapper_FY27.pdf',
       filters: [{ name: 'PDF', extensions: ['pdf'] }],
     });
     if (canceled || !filePath) return { ok: false };

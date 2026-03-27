@@ -627,7 +627,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
   </div>
   <div class="hdr-center">
     <h1 id="roadmapTitle" contenteditable="true" spellcheck="false" title="Click to edit the roadmap title">Product Roadmap</h1>
-    <p id="roadmapSubtitle" contenteditable="true" spellcheck="false" title="Click to edit the subtitle / period label">FY26 · Combined High Level Overview</p>
+    <p id="roadmapSubtitle" contenteditable="true" spellcheck="false" title="Click to edit the subtitle / period label">FY27 · Combined High Level Overview</p>
     <p id="roadmapDesc" contenteditable="true" spellcheck="false" title="Click to add a description" style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic;min-width:200px;min-height:16px">Click to add a description…</p>
     <p style="font-size:10px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:4px;justify-content:center">
       <span style="letter-spacing:.06em;text-transform:uppercase;font-size:9px">Author:</span>
@@ -650,7 +650,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
   <span class="leg"><span class="swatch" style="background:linear-gradient(90deg,#d97706,#f59e0b)"></span>Delayed</span>
   <span class="leg"><span class="swatch" style="background:linear-gradient(90deg,#475569,#64748b)"></span>Strategy</span>
   <span class="leg"><span class="swatch" style="background:linear-gradient(90deg,#dc2626,#ef4444)"></span>At Risk</span>
-  <span style="margin-left:auto;color:var(--muted);font-size:10px">APR 2025 → FEB 2026 (FY26)</span>
+  <span style="margin-left:auto;color:var(--muted);font-size:10px">MAR 2025 → FEB 2027 (FY26–FY27)</span>
 </div>
 
 <!-- TABLE -->
@@ -663,9 +663,9 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 </div>
 
 <div class="footer">
-  <span>PM Roadmapper · FY26 Roadmap</span>
+  <span>PM Roadmapper · FY27 Roadmap</span>
   <span>Confidential — Internal Use Only</span>
-  <span>March 2026</span>
+  <span>March 2027</span>
 </div>
 </div>
 
@@ -1045,14 +1045,14 @@ var ALL_MONTHS=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV
 var Q_MONTH_MAP={1:["MAR","APR","MAY"],2:["JUN","JUL","AUG"],3:["SEP","OCT","NOV"],4:["DEC","JAN","FEB"]};
 
 var quarters=[
-  {label:"Q1 · FY25",year:2025,q:1,months:["MAR","APR","MAY"]},
-  {label:"Q2 · FY25",year:2025,q:2,months:["JUN","JUL","AUG"]},
-  {label:"Q3 · FY25",year:2025,q:3,months:["SEP","OCT","NOV"]},
-  {label:"Q4 · FY25",year:2025,q:4,months:["DEC","JAN","FEB"]},
-  {label:"Q1 · FY26",year:2026,q:1,months:["MAR","APR","MAY"]},
-  {label:"Q2 · FY26",year:2026,q:2,months:["JUN","JUL","AUG"]},
-  {label:"Q3 · FY26",year:2026,q:3,months:["SEP","OCT","NOV"]},
-  {label:"Q4 · FY26",year:2026,q:4,months:["DEC","JAN","FEB"]},
+  {label:"Q1 · FY26",year:2025,q:1,months:["MAR","APR","MAY"]},
+  {label:"Q2 · FY26",year:2025,q:2,months:["JUN","JUL","AUG"]},
+  {label:"Q3 · FY26",year:2025,q:3,months:["SEP","OCT","NOV"]},
+  {label:"Q4 · FY26",year:2025,q:4,months:["DEC","JAN","FEB"]},
+  {label:"Q1 · FY27",year:2026,q:1,months:["MAR","APR","MAY"]},
+  {label:"Q2 · FY27",year:2026,q:2,months:["JUN","JUL","AUG"]},
+  {label:"Q3 · FY27",year:2026,q:3,months:["SEP","OCT","NOV"]},
+  {label:"Q4 · FY27",year:2026,q:4,months:["DEC","JAN","FEB"]},
 ];
 
 // Derived globals — recomputed whenever quarters change
@@ -1204,13 +1204,17 @@ function drawTodayLine(){
   var todayMonthName=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][todayMonth];
 
   // Find today's month index in the timeline
+  // The year field in quarters is the calendar year when Q1 starts (MAR)
+  // Q4 months DEC use q.year, but JAN/FEB belong to q.year+1
   var targetIdx=-1;
   var col=0;
   for(var qi=0;qi<quarters.length;qi++){
     var q=quarters[qi];
     for(var mi=0;mi<q.months.length;mi++){
       var mName=q.months[mi];
-      var mYear=(q.q===4 && ['JAN','FEB','MAR'].indexOf(mName)>=0) ? q.year+1 : q.year;
+      var mYear=q.year;
+      // For Q4: DEC is in q.year, but JAN and FEB are in q.year+1
+      if(q.q===4 && (mName==='JAN'||mName==='FEB')) mYear=q.year+1;
       if(mName===todayMonthName && mYear===todayYear){ targetIdx=col; break; }
       col++;
     }
@@ -2005,7 +2009,7 @@ function exportExcel(){
   var t='';
   t+='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
   t+='<head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets>';
-  t+='<x:ExcelWorksheet><x:Name>HW Roadmap FY26</x:Name><x:WorksheetOptions>';
+  t+='<x:ExcelWorksheet><x:Name>HW Roadmap FY27</x:Name><x:WorksheetOptions>';
   t+='<x:DisplayGridlines/><x:FreezePanes/><x:FrozenNoSplit/><x:SplitHorizontal>2</x:SplitHorizontal><x:TopRowBottomPane>2</x:TopRowBottomPane>';
   t+='<x:SplitVertical>1</x:SplitVertical><x:LeftColumnRightPane>1</x:LeftColumnRightPane>';
   t+='</x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->';
@@ -2026,16 +2030,16 @@ function exportExcel(){
 
   // ── Header row 1: Logo + Quarters ──
   t+='<tr>';
-  t+='<th class="th-init" rowspan="2" style="font-size:13pt;letter-spacing:.05em;width:200px">PM ROADMAPPER<br><span style="font-size:8pt;font-weight:400;color:#a0aec0">FY26 ROADMAP</span></th>';
+  t+='<th class="th-init" rowspan="2" style="font-size:13pt;letter-spacing:.05em;width:200px">PM ROADMAPPER<br><span style="font-size:8pt;font-weight:400;color:#a0aec0">FY27 ROADMAP</span></th>';
   var quarters=[
-    {label:'Q1 · 2025',span:3,bg:'#1a1464'},
-    {label:'Q2 · 2025',span:3,bg:'#1e3478'},
-    {label:'Q3 · 2025',span:3,bg:'#1a3a8c'},
-    {label:'Q4 · 2025',span:3,bg:'#1544a0'},
-    {label:'Q1 · 2026',span:3,bg:'#1a1464'},
-    {label:'Q2 · 2026',span:3,bg:'#1e3478'},
-    {label:'Q3 · 2026',span:3,bg:'#1a3a8c'},
-    {label:'Q4 · 2026',span:2,bg:'#1544a0'},
+    {label:'Q1 · FY26',span:3,bg:'#1a1464'},
+    {label:'Q2 · FY26',span:3,bg:'#1e3478'},
+    {label:'Q3 · FY26',span:3,bg:'#1a3a8c'},
+    {label:'Q4 · FY26',span:3,bg:'#1544a0'},
+    {label:'Q1 · FY27',span:3,bg:'#1a1464'},
+    {label:'Q2 · FY27',span:3,bg:'#1e3478'},
+    {label:'Q3 · FY27',span:3,bg:'#1a3a8c'},
+    {label:'Q4 · FY27',span:3,bg:'#1544a0'},
   ];
   quarters.forEach(function(q){
     t+='<th class="qh" colspan="'+q.span+'" style="background:'+q.bg+';border-right:3px solid rgba(255,255,255,0.4)">'+q.label+'</th>';
@@ -2114,12 +2118,12 @@ function exportExcel(){
   Object.keys(BAR_HEX).forEach(function(k){
     t+='<span style="background:'+BAR_HEX[k]+';color:#fff;padding:2px 8px;border-radius:3px;margin-right:6px;font-size:8pt">'+BAR_LABEL[k]+'</span>';
   });
-  t+='&nbsp;&nbsp;PM Roadmapper · FY26 · Confidential</td></tr>';
+  t+='&nbsp;&nbsp;PM Roadmapper · FY27 · Confidential</td></tr>';
 
   t+='</table></body></html>';
 
   if(window.electronAPI){
-    window.electronAPI.saveFile({content:t,defaultName:'PM_Roadmapper_FY26.xls',ext:'xls',label:'Excel Spreadsheet'})
+    window.electronAPI.saveFile({content:t,defaultName:'PM_Roadmapper_FY27.xls',ext:'xls',label:'Excel Spreadsheet'})
       .then(function(res){ if(res&&res.ok) console.log('Excel saved'); });
   } else {
     openPreview(t, 'Excel Preview — Right-click table → Copy to paste into Excel', 'xls', t);
@@ -2180,7 +2184,7 @@ function exportPDF(){
   // Header
   p+='<div class="hdr">';
   p+='<div class="logo" style="font-size:16pt;font-weight:900;letter-spacing:.05em;background:#1a1464;color:#fff;padding:4px 12px;border-radius:4px">'+(window._logoDataUrl?'<img src="'+window._logoDataUrl+'" style="height:36px;max-width:120px;object-fit:contain">':'PM Roadmapper')+'</div>';
-  p+='<div style="text-align:center"><div class="title">PRODUCT STRATEGY ROADMAP — HARDWARE</div><div class="sub">FY26 · Combined High Level Overview</div></div>';
+  p+='<div style="text-align:center"><div class="title">PRODUCT STRATEGY ROADMAP — HARDWARE</div><div class="sub">FY27 · Combined High Level Overview</div></div>';
   p+='<div class="badge">HW PORTFOLIO</div>';
   p+='</div>';
 
@@ -2190,7 +2194,7 @@ function exportPDF(){
   [['g','Released'],['b','In Progress'],['o','Delayed'],['s','Strategy'],['r','At Risk']].forEach(function(item){
     p+='<span class="leg"><span class="swatch" style="background:'+BAR_HEX[item[0]]+'"></span>'+item[1]+'</span>';
   });
-  p+='<span style="margin-left:auto;color:#7b8db0;font-size:7pt">APR 2025 → FEB 2026 (FY26)</span>';
+  p+='<span style="margin-left:auto;color:#7b8db0;font-size:7pt">MAR 2025 → FEB 2027 (FY26–FY27)</span>';
   p+='</div>';
 
   // Table
@@ -2201,10 +2205,10 @@ function exportPDF(){
   p+='<thead><tr>';
   p+='<th class="th-lbl">INITIATIVE</th>';
   var quarters=[
-    {label:'Q1 · 2025',span:3,bg:'#1a1464'},{label:'Q2 · 2025',span:3,bg:'#1e3478'},
-    {label:'Q3 · 2025',span:3,bg:'#1a3a8c'},{label:'Q4 · 2025',span:3,bg:'#1544a0'},
-    {label:'Q1 · 2026',span:3,bg:'#1a1464'},{label:'Q2 · 2026',span:3,bg:'#1e3478'},
-    {label:'Q3 · 2026',span:3,bg:'#1a3a8c'},{label:'Q4 · 2026',span:2,bg:'#1544a0'},
+    {label:'Q1 · FY26',span:3,bg:'#1a1464'},{label:'Q2 · FY26',span:3,bg:'#1e3478'},
+    {label:'Q3 · FY26',span:3,bg:'#1a3a8c'},{label:'Q4 · FY26',span:3,bg:'#1544a0'},
+    {label:'Q1 · FY27',span:3,bg:'#1a1464'},{label:'Q2 · FY27',span:3,bg:'#1e3478'},
+    {label:'Q3 · FY27',span:3,bg:'#1a3a8c'},{label:'Q4 · FY27',span:3,bg:'#1544a0'},
   ];
   quarters.forEach(function(q){
     p+='<th class="qh" colspan="'+q.span+'" style="background:'+q.bg+';border-right:2px solid rgba(255,255,255,.3)">'+q.label+'</th>';
@@ -2261,7 +2265,7 @@ function exportPDF(){
   });
 
   p+='</tbody></table>';
-  p+='<div class="footer"><span><b>PM Roadmapper · FY26 Roadmap</b></span><span>Confidential — Internal Use Only</span><span>March 2026</span></div>';
+  p+='<div class="footer"><span><b>PM Roadmapper · FY27 Roadmap</b></span><span>Confidential — Internal Use Only</span><span>March 2027</span></div>';
   p+='</body></html>';
 
   if(window.electronAPI){
@@ -2292,7 +2296,7 @@ function openPreview(iframeContent, title, ext, downloadContent){
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a');
       a.href = url;
-      a.download = 'PM_Roadmapper_FY26.' + ext;
+      a.download = 'PM_Roadmapper_FY27.' + ext;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
