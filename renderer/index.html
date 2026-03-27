@@ -4441,7 +4441,7 @@ function openCompetitiveAnalysis(){
 
   // Show setup prompt if no company profile yet
   var hasProfile=!!localStorage.getItem('pmr_my_company');
-  if(!hasProfile){tabMyco.style.cssText+=';animation:comp-spin 1s ease-in-out 3;border-color:#d97706;color:#d97706';tabMyco.textContent='⚠ My Company (Setup)';}
+  if(!hasProfile){tabMyco.style.cssText+=';border-color:#d97706;color:#d97706;box-shadow:0 0 8px rgba(245,158,11,.5)';tabMyco.textContent='⚠ My Company (Setup)';setTimeout(function(){tabMyco.style.boxShadow='';},3000);}
   else{tabMyco.textContent='🏢 My Company';}
 
   function setActiveTab(active){[tabMyco,tabNew,tabHist].forEach(function(t){t.className='comp-tab'+(t===active?' active':'');});}
@@ -4905,11 +4905,11 @@ function buildNewAnalysisView(container){
 
   // Restore saved key
   var savedKey=localStorage.getItem('pmr_comp_apikey_'+engSel.value);
-  if(savedKey)keyInp.value=savedKey;
+  if(savedKey){keyInp.value=savedKey;keyInp.style.borderColor='#16a34a';}
 
-  var keyNote=document.createElement('div');
-  keyNote.style.cssText='font-size:10px;color:var(--muted);margin-top:4px';
-  keyNote.textContent='Your key is saved locally on your device and only sent to the selected AI provider.';
+  var keyNote=document.createElement('div');keyNote.id='compKeyNote';
+  keyNote.style.cssText='font-size:10px;margin-top:4px;color:'+(savedKey?'#16a34a':'var(--muted)');
+  keyNote.textContent=savedKey?'✓ Key loaded from saved settings':'Paste your API key — it will be saved locally on your device.';
 
   // Show saved keys status
   var keysStatus=document.createElement('div');keysStatus.style.cssText='font-size:10px;margin-top:6px;display:flex;gap:10px';
@@ -4929,6 +4929,9 @@ function buildNewAnalysisView(container){
     keyWrap.style.display='block';
     var sk=localStorage.getItem('pmr_comp_apikey_'+engSel.value);
     keyInp.value=sk||'';
+    keyInp.style.borderColor=sk?'#16a34a':'';
+    var note=document.getElementById('compKeyNote');
+    if(note){note.textContent=sk?'✓ Key loaded from saved settings':'Paste your API key — it will be saved locally.';note.style.color=sk?'#16a34a':'var(--muted)';}
   };
   // Also auto-save on blur
   keyInp.onblur=function(){if(keyInp.value.trim())localStorage.setItem('pmr_comp_apikey_'+engSel.value,keyInp.value);};
@@ -5133,9 +5136,10 @@ function showAnalysisError(container,msg){
   wrap.innerHTML='<div style="font-size:36px;margin-bottom:12px">⚠️</div>'+
     '<p style="font-size:14px;font-weight:600;color:#dc2626;margin-bottom:8px">Analysis Failed</p>'+
     '<p style="font-size:12px;color:var(--muted);margin-bottom:20px;max-width:500px;margin-left:auto;margin-right:auto">'+msg+'</p>'+
-    '<div style="display:flex;gap:10px;justify-content:center">'+
-    '<button class="btn accent" style="padding:8px 20px;font-size:12px;border:1px solid var(--accent);color:var(--accent);background:#fff;border-radius:6px;cursor:pointer;font-weight:700" onclick="buildNewAnalysisView(document.getElementById(\'compContent\'))">← Back to Setup</button>'+
-    '<button class="btn" style="padding:8px 20px;font-size:12px;border:1px solid var(--border);color:var(--muted);background:#fff;border-radius:6px;cursor:pointer;font-weight:700" onclick="renderAnalysisResults(document.getElementById(\'compContent\'),getDemoResults(window._compCompetitors||[\'Competitor\'],getSelectedAreas()||[\'strengths_weaknesses\']))">Try Demo Mode</button>'+
+    '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'+
+    '<button class="comp-tab" onclick="buildNewAnalysisView(document.getElementById(\'compContent\'))">← New Analysis</button>'+
+    '<button class="comp-tab" onclick="buildHistoryView(document.getElementById(\'compContent\'))">📋 History</button>'+
+    '<button class="comp-tab" onclick="renderAnalysisResults(document.getElementById(\'compContent\'),getDemoResults(window._compCompetitors||[\'Competitor\'],getSelectedAreas()||[\'strengths_weaknesses\']))">Try Demo</button>'+
     '</div>';
   container.appendChild(wrap);
   window._compCompetitors=_compCompetitors;
@@ -5340,6 +5344,16 @@ function renderAnalysisResults(container,results){
     });
     srcBody.appendChild(srcList);srcCard.appendChild(srcBody);container.appendChild(srcCard);
   }
+
+  // Bottom navigation
+  var bottomNav=document.createElement('div');bottomNav.style.cssText='display:flex;justify-content:center;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid #e8edf7';
+  var backBtn2=document.createElement('button');backBtn2.className='comp-tab';backBtn2.textContent='← New Analysis';
+  backBtn2.onclick=function(){buildNewAnalysisView(container);};
+  var histBtn=document.createElement('button');histBtn.className='comp-tab';histBtn.textContent='📋 History';
+  histBtn.onclick=function(){buildHistoryView(container);};
+  bottomNav.appendChild(backBtn2);bottomNav.appendChild(histBtn);
+  container.appendChild(bottomNav);
+
   }catch(renderErr){
     console.error('[CompAnalysis] RENDER ERROR:',renderErr);
     container.innerHTML='<div style="text-align:center;padding:30px;color:#dc2626"><p><strong>Error rendering results</strong></p><p style="font-size:11px;color:var(--muted)">'+renderErr.message+'</p><pre style="text-align:left;font-size:10px;max-height:200px;overflow:auto;background:#f8f8f8;padding:10px;border-radius:6px;margin-top:10px">'+JSON.stringify(results,null,2).substring(0,2000)+'</pre></div>';
@@ -5520,16 +5534,140 @@ function saveAnalysisLocally(results){
   showToast('Analysis saved locally');
 }
 
+function deleteSavedAnalysis(id,container){
+  if(!confirm('Delete this saved analysis?'))return;
+  var saved=JSON.parse(localStorage.getItem('pmr_saved_analyses')||'[]');
+  saved=saved.filter(function(a){return a.id!==id;});
+  localStorage.setItem('pmr_saved_analyses',JSON.stringify(saved));
+  if(container) buildHistoryView(container);
+  showToast('Analysis deleted');
+}
+
 function getSavedAnalyses(){
   return JSON.parse(localStorage.getItem('pmr_saved_analyses')||'[]');
+}
+
+function mergeAnalyses(ids){
+  var saved=getSavedAnalyses();
+  var toMerge=saved.filter(function(a){return ids.indexOf(a.id)>=0;});
+  if(toMerge.length<2){alert('Select at least 2 analyses to merge.');return null;}
+
+  var merged={
+    overall_summary:'',
+    competitors:[],
+    market_trends:[],
+    comparison_matrix:{categories:[],data:{}},
+    sources:[],
+    _merged:true,
+    _merged_from:ids
+  };
+
+  var seenCompetitors={};
+  var allTrends=[];
+  var allSources=[];
+  var summaries=[];
+
+  toMerge.forEach(function(entry){
+    var r=entry.results;if(!r)return;
+    if(r.overall_summary) summaries.push(r.overall_summary);
+    // Merge competitors — combine research areas for same competitor
+    (r.competitors||[]).forEach(function(comp){
+      if(seenCompetitors[comp.name]){
+        var existing=seenCompetitors[comp.name];
+        // Merge research areas
+        if(comp.research){
+          Object.keys(comp.research).forEach(function(key){
+            if(!existing.research[key]) existing.research[key]=comp.research[key];
+            else {
+              // Append details
+              var ed=existing.research[key].details||[];
+              var nd=comp.research[key].details||[];
+              existing.research[key].details=ed.concat(nd.filter(function(d){return ed.indexOf(d)<0;}));
+              var es=existing.research[key].sources||[];
+              var ns=comp.research[key].sources||[];
+              existing.research[key].sources=es.concat(ns.filter(function(s){return es.indexOf(s)<0;}));
+            }
+          });
+        }
+        // Merge SWOT
+        if(comp.swot&&existing.swot){
+          ['strengths','weaknesses','opportunities','threats'].forEach(function(k){
+            var ea=existing.swot[k]||[];
+            var na=(comp.swot[k]||[]);
+            existing.swot[k]=ea.concat(na.filter(function(i){return ea.indexOf(i)<0;}));
+          });
+        }
+        // Merge insights
+        var ei=existing.key_insights||[];
+        (comp.key_insights||[]).forEach(function(ins){if(ei.indexOf(ins)<0)ei.push(ins);});
+        existing.key_insights=ei;
+        // Merge recommendations
+        var er=existing.recommendations||[];
+        (comp.recommendations||[]).forEach(function(rec){
+          if(!er.find(function(e){return e.title===rec.title;}))er.push(rec);
+        });
+        existing.recommendations=er;
+      } else {
+        seenCompetitors[comp.name]=JSON.parse(JSON.stringify(comp));
+        merged.competitors.push(seenCompetitors[comp.name]);
+      }
+    });
+    // Merge trends
+    (r.market_trends||[]).forEach(function(t){if(allTrends.indexOf(t)<0)allTrends.push(t);});
+    // Merge sources
+    (r.sources||[]).forEach(function(s){if(allSources.indexOf(s)<0)allSources.push(s);});
+    // Merge comparison matrix
+    if(r.comparison_matrix){
+      (r.comparison_matrix.categories||[]).forEach(function(c){
+        if(merged.comparison_matrix.categories.indexOf(c)<0)merged.comparison_matrix.categories.push(c);
+      });
+      var md=r.comparison_matrix.data||{};
+      Object.keys(md).forEach(function(co){
+        if(!merged.comparison_matrix.data[co])merged.comparison_matrix.data[co]={};
+        Object.keys(md[co]).forEach(function(cat){
+          if(!merged.comparison_matrix.data[co][cat])merged.comparison_matrix.data[co][cat]=md[co][cat];
+        });
+      });
+    }
+  });
+
+  merged.overall_summary=summaries.join('\n\n');
+  merged.market_trends=allTrends;
+  merged.sources=allSources;
+  return merged;
 }
 
 // ── History View ──
 async function buildHistoryView(container){
   container.innerHTML='';
 
-  // Locally saved analyses
   var saved=getSavedAnalyses();
+
+  // Merge toolbar
+  if(saved.length>=2){
+    var mergeBar=document.createElement('div');
+    mergeBar.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#f0f5ff;border:1px solid var(--accent);border-radius:8px;margin-bottom:12px';
+    mergeBar.innerHTML='<span style="font-size:12px;color:var(--navy);font-weight:600">Select analyses to merge into one report</span>';
+    var mergeBtn=document.createElement('button');
+    mergeBtn.className='btn green';mergeBtn.style.cssText='padding:6px 16px;font-size:11px;border-radius:6px;font-weight:700';
+    mergeBtn.textContent='🔗 Merge Selected';
+    mergeBtn.onclick=function(){
+      var checked=[];
+      container.querySelectorAll('.merge-cb:checked').forEach(function(cb){checked.push(cb.value);});
+      if(checked.length<2){alert('Select at least 2 analyses to merge.');return;}
+      var merged=mergeAnalyses(checked);
+      if(merged){
+        // Save merged result
+        saveAnalysisLocally(merged);
+        renderAnalysisResults(container,merged);
+        showToast('Merged '+checked.length+' analyses into one report');
+      }
+    };
+    mergeBar.appendChild(mergeBtn);
+    container.appendChild(mergeBar);
+  }
+
+  // Locally saved analyses
   if(saved.length){
     var localLabel=document.createElement('label');
     localLabel.style.cssText='display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px';
@@ -5538,15 +5676,21 @@ async function buildHistoryView(container){
 
     saved.forEach(function(a){
       var item=document.createElement('div');item.className='comp-history-item';
-      item.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center">'+
+      item.style.cssText+='display:flex;align-items:center;gap:10px';
+      var cb=document.createElement('input');cb.type='checkbox';cb.className='merge-cb';cb.value=a.id;
+      cb.onclick=function(e){e.stopPropagation();};
+      var info=document.createElement('div');info.style.cssText='flex:1;cursor:pointer';
+      info.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center">'+
         '<div><strong style="font-size:13px;color:var(--navy)">'+a.competitors.join(', ')+'</strong>'+
-        '<div style="font-size:10px;color:var(--muted);margin-top:2px">Saved locally</div></div>'+
+        '<div style="font-size:10px;color:var(--muted);margin-top:2px">Saved locally'+(a.results&&a.results._merged?' · <span style="color:#7c3aed;font-weight:700">MERGED</span>':'')+'</div></div>'+
         '<div style="text-align:right;display:flex;align-items:center;gap:8px">'+
         '<div><div style="font-size:11px;color:var(--muted)">'+new Date(a.date).toLocaleDateString()+'</div>'+
         '<div style="font-size:10px;font-weight:700;color:#16a34a">saved</div></div>'+
-        '<button onclick="event.stopPropagation();loadSavedCompetitors(\''+a.id+'\')" style="background:var(--accent);color:#fff;border:none;border-radius:4px;padding:4px 8px;font-size:10px;font-weight:700;cursor:pointer" title="Load these competitors into a new analysis">Re-analyze</button>'+
+        '<button onclick="event.stopPropagation();loadSavedCompetitors(\''+a.id+'\')" style="background:var(--accent);color:#fff;border:none;border-radius:4px;padding:4px 8px;font-size:10px;font-weight:700;cursor:pointer" title="Re-analyze these competitors">Re-analyze</button>'+
+        '<button onclick="event.stopPropagation();deleteSavedAnalysis(\''+a.id+'\',this.closest(\'#compContent\'))" style="background:none;border:none;color:#dc2626;font-size:14px;cursor:pointer" title="Delete">✕</button>'+
         '</div></div>';
-      item.onclick=function(){renderAnalysisResults(container,a.results);};
+      info.onclick=function(){renderAnalysisResults(container,a.results);};
+      item.appendChild(cb);item.appendChild(info);
       container.appendChild(item);
     });
   }
@@ -5554,7 +5698,7 @@ async function buildHistoryView(container){
   // Cloud analyses
   var r;
   try{
-    r=await _dbReq('/rest/v1/competitive_analyses?select=id,competitors,research_areas,status,created_at&user_id=eq.'+_currentUser.id+'&order=created_at.desc&limit=20');
+    r=await _dbReq('/rest/v1/competitive_analyses?select=id,competitors,research_areas,status,created_at&user_id=eq.'+_currentUser.id+'&status=eq.complete&order=created_at.desc&limit=20');
   }catch(e){}
 
   if(r&&r.ok&&r.data&&r.data.length>0){
@@ -5593,14 +5737,31 @@ function loadSavedCompetitors(savedId){
 
 async function loadPastAnalysis(id,container){
   container.innerHTML='<div class="comp-loading"><div class="spinner"></div><p style="font-size:13px;color:var(--muted)">Loading analysis...</p></div>';
+
+  // Try locally saved first
+  var saved=getSavedAnalyses();
+  var local=saved.find(function(a){return a.id===id;});
+  if(local&&local.results){
+    renderAnalysisResults(container,local.results);
+    return;
+  }
+
+  // Try cloud
   var r;
   try{
     r=await _dbReq('/rest/v1/competitive_analyses?select=*&id=eq.'+id);
   }catch(e){console.error('[CompAnalysis] History load error:',e);}
+
   if(r&&r.ok&&r.data&&r.data.length>0&&r.data[0].results){
     renderAnalysisResults(container,r.data[0].results);
   } else {
-    container.innerHTML='<p style="color:#dc2626;text-align:center;padding:30px">Failed to load analysis. The analysis may still be processing or may have failed.</p><button class="comp-tab" onclick="buildHistoryView(this.parentElement)" style="margin:0 auto;display:block">\u2190 Back to History</button>';
+    var status=(r&&r.ok&&r.data&&r.data.length>0)?r.data[0].status:'unknown';
+    container.innerHTML='<div style="text-align:center;padding:30px">'+
+      '<p style="color:#dc2626;font-weight:600;margin-bottom:8px">Could not load analysis results</p>'+
+      '<p style="color:var(--muted);font-size:12px;margin-bottom:16px">Status: '+status+'. The analysis may have timed out before results were saved. Try running a new analysis with fewer areas.</p>'+
+      '<div style="display:flex;gap:10px;justify-content:center;margin-top:10px">'+
+      '<button class="comp-tab" onclick="buildNewAnalysisView(document.getElementById(\'compContent\'))">← New Analysis</button>'+
+      '<button class="comp-tab" onclick="buildHistoryView(document.getElementById(\'compContent\'))">📋 History</button></div></div>';
   }
 }
 
