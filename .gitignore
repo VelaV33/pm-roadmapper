@@ -1,6 +1,33 @@
+# Dependencies
 node_modules/
+
+# Electron build output
 dist/
 out/
-*.log
+
+# OS files
 .DS_Store
+.DS_Store?
+._*
 Thumbs.db
+ehthumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment / secrets — NEVER COMMIT THESE
+.env
+.env.local
+.env.*.local
+secrets.json
+
+# Temp / cache
+*.tmp
+*.bak

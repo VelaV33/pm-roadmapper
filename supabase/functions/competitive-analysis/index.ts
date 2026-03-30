@@ -174,7 +174,7 @@ serve(async (req) => {
     log(`START — competitors: ${competitors?.join(", ")}, areas: ${research_areas?.length}, engine: ${external_api?.provider || "claude"}`);
 
     // Special mode: document parsing for company profile
-    const isProfileParse = competitors?.[0] === '__PROFILE_PARSE__';
+    const isProfileParse = competitors?.[0] === '__PROFILE_PARSE__' || competitors?.[0] === '__AI_COMMAND__';
 
     if (!isProfileParse) {
       if (!competitors?.length) return errResp(400, "Add at least one competitor");

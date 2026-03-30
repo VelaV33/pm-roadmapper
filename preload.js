@@ -15,4 +15,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openExternal:    (url)       => ipcRenderer.invoke('open-external', url),
   saveBinaryFile:  (opts)      => ipcRenderer.invoke('save-binary-file', opts),
   readFile:        (opts)      => ipcRenderer.invoke('read-file', opts),
+  transcribeAudio: (opts)      => ipcRenderer.invoke('transcribe-audio', opts),
 });

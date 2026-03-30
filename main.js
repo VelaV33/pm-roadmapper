@@ -31,6 +31,20 @@ function createWindow() {
     },
   });
 
+  // Grant microphone permission for voice-to-text
+  win.webContents.session.setPermissionRequestHandler((webContents, permission, callback) => {
+    if (permission === 'media' || permission === 'microphone') {
+      callback(true);
+    } else {
+      callback(true);
+    }
+  });
+
+  win.webContents.session.setPermissionCheckHandler((webContents, permission) => {
+    if (permission === 'media' || permission === 'microphone') return true;
+    return true;
+  });
+
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
   // Custom menu
@@ -341,6 +355,66 @@ ipcMain.handle('read-file', async (_event, opts) => {
   } catch (e) {
     return { ok: false, error: e.message };
   }
+});
+
+// Transcribe audio via Gemini API (runs in main process to avoid CORS)
+ipcMain.handle('transcribe-audio', async (_event, { base64, apiKey, mimeType }) => {
+  const mime = mimeType || 'audio/webm';
+  console.log(`[Transcribe] Starting — mime: ${mime}, base64 length: ${base64?.length || 0}`);
+  let firstError = '';
+  const models = ['gemini-3-flash-preview', 'gemini-3-pro-preview', 'gemini-3.1-pro-preview', 'gemini-2.5-flash'];
+  for (const model of models) {
+    try {
+      console.log(`[Transcribe] Trying ${model}...`);
+      const payload = JSON.stringify({
+        contents: [{ parts: [
+          { inlineData: { mimeType: mime, data: base64 } },
+          { text: 'This is a voice recording of someone giving instructions for a product roadmap tool. Listen carefully and transcribe EXACTLY what is spoken, word for word. Do NOT make up or generate content. If you cannot hear clear speech, respond with "[unclear audio]". Return ONLY the exact transcription.' }
+        ]}],
+        generationConfig: { maxOutputTokens: 2000, temperature: 0 }
+      });
+
+      const result = await new Promise((resolve) => {
+        const options = {
+          hostname: 'generativelanguage.googleapis.com',
+          path: `/v1beta/models/${model}:generateContent?key=${apiKey}`,
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }
+        };
+        const req = https.request(options, (res) => {
+          let data = '';
+          res.on('data', chunk => data += chunk);
+          res.on('end', () => {
+            console.log(`[Transcribe] ${model} status: ${res.statusCode}, size: ${data.length}`);
+            try { resolve({ ok: res.statusCode < 300, data: JSON.parse(data), status: res.statusCode }); }
+            catch(e) { resolve({ ok: false, data: {}, status: res.statusCode }); }
+          });
+        });
+        req.on('error', e => { console.log(`[Transcribe] ${model} error: ${e.message}`); resolve({ ok: false, error: e.message }); });
+        req.write(payload);
+        req.end();
+      });
+
+      if (result.ok && result.data.candidates) {
+        let text = '';
+        const parts = result.data.candidates[0]?.content?.parts || [];
+        parts.forEach(p => { if (p.text) text += p.text; });
+        if (text.trim() && !text.toLowerCase().includes('unable to process audio') && !text.toLowerCase().includes('cannot transcribe') && !text.toLowerCase().includes('[unclear audio]')) {
+          console.log(`[Transcribe] Success with ${model}: "${text.trim().substring(0, 50)}..."`);
+          return { ok: true, text: text.trim(), model };
+        }
+        console.log(`[Transcribe] ${model} returned: "${text.substring(0, 100)}"`);
+      } else {
+        const errDetail = JSON.stringify(result.data).substring(0, 300);
+        console.log(`[Transcribe] ${model} failed — status: ${result.status}, response:`, errDetail);
+        // Return the first error we get so user can see it
+        if (!firstError) firstError = `${model}: HTTP ${result.status} — ${errDetail}`;
+      }
+    } catch (e) {
+      console.log(`[Transcribe] ${model} exception: ${e.message}`);
+    }
+  }
+  return { ok: false, error: firstError || ('All models failed. base64 size: ' + (base64?.length || 0)) };
 });
 
 // Save binary file (e.g. XLSX) from base64
