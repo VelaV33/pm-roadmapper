@@ -6,6 +6,7 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMyNTYzYTgiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMWExNDY0Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHJ4PSI3IiBmaWxsPSJ1cmwoI2JnKSIvPgogIDxyZWN0IHg9IjQiIHk9IjYiICB3aWR0aD0iMjQiIGhlaWdodD0iNSIgcng9IjIuNSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwuOSkiLz4KICA8cmVjdCB4PSI0IiB5PSIxNCIgd2lkdGg9IjE1IiBoZWlnaHQ9IjUiIHJ4PSIyLjUiIGZpbGw9IiMxNmEzNGEiIG9wYWNpdHk9Ii45Ii8+CiAgPHJlY3QgeD0iNCIgeT0iMjEiIHdpZHRoPSIxMCIgaGVpZ2h0PSI1IiByeD0iMi41IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LC41KSIvPgogIDxyZWN0IHg9IjE3IiB5PSIyMSIgd2lkdGg9IjExIiBoZWlnaHQ9IjUiIHJ4PSIyLjUiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsLjI1KSIvPgogIDxjaXJjbGUgY3g9IjI4IiBjeT0iOC41IiByPSIzIiBmaWxsPSIjNGE5MGQ5IiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTkiIGN5PSIxNi41IiByPSIzIiBmaWxsPSIjZmZmIiBzdHJva2U9IiMxNmEzNGEiIHN0cm9rZS13aWR0aD0iMS41Ii8+Cjwvc3ZnPgo=">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="../node_modules/pptxgenjs/dist/pptxgen.bundle.js"></script>
 <style>
 :root{
   --navy:#1a1464;--blue:#2563a8;--accent:#4a90d9;
@@ -338,7 +339,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 /* ── KPI OVERLAY ── */
 #kpiOverlay{position:fixed;inset:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
 #kpiOverlay.open{display:flex}
-.kpi-header{background:linear-gradient(135deg,#991b1b 0%,#dc2626 40%,#ea580c 100%);padding:16px 24px;display:flex;align-items:center;gap:16px;flex-shrink:0;flex-wrap:wrap}
+.kpi-header{background:linear-gradient(135deg,#065f46 0%,#0f766e 40%,#0d9488 100%);padding:16px 24px;display:flex;align-items:center;gap:16px;flex-shrink:0;flex-wrap:wrap}
 .kpi-header h2{color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;letter-spacing:.05em}
 .kpi-body{flex:1;overflow-y:auto;padding:20px 24px 60px;background:var(--bg)}
 .kpi-group{background:#fff;border:1px solid var(--border);border-radius:12px;margin-bottom:16px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04)}
@@ -452,6 +453,37 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .cap-template-card .icon{font-size:24px;margin-bottom:6px}
 .cap-template-card .name{font-size:13px;font-weight:700;color:#e2e8f0}
 .cap-template-card .desc{font-size:10px;color:#64748b;margin-top:4px}
+
+/* ── RBAC ── */
+.rbac-disabled{pointer-events:none;opacity:.5;position:relative}
+.rbac-disabled::after{content:'Read Only';position:absolute;top:2px;right:2px;background:#dc2626;color:#fff;font-size:7px;font-weight:700;padding:1px 5px;border-radius:3px;z-index:10}
+.rbac-hidden{display:none !important}
+.role-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.role-badge.manager{background:#7c3aed;color:#fff}
+.role-badge.product_manager{background:#2563eb;color:#fff}
+.role-badge.developer{background:#0d9488;color:#fff}
+.role-badge.read_only{background:#64748b;color:#fff}
+.role-manage-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+
+/* ── ARTIFACTS OVERLAY ── */
+#artOverlay{position:fixed;inset:0;background:rgba(10,10,40,.92);z-index:3000;display:none;flex-direction:column;overflow:hidden}
+#artOverlay.open{display:flex}
+.art-header{background:linear-gradient(135deg,#7c3aed,#a78bfa);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;border-bottom:2px solid #a78bfa}
+.art-header h2{color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;letter-spacing:.05em}
+.art-body{flex:1;overflow-y:auto;padding:20px 24px 60px;background:var(--bg)}
+.art-toolbar{background:rgba(0,0,0,.3);padding:10px 24px;display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap}
+.art-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.art-card{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:box-shadow .15s}
+.art-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.art-card-top{padding:14px 16px;border-bottom:1px solid #f0f3f8}
+.art-card-body{padding:12px 16px}
+.art-type-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#fff}
+.art-status{display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;text-transform:uppercase}
+.art-status.draft{background:#fef3c7;color:#92400e}
+.art-status.in-review{background:#dbeafe;color:#1e40af}
+.art-status.approved{background:#dcfce7;color:#166534}
+.art-status.published{background:#f0fdf4;color:#065f46;border:1px solid #bbf7d0}
+.art-status.archived{background:#f1f5f9;color:#475569}
 
 /* no-display */
 .hidden{display:none}
@@ -756,13 +788,19 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
     <button onclick="openTodo()" title="ToDo List per Initiative" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);border:1px solid rgba(124,58,237,.6);color:#fff;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;margin-right:6px">📋 ToDo</button>
 
     <!-- KPI Scorecard -->
-    <button onclick="openKPI()" title="KPI Scorecard" style="background:linear-gradient(135deg,#dc2626,#ea580c);border:1px solid rgba(220,38,38,.6);color:#fff;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;margin-right:6px">📊 KPIs</button>
+    <button onclick="openKPI()" title="KPI Scorecard" style="background:linear-gradient(135deg,#065f46,#0d9488);border:1px solid rgba(13,148,136,.6);color:#fff;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;margin-right:6px">📊 KPIs</button>
 
     <!-- UCR -->
     <button onclick="openUCR()" title="User Change Requests" style="background:linear-gradient(135deg,#b91c1c,#dc2626);border:1px solid rgba(185,28,28,.6);color:#fff;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;margin-right:6px">📝 UCR</button>
 
+    <!-- Artifacts -->
+    <button onclick="openArtifacts()" title="Product Artifacts & Collateral" style="background:linear-gradient(135deg,#7c3aed,#a78bfa);border:1px solid rgba(124,58,237,.6);color:#fff;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;margin-right:6px">📄 Artifacts</button>
+
     <!-- CapacityIQ -->
     <button onclick="openCapacity()" title="CapacityIQ — Team Capacity Planning" style="background:linear-gradient(135deg,#0d9488,#0f766e);border:1px solid rgba(13,148,136,.6);color:#fff;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;margin-right:6px">⚡ CapacityIQ</button>
+
+    <!-- Settings -->
+    <button onclick="openSettings()" title="Settings — AI Config, Brand Guide, Preferences" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.8);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">⚙️</button>
 
     <!-- Competitive Intel -->
     <button id="compIntelBtn" onclick="openCompetitiveAnalysis()" title="AI-powered Competitive Analysis" style="background:linear-gradient(135deg,#7c3aed,#2563a8);border:1px solid rgba(124,58,237,.6);color:#fff;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;margin-right:6px">🔍 CI <span class="premium-badge">PRO</span></button>
@@ -832,6 +870,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
     <!-- Status — right -->
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
       <span id="saveStatus" class="saved">● Saved</span>
+      <span id="roleBadge" onclick="openRoleManager()" style="cursor:pointer" title="Click to manage roles"></span>
       <span id="cloudSyncStatus" style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:12px;color:#94a3b8" title="Cloud sync status">☁</span>
     </div>
 
@@ -1114,7 +1153,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
     <div style="display:flex;gap:8px">
       <button class="btn green" onclick="addTodoItem()">+ Add Task</button>
       <button class="btn" onclick="toggleTodoView()" id="todoViewToggle" style="background:rgba(255,255,255,.15)">🔲 Kanban</button>
-      <button class="btn" onclick="closeTodo()" style="background:rgba(255,255,255,.15)">← Back to Roadmap</button>
+      <button class="btn" id="todoBackBtn" onclick="closeTodo()" style="background:rgba(255,255,255,.15)">← Back to Roadmap</button>
     </div>
   </div>
   <div class="todo-toolbar">
@@ -1147,6 +1186,30 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
   <div class="todo-body" id="todoBody"></div>
 </div>
 
+<!-- ── ARTIFACTS OVERLAY ── -->
+<div id="artOverlay">
+  <div class="art-header">
+    <h2>📄 Product Artifacts & Collateral</h2>
+    <div style="display:flex;gap:8px">
+      <button class="btn green" onclick="addNewArtifact()">+ New Artifact</button>
+      <button class="btn" onclick="openBrandGuide()" style="background:linear-gradient(135deg,#ec4899,#f472b6);border-color:#ec4899">🎨 Brand Guide</button>
+      <button class="btn" onclick="closeArtifacts()" style="background:rgba(255,255,255,.15)">← Back to Roadmap</button>
+    </div>
+  </div>
+  <div class="art-toolbar">
+    <label style="color:rgba(255,255,255,.6);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em">Initiative:</label>
+    <select id="artInitFilter" onchange="renderArtifacts()" style="padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);color:#fff;font-size:12px;font-weight:600;min-width:200px"></select>
+    <label style="color:rgba(255,255,255,.6);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-left:8px">Type:</label>
+    <select id="artTypeFilter" onchange="renderArtifacts()" style="padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);color:#fff;font-size:12px;font-weight:600"></select>
+    <span id="artCount" style="color:rgba(255,255,255,.6);font-size:11px;font-weight:600;margin-left:auto"></span>
+    <div style="margin-left:auto;display:flex;gap:6px">
+      <button class="btn" onclick="showArtTemplatesTab()" id="artTemplatesBtn" style="background:rgba(255,255,255,.15);font-size:10px;padding:4px 10px">&#x1F4D0; Templates</button>
+      <button class="btn" onclick="showAIKeySettings()" style="background:rgba(255,255,255,.15);font-size:10px;padding:4px 10px">&#x1F511; AI Key</button>
+    </div>
+  </div>
+  <div class="art-body" id="artBody"></div>
+</div>
+
 <!-- ── KPI OVERLAY ── -->
 <div id="kpiOverlay">
   <div class="kpi-header">
@@ -1164,7 +1227,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
       <button onclick="tsNavWeek(1)">&#9654;</button>
     </div>
     <div style="display:flex;gap:8px">
-      <button class="btn accent" onclick="showAddCustomKPI()">+ Add KPI</button>
+      <button class="btn accent" id="kpiAddBtn" onclick="showAddCustomKPI()">+ Add KPI</button>
       <button class="btn green" onclick="exportKPIWord()">📄 Export Word</button>
       <button class="btn" onclick="closeKPI()" style="background:rgba(255,255,255,.15)">← Back to Roadmap</button>
     </div>
@@ -1643,34 +1706,52 @@ function drawTodayLine(){
   var todayMonthName=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][todayMonth];
 
   // Find today's month index in the timeline
-  // The year field in quarters is the calendar year when Q1 starts (MAR)
-  // Q4 months DEC use q.year, but JAN/FEB belong to q.year+1
+  // Build a calendar year for each month by walking sequentially
+  // and inferring year from month order (when month goes backwards like DEC→JAN, year increments)
   var targetIdx=-1;
   var col=0;
-  for(var qi=0;qi<quarters.length;qi++){
-    var q=quarters[qi];
-    for(var mi=0;mi<q.months.length;mi++){
-      var mName=q.months[mi];
-      var mYear=q.year;
-      // For Q4: DEC is in q.year, but JAN and FEB are in q.year+1
-      if(q.q===4 && (mName==='JAN'||mName==='FEB')) mYear=q.year+1;
-      if(mName===todayMonthName && mYear===todayYear){ targetIdx=col; break; }
-      col++;
+  var allMonths=[];
+  quarters.forEach(function(q){
+    q.months.forEach(function(m){ allMonths.push({name:m,qYear:q.year,q:q.q}); });
+  });
+
+  // Assign calendar years: use first quarter's year as base, increment when month wraps
+  var monthNum={JAN:0,FEB:1,MAR:2,APR:3,MAY:4,JUN:5,JUL:6,AUG:7,SEP:8,OCT:9,NOV:10,DEC:11};
+  if(allMonths.length>0){
+    // Start: first month's calendar year
+    var firstM=allMonths[0];
+    var calYear=firstM.qYear;
+    // If Q1 starts with MAR, the year is q.year
+    // Adjust: for FY quarters, Q1 MAR year = q.year, so MAR 2025 for FY26
+    allMonths[0].calYear=calYear;
+    for(var ai=1;ai<allMonths.length;ai++){
+      var prev=monthNum[allMonths[ai-1].name];
+      var curr=monthNum[allMonths[ai].name];
+      if(curr<=prev) calYear++; // month wrapped (e.g. DEC→JAN)
+      allMonths[ai].calYear=calYear;
     }
-    if(targetIdx>=0) break;
   }
-  if(targetIdx<0) return; // today is outside the timeline range
 
-  // Calculate fractional position within the month
-  var dim=DAYS_IN_MONTH[todayMonthName]||30;
-  var frac=(todayDay-1)/dim; // 0..~1
-
-  // Position: label column (220px) + targetIdx * 42px + frac * 42px
+  for(var ai=0;ai<allMonths.length;ai++){
+    if(allMonths[ai].name===todayMonthName && allMonths[ai].calYear===todayYear){
+      targetIdx=ai;
+      break;
+    }
+  }
+  if(targetIdx<0) return;
+  // Use actual DOM positions of month header cells for accurate placement
   var table=document.getElementById('roadmap');
   if(!table) return;
-  var labelColWidth=table.querySelector('.td-lbl, .th-lbl');
-  var lcw=labelColWidth?labelColWidth.offsetWidth:220;
-  var px=lcw + targetIdx*42 + frac*42;
+  var monthHeaders=table.querySelectorAll('th.mh');
+  if(!monthHeaders||targetIdx>=monthHeaders.length) return;
+
+  var th=monthHeaders[targetIdx];
+  var wrapRect=wrap.getBoundingClientRect();
+  var thRect=th.getBoundingClientRect();
+
+  var dim=DAYS_IN_MONTH[todayMonthName]||30;
+  var frac=(todayDay-1)/dim;
+  var px=(thRect.left - wrapRect.left) + wrap.scrollLeft + frac*thRect.width;
 
   var line=document.createElement('div');
   line.className='today-line';
@@ -1910,6 +1991,7 @@ function openEditModal(rowId){
 }
 
 function openAddRowModal(secId){
+  if(!canEdit('roadmap')){alert('Read-only access. You cannot add rows.');return;}
   editingRowId=null;
   document.getElementById('modalIntegrationSection').style.display='none';
   document.getElementById('modalTitle').textContent='Add New Row';
@@ -2218,6 +2300,7 @@ function pickAndAttach(){
 }
 
 function saveRow(){
+  if(!canEdit('roadmap')){alert('You do not have permission to edit the roadmap.');return;}
   var name=document.getElementById('fName').value.trim();
   if(!name){alert('Please enter a row label');return;}
   var sub=document.getElementById('fSub').value.trim();
@@ -2315,6 +2398,7 @@ function saveRow(){
 }
 
 function deleteRow(rowId){
+  if(!canEdit('roadmap')) return;
   if(!confirm('Delete this row?')) return;
   rows=rows.filter(function(r){return r.id!==rowId});
   render();
@@ -3498,6 +3582,84 @@ var SUPABASE_URL  = 'https://nigusoyssktoebzscbwe.supabase.co';
 var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZ3Vzb3lzc2t0b2VienNjYndlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4Mzg4MDEsImV4cCI6MjA4OTQxNDgwMX0.RhMTy0kL5LuEhxPb3R6SSxUTHGauouudCWlPHWteTtI';
 
 var _currentUser  = null;
+var _userRole = 'product_manager'; // default role: 'manager', 'product_manager', 'developer', 'read_only'
+
+function canEdit(feature){
+  // feature: 'roadmap','g2m','todo','kpi','timesheet','ucr','capacity','roles'
+  if(_userRole==='manager') return true;
+  if(_userRole==='product_manager') return feature!=='roles';
+  if(_userRole==='developer') return feature==='todo'||feature==='capacity';
+  return false; // read_only
+}
+function canView(feature){
+  // Everyone can view everything
+  return true;
+}
+function isManager(){return _userRole==='manager';}
+
+function getRoleBadgeHtml(role){
+  var labels={manager:'Manager',product_manager:'Product Manager',developer:'Developer',read_only:'Read Only'};
+  return '<span class="role-badge '+(role||'read_only')+'">'+(labels[role]||'Unknown')+'</span>';
+}
+
+function applyRBAC(){
+  // Apply read-only state to toolbar buttons and overlays based on role
+  var g2mAddBtn=document.querySelector('[onclick="showG2MAddRowForm()"]');
+  if(g2mAddBtn) g2mAddBtn.style.display=canEdit('g2m')?'':'none';
+  var ucrAddBtn=document.querySelector('[onclick="addNewUCR()"]');
+  if(ucrAddBtn) ucrAddBtn.style.display=canEdit('ucr')?'':'none';
+}
+
+function openRoleManager(){
+  if(!isManager()){
+    alert('Your role: '+(_userRole||'product_manager').replace(/_/g,' ').toUpperCase()+'\nContact a Manager to change your role.');
+    return;
+  }
+  var existing=document.getElementById('roleManagerOverlay');
+  if(existing){existing.remove();return;}
+  var overlay=document.createElement('div');
+  overlay.id='roleManagerOverlay';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px';
+  var modal=document.createElement('div');
+  modal.style.cssText='background:#fff;border-radius:12px;width:480px;max-width:100%;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)';
+  var html='<div style="background:var(--navy);color:#fff;padding:16px 20px;border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between"><h2 style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:800">Role Management</h2><button onclick="document.getElementById(\'roleManagerOverlay\').remove()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">&times;</button></div>';
+  html+='<div style="padding:20px">';
+  html+='<div style="margin-bottom:16px"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px">Your Role</label>';
+  html+='<select id="selfRoleSelect" onchange="changeSelfRole(this.value)" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;width:100%">';
+  var roles=['manager','product_manager','developer','read_only'];
+  var labels={manager:'Manager \u2014 Full access + role management',product_manager:'Product Manager \u2014 Full access to all features',developer:'Developer \u2014 Edit CapacityIQ & ToDo, read-only elsewhere',read_only:'Read Only \u2014 View everything, edit nothing'};
+  for(var i=0;i<roles.length;i++){html+='<option value="'+roles[i]+'"'+(_userRole===roles[i]?' selected':'')+'>'+labels[roles[i]]+'</option>';}
+  html+='</select></div>';
+  html+='<div style="background:#f8faff;border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:16px">';
+  html+='<div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:6px">Security Notes</div>';
+  html+='<ul style="font-size:11px;color:var(--muted);padding-left:16px;line-height:1.6">';
+  html+='<li>Data is isolated per user \u2014 each user only sees their own roadmap data</li>';
+  html+='<li>Shared roadmaps require explicit email invitation</li>';
+  html+='<li>Cloud sync uses authenticated Supabase calls with row-level security</li>';
+  html+='<li>Roles are enforced client-side \u2014 for production, add Supabase RLS policies</li>';
+  html+='<li>Session tokens stored in localStorage \u2014 clear on logout</li>';
+  html+='<li>API keys (CI, DevOps) stored locally and never sent to other users</li>';
+  html+='</ul></div>';
+  html+='<button onclick="document.getElementById(\'roleManagerOverlay\').remove()" style="width:100%;padding:10px;background:var(--navy);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">Done</button>';
+  html+='</div>';
+  modal.innerHTML=html;
+  overlay.appendChild(modal);
+  overlay.addEventListener('click',function(e){if(e.target===overlay) overlay.remove();});
+  document.body.appendChild(overlay);
+}
+
+function changeSelfRole(role){
+  _userRole=role;
+  saveProfileSettings();
+  updateRoleBadge();
+  applyRBAC();
+}
+
+function updateRoleBadge(){
+  var badge=document.getElementById('roleBadge');
+  if(badge) badge.innerHTML=getRoleBadgeHtml(_userRole);
+}
+
 var _accessToken  = null;
 var _refreshToken = null;
 var _authMode     = 'login';
@@ -3731,6 +3893,7 @@ function onAuthSuccess(user){
     if(user.user_metadata.avatar_url) userProfile.avatarUrl=user.user_metadata.avatar_url;
   }
   saveProfileSettings(); applyProfileToUI(); enableSync();
+  updateRoleBadge(); applyRBAC();
   setTimeout(function(){ loadAllCommentBadges(); loadSharedToMe(); loadUserTier(); }, 800);
   console.log('Signed in:', user.email);
 }
@@ -3878,16 +4041,21 @@ function loadProfileSettings(){
   try {
     var p = localStorage.getItem('pmr_profile');
     var s = localStorage.getItem('pmr_settings');
+    var r = localStorage.getItem('pmr_role');
     if(p) userProfile   = Object.assign(userProfile,   JSON.parse(p));
     if(s) appSettings   = Object.assign(appSettings,   JSON.parse(s));
+    if(r) _userRole = r;
   } catch(e){}
   applyProfileToUI();
+  updateRoleBadge();
+  applyRBAC();
 }
 
 function saveProfileSettings(){
   try {
     localStorage.setItem('pmr_profile',  JSON.stringify(userProfile));
     localStorage.setItem('pmr_settings', JSON.stringify(appSettings));
+    localStorage.setItem('pmr_role', _userRole);
   } catch(e){}
 }
 
@@ -6996,7 +7164,8 @@ function getG2MItems(product){
 function renderG2M(){
   var body=document.getElementById('g2mBody');
   body.innerHTML='';
-  if(!g2mCurrentProduct){body.innerHTML='<p style="color:var(--muted);padding:40px;text-align:center;font-size:14px">Select a product initiative to view its G2M checklist.</p>';return;}
+  if(!canEdit('g2m')){body.innerHTML+='<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:11px;color:#92400e;font-weight:600">&#128274; Read-only mode — you can view but not edit this checklist</div>';}
+  if(!g2mCurrentProduct){body.innerHTML+='<p style="color:var(--muted);padding:40px;text-align:center;font-size:14px">Select a product initiative to view its G2M checklist.</p>';return;}
   var items=getG2MItems(g2mCurrentProduct);
   var globalNum=0;
   G2M_CATEGORIES.forEach(function(cat){
@@ -7061,6 +7230,7 @@ function renderG2M(){
 }
 
 function setG2MVal(product,idx,val){
+  if(!canEdit('g2m')) return;
   var items=getG2MItems(product);
   if(items[idx]) items[idx].value=val;
   persistG2M();
@@ -7101,6 +7271,7 @@ function showG2MAddRowForm(){
   document.getElementById('g2mNewRowText').focus();
 }
 function confirmG2MAddRow(){
+  if(!canEdit('g2m')) return;
   var text=document.getElementById('g2mNewRowText').value.trim();
   if(!text){document.getElementById('g2mNewRowText').focus();return;}
   var catName=document.getElementById('g2mNewRowCat').value;
@@ -7112,6 +7283,7 @@ function confirmG2MAddRow(){
 }
 
 function saveG2MProductDesc(){
+  if(!canEdit('g2m')) return;
   if(!g2mCurrentProduct) return;
   if(!g2mAllData[g2mCurrentProduct]) getG2MItems(g2mCurrentProduct);
   g2mAllData[g2mCurrentProduct].description=document.getElementById('g2mProductDesc').innerHTML;
@@ -7258,13 +7430,31 @@ function openG2MForProduct(productName){
 
 var _todoView='list'; // 'list' or 'kanban'
 
+var _todoReturnTo=''; // track where user came from
 function openTodo(){
   document.getElementById('todoOverlay').classList.add('open');
   populateTodoFilterSelect();
+  updateTodoBackBtn();
   renderTodo();
 }
 function closeTodo(){
   document.getElementById('todoOverlay').classList.remove('open');
+  if(_todoReturnTo==='timesheet'){
+    _todoReturnTo='';
+    openKPI();
+    setTimeout(function(){setKPIView('timesheet');},100);
+    return;
+  }
+  _todoReturnTo='';
+}
+function updateTodoBackBtn(){
+  var btn=document.getElementById('todoBackBtn');
+  if(!btn) return;
+  if(_todoReturnTo==='timesheet'){
+    btn.textContent='← Back to Timesheet';
+  } else {
+    btn.textContent='← Back to Roadmap';
+  }
 }
 function openTodoForInitiative(name){
   document.getElementById('todoOverlay').classList.add('open');
@@ -7325,6 +7515,7 @@ function _formatDue(d){
 function renderTodo(){
   var body=document.getElementById('todoBody');
   body.innerHTML='';
+  if(!canEdit('todo')){body.innerHTML+='<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:11px;color:#92400e;font-weight:600">&#128274; Read-only mode — you can view but not edit tasks</div>';}
   var filter=document.getElementById('todoFilterSelect').value;
   var statusFilter=document.getElementById('todoStatusFilter').value;
 
@@ -7380,6 +7571,17 @@ function buildTodoItem(entry){
   var kpiName='';
   if(t.kpiId){KPI_TEMPLATE.forEach(function(g){g.items.forEach(function(k){if(k.id===t.kpiId)kpiName=k.name;});});}
 
+  // Time logging
+  var actualHrs=parseFloat(t.actualHours)||0;
+  var estHrs=parseFloat(t.estimate)||0;
+  var hrsColor=actualHrs>0?(actualHrs>estHrs&&estHrs>0?'#dc2626':'#0f766e'):'var(--muted)';
+
+  // Attachments/links on todo
+  var todoLinksHtml='';
+  (t.links||[]).forEach(function(lnk,li){
+    todoLinksHtml+='<span class="g2m-link-chip" title="'+lnk.url+'"><span onclick="window.open(\''+lnk.url.replace(/'/g,"\\'")+'\')">'+(lnk.label||lnk.url).substring(0,20)+'</span><span class="g2m-link-rm" onclick="removeTodoLink(\''+escapedInit+'\',\''+escapedId+'\','+li+')">&times;</span></span>';
+  });
+
   div.innerHTML=
     '<select class="todo-status-sel" onchange="setTodoStatus(\''+escapedInit+'\',\''+escapedId+'\',this.value)" style="border-color:'+statusColor+'">'+
       '<option value="open"'+(status==='open'?' selected':'')+' style="background:#fff;color:#1a1464">Open</option>'+
@@ -7390,11 +7592,18 @@ function buildTodoItem(entry){
       '<div class="todo-text" id="todoText_'+escapedId+'" ondblclick="editTodoText(\''+escapedInit+'\',\''+escapedId+'\')">'+t.text+'</div>'+
       (t.comments?'<div style="font-size:10px;color:var(--muted);margin-top:2px">💬 '+t.comments.replace(/</g,'&lt;').substring(0,80)+(t.comments.length>80?'...':'')+'</div>':'')+
       (kpiName?'<div style="font-size:9px;color:#7c3aed;margin-top:1px">📊 '+kpiName+'</div>':'')+
+      // Links/attachments row
+      (todoLinksHtml?'<div style="margin-top:2px;display:flex;gap:2px;flex-wrap:wrap">'+todoLinksHtml+'</div>':'')+
+    '</div>'+
+    // Time tracking compact
+    '<div style="display:flex;align-items:center;gap:3px;flex-shrink:0" title="Actual hours / Estimate">'+
+      '<input type="number" min="0" step="0.5" value="'+(t.actualHours||'')+'" placeholder="0" onchange="setTodoField(\''+escapedInit+'\',\''+escapedId+'\',\'actualHours\',this.value)" style="width:36px;padding:2px 3px;border:1px solid var(--border);border-radius:4px;font-size:10px;font-weight:700;text-align:center;color:'+hrsColor+'">'+
+      '<span style="font-size:8px;color:var(--muted)">/'+estHrs+'h</span>'+
     '</div>'+
     _formatDue(t.due)+
-    (t.estimate?'<span style="font-size:9px;font-weight:700;background:#eff6ff;color:#2563a8;padding:2px 6px;border-radius:4px;flex-shrink:0">'+t.estimate+'h est</span>':'')+
     kpiSelHtml+
     '<span class="todo-tag" onclick="document.getElementById(\'todoFilterSelect\').value=\''+escapedInit+'\';renderTodo()">'+entry.initiative+'</span>'+
+    '<button class="todo-comment-btn" onclick="addTodoLink(\''+escapedInit+'\',\''+escapedId+'\')" title="Add link">🔗</button>'+
     '<button class="todo-comment-btn" onclick="editTodoComment(\''+escapedInit+'\',\''+escapedId+'\')" title="Add/Edit comment">💬</button>'+
     '<button class="todo-comment-btn" onclick="editTodoDue(\''+escapedInit+'\',\''+escapedId+'\')" title="Set due date">📅</button>'+
     '<button class="todo-del" onclick="deleteTodoItem(\''+escapedInit+'\',\''+escapedId+'\')" title="Delete">✕</button>';
@@ -7519,6 +7728,7 @@ function addTodoItem(){
 }
 
 function confirmAddTodo(){
+  if(!canEdit('todo')){alert('You do not have permission to add tasks.');return;}
   var text=document.getElementById('todoNewText').value.trim();
   if(!text){document.getElementById('todoNewText').focus();return;}
   var initiative=document.getElementById('todoNewInit').value;
@@ -7543,6 +7753,7 @@ function confirmAddTodo(){
 }
 
 function setTodoStatus(initiative,todoId,status){
+  if(!canEdit('todo')) return;
   var list=todoAllData[initiative]||[];
   var t=list.find(function(i){return i.id===todoId;});
   if(t) t.status=status;
@@ -7554,6 +7765,50 @@ function setTodoKPI(initiative,todoId,kpiId){
   var t=list.find(function(i){return i.id===todoId;});
   if(t) t.kpiId=kpiId;
   persistData();
+}
+function setTodoField(initiative,todoId,field,val){
+  var list=todoAllData[initiative]||[];
+  var t=list.find(function(i){return i.id===todoId;});
+  if(t) t[field]=val;
+  persistData();
+}
+function addTodoLink(initiative,todoId){
+  var list=todoAllData[initiative]||[];
+  var t=list.find(function(i){return i.id===todoId;});
+  if(!t) return;
+  var parent=event.target.closest('.todo-item');
+  if(!parent) return;
+  var existing=document.getElementById('todoLinkForm_'+todoId);
+  if(existing){existing.remove();return;}
+  var form=document.createElement('div');
+  form.id='todoLinkForm_'+todoId;
+  form.style.cssText='margin-top:6px;display:flex;gap:4px;align-items:center';
+  form.innerHTML='<input id="todoLinkUrl_'+todoId+'" placeholder="https://..." style="flex:2;padding:4px 8px;border:1px solid var(--accent);border-radius:4px;font-size:10px;font-family:inherit;color:var(--text)">'+
+    '<input id="todoLinkLabel_'+todoId+'" placeholder="Label" style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:10px;font-family:inherit">'+
+    '<button onclick="confirmTodoLink(\''+initiative.replace(/'/g,"\\'")+'\',\''+todoId+'\')" style="padding:3px 8px;border-radius:4px;border:none;background:var(--navy);color:#fff;font-size:9px;font-weight:700;cursor:pointer">Add</button>'+
+    '<button onclick="this.parentElement.remove()" style="padding:3px 6px;border-radius:4px;border:none;background:#e5e7eb;font-size:9px;cursor:pointer">X</button>';
+  parent.appendChild(form);
+  document.getElementById('todoLinkUrl_'+todoId).focus();
+}
+function confirmTodoLink(initiative,todoId){
+  var url=document.getElementById('todoLinkUrl_'+todoId).value.trim();
+  if(!url) return;
+  var label=document.getElementById('todoLinkLabel_'+todoId).value.trim();
+  var list=todoAllData[initiative]||[];
+  var t=list.find(function(i){return i.id===todoId;});
+  if(!t) return;
+  if(!t.links) t.links=[];
+  t.links.push({url:url,label:label});
+  persistData();
+  renderTodo();
+}
+function removeTodoLink(initiative,todoId,linkIdx){
+  var list=todoAllData[initiative]||[];
+  var t=list.find(function(i){return i.id===todoId;});
+  if(!t||!t.links) return;
+  t.links.splice(linkIdx,1);
+  persistData();
+  renderTodo();
 }
 
 function editTodoText(initiative,todoId){
@@ -7804,6 +8059,24 @@ var _tsCurrentWeek = '';
 var _kpiView = 'scorecard';
 var ucrAllData = [];
 
+var artifactsData = []; // [{id,title,type,initiative,status,description,content,links:[],attachments:[],referenceDocs:[],templateFile:null,createdAt,updatedAt}]
+var brandGuideData = {file:null,fileName:'',notes:'',colors:[],fonts:'',logoUrl:''}; // persisted brand/CI guide
+var artTemplates = {}; // keyed by artifact type id, value: {fileName, storedName, uploadedAt}
+var userAIKey = {provider:'gemini', key:'', model:''}; // per-user AI key
+
+var ART_TYPES = [
+  {id:'brochure',name:'Brochure',icon:'📰',color:'#dc2626'},
+  {id:'faq',name:'FAQ',icon:'❓',color:'#d97706'},
+  {id:'pig',name:'Product Information Guide',icon:'📋',color:'#2563eb'},
+  {id:'presentation',name:'Presentation / PowerPoint',icon:'📊',color:'#7c3aed'},
+  {id:'datasheet',name:'Data Sheet',icon:'📑',color:'#0f766e'},
+  {id:'salesguide',name:'Sales Guide',icon:'💼',color:'#ea580c'},
+  {id:'training',name:'Training Material',icon:'🎓',color:'#0d9488'},
+  {id:'releasenote',name:'Release Note',icon:'📝',color:'#16a34a'},
+  {id:'technical',name:'Technical Document',icon:'🔧',color:'#64748b'},
+  {id:'other',name:'Other',icon:'📎',color:'#475569'}
+];
+
 var capData = {
   teams: [],
   members: [],
@@ -7927,6 +8200,7 @@ function getSelectedQuarter(){
 function renderKPI(){
   var body=document.getElementById('kpiBody');
   body.innerHTML='';
+  if(!canEdit('kpi')){body.innerHTML+='<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:11px;color:#92400e;font-weight:600">&#128274; Read-only mode — you can view but not edit KPIs</div>';}
   var quarter=getSelectedQuarter();
   var data=getKPIData(quarter);
 
@@ -8109,7 +8383,7 @@ function getAutoMetrics(kpi){
       (todoAllData[k]||[]).forEach(function(t){totalTasks++;if((t.status||'open')==='done')doneTasks++;});
     });
     if(totalTasks>0){
-      return '&#128203; <b>Task Completion:</b> '+doneTasks+'/'+totalTasks+' tasks done ('+Math.round(doneTasks/totalTasks*100)+'%) — <a style="color:#16a34a;cursor:pointer" onclick="closeKPI();openTodo()">View Tasks</a>';
+      return '&#128203; <b>Task Completion:</b> '+doneTasks+'/'+totalTasks+' tasks done ('+Math.round(doneTasks/totalTasks*100)+'%) — <a style="color:#16a34a;cursor:pointer" onclick="_todoReturnTo=&quot;timesheet&quot;;closeKPI();openTodo()">View Tasks</a>';
     }
   }
   return '';
@@ -8146,6 +8420,7 @@ function buildEvidenceHtml(d,kpi,quarter){
 }
 
 function setKPIScore(quarter,kpiId,type,val){
+  if(!canEdit('kpi')) return;
   var data=getKPIData(quarter);
   if(!data.items[kpiId]) return;
   if(type==='pm') data.items[kpiId].pmScore=val;
@@ -8429,6 +8704,7 @@ function closeUCR() {
 }
 
 function addNewUCR() {
+  if(!canEdit('ucr')){alert('Read-only access.');return;}
   var ucr = makeNewUCR();
   ucrAllData.unshift(ucr);
   persistData();
@@ -8450,6 +8726,7 @@ function toggleUCRCard(id) {
 }
 
 function setUCRField(ucrId, field, value) {
+  if(!canEdit('ucr')) return;
   var ucr = ucrAllData.find(function(u){ return u.id === ucrId; });
   if (!ucr) return;
   // support nested fields like approvalBusiness.name
@@ -8650,6 +8927,7 @@ function renderUCR() {
   var countEl = document.getElementById('ucrCount');
   if (countEl) countEl.textContent = list.length + ' of ' + ucrAllData.length + ' UCRs';
   var body = document.getElementById('ucrBody');
+  if(!canEdit('ucr')){body.innerHTML='<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:11px;color:#92400e;font-weight:600">&#128274; Read-only mode — you can view but not edit UCRs</div>';}
   if (!list.length) {
     body.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--muted)"><div style="font-size:40px;margin-bottom:12px">📝</div><div style="font-size:14px;font-weight:600">No User Change Requests yet</div><div style="font-size:12px;margin-top:6px">Click "+ New UCR" to create one</div></div>';
     return;
@@ -8773,6 +9051,11 @@ function setKPIView(view){
   document.getElementById('kpiViewScorecard').className='ts-view-btn'+(view==='scorecard'?' active':'');
   document.getElementById('kpiViewTimesheet').className='ts-view-btn'+(view==='timesheet'?' active':'');
   document.getElementById('tsWeekNav').style.display=view==='timesheet'?'flex':'none';
+  var addBtn=document.getElementById('kpiAddBtn');
+  if(addBtn){
+    addBtn.textContent=view==='timesheet'?'+ Add Task':'+ Add KPI';
+    addBtn.setAttribute('onclick',view==='timesheet'?'_todoReturnTo="timesheet";closeKPI();openTodo();addTodoItem()':'showAddCustomKPI()');
+  }
   if(view==='timesheet'){
     document.getElementById('tsWeekLabel').textContent=_weekLabel(_tsCurrentWeek);
     renderTimesheet();
@@ -8827,15 +9110,41 @@ function _kpiSelectHtml(selectedId,onchangeExpr){
 function renderTimesheet(){
   var body=document.getElementById('kpiBody');
   body.innerHTML='';
+  if(!canEdit('timesheet')){body.innerHTML+='<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:11px;color:#92400e;font-weight:600">&#128274; Read-only mode</div>';}
   var week=_tsCurrentWeek;
-  var data=getTimesheetWeek(week);
-  var days=['mon','tue','wed','thu','fri'];
-  var dayLabels=_weekDates(week).map(function(d){return d.toLocaleDateString('en-ZA',{weekday:'short',day:'numeric'});});
+  // Get week date range
+  var weekDates=_weekDates(week);
+  // Pull ALL TDL tasks that have actual hours logged, or are in progress/done with due dates in this week
+  var weekStart=weekDates[0]; weekStart.setHours(0,0,0,0);
+  var weekEnd=new Date(weekDates[4]); weekEnd.setHours(23,59,59,999);
 
-  // Calc totals
+  var allTdlTasks=[];
+  Object.keys(todoAllData).forEach(function(init){
+    (todoAllData[init]||[]).forEach(function(t){
+      allTdlTasks.push({initiative:init,todo:t});
+    });
+  });
+
+  // Filter: tasks with actualHours > 0, or tasks with due date in this week, or in-progress tasks
+  var weekTasks=allTdlTasks.filter(function(e){
+    var t=e.todo;
+    if(parseFloat(t.actualHours)>0) return true;
+    if(t.due){
+      var d=new Date(t.due);
+      if(d>=weekStart&&d<=weekEnd) return true;
+    }
+    if((t.status||'open')==='progress') return true;
+    return false;
+  });
+
+  // Calc totals from actual hours
   var totalLogged=0,totalTarget=35;
   var kpiHours={};
-  data.tasks.forEach(function(t){totalLogged+=parseFloat(t.hours)||0; if(t.kpiId){kpiHours[t.kpiId]=(kpiHours[t.kpiId]||0)+(parseFloat(t.hours)||0);}});
+  weekTasks.forEach(function(e){
+    var hrs=parseFloat(e.todo.actualHours)||0;
+    totalLogged+=hrs;
+    if(e.todo.kpiId) kpiHours[e.todo.kpiId]=(kpiHours[e.todo.kpiId]||0)+hrs;
+  });
   var pct=totalTarget>0?Math.round(totalLogged/totalTarget*100):0;
   var barCol=pct>=90?'#16a34a':pct>=60?'#f59e0b':'#dc2626';
 
@@ -8846,10 +9155,10 @@ function renderTimesheet(){
     '<div class="ts-summary-card"><div class="ts-num" style="color:'+barCol+'">'+totalLogged.toFixed(1)+'h</div><div class="ts-lbl">Logged this week</div><div class="ts-bar"><div class="ts-bar-fill" style="width:'+Math.min(pct,100)+'%;background:'+barCol+'"></div></div></div>'+
     '<div class="ts-summary-card"><div class="ts-num" style="color:var(--navy)">'+totalTarget+'h</div><div class="ts-lbl">Weekly target</div></div>'+
     '<div class="ts-summary-card"><div class="ts-num" style="color:'+(pct>=90?'#16a34a':'#dc2626')+'">'+pct+'%</div><div class="ts-lbl">Utilisation</div></div>'+
-    '<div class="ts-summary-card"><div class="ts-num" style="color:var(--muted)">'+(totalTarget-totalLogged).toFixed(1)+'h</div><div class="ts-lbl">Remaining</div></div>';
+    '<div class="ts-summary-card"><div class="ts-num" style="color:var(--muted)">'+weekTasks.length+'</div><div class="ts-lbl">Tasks this week</div></div>';
   body.appendChild(summary);
 
-  // KPI breakdown mini-cards
+  // KPI breakdown
   var kpiBreak=document.createElement('div');
   kpiBreak.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px';
   KPI_TEMPLATE.forEach(function(g){g.items.forEach(function(kpi){
@@ -8863,86 +9172,95 @@ function renderTimesheet(){
   });});
   body.appendChild(kpiBreak);
 
-  // Actions
+  // Link to TDL
   var actionsDiv=document.createElement('div');
-  actionsDiv.style.cssText='display:flex;gap:8px;margin-bottom:12px';
+  actionsDiv.style.cssText='display:flex;gap:8px;margin-bottom:12px;align-items:center';
   actionsDiv.innerHTML=
-    '<button onclick="addTSTask()" class="btn accent" style="font-size:11px;padding:5px 12px">+ Add Task</button>'+
-    '<button onclick="pullTDLToTimesheet()" class="btn" style="font-size:11px;padding:5px 12px;background:#16a34a;border-color:#16a34a;color:#fff">📋 Pull from ToDo List</button>';
+    '<button onclick="_todoReturnTo=&quot;timesheet&quot;;closeKPI();openTodo()" class="btn accent" style="font-size:11px;padding:5px 12px">📋 Open ToDo List to log time</button>'+
+    '<span style="font-size:10px;color:var(--muted)">Log actual hours on each task in the ToDo List — they appear here automatically</span>';
   body.appendChild(actionsDiv);
 
-  // Tasks table
-  var tbl=document.createElement('table');
-  tbl.className='ts-table';
-  tbl.innerHTML='<thead><tr><th style="min-width:200px">Task</th><th style="min-width:140px">KPI Attribute</th><th style="width:50px">Day</th><th style="width:60px">Hours</th><th style="min-width:140px">Comment</th><th style="width:40px"></th></tr></thead>';
-  var tbody=document.createElement('tbody');
+  // Render tasks as read-only cards (data lives in TDL)
+  if(weekTasks.length===0){
+    body.innerHTML+='<div style="text-align:center;color:var(--muted);padding:40px;font-size:14px">No tasks with logged hours this week.<br>Go to the <a style="color:#0d9488;cursor:pointer;font-weight:700" onclick="_todoReturnTo=&quot;timesheet&quot;;closeKPI();openTodo()">ToDo List</a> to log hours on your tasks.</div>';
+  } else {
+    // Group by status
+    var statusGroups={progress:[],done:[],open:[]};
+    weekTasks.forEach(function(e){
+      var s=e.todo.status||'open';
+      if(statusGroups[s]) statusGroups[s].push(e); else statusGroups.open.push(e);
+    });
 
-  // Group tasks by day
-  var dayOrder={mon:0,tue:1,wed:2,thu:3,fri:4};
-  var sorted=data.tasks.slice().sort(function(a,b){return (dayOrder[a.day]||0)-(dayOrder[b.day]||0);});
-  var lastDay='';
+    [{key:'progress',label:'In Progress',color:'#f59e0b'},{key:'done',label:'Completed',color:'#16a34a'},{key:'open',label:'Open',color:'#64748b'}].forEach(function(grp){
+      if(!statusGroups[grp.key].length) return;
+      var hdr=document.createElement('div');
+      hdr.style.cssText='font-size:11px;font-weight:800;color:'+grp.color+';text-transform:uppercase;letter-spacing:.06em;padding:10px 0 4px;border-bottom:2px solid '+grp.color+';margin-bottom:8px;margin-top:12px';
+      hdr.textContent=grp.label+' ('+statusGroups[grp.key].length+')';
+      body.appendChild(hdr);
 
-  sorted.forEach(function(task,ti){
-    var actualIdx=data.tasks.indexOf(task);
-    if(task.day!==lastDay){
-      lastDay=task.day;
-      var dayIdx=days.indexOf(task.day);
-      var dayLabel=dayIdx>=0?dayLabels[dayIdx]:(task.day||'Unset');
-      var dayTr=document.createElement('tr');
-      dayTr.className='ts-cat-row';
-      dayTr.innerHTML='<td colspan="6">'+dayLabel+'</td>';
-      tbody.appendChild(dayTr);
-    }
+      statusGroups[grp.key].forEach(function(entry){
+        var t=entry.todo;
+        var escapedInit=entry.initiative.replace(/'/g,"\\'");
+        var escapedId=t.id;
+        var actualHrs=parseFloat(t.actualHours)||0;
+        var estHrs=parseFloat(t.estimate)||0;
+        var hrsCol=actualHrs>0?(actualHrs>estHrs&&estHrs>0?'#dc2626':'#0f766e'):'var(--muted)';
+        var kpiName='';
+        if(t.kpiId){KPI_TEMPLATE.forEach(function(g){g.items.forEach(function(k){if(k.id===t.kpiId) kpiName=k.name;});});}
 
-    var tr=document.createElement('tr');
-    if(task.fromTDL) tr.className='ts-tdl-row';
-    var kpiSel=_kpiSelectHtml(task.kpiId||'','setTSTaskField(\''+week+'\','+actualIdx+',\'kpiId\',this.value)');
-    var daySel='<select style="padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:10px;color:var(--text)" onchange="setTSTaskField(\''+week+'\','+actualIdx+',\'day\',this.value);renderTimesheet()">';
-    days.forEach(function(d,di){daySel+='<option value="'+d+'"'+(task.day===d?' selected':'')+'>'+dayLabels[di]+'</option>';});
-    daySel+='</select>';
+        // Links
+        var lHtml='';
+        (t.links||[]).forEach(function(lnk){
+          lHtml+='<span class="g2m-link-chip" title="'+lnk.url+'"><span onclick="window.open(\''+lnk.url.replace(/'/g,"\\'")+'\')">'+(lnk.label||lnk.url).substring(0,20)+'</span></span>';
+        });
 
-    tr.innerHTML=
-      '<td><div style="display:flex;align-items:center;gap:4px">'+
-        (task.fromTDL?'<span style="font-size:7px;background:#dcfce7;color:#16a34a;padding:1px 4px;border-radius:3px;font-weight:700">TDL</span>':'')+
-        '<input type="text" value="'+(task.text||'').replace(/"/g,'&quot;')+'" placeholder="What did you work on?" onchange="setTSTaskField(\''+week+'\','+actualIdx+',\'text\',this.value)" style="flex:1;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:11px;font-family:inherit;color:var(--text)">'+
-      '</div></td>'+
-      '<td>'+kpiSel+'</td>'+
-      '<td>'+daySel+'</td>'+
-      '<td><input class="ts-hr" type="number" min="0" max="12" step="0.5" value="'+(task.hours||'')+'" onchange="setTSTaskField(\''+week+'\','+actualIdx+',\'hours\',parseFloat(this.value)||0);renderTimesheet()"></td>'+
-      '<td><input type="text" value="'+(task.comment||'').replace(/"/g,'&quot;')+'" placeholder="Optional comment..." onchange="setTSTaskField(\''+week+'\','+actualIdx+',\'comment\',this.value)" style="width:100%;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:10px;font-family:inherit;color:var(--muted)"></td>'+
-      '<td><button onclick="removeTSTask(\''+week+'\','+actualIdx+')" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:12px">✕</button></td>';
-    tbody.appendChild(tr);
-  });
-
-  if(data.tasks.length===0){
-    var emptyTr=document.createElement('tr');
-    emptyTr.innerHTML='<td colspan="6" style="text-align:center;color:var(--muted);padding:20px">No tasks logged this week. Click "+ Add Task" or "Pull from ToDo List" to start.</td>';
-    tbody.appendChild(emptyTr);
+        var card=document.createElement('div');
+        card.style.cssText='background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:6px;border-left:3px solid '+grp.color;
+        card.innerHTML=
+          '<div style="display:flex;align-items:flex-start;gap:10px">'+
+            '<div style="flex-shrink:0;text-align:center;min-width:48px">'+
+              '<input class="ts-hr" type="number" min="0" step="0.5" value="'+(t.actualHours||'')+'" onchange="setTodoField(\''+escapedInit+'\',\''+escapedId+'\',\'actualHours\',this.value);renderTimesheet()" style="width:48px;font-size:14px;font-weight:800;color:'+hrsCol+';border-color:#0d9488">'+
+              '<div style="font-size:7px;color:var(--muted);font-weight:700;margin-top:1px">ACTUAL</div>'+
+              (estHrs?'<div style="font-size:8px;color:var(--muted);margin-top:1px">Est: '+estHrs+'h</div>':'')+
+            '</div>'+
+            '<div style="flex:1;min-width:0">'+
+              '<div style="font-size:12px;font-weight:600;color:var(--navy)">'+t.text+'</div>'+
+              (t.comments?'<div style="font-size:10px;color:var(--muted);margin-top:2px">💬 '+t.comments.replace(/</g,'&lt;').substring(0,80)+'</div>':'')+
+              '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:4px">'+
+                (kpiName?'<span style="font-size:8px;font-weight:700;background:#f5f0ff;color:#7c3aed;padding:1px 6px;border-radius:3px">📊 '+kpiName+'</span>':'')+
+                '<span style="font-size:8px;font-weight:700;background:#eff6ff;color:#2563a8;padding:1px 6px;border-radius:3px">'+entry.initiative+'</span>'+
+                (t.due?'<span style="font-size:8px;color:var(--muted)">📅 '+t.due+'</span>':'')+
+                lHtml+
+              '</div>'+
+            '</div>'+
+          '</div>';
+        body.appendChild(card);
+      });
+    });
   }
 
-  // Total row
-  var totalTr=document.createElement('tr');
-  totalTr.className='ts-total';
-  totalTr.innerHTML='<td>TOTAL</td><td></td><td></td><td style="font-weight:800;color:'+barCol+'">'+totalLogged.toFixed(1)+'h</td><td></td><td></td>';
-  tbody.appendChild(totalTr);
-
-  tbl.appendChild(tbody);
-  body.appendChild(tbl);
+  // Total bar
+  var totalBar=document.createElement('div');
+  totalBar.style.cssText='background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-top:12px;display:flex;align-items:center;justify-content:space-between';
+  totalBar.innerHTML='<span style="font-size:13px;font-weight:800;color:var(--navy)">TOTAL THIS WEEK</span><span style="font-size:22px;font-weight:900;color:'+barCol+';font-family:Barlow Condensed,sans-serif">'+totalLogged.toFixed(1)+'h / '+totalTarget+'h</span>';
+  body.appendChild(totalBar);
 }
 
 function addTSTask(){
+  if(!canEdit('timesheet')){alert('Read-only access.');return;}
   var data=getTimesheetWeek(_tsCurrentWeek);
   var days=['mon','tue','wed','thu','fri'];
   // Default to current day of week
   var today=new Date().getDay();
   var dayMap={1:'mon',2:'tue',3:'wed',4:'thu',5:'fri'};
   var defaultDay=dayMap[today]||'mon';
-  data.tasks.push({id:'ts_'+Date.now(),text:'',kpiId:'',hours:0,day:defaultDay,comment:'',fromTDL:false});
+  data.tasks.push({id:'ts_'+Date.now(),text:'',description:'',kpiId:'',hours:0,day:defaultDay,comment:'',links:[],attachments:[],fromTDL:false});
   persistData();
   renderTimesheet();
 }
 
 function setTSTaskField(week,idx,field,val){
+  if(!canEdit('timesheet')) return;
   var data=getTimesheetWeek(week);
   if(data.tasks[idx]) data.tasks[idx][field]=val;
   persistData();
@@ -8951,6 +9269,62 @@ function setTSTaskField(week,idx,field,val){
 function removeTSTask(week,idx){
   var data=getTimesheetWeek(week);
   data.tasks.splice(idx,1);
+  persistData();
+  renderTimesheet();
+}
+
+function addTSLink(week,idx){
+  var existing=document.getElementById('tsLinkForm_'+idx);
+  if(existing){existing.remove();return;}
+  var cards=document.querySelectorAll('.ts-link-form-host');
+  // Find the task card — use event target parent
+  var parent=event.target.closest('div[style*="border-radius:8px"]');
+  if(!parent) return;
+  var form=document.createElement('div');
+  form.id='tsLinkForm_'+idx;
+  form.style.cssText='margin-top:6px;display:flex;gap:4px;align-items:center';
+  form.innerHTML='<input id="tsLinkUrl_'+idx+'" placeholder="https://..." style="flex:2;padding:4px 8px;border:1px solid #0d9488;border-radius:4px;font-size:10px;font-family:inherit;color:var(--text)">'+
+    '<input id="tsLinkLabel_'+idx+'" placeholder="Label" style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:10px;font-family:inherit">'+
+    '<button onclick="confirmTSLink(\''+week.replace(/'/g,"\\'")+'\','+idx+')" style="padding:3px 8px;border-radius:4px;border:none;background:#0d9488;color:#fff;font-size:9px;font-weight:700;cursor:pointer">Add</button>'+
+    '<button onclick="this.parentElement.remove()" style="padding:3px 6px;border-radius:4px;border:none;background:#e5e7eb;font-size:9px;cursor:pointer">X</button>';
+  parent.appendChild(form);
+  document.getElementById('tsLinkUrl_'+idx).focus();
+}
+function confirmTSLink(week,idx){
+  var url=document.getElementById('tsLinkUrl_'+idx).value.trim();
+  if(!url) return;
+  var label=document.getElementById('tsLinkLabel_'+idx).value.trim();
+  var data=getTimesheetWeek(week);
+  if(!data.tasks[idx]) return;
+  if(!data.tasks[idx].links) data.tasks[idx].links=[];
+  data.tasks[idx].links.push({url:url,label:label});
+  persistData();
+  renderTimesheet();
+}
+function removeTSLink(week,idx,linkIdx){
+  var data=getTimesheetWeek(week);
+  if(!data.tasks[idx]||!data.tasks[idx].links) return;
+  data.tasks[idx].links.splice(linkIdx,1);
+  persistData();
+  renderTimesheet();
+}
+
+function addTSAttach(week,idx){
+  if(!window.electronAPI||!window.electronAPI.readFile) return;
+  window.electronAPI.readFile({title:'Attach a document'}).then(function(res){
+    if(!res||!res.name) return;
+    var data=getTimesheetWeek(week);
+    if(!data.tasks[idx]) return;
+    if(!data.tasks[idx].attachments) data.tasks[idx].attachments=[];
+    data.tasks[idx].attachments.push({name:res.name,storedName:res.storedName||res.name});
+    persistData();
+    renderTimesheet();
+  });
+}
+function removeTSAttach(week,idx,attIdx){
+  var data=getTimesheetWeek(week);
+  if(!data.tasks[idx]||!data.tasks[idx].attachments) return;
+  data.tasks[idx].attachments.splice(attIdx,1);
   persistData();
   renderTimesheet();
 }
@@ -9642,6 +10016,1153 @@ function capExportDashboard(){
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// ── ARTIFACTS / COLLATERAL ──────────────────────────────────────────────────
+
+function openArtifacts() {
+  var ov = document.getElementById('artOverlay');
+  ov.classList.add('open');
+  populateArtFilters();
+  renderArtifacts();
+}
+
+function closeArtifacts() {
+  document.getElementById('artOverlay').classList.remove('open');
+}
+
+function populateArtFilters() {
+  // Initiative filter
+  var sel = document.getElementById('artInitFilter');
+  var prev = sel.value;
+  sel.innerHTML = '<option value="">All Initiatives</option>';
+  rows.forEach(function(r) {
+    var o = document.createElement('option');
+    o.value = r.id;
+    o.textContent = r.name;
+    sel.appendChild(o);
+  });
+  if (prev) sel.value = prev;
+
+  // Type filter
+  var tsel = document.getElementById('artTypeFilter');
+  var tprev = tsel.value;
+  tsel.innerHTML = '<option value="">All Types</option>';
+  ART_TYPES.forEach(function(t) {
+    var o = document.createElement('option');
+    o.value = t.id;
+    o.textContent = t.icon + ' ' + t.name;
+    tsel.appendChild(o);
+  });
+  if (tprev) tsel.value = tprev;
+}
+
+function _artGetType(id) {
+  return ART_TYPES.find(function(t){ return t.id === id; }) || ART_TYPES[ART_TYPES.length - 1];
+}
+
+function _artGetInitName(rid) {
+  var r = rows.find(function(x){ return x.id === rid; });
+  return r ? r.name : '(Unlinked)';
+}
+
+function renderArtifacts() {
+  var body = document.getElementById('artBody');
+  var initF = document.getElementById('artInitFilter').value;
+  var typeF = document.getElementById('artTypeFilter').value;
+
+  var filtered = artifactsData.filter(function(a) {
+    if (initF && a.initiative !== initF) return false;
+    if (typeF && a.type !== typeF) return false;
+    return true;
+  });
+
+  // Summary
+  var countEl = document.getElementById('artCount');
+  var byType = {};
+  filtered.forEach(function(a) {
+    byType[a.type] = (byType[a.type] || 0) + 1;
+  });
+  var summary = filtered.length + ' artifact' + (filtered.length !== 1 ? 's' : '');
+  var parts = [];
+  ART_TYPES.forEach(function(t) {
+    if (byType[t.id]) parts.push(t.icon + ' ' + byType[t.id] + ' ' + t.name);
+  });
+  if (parts.length) summary += ' — ' + parts.join(', ');
+  countEl.textContent = summary;
+
+  if (filtered.length === 0) {
+    body.innerHTML = '<div style="text-align:center;padding:60px 20px">' +
+      '<div style="font-size:48px;margin-bottom:12px">📄</div>' +
+      '<h3 style="color:var(--navy);font-size:18px;margin-bottom:8px">No Artifacts Yet</h3>' +
+      '<p style="color:var(--muted);font-size:13px;max-width:400px;margin:0 auto">Create product collateral like brochures, FAQs, data sheets, and presentations linked to your roadmap initiatives. Click <b>+ New Artifact</b> to get started.</p>' +
+      '</div>';
+    return;
+  }
+
+  var h = '<div class="art-grid">';
+  filtered.forEach(function(a) {
+    var tp = _artGetType(a.type);
+    var statusClass = (a.status || 'draft').replace(/\s+/g, '-').toLowerCase();
+    h += '<div class="art-card" id="artCard_' + a.id + '">';
+    h += '<div class="art-card-top" style="cursor:pointer" onclick="toggleArtDetail(\'' + a.id + '\')">';
+    h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">';
+    h += '<span class="art-type-badge" style="background:' + tp.color + '">' + tp.icon + ' ' + tp.name + '</span>';
+    h += '<span class="art-status ' + statusClass + '">' + (a.status || 'Draft') + '</span>';
+    h += '</div>';
+    h += '<div style="font-size:14px;font-weight:700;color:var(--navy)">' + _esc(a.title) + '</div>';
+    h += '<div style="display:flex;align-items:center;gap:8px;margin-top:4px">';
+    h += '<span style="font-size:10px;color:var(--muted);background:#f0f3f8;padding:1px 6px;border-radius:3px">' + _esc(_artGetInitName(a.initiative)) + '</span>';
+    h += '<span style="font-size:9px;color:var(--muted)">' + (a.updatedAt ? new Date(a.updatedAt).toLocaleDateString() : '') + '</span>';
+    h += '</div>';
+    h += '</div>';
+    h += '<div class="art-card-body" id="artDetail_' + a.id + '" style="display:none"></div>';
+    h += '</div>';
+  });
+  h += '</div>';
+  body.innerHTML = h;
+}
+
+function _esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+// ── BRAND GUIDE ──
+function openBrandGuide(){
+  var existing=document.getElementById('brandGuideModal');
+  if(existing){existing.remove();return;}
+  var overlay=document.createElement('div');
+  overlay.id='brandGuideModal';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px';
+  var modal=document.createElement('div');
+  modal.style.cssText='background:#fff;border-radius:12px;width:560px;max-width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)';
+  var h='<div style="background:linear-gradient(135deg,#ec4899,#f472b6);color:#fff;padding:16px 20px;border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between"><h2 style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:800">🎨 Brand / CI Guide</h2><button onclick="document.getElementById(\'brandGuideModal\').remove()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">&times;</button></div>';
+  h+='<div style="padding:20px">';
+  h+='<p style="font-size:11px;color:var(--muted);margin-bottom:12px">Upload your brand/CI guide once — AI will use it to ensure all artifacts match your company brand, corporate image, colours, and style.</p>';
+
+  // Brand file
+  h+='<div style="margin-bottom:14px"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px">Brand Guide Document</label>';
+  if(brandGuideData.fileName){
+    h+='<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fdf2f8;border:1px solid #fbcfe8;border-radius:6px"><span style="font-size:12px">📎 '+_esc(brandGuideData.fileName)+'</span><button onclick="brandGuideData.fileName=\'\';brandGuideData.file=null;persistData();openBrandGuide()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:12px">✕ Remove</button></div>';
+  } else {
+    h+='<button onclick="uploadBrandGuide()" style="padding:8px 14px;background:#fdf2f8;border:1px dashed #ec4899;border-radius:6px;color:#ec4899;font-size:11px;font-weight:700;cursor:pointer;width:100%">📎 Upload Brand Guide (PDF, Word, PowerPoint, Image)</button>';
+  }
+  h+='</div>';
+
+  // Brand colors
+  h+='<div style="margin-bottom:14px"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px">Brand Colours (hex codes)</label>';
+  h+='<input id="bgColors" value="'+(brandGuideData.colors||[]).join(', ')+'" placeholder="e.g. #1a1464, #0d9488, #dc2626" onchange="brandGuideData.colors=this.value.split(\',\').map(function(c){return c.trim()}).filter(Boolean);persistData()" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px"></div>';
+
+  // Brand fonts
+  h+='<div style="margin-bottom:14px"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px">Brand Fonts</label>';
+  h+='<input id="bgFonts" value="'+_esc(brandGuideData.fonts||'')+'" placeholder="e.g. Barlow, Arial" onchange="brandGuideData.fonts=this.value;persistData()" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px"></div>';
+
+  // Brand notes
+  h+='<div style="margin-bottom:14px"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px">Style Notes / Guidelines</label>';
+  h+='<textarea id="bgNotes" rows="3" placeholder="Describe your brand tone, style preferences, do/don\'t rules..." onchange="brandGuideData.notes=this.value;persistData()" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;resize:vertical">'+(brandGuideData.notes||'')+'</textarea></div>';
+
+  // Logo URL
+  h+='<div style="margin-bottom:14px"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px">Logo URL (optional)</label>';
+  h+='<input id="bgLogo" value="'+_esc(brandGuideData.logoUrl||'')+'" placeholder="https://..." onchange="brandGuideData.logoUrl=this.value;persistData()" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px"></div>';
+
+  // AI Analyse button
+  h+='<div style="margin-bottom:14px"><button onclick="analyseBrandGuide(this)" style="width:100%;padding:10px;background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">&#x1F916; AI Analyse Brand Guide</button>';
+  h+='<p style="font-size:9px;color:var(--muted);margin-top:4px;text-align:center">Upload a brand guide document above, then click to auto-extract colours, fonts, and style notes using AI</p></div>';
+
+  // Status indicator
+  var hasGuide=brandGuideData.fileName||brandGuideData.colors.length||brandGuideData.notes;
+  h+='<div style="background:'+(hasGuide?'#f0fdf4':'#fef3c7')+';border:1px solid '+(hasGuide?'#bbf7d0':'#fde68a')+';border-radius:6px;padding:8px 12px;font-size:11px;color:'+(hasGuide?'#166534':'#92400e')+';font-weight:600">'+(hasGuide?'✅ Brand guide configured — AI will use this for all artifact generation':'⚠️ No brand guide set — artifacts will use generic styling')+'</div>';
+
+  h+='<button onclick="document.getElementById(\'brandGuideModal\').remove()" style="width:100%;margin-top:12px;padding:10px;background:var(--navy);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">Done</button>';
+  h+='</div>';
+  modal.innerHTML=h;
+  overlay.appendChild(modal);
+  overlay.addEventListener('click',function(e){if(e.target===overlay)overlay.remove();});
+  document.body.appendChild(overlay);
+}
+
+function uploadBrandGuide(){
+  if(!window.electronAPI||!window.electronAPI.readFile) return;
+  window.electronAPI.readFile({title:'Select Brand / CI Guide'}).then(function(res){
+    if(!res||!res.name) return;
+    brandGuideData.fileName=res.name;
+    brandGuideData.file=res.storedName||res.name;
+    brandGuideData.extractedText=res.text||''; // save extracted text for AI analysis
+    persistData();
+    openBrandGuide();
+  });
+}
+
+function addNewArtifact() {
+  var existing=document.getElementById('artNewModal');
+  if(existing) existing.remove();
+
+  _artNewRefDocs=[];
+  _artNewTemplateFile=null;
+
+  var overlay=document.createElement('div');
+  overlay.id='artNewModal';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px';
+
+  var modal=document.createElement('div');
+  modal.style.cssText='background:#fff;border-radius:12px;width:640px;max-width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)';
+
+  var h='<div style="background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;padding:16px 20px;border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between"><h2 style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:800">New Artifact</h2><button onclick="document.getElementById(\'artNewModal\').remove()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">&times;</button></div>';
+  h+='<div style="padding:20px">';
+
+  // Title + Type
+  h+='<div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-bottom:12px">';
+  h+='<div><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:3px">Title</label>';
+  h+='<input id="artNewTitle" type="text" placeholder="e.g. VBU850 Product Brochure" style="width:100%;padding:8px 10px;border:2px solid var(--accent);border-radius:6px;font-size:13px;font-weight:600;color:var(--navy);font-family:inherit;box-sizing:border-box"></div>';
+  h+='<div><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:3px">Type</label>';
+  h+='<select id="artNewType" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit">';
+  ART_TYPES.forEach(function(t){h+='<option value="'+t.id+'">'+t.icon+' '+t.name+'</option>';});
+  h+='</select></div></div>';
+
+  // Initiative + Description
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">';
+  h+='<div><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:3px">Initiative</label>';
+  h+='<select id="artNewInit" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit"><option value="">(None)</option>';
+  rows.forEach(function(r){h+='<option value="'+r.id+'">'+_esc(r.name)+'</option>';});
+  h+='</select></div>';
+  h+='<div><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:3px">Description</label>';
+  h+='<textarea id="artNewDesc" rows="2" placeholder="Brief description..." style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;resize:vertical;font-family:inherit;box-sizing:border-box"></textarea></div></div>';
+
+  // AI Prompt
+  h+='<div style="background:linear-gradient(135deg,#f5f0ff,#fdf2f8);border:2px solid #a78bfa;border-radius:8px;padding:12px;margin-bottom:12px">';
+  h+='<label style="font-size:10px;font-weight:700;color:#7c3aed;text-transform:uppercase;display:block;margin-bottom:6px">🤖 AI Instructions — Tell AI what you want</label>';
+  h+='<textarea id="artNewPrompt" rows="3" placeholder="e.g. Create a 2-page brochure highlighting VBU850 fleet management benefits, fuel savings, real-time tracking. Include comparison table vs competitors. Target: fleet managers." style="width:100%;padding:8px 10px;border:1px solid #a78bfa;border-radius:6px;font-size:12px;resize:vertical;font-family:inherit;color:var(--navy);box-sizing:border-box"></textarea>';
+  h+='</div>';
+
+  // Reference Docs
+  h+='<div style="background:#f8faff;border:1px solid #e0e7f0;border-radius:8px;padding:12px;margin-bottom:12px">';
+  h+='<label style="font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;display:block;margin-bottom:6px">📚 Reference Documents</label>';
+  h+='<div id="artNewRefDocs" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px"></div>';
+  h+='<button type="button" onclick="addArtRefDoc()" style="padding:6px 12px;background:var(--accent);color:#fff;border:none;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer">📎 Add Reference Document</button>';
+  h+='</div>';
+
+  // Template
+  h+='<div style="background:#fdf2f8;border:1px solid #fbcfe8;border-radius:8px;padding:12px;margin-bottom:12px">';
+  h+='<label style="font-size:10px;font-weight:700;color:#ec4899;text-transform:uppercase;display:block;margin-bottom:6px">🎨 Visual Template (optional)</label>';
+  h+='<div id="artNewTemplate" style="margin-bottom:6px"></div>';
+  h+='<button type="button" onclick="addArtTemplate()" style="padding:6px 12px;background:#ec4899;color:#fff;border:none;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer">📎 Upload Template</button>';
+  h+='</div>';
+
+  // Output format
+  h+='<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">';
+  h+='<label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Output:</label>';
+  h+='<select id="artNewFormat" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit">';
+  h+='<option value="word">📄 Word</option><option value="pptx">📊 PowerPoint</option><option value="xlsx">📗 Excel</option><option value="pdf">📕 PDF</option>';
+  h+='</select></div>';
+
+  // Brand status
+  var hasGuide=brandGuideData.fileName||(brandGuideData.colors&&brandGuideData.colors.length)||brandGuideData.notes;
+  h+='<div style="font-size:10px;color:'+(hasGuide?'#166534':'#92400e')+';margin-bottom:12px">'+(hasGuide?'✅ Brand guide loaded':'⚠️ No brand guide — go to ⚙️ Settings to upload')+'</div>';
+
+  // Buttons
+  h+='<div style="display:flex;gap:8px">';
+  h+='<button type="button" onclick="confirmAddArtifact()" style="padding:8px 16px;background:var(--navy);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">Save as Draft</button>';
+  h+='<button type="button" onclick="confirmAndGenerateArtifact()" style="padding:8px 16px;background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">🤖 Generate with AI</button>';
+  h+='<button type="button" onclick="document.getElementById(\'artNewModal\').remove()" style="padding:8px 16px;background:#fff;color:var(--navy);border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer">Cancel</button>';
+  h+='</div></div>';
+
+  modal.innerHTML=h;
+  overlay.appendChild(modal);
+  // Close on backdrop click but not on modal click
+  overlay.addEventListener('click',function(e){if(e.target===overlay) overlay.remove();});
+  document.body.appendChild(overlay);
+  setTimeout(function(){var t=document.getElementById('artNewTitle');if(t)t.focus();},150);
+}
+
+var _artNewRefDocs=[];
+var _artNewTemplateFile=null;
+
+function addArtRefDoc(){
+  // Use pickAttachments (same as roadmap attachments - proven to work)
+  if(window.electronAPI&&window.electronAPI.pickAttachments){
+    var modal=document.getElementById('artNewModal');
+    if(modal) modal.style.zIndex='1';
+    window.electronAPI.pickAttachments().then(function(res){
+      if(modal) modal.style.zIndex='5000';
+      if(!res||!res.ok||!res.files||!res.files.length) return;
+      res.files.forEach(function(f){
+        _artNewRefDocs.push({name:f.name,storedName:f.storedName,text:'',ext:''});
+      });
+      _refreshArtRefDocs();
+      // Now try to read text from the file for AI
+      res.files.forEach(function(f,i){
+        var idx=_artNewRefDocs.length-res.files.length+i;
+        window.electronAPI.readFile({title:'Reading '+f.name}).catch(function(){});
+      });
+    }).catch(function(err){
+      if(modal) modal.style.zIndex='5000';
+    });
+  } else if(window.electronAPI&&window.electronAPI.readFile){
+    var modal=document.getElementById('artNewModal');
+    if(modal) modal.style.zIndex='1';
+    window.electronAPI.readFile({title:'Select Reference Document'}).then(function(res){
+      if(modal) modal.style.zIndex='5000';
+      if(!res||res.ok===false) return;
+      _artNewRefDocs.push({name:res.name||'Unknown',text:res.text||'',ext:res.ext||'',storedName:res.storedName||''});
+      _refreshArtRefDocs();
+    }).catch(function(err){
+      if(modal) modal.style.zIndex='5000';
+    });
+  } else {
+    alert('File attachment not available');
+  }
+}
+
+function addArtTemplate(){
+  if(window.electronAPI&&window.electronAPI.pickAttachments){
+    var modal=document.getElementById('artNewModal');
+    if(modal) modal.style.zIndex='1';
+    window.electronAPI.pickAttachments().then(function(res){
+      if(modal) modal.style.zIndex='5000';
+      if(!res||!res.ok||!res.files||!res.files.length) return;
+      var f=res.files[0];
+      _artNewTemplateFile={name:f.name,storedName:f.storedName};
+      var container=document.getElementById('artNewTemplate');
+      if(container) container.innerHTML='<span style="font-size:10px;background:#fdf2f8;border:1px solid #fbcfe8;padding:3px 8px;border-radius:4px;color:#ec4899;display:inline-flex;align-items:center;gap:3px">🎨 '+_esc(f.name.substring(0,30))+'<span onclick="_artNewTemplateFile=null;document.getElementById(\'artNewTemplate\').innerHTML=\'\'" style="cursor:pointer;color:#dc2626;margin-left:2px">&times;</span></span>';
+    }).catch(function(err){
+      if(modal) modal.style.zIndex='5000';
+    });
+  } else if(window.electronAPI&&window.electronAPI.readFile){
+    var modal=document.getElementById('artNewModal');
+    if(modal) modal.style.zIndex='1';
+    window.electronAPI.readFile({title:'Select Visual Template'}).then(function(res){
+      if(modal) modal.style.zIndex='5000';
+      if(!res||res.ok===false) return;
+      _artNewTemplateFile={name:res.name||'Unknown',storedName:res.storedName||''};
+      var container=document.getElementById('artNewTemplate');
+      if(container) container.innerHTML='<span style="font-size:10px;background:#fdf2f8;border:1px solid #fbcfe8;padding:3px 8px;border-radius:4px;color:#ec4899;display:inline-flex;align-items:center;gap:3px">🎨 '+_esc((res.name||'Template').substring(0,30))+'<span onclick="_artNewTemplateFile=null;document.getElementById(\'artNewTemplate\').innerHTML=\'\'" style="cursor:pointer;color:#dc2626;margin-left:2px">&times;</span></span>';
+    }).catch(function(err){
+      if(modal) modal.style.zIndex='5000';
+    });
+  }
+}
+function _refreshArtRefDocs(){
+  var container=document.getElementById('artNewRefDocs');
+  if(!container) return;
+  container.innerHTML='';
+  _artNewRefDocs.forEach(function(d,i){
+    container.innerHTML+='<span style="font-size:9px;background:#eff6ff;border:1px solid #bfdbfe;padding:2px 8px;border-radius:4px;color:#2563a8;display:inline-flex;align-items:center;gap:3px">📄 '+_esc(d.name.substring(0,25))+'<span onclick="_artNewRefDocs.splice('+i+',1);_refreshArtRefDocs()" style="cursor:pointer;color:#dc2626;margin-left:2px">&times;</span></span>';
+  });
+}
+
+function _buildNewArtifact(){
+  var title = document.getElementById('artNewTitle').value.trim();
+  if (!title) { alert('Please enter a title.'); return null; }
+  var type = document.getElementById('artNewType').value;
+  var init = document.getElementById('artNewInit').value;
+  var desc = document.getElementById('artNewDesc').value.trim();
+  var aiPrompt = document.getElementById('artNewPrompt')?document.getElementById('artNewPrompt').value.trim():'';
+  var format = document.getElementById('artNewFormat')?document.getElementById('artNewFormat').value:'word';
+  var now = new Date().toISOString();
+
+  var art={
+    id: 'art_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+    title: title, type: type, initiative: init, status: 'Draft',
+    description: desc, aiPrompt: aiPrompt, outputFormat: format,
+    content: '', links: [], attachments: [],
+    referenceDocs: _artNewRefDocs.slice(),
+    templateFile: _artNewTemplateFile,
+    createdAt: now, updatedAt: now
+  };
+  artifactsData.push(art);
+  _artNewRefDocs=[];
+  _artNewTemplateFile=null;
+  var modal = document.getElementById('artNewModal');
+  if (modal) modal.remove();
+  var form = document.getElementById('artAddForm');
+  if (form) form.remove();
+  persistData();
+  return art;
+}
+
+function confirmAddArtifact() {
+  var art=_buildNewArtifact();
+  if(!art) return;
+  renderArtifacts();
+}
+
+async function confirmAndGenerateArtifact(){
+  var art=_buildNewArtifact();
+  if(!art) return;
+  renderArtifacts();
+
+  // Build AI prompt with all context
+  var typeObj=ART_TYPES.find(function(t){return t.id===art.type;});
+  var typeName=typeObj?typeObj.name:art.type;
+
+  var context='';
+  // Brand guide
+  if(brandGuideData.notes) context+='BRAND GUIDELINES:\n'+brandGuideData.notes+'\n\n';
+  if(brandGuideData.colors&&brandGuideData.colors.length) context+='BRAND COLORS: '+brandGuideData.colors.join(', ')+'\n';
+  if(brandGuideData.fonts) context+='BRAND FONTS: '+brandGuideData.fonts+'\n\n';
+
+  // Template
+  var tpl=artTemplates[art.type];
+  if(tpl) context+='TEMPLATE: Follow the structure and style of template "'+tpl.fileName+'".\n\n';
+
+  // Reference docs content
+  if(art.referenceDocs&&art.referenceDocs.length){
+    art.referenceDocs.forEach(function(d){
+      if(d.text) context+='REFERENCE DOC ('+d.name+'):\n'+d.text.substring(0,3000)+'\n\n';
+      else context+='REFERENCE DOC: '+d.name+' (content not available)\n\n';
+    });
+  }
+
+  // Initiative info
+  if(art.initiative){
+    var row=rows.find(function(r){return r.id===art.initiative;});
+    if(row) context+='PRODUCT/INITIATIVE: '+row.name+(row.sub?' — '+row.sub:'')+'\n\n';
+  }
+
+  var systemPrompt='You are an expert technical writer, marketing content creator, and document designer. Create professional business documents that follow brand guidelines exactly. Output well-structured HTML content with inline styles.';
+
+  var userPrompt='Create a professional '+typeName+'.\n\n';
+  userPrompt+='TITLE: '+art.title+'\n';
+  if(art.description) userPrompt+='DESCRIPTION: '+art.description+'\n';
+  if(art.aiPrompt) userPrompt+='\nUSER SPECIFICATIONS:\n'+art.aiPrompt+'\n';
+  userPrompt+='\n'+context;
+  userPrompt+='\nOUTPUT REQUIREMENTS:\n';
+  userPrompt+='- Create complete, professional HTML with inline CSS\n';
+  userPrompt+='- Use brand colors for headings and accents\n';
+  userPrompt+='- Include proper sections appropriate for a '+typeName+'\n';
+  userPrompt+='- Make it polished and business-ready\n';
+  userPrompt+='- Mark any placeholders with [PLACEHOLDER]\n';
+  userPrompt+='\nGenerate the complete HTML now:';
+
+  // Show loading state
+  var body=document.getElementById('artBody');
+  var loadingDiv=document.createElement('div');
+  loadingDiv.id='artGenerating';
+  loadingDiv.style.cssText='background:linear-gradient(135deg,#f5f0ff,#fdf2f8);border:2px solid #a78bfa;border-radius:10px;padding:20px;text-align:center;margin-bottom:12px';
+  loadingDiv.innerHTML='<div style="font-size:24px;margin-bottom:8px">🤖</div><div style="font-size:13px;font-weight:700;color:#7c3aed">Generating '+typeName+'...</div><div style="font-size:10px;color:var(--muted);margin-top:4px">This may take 15-30 seconds depending on complexity</div>';
+  body.insertBefore(loadingDiv,body.firstChild);
+
+  var result=await callAI(userPrompt,systemPrompt);
+
+  var lg=document.getElementById('artGenerating');
+  if(lg) lg.remove();
+
+  if(!result){renderArtifacts();return;}
+
+  // Clean HTML
+  var html=result.replace(/```html?\n?/g,'').replace(/```/g,'').trim();
+  art.content=html;
+  art.status='Draft';
+  art.updatedAt=new Date().toISOString();
+  persistData();
+
+  // Export
+  var format=art.outputFormat||'word';
+  if(format==='word'){
+    window.electronAPI.saveFile({content:html,defaultName:art.title.replace(/[^a-zA-Z0-9]/g,'_')+'.doc',ext:'doc',label:'Word Document'});
+  } else if(format==='pdf'){
+    var win=window.open('','_blank','width=800,height=600');
+    win.document.write(html);win.document.close();
+    setTimeout(function(){win.print();},500);
+  } else if(format==='pptx'){
+    generatePPTX(art,html);
+  } else if(format==='xlsx'){
+    generateXLSX(art,html);
+  }
+  renderArtifacts();
+}
+
+function toggleArtDetail(id) {
+  var el = document.getElementById('artDetail_' + id);
+  if (!el) return;
+  if (el.style.display !== 'none') {
+    el.style.display = 'none';
+    return;
+  }
+  el.style.display = 'block';
+
+  var a = artifactsData.find(function(x){ return x.id === id; });
+  if (!a) return;
+
+  var h = '';
+  // Status selector
+  h += '<div style="margin-bottom:10px"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:3px">Status</label>';
+  h += '<select onchange="setArtField(\'' + id + '\',\'status\',this.value)" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px">';
+  ['Draft','In Review','Approved','Published','Archived'].forEach(function(s) {
+    h += '<option value="' + s + '"' + (a.status === s ? ' selected' : '') + '>' + s + '</option>';
+  });
+  h += '</select></div>';
+
+  // Description
+  h += '<div style="margin-bottom:10px"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:3px">Description</label>';
+  h += '<textarea onchange="setArtField(\'' + id + '\',\'description\',this.value)" rows="2" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;resize:vertical">' + _esc(a.description || '') + '</textarea></div>';
+
+  // Content
+  h += '<div style="margin-bottom:10px"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:3px">Content</label>';
+  h += '<textarea onchange="setArtField(\'' + id + '\',\'content\',this.value)" rows="5" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;resize:vertical" placeholder="Full artifact content...">' + _esc(a.content || '') + '</textarea></div>';
+
+  // Links
+  h += '<div style="margin-bottom:10px"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:3px">Links</label>';
+  if (a.links && a.links.length) {
+    a.links.forEach(function(lk, idx) {
+      h += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">';
+      h += '<a href="#" onclick="event.preventDefault();if(window.electronAPI&&window.electronAPI.openExternal)window.electronAPI.openExternal(\'' + _esc(lk.url) + '\')" style="font-size:12px;color:#2563eb;text-decoration:underline">' + _esc(lk.label || lk.url) + '</a>';
+      h += '<button onclick="removeArtLink(\'' + id + '\',' + idx + ')" style="border:none;background:none;color:#dc2626;cursor:pointer;font-size:11px" title="Remove">✕</button>';
+      h += '</div>';
+    });
+  }
+  h += '<div id="artLinkForm_' + id + '" style="display:none;margin-top:4px">';
+  h += '<input id="artLinkLabel_' + id + '" type="text" placeholder="Label" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:11px;width:120px;margin-right:4px">';
+  h += '<input id="artLinkUrl_' + id + '" type="text" placeholder="URL" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:11px;width:200px;margin-right:4px">';
+  h += '<button onclick="confirmArtLink(\'' + id + '\')" style="padding:3px 8px;border-radius:4px;border:1px solid #16a34a;background:#16a34a;color:#fff;font-size:10px;cursor:pointer">Add</button>';
+  h += '</div>';
+  h += '<button onclick="addArtLink(\'' + id + '\')" style="padding:3px 8px;border-radius:4px;border:1px solid var(--border);background:#f8fafc;font-size:10px;cursor:pointer;margin-top:4px">+ Add Link</button>';
+  h += '</div>';
+
+  // Attachments
+  h += '<div style="margin-bottom:10px"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:3px">Attachments</label>';
+  if (a.attachments && a.attachments.length) {
+    a.attachments.forEach(function(att, idx) {
+      h += '<div style="font-size:11px;color:var(--navy);margin-bottom:3px">📎 ' + _esc(att.name || att.path || 'File') + '</div>';
+    });
+  }
+  h += '<button onclick="addArtAttach(\'' + id + '\')" style="padding:3px 8px;border-radius:4px;border:1px solid var(--border);background:#f8fafc;font-size:10px;cursor:pointer;margin-top:4px">+ Attach File</button>';
+  h += '</div>';
+
+  // AI Generation
+  var _brandOk=brandGuideData.fileName||brandGuideData.colors.length||brandGuideData.notes;
+  var _tplOk=artTemplates[a.type]&&artTemplates[a.type].fileName;
+  h += '<div style="background:#f5f0ff;border:1px solid #e0d5ff;border-radius:8px;padding:12px;margin-bottom:10px">';
+  h += '<div style="font-size:10px;font-weight:700;color:#7c3aed;text-transform:uppercase;margin-bottom:6px">&#x1F916; AI Generation</div>';
+  h += '<div style="display:flex;gap:8px;align-items:center">';
+  h += '<select id="artGenFormat_' + id + '" style="padding:5px 10px;border:1px solid var(--border);border-radius:4px;font-size:11px">';
+  h += '<option value="word">&#x1F4C4; Word Document</option>';
+  h += '<option value="pptx">&#x1F4CA; PowerPoint</option>';
+  h += '<option value="xlsx">&#x1F4D7; Excel</option>';
+  h += '<option value="pdf">&#x1F4D5; PDF</option>';
+  h += '</select>';
+  h += '<button id="artGenBtn_' + id + '" onclick="generateArtifact(\'' + id + '\')" style="padding:5px 12px;background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">&#x1F916; Generate with AI</button>';
+  h += '</div>';
+  h += '<div style="margin-top:6px;font-size:9px;color:var(--muted)">' + (_brandOk ? '&#x2705; Brand guide loaded' : '&#x26A0;&#xFE0F; No brand guide') + ' &nbsp;|&nbsp; ' + (_tplOk ? '&#x2705; Template: ' + _esc(artTemplates[a.type].fileName) : '&#x26A0;&#xFE0F; No template for this type') + '</div>';
+  h += '</div>';
+
+  // Actions
+  h += '<div style="display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid #f0f3f8">';
+  h += '<button onclick="exportArtifactWord(\'' + id + '\')" class="btn accent" style="padding:4px 12px;font-size:10px">📥 Export Word</button>';
+  h += '<button onclick="deleteArtifact(\'' + id + '\')" class="btn red" style="padding:4px 12px;font-size:10px">🗑 Delete</button>';
+  h += '</div>';
+
+  // Meta
+  h += '<div style="margin-top:8px;font-size:9px;color:var(--muted)">Created: ' + (a.createdAt ? new Date(a.createdAt).toLocaleString() : 'N/A') + ' | Updated: ' + (a.updatedAt ? new Date(a.updatedAt).toLocaleString() : 'N/A') + '</div>';
+
+  el.innerHTML = h;
+}
+
+function setArtField(id, field, value) {
+  var a = artifactsData.find(function(x){ return x.id === id; });
+  if (!a) return;
+  a[field] = value;
+  a.updatedAt = new Date().toISOString();
+  // Update status badge in card top if status changed
+  if (field === 'status') {
+    var card = document.getElementById('artCard_' + id);
+    if (card) {
+      var badge = card.querySelector('.art-status');
+      if (badge) {
+        badge.className = 'art-status ' + value.replace(/\s+/g, '-').toLowerCase();
+        badge.textContent = value;
+      }
+    }
+  }
+  persistData();
+}
+
+function addArtLink(id) {
+  var form = document.getElementById('artLinkForm_' + id);
+  if (form) form.style.display = 'block';
+}
+
+function confirmArtLink(id) {
+  var label = document.getElementById('artLinkLabel_' + id).value.trim();
+  var url = document.getElementById('artLinkUrl_' + id).value.trim();
+  if (!url) { alert('Please enter a URL.'); return; }
+  var a = artifactsData.find(function(x){ return x.id === id; });
+  if (!a) return;
+  if (!a.links) a.links = [];
+  a.links.push({ label: label || url, url: url });
+  a.updatedAt = new Date().toISOString();
+  toggleArtDetail(id); // collapse
+  toggleArtDetail(id); // re-expand to refresh
+  persistData();
+}
+
+function removeArtLink(id, idx) {
+  var a = artifactsData.find(function(x){ return x.id === id; });
+  if (!a || !a.links) return;
+  a.links.splice(idx, 1);
+  a.updatedAt = new Date().toISOString();
+  toggleArtDetail(id); // collapse
+  toggleArtDetail(id); // re-expand to refresh
+  persistData();
+}
+
+function addArtAttach(id) {
+  if (!window.electronAPI || !window.electronAPI.openFile) {
+    alert('File attachment requires the Electron API.');
+    return;
+  }
+  window.electronAPI.openFile().then(function(result) {
+    if (!result || result.canceled) return;
+    var a = artifactsData.find(function(x){ return x.id === id; });
+    if (!a) return;
+    if (!a.attachments) a.attachments = [];
+    var filePath = Array.isArray(result.filePaths) ? result.filePaths[0] : (result.filePath || '');
+    if (!filePath) return;
+    var name = filePath.split(/[/\\]/).pop();
+    a.attachments.push({ name: name, path: filePath });
+    a.updatedAt = new Date().toISOString();
+    toggleArtDetail(id);
+    toggleArtDetail(id);
+    persistData();
+  });
+}
+
+function deleteArtifact(id) {
+  if (!confirm('Delete this artifact? This cannot be undone.')) return;
+  artifactsData = artifactsData.filter(function(x){ return x.id !== id; });
+  renderArtifacts();
+  persistData();
+}
+
+function exportArtifactWord(id) {
+  var a = artifactsData.find(function(x){ return x.id === id; });
+  if (!a) return;
+  var tp = _artGetType(a.type);
+  var initName = _artGetInitName(a.initiative);
+  var h = '<html><head><meta charset="utf-8"><style>body{font-family:Calibri,sans-serif;padding:40px;color:#1a1464}h1{font-size:22px;border-bottom:2px solid #7c3aed;padding-bottom:8px}h2{font-size:16px;color:#7c3aed;margin-top:20px}.meta{color:#64748b;font-size:12px;margin-bottom:16px}.badge{display:inline-block;background:#7c3aed;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}table{border-collapse:collapse;width:100%;margin-top:12px}td,th{border:1px solid #c5d5ea;padding:6px 10px;font-size:12px;text-align:left}th{background:#f0f3f8;font-weight:700}</style></head><body>';
+  h += '<h1>' + _esc(a.title) + '</h1>';
+  h += '<div class="meta"><span class="badge">' + tp.icon + ' ' + tp.name + '</span> &nbsp; Initiative: <b>' + _esc(initName) + '</b> &nbsp; Status: <b>' + _esc(a.status || 'Draft') + '</b></div>';
+  h += '<div class="meta">Created: ' + (a.createdAt ? new Date(a.createdAt).toLocaleDateString() : 'N/A') + ' | Updated: ' + (a.updatedAt ? new Date(a.updatedAt).toLocaleDateString() : 'N/A') + '</div>';
+  if (a.description) { h += '<h2>Description</h2><p>' + _esc(a.description).replace(/\n/g, '<br>') + '</p>'; }
+  if (a.content) { h += '<h2>Content</h2><div>' + _esc(a.content).replace(/\n/g, '<br>') + '</div>'; }
+  if (a.links && a.links.length) {
+    h += '<h2>Links</h2><ul>';
+    a.links.forEach(function(lk) { h += '<li><a href="' + _esc(lk.url) + '">' + _esc(lk.label || lk.url) + '</a></li>'; });
+    h += '</ul>';
+  }
+  if (a.attachments && a.attachments.length) {
+    h += '<h2>Attachments</h2><ul>';
+    a.attachments.forEach(function(att) { h += '<li>' + _esc(att.name || att.path) + '</li>'; });
+    h += '</ul>';
+  }
+  h += '</body></html>';
+
+  if (window.electronAPI && window.electronAPI.saveFile) {
+    var safeName = a.title.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 50);
+    window.electronAPI.saveFile({ content: h, defaultName: safeName + '_' + new Date().toISOString().slice(0, 10) + '.doc', ext: 'doc', label: 'Word Document' });
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── AI Key Settings ──
+// ── SETTINGS MODULE ──────────────────────────────────────────────────────────
+function openSettings(){
+  var existing=document.getElementById('settingsOverlay');
+  if(existing){existing.remove();return;}
+  var overlay=document.createElement('div');
+  overlay.id='settingsOverlay';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px';
+  var modal=document.createElement('div');
+  modal.style.cssText='background:#fff;border-radius:12px;width:600px;max-width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)';
+
+  var hasKey=userAIKey.key&&userAIKey.key.length>5;
+  var hasBrand=brandGuideData.fileName||(brandGuideData.colors&&brandGuideData.colors.length)||brandGuideData.notes;
+  var tplCount=Object.keys(artTemplates).filter(function(k){return artTemplates[k]&&artTemplates[k].fileName;}).length;
+
+  var h='<div style="background:var(--navy);color:#fff;padding:16px 20px;border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between"><h2 style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:800;letter-spacing:.04em">⚙️ Settings</h2><button onclick="document.getElementById(\'settingsOverlay\').remove()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">&times;</button></div>';
+  h+='<div style="padding:20px">';
+
+  // ── AI Configuration ──
+  h+='<div style="margin-bottom:20px">';
+  h+='<div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:8px;display:flex;align-items:center;gap:6px">🤖 AI Configuration <span style="font-size:9px;font-weight:600;padding:2px 6px;border-radius:3px;background:'+(hasKey?'#dcfce7':'#fef3c7')+';color:'+(hasKey?'#166534':'#92400e')+'">'+(hasKey?'Connected':'Not Set')+'</span></div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">';
+  h+='<div><label style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:3px">Provider</label>';
+  h+='<select id="settAIProvider" onchange="updateSettingsModels()" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px">';
+  h+='<option value="gemini"'+(userAIKey.provider==='gemini'?' selected':'')+'>Google Gemini</option>';
+  h+='<option value="openai"'+(userAIKey.provider==='openai'?' selected':'')+'>OpenAI</option>';
+  h+='<option value="claude"'+(userAIKey.provider==='claude'?' selected':'')+'>Anthropic Claude</option>';
+  h+='</select></div>';
+  h+='<div><label style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:3px">Model</label>';
+  h+='<select id="settAIModel" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px"></select></div></div>';
+  h+='<div><label style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:3px">API Key <span style="font-weight:400;color:#b0bbd0">(stored locally per user — never shared)</span></label>';
+  h+='<div style="display:flex;gap:6px"><input id="settAIKey" type="password" value="'+_esc(userAIKey.key||'')+'" placeholder="Paste your API key..." style="flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px">';
+  h+='<button onclick="saveSettingsAIKey()" style="padding:7px 14px;background:var(--navy);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">Save Key</button></div></div>';
+  h+='<div style="font-size:9px;color:var(--muted);margin-top:4px">Your key is encrypted in local storage and never sent to our servers. Get keys from: <a style="color:var(--accent)" href="#" onclick="event.preventDefault()">Gemini</a> · <a style="color:var(--accent)" href="#" onclick="event.preventDefault()">OpenAI</a> · <a style="color:var(--accent)" href="#" onclick="event.preventDefault()">Claude</a></div>';
+  h+='</div>';
+
+  // ── Brand Guide ──
+  h+='<div style="margin-bottom:20px;padding-top:16px;border-top:1px solid #e8edf7">';
+  h+='<div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:8px;display:flex;align-items:center;gap:6px">🎨 Brand Guide <span style="font-size:9px;font-weight:600;padding:2px 6px;border-radius:3px;background:'+(hasBrand?'#dcfce7':'#fef3c7')+';color:'+(hasBrand?'#166534':'#92400e')+'">'+(hasBrand?'Configured':'Not Set')+'</span></div>';
+
+  // Brand doc
+  if(brandGuideData.fileName){
+    h+='<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:#fdf2f8;border:1px solid #fbcfe8;border-radius:6px;margin-bottom:8px"><span style="font-size:11px">📎 '+_esc(brandGuideData.fileName)+'</span><button onclick="brandGuideData.fileName=\'\';brandGuideData.file=null;persistData();openSettings()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:11px;margin-left:auto">✕</button>';
+    h+='<button onclick="document.getElementById(\'settingsOverlay\').remove();analyseBrandGuide()" style="padding:3px 8px;background:#7c3aed;color:#fff;border:none;border-radius:4px;font-size:9px;font-weight:700;cursor:pointer">🤖 AI Analyse</button></div>';
+  } else {
+    h+='<button onclick="uploadBrandGuideFromSettings()" style="width:100%;padding:8px;background:#fdf2f8;border:1px dashed #ec4899;border-radius:6px;color:#ec4899;font-size:11px;font-weight:700;cursor:pointer;margin-bottom:8px">📎 Upload Brand / CI Guide</button>';
+  }
+
+  // Colors, fonts, notes inline
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">';
+  h+='<div><label style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:3px">Brand Colours</label>';
+  h+='<input id="settBrandColors" value="'+((brandGuideData.colors||[]).join(', '))+'" placeholder="#1a1464, #0d9488" onchange="brandGuideData.colors=this.value.split(\',\').map(function(c){return c.trim()}).filter(Boolean);persistData()" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:11px">';
+  // Color swatches
+  if(brandGuideData.colors&&brandGuideData.colors.length){
+    h+='<div style="display:flex;gap:4px;margin-top:4px">';
+    brandGuideData.colors.forEach(function(c){h+='<span style="width:18px;height:18px;border-radius:4px;background:'+c+';border:1px solid #e0e7f0"></span>';});
+    h+='</div>';
+  }
+  h+='</div>';
+  h+='<div><label style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:3px">Brand Fonts</label>';
+  h+='<input id="settBrandFonts" value="'+_esc(brandGuideData.fonts||'')+'" placeholder="Barlow, Arial" onchange="brandGuideData.fonts=this.value;persistData()" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:11px"></div></div>';
+
+  // Logo + Icons
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">';
+  h+='<div><label style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:3px">Logo URL</label>';
+  h+='<input value="'+_esc(brandGuideData.logoUrl||'')+'" placeholder="https://..." onchange="brandGuideData.logoUrl=this.value;persistData()" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:11px"></div>';
+  h+='<div><label style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:3px">Brand Icons / Assets</label>';
+  h+='<button onclick="uploadBrandAsset()" style="width:100%;padding:6px;background:#f8faff;border:1px dashed var(--border);border-radius:4px;color:var(--accent);font-size:10px;font-weight:700;cursor:pointer">📎 Upload Logo/Icons</button>';
+  if(brandGuideData.assets&&brandGuideData.assets.length){
+    h+='<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">';
+    brandGuideData.assets.forEach(function(a,i){h+='<span style="font-size:8px;background:#eff6ff;border:1px solid #bfdbfe;padding:1px 5px;border-radius:3px;color:#2563a8">'+_esc(a.name.substring(0,15))+'<span onclick="brandGuideData.assets.splice('+i+',1);persistData();openSettings()" style="cursor:pointer;color:#dc2626;margin-left:2px">&times;</span></span>';});
+    h+='</div>';
+  }
+  h+='</div></div>';
+
+  // Style notes
+  h+='<div><label style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:3px">Style Notes / Guidelines</label>';
+  h+='<textarea rows="2" onchange="brandGuideData.notes=this.value;persistData()" placeholder="Brand tone, style rules..." style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:11px;resize:vertical">'+(brandGuideData.notes||'')+'</textarea></div>';
+  h+='</div>';
+
+  // ── Templates ──
+  h+='<div style="margin-bottom:20px;padding-top:16px;border-top:1px solid #e8edf7">';
+  h+='<div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:8px;display:flex;align-items:center;gap:6px">📐 Artifact Templates <span style="font-size:9px;font-weight:600;padding:2px 6px;border-radius:3px;background:#eff6ff;color:#2563a8">'+tplCount+'/'+ART_TYPES.length+' configured</span></div>';
+  h+='<div style="font-size:10px;color:var(--muted);margin-bottom:8px">Upload a template per artifact type — AI follows the structure and visual style when generating.</div>';
+
+  ART_TYPES.forEach(function(type){
+    var tpl=artTemplates[type.id];
+    h+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f0f3f8">';
+    h+='<span style="font-size:14px;width:22px;text-align:center">'+type.icon+'</span>';
+    h+='<span style="font-size:11px;font-weight:600;color:var(--navy);flex:1">'+type.name+'</span>';
+    if(tpl&&tpl.fileName){
+      h+='<span style="font-size:9px;color:#16a34a;font-weight:600">✅ '+_esc(tpl.fileName.substring(0,20))+'</span>';
+      h+='<button onclick="removeArtTemplate(\''+type.id+'\');openSettings()" style="padding:2px 6px;border-radius:3px;border:1px solid #fca5a5;background:#fff;color:#dc2626;font-size:8px;font-weight:700;cursor:pointer">✕</button>';
+    }
+    h+='<button onclick="uploadArtTemplateFromSettings(\''+type.id+'\')" style="padding:2px 8px;border-radius:3px;border:1px solid #7c3aed;background:#fff;color:#7c3aed;font-size:8px;font-weight:700;cursor:pointer">'+(tpl&&tpl.fileName?'Replace':'Upload')+'</button>';
+    h+='</div>';
+  });
+  h+='</div>';
+
+  // ── Role ──
+  h+='<div style="padding-top:16px;border-top:1px solid #e8edf7;margin-bottom:12px">';
+  h+='<div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:8px">👤 Your Role</div>';
+  h+='<select onchange="changeSelfRole(this.value)" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px">';
+  [{v:'manager',l:'Manager — Full access + role management'},{v:'product_manager',l:'Product Manager — Full access to all features'},{v:'developer',l:'Developer — Edit CapacityIQ & ToDo, read-only elsewhere'},{v:'read_only',l:'Read Only — View everything, edit nothing'}].forEach(function(r){
+    h+='<option value="'+r.v+'"'+(_userRole===r.v?' selected':'')+'>'+r.l+'</option>';
+  });
+  h+='</select></div>';
+
+  h+='<button onclick="document.getElementById(\'settingsOverlay\').remove()" style="width:100%;padding:10px;background:var(--navy);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">Done</button>';
+  h+='</div>';
+
+  modal.innerHTML=h;
+  overlay.appendChild(modal);
+  overlay.addEventListener('click',function(e){if(e.target===overlay)overlay.remove();});
+  document.body.appendChild(overlay);
+  // Populate model options
+  setTimeout(function(){updateSettingsModels();},50);
+}
+
+function updateSettingsModels(){
+  var prov=document.getElementById('settAIProvider');
+  var modSel=document.getElementById('settAIModel');
+  if(!prov||!modSel) return;
+  var p=prov.value;
+  var models={
+    gemini:[{v:'gemini-2.5-flash',l:'Gemini 2.5 Flash'},{v:'gemini-2.5-pro',l:'Gemini 2.5 Pro'},{v:'gemini-2.0-flash',l:'Gemini 2.0 Flash (Legacy)'}],
+    openai:[{v:'gpt-4o',l:'GPT-4o'},{v:'gpt-4o-mini',l:'GPT-4o Mini'},{v:'gpt-4.1',l:'GPT-4.1'}],
+    claude:[{v:'claude-sonnet-4-5-20250514',l:'Claude Sonnet 4.5'},{v:'claude-haiku-4-5-20251001',l:'Claude Haiku 4.5'},{v:'claude-opus-4-6',l:'Claude Opus 4.6'}]
+  };
+  modSel.innerHTML='';
+  (models[p]||[]).forEach(function(m){
+    var o=document.createElement('option');o.value=m.v;o.textContent=m.l;
+    if(userAIKey.provider===p&&userAIKey.model===m.v) o.selected=true;
+    modSel.appendChild(o);
+  });
+}
+
+function saveSettingsAIKey(){
+  var prov=document.getElementById('settAIProvider').value;
+  var model=document.getElementById('settAIModel').value;
+  var key=document.getElementById('settAIKey').value.trim();
+  userAIKey={provider:prov,key:key,model:model};
+  localStorage.setItem('pmr_ai_key',JSON.stringify(userAIKey));
+  // Show feedback
+  var btn=event.target;btn.textContent='✓ Saved!';btn.style.background='#16a34a';
+  setTimeout(function(){btn.textContent='Save Key';btn.style.background='var(--navy)';},1500);
+}
+
+function uploadBrandGuideFromSettings(){
+  if(!window.electronAPI||!window.electronAPI.readFile) return;
+  window.electronAPI.readFile({title:'Select Brand / CI Guide'}).then(function(res){
+    if(!res||!res.name) return;
+    brandGuideData.fileName=res.name;
+    brandGuideData.file=res.storedName||res.name;
+    brandGuideData.extractedText=res.text||'';
+    persistData();
+    document.getElementById('settingsOverlay').remove();
+    openSettings();
+  });
+}
+
+function uploadBrandAsset(){
+  if(!window.electronAPI||!window.electronAPI.readFile) return;
+  window.electronAPI.readFile({title:'Select Logo / Icon / Brand Asset'}).then(function(res){
+    if(!res||!res.name) return;
+    if(!brandGuideData.assets) brandGuideData.assets=[];
+    brandGuideData.assets.push({name:res.name,storedName:res.storedName||res.name});
+    persistData();
+    document.getElementById('settingsOverlay').remove();
+    openSettings();
+  });
+}
+
+function uploadArtTemplateFromSettings(typeId){
+  if(!window.electronAPI||!window.electronAPI.readFile) return;
+  window.electronAPI.readFile({title:'Select template for '+typeId}).then(function(res){
+    if(!res||!res.name) return;
+    artTemplates[typeId]={fileName:res.name,storedName:res.storedName||res.name,uploadedAt:new Date().toISOString()};
+    persistData();
+    document.getElementById('settingsOverlay').remove();
+    openSettings();
+  });
+}
+
+function loadAIKey(){
+  try{var s=localStorage.getItem('pmr_ai_key');if(s){userAIKey=JSON.parse(s);}}catch(e){}
+}
+function showAIKeySettings(){
+  var existing=document.getElementById('aiKeyModal');
+  if(existing){existing.remove();return;}
+  var overlay=document.createElement('div');
+  overlay.id='aiKeyModal';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px';
+  var modal=document.createElement('div');
+  modal.style.cssText='background:#fff;border-radius:12px;width:480px;max-width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)';
+  var h='<div style="background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;padding:16px 20px;border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between"><h2 style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:800">&#x1F511; AI API Key Settings</h2><button onclick="document.getElementById(\'aiKeyModal\').remove()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">&times;</button></div>';
+  h+='<div style="padding:20px">';
+  h+='<p style="font-size:11px;color:var(--muted);margin-bottom:12px">Your API key is stored locally on this device only and is never shared with the server.</p>';
+  // Provider
+  h+='<div style="margin-bottom:14px"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px">AI Provider</label>';
+  h+='<select id="aiKeyProvider" onchange="updateAIModelOptions()" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px">';
+  h+='<option value="gemini"'+(userAIKey.provider==='gemini'?' selected':'')+'>Google Gemini</option>';
+  h+='<option value="openai"'+(userAIKey.provider==='openai'?' selected':'')+'>OpenAI</option>';
+  h+='<option value="claude"'+(userAIKey.provider==='claude'?' selected':'')+'>Anthropic Claude</option>';
+  h+='</select></div>';
+  // Model
+  h+='<div style="margin-bottom:14px"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px">Model</label>';
+  h+='<select id="aiKeyModel" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px"></select></div>';
+  // API Key
+  h+='<div style="margin-bottom:14px"><label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px">API Key</label>';
+  h+='<input id="aiKeyInput" type="password" value="'+_esc(userAIKey.key||'')+'" placeholder="Paste your API key here..." style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px"></div>';
+  // Status
+  var hasKey=userAIKey.key&&userAIKey.key.length>5;
+  h+='<div style="background:'+(hasKey?'#f0fdf4':'#fef3c7')+';border:1px solid '+(hasKey?'#bbf7d0':'#fde68a')+';border-radius:6px;padding:8px 12px;font-size:11px;color:'+(hasKey?'#166534':'#92400e')+';font-weight:600;margin-bottom:12px">'+(hasKey?'&#x2705; API key configured for '+userAIKey.provider+' ('+userAIKey.model+')':'&#x26A0;&#xFE0F; No API key set — AI features will not work')+'</div>';
+  h+='<button onclick="saveAIKey()" style="width:100%;padding:10px;background:var(--navy);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">Save Key</button>';
+  h+='</div>';
+  modal.innerHTML=h;
+  overlay.appendChild(modal);
+  overlay.addEventListener('click',function(e){if(e.target===overlay)overlay.remove();});
+  document.body.appendChild(overlay);
+  updateAIModelOptions();
+}
+function updateAIModelOptions(){
+  var prov=document.getElementById('aiKeyProvider');
+  var modelSel=document.getElementById('aiKeyModel');
+  if(!prov||!modelSel) return;
+  var p=prov.value;
+  var models={gemini:['gemini-2.5-flash','gemini-2.5-pro','gemini-2.0-flash'],openai:['gpt-4o','gpt-4o-mini'],claude:['claude-sonnet-4-5-20250514','claude-haiku-4-5-20251001']};
+  var opts=models[p]||[];
+  modelSel.innerHTML='';
+  opts.forEach(function(m){
+    var o=document.createElement('option');o.value=m;o.textContent=m;
+    if(userAIKey.provider===p&&userAIKey.model===m) o.selected=true;
+    modelSel.appendChild(o);
+  });
+}
+function saveAIKey(){
+  var prov=document.getElementById('aiKeyProvider').value;
+  var model=document.getElementById('aiKeyModel').value;
+  var key=document.getElementById('aiKeyInput').value.trim();
+  userAIKey={provider:prov,key:key,model:model};
+  localStorage.setItem('pmr_ai_key',JSON.stringify(userAIKey));
+  document.getElementById('aiKeyModal').remove();
+}
+
+// ── AI API Call Helper ──
+async function callAI(prompt, systemPrompt){
+  // Reload key from localStorage in case it was just saved
+  loadAIKey();
+  if(!userAIKey.key){alert('Please set your AI API key in Settings (⚙️ button).');return null;}
+  console.log('[AI] Calling provider:',userAIKey.provider,'model:',userAIKey.model,'key length:',userAIKey.key.length);
+  try{
+    // Route through main process IPC to bypass CORS
+    if(window.electronAPI&&window.electronAPI.aiRequest){
+      var result=await window.electronAPI.aiRequest({
+        provider:userAIKey.provider,
+        apiKey:userAIKey.key,
+        model:userAIKey.model,
+        prompt:prompt,
+        systemPrompt:systemPrompt||''
+      });
+      if(result.ok) return result.text;
+      console.error('[AI] Error:',result.error);
+      alert('AI error ('+userAIKey.provider+' / '+userAIKey.model+'):\n\n'+(result.error||'Unknown error')+'\n\nGo to ⚙️ Settings to check your provider and API key.');
+      return null;
+    }
+    // Fallback: direct fetch (may fail due to CORS in Electron)
+    alert('AI proxy not available. Please restart the app.');
+    return null;
+  }catch(e){console.error('AI call failed:',e);alert('AI call failed: '+e.message);return null;}
+}
+
+// ── Brand Guide AI Analysis ──
+async function analyseBrandGuide(btnEl){
+  if(!brandGuideData.fileName){alert('Please upload a brand guide document first.');return;}
+
+  // Try to get text — either from saved extractedText or by re-reading the file
+  var content=brandGuideData.extractedText||'';
+  if(!content&&window.electronAPI&&window.electronAPI.readFile){
+    if(btnEl) btnEl.textContent='📎 Select brand guide file...';
+    // Lower any open modals
+    var settM=document.getElementById('settingsOverlay');
+    var bgM=document.getElementById('brandGuideModal');
+    if(settM) settM.style.zIndex='1';
+    if(bgM) bgM.style.zIndex='1';
+    try{
+      var res=await window.electronAPI.readFile({title:'Select your brand guide: '+brandGuideData.fileName});
+      if(settM) settM.style.zIndex='5000';
+      if(bgM) bgM.style.zIndex='5000';
+      if(res&&res.ok!==false&&res.text){
+        content=res.text;
+        brandGuideData.extractedText=content;
+        brandGuideData.fileName=res.name||brandGuideData.fileName;
+        brandGuideData.file=res.storedName||brandGuideData.file;
+        persistData();
+      }
+    }catch(e){
+      if(settM) settM.style.zIndex='5000';
+      if(bgM) bgM.style.zIndex='5000';
+    }
+  }
+  if(!content){
+    // Fallback: ask AI to work with just the file name
+    content='This is a brand guide document called "'+brandGuideData.fileName+'". I could not extract text content (it may be image-based). Please provide generic professional brand guidelines including suggested colors, fonts, and tone based on the company name "Netstar" which is a vehicle tracking and fleet management company.';
+  }
+
+  var prompt='Analyse this brand/CI guide document and extract:\n1. Primary and secondary brand colors (as hex codes)\n2. Brand fonts/typography\n3. Brand tone of voice and style guidelines\n4. Key visual rules (dos and don\'ts)\n5. Logo usage guidelines\n\nDocument content:\n'+content.substring(0,8000)+'\n\nRespond in JSON format only, no other text:\n{"colors":["#hex1","#hex2"],"fonts":"Font names","tone":"Description of tone","rules":"Key visual rules","logoNotes":"Logo usage notes"}';
+
+  // Update button state
+  var btn=btnEl||null;
+  if(btn){btn.textContent='🤖 Analysing...';btn.disabled=true;}
+
+  var result=await callAI(prompt,'You are a brand identity analyst. Extract brand information from documents. Always respond with valid JSON only, no markdown or explanation.');
+
+  if(btn){btn.textContent='🤖 AI Analyse Brand Guide';btn.disabled=false;}
+
+  if(!result) return;
+
+  console.log('[BrandAI] Raw result:',result.substring(0,500));
+
+  try{
+    var json=result.replace(/```json?\n?/g,'').replace(/```/g,'').trim();
+    // Try to find JSON object in the response
+    var jsonStart=json.indexOf('{');
+    var jsonEnd=json.lastIndexOf('}');
+    if(jsonStart>=0&&jsonEnd>jsonStart) json=json.substring(jsonStart,jsonEnd+1);
+
+    var parsed=JSON.parse(json);
+    console.log('[BrandAI] Parsed:',JSON.stringify(parsed));
+
+    var updated=[];
+    if(parsed.colors&&parsed.colors.length){brandGuideData.colors=parsed.colors;updated.push('colours ('+parsed.colors.join(', ')+')');}
+    if(parsed.fonts){brandGuideData.fonts=parsed.fonts;updated.push('fonts ('+parsed.fonts+')');}
+    var notes='';
+    if(parsed.tone) notes+='Tone: '+parsed.tone;
+    if(parsed.rules) notes+=(notes?'\n\n':'')+'Visual Rules: '+parsed.rules;
+    if(parsed.logoNotes) notes+=(notes?'\n\n':'')+'Logo: '+parsed.logoNotes;
+    if(notes){brandGuideData.notes=notes;updated.push('style notes');}
+    persistData();
+
+    if(updated.length){
+      alert('Brand guide analysed! Extracted:\n• '+updated.join('\n• ')+'\n\nCheck the fields below — they should now be populated.');
+    } else {
+      alert('AI analysed the document but could not extract specific brand data. The document may not contain explicit brand guidelines. Try adding details manually.');
+    }
+    // Refresh modals
+    var bgModal=document.getElementById('brandGuideModal');
+    if(bgModal){bgModal.remove();openBrandGuide();}
+    var settModal=document.getElementById('settingsOverlay');
+    if(settModal){settModal.remove();openSettings();}
+  }catch(e){
+    console.error('[BrandAI] JSON parse failed:',e.message,'\nRaw:',result.substring(0,300));
+    // Save raw AI output as notes anyway
+    brandGuideData.notes=(brandGuideData.notes?brandGuideData.notes+'\n\n':'')+'AI Analysis:\n'+result.substring(0,800);
+    persistData();
+    alert('AI returned analysis but not in structured format. The raw analysis has been saved to Style Notes. Check and edit manually.\n\nRaw response preview:\n'+result.substring(0,200));
+    var settModal=document.getElementById('settingsOverlay');
+    if(settModal){settModal.remove();openSettings();}
+    var bgModal=document.getElementById('brandGuideModal');
+    if(bgModal){bgModal.remove();openBrandGuide();}
+  }
+}
+
+// ── Templates Tab ──
+function showArtTemplatesTab(){
+  var body=document.getElementById('artBody');
+  body.innerHTML='';
+  var h='<div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:16px">';
+  h+='<h3 style="color:var(--navy);font-size:16px;font-weight:800;margin-bottom:4px">&#x1F4D0; Artifact Templates</h3>';
+  h+='<p style="font-size:11px;color:var(--muted);margin-bottom:16px">Upload a template for each artifact type. When generating artifacts, AI will follow the template\'s structure and visual style.</p>';
+  ART_TYPES.forEach(function(type){
+    var tpl=artTemplates[type.id];
+    h+='<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0f3f8">';
+    h+='<span style="font-size:18px;width:28px;text-align:center">'+type.icon+'</span>';
+    h+='<div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--navy)">'+type.name+'</div>';
+    if(tpl&&tpl.fileName){
+      h+='<div style="font-size:10px;color:#16a34a">&#x2705; '+_esc(tpl.fileName)+' <span style="color:var(--muted)">uploaded '+new Date(tpl.uploadedAt).toLocaleDateString('en-ZA')+'</span></div>';
+    } else {
+      h+='<div style="font-size:10px;color:var(--muted)">No template uploaded</div>';
+    }
+    h+='</div>';
+    if(tpl&&tpl.fileName){
+      h+='<button onclick="removeArtTemplate(\''+type.id+'\')" style="padding:3px 8px;border-radius:4px;border:1px solid #fca5a5;background:#fff;color:#dc2626;font-size:9px;font-weight:700;cursor:pointer">Remove</button>';
+    }
+    h+='<button onclick="uploadArtTemplate(\''+type.id+'\')" style="padding:3px 10px;border-radius:4px;border:1px solid #7c3aed;background:#fff;color:#7c3aed;font-size:9px;font-weight:700;cursor:pointer">'+(tpl&&tpl.fileName?'Replace':'Upload')+'</button>';
+    h+='</div>';
+  });
+  h+='</div>';
+  h+='<button class="btn accent" onclick="renderArtifacts()" style="font-size:11px">&#x2190; Back to Artifacts</button>';
+  body.innerHTML=h;
+}
+function uploadArtTemplate(typeId){
+  if(!window.electronAPI||!window.electronAPI.readFile) return;
+  window.electronAPI.readFile({title:'Select template for '+typeId}).then(function(res){
+    if(!res||!res.name) return;
+    artTemplates[typeId]={fileName:res.name,storedName:res.storedName||res.name,uploadedAt:new Date().toISOString()};
+    persistData();
+    showArtTemplatesTab();
+  });
+}
+function removeArtTemplate(typeId){
+  delete artTemplates[typeId];
+  persistData();
+  showArtTemplatesTab();
+}
+
+// ── AI Artifact Generation ──
+async function generateArtifact(artId){
+  var art=artifactsData.find(function(a){return a.id===artId;});
+  if(!art){return;}
+  var formatEl=document.getElementById('artGenFormat_'+artId);
+  var format=formatEl?formatEl.value:'word';
+  var context='';
+  if(brandGuideData.notes) context+='BRAND GUIDELINES:\n'+brandGuideData.notes+'\n\n';
+  if(brandGuideData.colors&&brandGuideData.colors.length) context+='BRAND COLORS: '+brandGuideData.colors.join(', ')+'\n';
+  if(brandGuideData.fonts) context+='BRAND FONTS: '+brandGuideData.fonts+'\n\n';
+  var typeObj=ART_TYPES.find(function(t){return t.id===art.type;});
+  var typeName=typeObj?typeObj.name:art.type;
+  var tpl=artTemplates[art.type];
+  if(tpl) context+='TEMPLATE: Follow the structure of template "'+tpl.fileName+'"\n\n';
+  if(art.referenceDocs&&art.referenceDocs.length){
+    context+='REFERENCE DOCUMENTS: '+art.referenceDocs.map(function(d){return d.name;}).join(', ')+'\n\n';
+  }
+  if(art.initiative){
+    var row=rows.find(function(r){return r.id===art.initiative;});
+    if(row) context+='PRODUCT/INITIATIVE: '+row.name+' — '+row.sub+'\n\n';
+  }
+  var systemPrompt='You are an expert technical writer and marketing content creator. Create professional business documents that follow brand guidelines exactly. Output well-structured HTML content with inline styles for colors, fonts, and layout.';
+  var prompt='Create a professional '+typeName+' document.\n\nTitle: '+art.title+'\nDescription: '+(art.description||'No description provided')+'\n\n'+context+'\n\nFormat requirements:\n- Output as clean, well-structured HTML with inline CSS styles\n- Use brand colors for headings, accents, and highlights\n- Use brand fonts if specified\n- Include proper sections, headers, and formatting appropriate for a '+typeName+'\n- Make it professional, polished, and ready for business use\n- Include placeholder text where specific product data would go, marked with [PLACEHOLDER]\n\nGenerate the complete HTML content now:';
+  var genBtn=document.getElementById('artGenBtn_'+artId);
+  if(genBtn){genBtn.textContent='Generating...';genBtn.disabled=true;}
+  var result=await callAI(prompt,systemPrompt);
+  if(genBtn){genBtn.textContent='\u{1F916} Generate with AI';genBtn.disabled=false;}
+  if(!result){alert('Generation failed. Check your AI API key.');return;}
+  var html=result.replace(/```html?\n?/g,'').replace(/```/g,'').trim();
+  art.content=html;
+  art.updatedAt=new Date().toISOString();
+  persistData();
+  if(format==='word'){
+    window.electronAPI.saveFile({content:html,defaultName:art.title.replace(/[^a-zA-Z0-9]/g,'_')+'.doc',ext:'doc',label:'Word Document'});
+  } else if(format==='pdf'){
+    var win=window.open('','_blank','width=800,height=600');
+    win.document.write(html);
+    win.document.close();
+    setTimeout(function(){win.print();},500);
+  } else if(format==='pptx'){
+    generatePPTX(art,html);
+  } else if(format==='xlsx'){
+    generateXLSX(art,html);
+  }
+  toggleArtDetail(artId);
+  toggleArtDetail(artId);
+}
+
+function generatePPTX(art,htmlContent){
+  if(typeof PptxGenJS==='undefined'){alert('PowerPoint library not loaded.');return;}
+  var pptx=new PptxGenJS();
+  pptx.author='PM Roadmapper';
+  pptx.title=art.title;
+  var slide1=pptx.addSlide();
+  var bgColor=brandGuideData.colors&&brandGuideData.colors[0]?brandGuideData.colors[0].replace('#',''):'1A1464';
+  slide1.background={fill:bgColor};
+  slide1.addText(art.title,{x:0.5,y:1.5,w:9,h:1.5,fontSize:36,fontFace:brandGuideData.fonts||'Arial',color:'FFFFFF',bold:true});
+  slide1.addText(art.description||'',{x:0.5,y:3.2,w:9,h:0.8,fontSize:14,color:'CCCCCC'});
+  slide1.addText(new Date().toLocaleDateString('en-ZA',{year:'numeric',month:'long',day:'numeric'}),{x:0.5,y:4.5,w:9,h:0.5,fontSize:10,color:'999999'});
+  var sections=htmlContent.split(/<h[12][^>]*>/gi);
+  sections.forEach(function(sec,i){
+    if(i===0&&sec.trim().length<50) return;
+    var slide=pptx.addSlide();
+    var headMatch=sec.match(/^([^<]+)/);
+    var heading=headMatch?headMatch[1].replace(/<[^>]*>/g,'').trim():'';
+    var body=sec.replace(/^[^<]+/,'').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
+    if(heading){
+      var accentColor=brandGuideData.colors&&brandGuideData.colors[1]?brandGuideData.colors[1].replace('#',''):'0D9488';
+      slide.addText(heading,{x:0.5,y:0.3,w:9,h:0.8,fontSize:24,fontFace:brandGuideData.fonts||'Arial',color:bgColor,bold:true});
+      slide.addShape(pptx.ShapeType.rect,{x:0.5,y:1.0,w:2,h:0.05,fill:{color:accentColor}});
+    }
+    if(body) slide.addText(body.substring(0,1500),{x:0.5,y:1.3,w:9,h:4.5,fontSize:12,color:'333333',breakType:'none',paraSpaceAfter:6});
+  });
+  pptx.writeFile({fileName:art.title.replace(/[^a-zA-Z0-9]/g,'_')+'.pptx'});
+}
+
+function generateXLSX(art,htmlContent){
+  if(typeof XLSX==='undefined'){alert('Excel library not loaded.');return;}
+  var wb=XLSX.utils.book_new();
+  var temp=document.createElement('div');
+  temp.innerHTML=htmlContent;
+  var tables=temp.querySelectorAll('table');
+  if(tables.length>0){
+    tables.forEach(function(tbl,i){
+      var ws=XLSX.utils.table_to_sheet(tbl);
+      XLSX.utils.book_append_sheet(wb,ws,'Sheet'+(i+1));
+    });
+  } else {
+    var text=temp.textContent||temp.innerText;
+    var lines=text.split('\n').filter(function(l){return l.trim();});
+    var data=lines.map(function(l){return [l.trim()];});
+    var ws=XLSX.utils.aoa_to_sheet([[art.title]].concat(data));
+    XLSX.utils.book_append_sheet(wb,ws,'Content');
+  }
+  XLSX.writeFile(wb,art.title.replace(/[^a-zA-Z0-9]/g,'_')+'.xlsx');
+}
 
 function persistData() {
   if (!window.electronAPI) return;
@@ -9650,7 +11171,7 @@ function persistData() {
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(function() {
     var customKPIs=[];KPI_TEMPLATE.forEach(function(g){g.items.forEach(function(k){if(k.custom) customKPIs.push({group:g.group,color:g.color,item:k});});});
-    window.electronAPI.saveData({ sections: sections, rows: rows, quarters: quarters, tabs_data: tabs_data, activeTabId: activeTabId, g2mData: g2mAllData, todoData: todoAllData, kpiData: kpiAllData, kpiCustomKPIs: customKPIs, ucrData: ucrAllData, timesheetData: timesheetData, capData: capData }).then(function(res) {
+    window.electronAPI.saveData({ sections: sections, rows: rows, quarters: quarters, tabs_data: tabs_data, activeTabId: activeTabId, g2mData: g2mAllData, todoData: todoAllData, kpiData: kpiAllData, kpiCustomKPIs: customKPIs, ucrData: ucrAllData, timesheetData: timesheetData, capData: capData, artifactsData: artifactsData, brandGuideData: brandGuideData, artTemplates: artTemplates }).then(function(res) {
       if (!el) return;
       if (res && res.ok) {
         el.textContent = '● Saved'; el.className = 'saved';
@@ -10027,6 +11548,9 @@ async function init() {
       if (res.data.kpiData) kpiAllData = res.data.kpiData;
       if (res.data.timesheetData) timesheetData = res.data.timesheetData;
       if (res.data.ucrData) ucrAllData = res.data.ucrData;
+      if (res.data.artifactsData) artifactsData = res.data.artifactsData;
+      if (res.data.brandGuideData) brandGuideData = res.data.brandGuideData;
+      if (res.data.artTemplates) artTemplates = res.data.artTemplates;
       if (res.data.capData) capData = res.data.capData;
       if (res.data.kpiCustomKPIs) {
         res.data.kpiCustomKPIs.forEach(function(ck){
@@ -10047,6 +11571,7 @@ async function init() {
   }
   // Restore quarters if saved
   loadProfileSettings();
+  loadAIKey();
   recomputeTimeline();
   renderTableHeader();
   renderTabs();

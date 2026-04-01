@@ -16,4 +16,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveBinaryFile:  (opts)      => ipcRenderer.invoke('save-binary-file', opts),
   readFile:        (opts)      => ipcRenderer.invoke('read-file', opts),
   transcribeAudio: (opts)      => ipcRenderer.invoke('transcribe-audio', opts),
+  aiRequest:       (opts)      => ipcRenderer.invoke('ai-request', opts),
 });

@@ -304,21 +304,33 @@ ipcMain.handle('read-file', async (_event, opts) => {
     const name = path.basename(filePath);
     const buf = fs.readFileSync(filePath);
 
+    // Copy file to attachments dir for persistence
+    const attachDir = path.join(app.getPath('userData'), 'attachments');
+    if (!fs.existsSync(attachDir)) fs.mkdirSync(attachDir, { recursive: true });
+    const storedName = Date.now() + '_' + name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const storedPath = path.join(attachDir, storedName);
+    try { fs.copyFileSync(filePath, storedPath); } catch(copyErr) { console.warn('Could not copy file:', copyErr.message); }
+
     // PDF — extract text
     if (ext === '.pdf' && pdfParse) {
-      const data = await pdfParse(buf);
-      return { ok: true, name, ext, text: data.text || '' };
+      try {
+        const data = await pdfParse(buf);
+        return { ok: true, name, ext, text: data.text || '', storedName };
+      } catch(pdfErr) {
+        console.warn('PDF parse failed:', pdfErr.message);
+        return { ok: true, name, ext, text: '[PDF text extraction failed - ' + pdfErr.message + ']', storedName };
+      }
     }
 
     // Word (.docx) — extract text
     if (ext === '.docx' && mammoth) {
       const result = await mammoth.extractRawText({ buffer: buf });
-      return { ok: true, name, ext, text: result.value || '' };
+      return { ok: true, name, ext, text: result.value || '', storedName };
     }
 
     // Excel — return base64 for SheetJS in renderer
     if (['.xlsx', '.xls'].includes(ext)) {
-      return { ok: true, name, ext, base64: buf.toString('base64') };
+      return { ok: true, name, ext, base64: buf.toString('base64'), storedName };
     }
 
     // PowerPoint (.pptx) — basic XML text extraction
@@ -336,22 +348,20 @@ ipcMain.handle('read-file', async (_event, opts) => {
             text += '\n';
           }
         });
-        return { ok: true, name, ext, text: text.trim() };
+        return { ok: true, name, ext, text: text.trim(), storedName };
       } catch (e) {
-        // If adm-zip not available, return base64 as fallback
-        return { ok: true, name, ext, base64: buf.toString('base64') };
+        return { ok: true, name, ext, base64: buf.toString('base64'), storedName };
       }
     }
 
-    // Old Word (.doc) — return base64, can't easily parse
+    // Old Word (.doc)
     if (ext === '.doc') {
-      // Try to extract readable ASCII text from binary
       const rawText = buf.toString('utf-8').replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/\s{3,}/g, '\n');
-      return { ok: true, name, ext, text: rawText };
+      return { ok: true, name, ext, text: rawText, storedName };
     }
 
     // CSV, TXT and others — read as text
-    return { ok: true, name, ext, text: buf.toString('utf-8') };
+    return { ok: true, name, ext, text: buf.toString('utf-8'), storedName };
   } catch (e) {
     return { ok: false, error: e.message };
   }
@@ -476,6 +486,90 @@ function supaFetch(path, method, body, token) {
     req.end();
   });
 }
+
+// ── AI API Proxy (routes through main process to bypass CORS) ──
+ipcMain.handle('ai-request', async (_event, { provider, apiKey, model, prompt, systemPrompt }) => {
+  return new Promise((resolve) => {
+    try {
+      let hostname, reqPath, headers, payload;
+
+      if (provider === 'gemini') {
+        hostname = 'generativelanguage.googleapis.com';
+        reqPath = '/v1beta/models/' + (model || 'gemini-2.5-flash') + ':generateContent?key=' + apiKey;
+        headers = { 'Content-Type': 'application/json' };
+        payload = JSON.stringify({
+          contents: [{ parts: [{ text: (systemPrompt ? systemPrompt + '\n\n' : '') + prompt }] }],
+          generationConfig: { temperature: 0.3, maxOutputTokens: 8192 }
+        });
+      } else if (provider === 'openai') {
+        hostname = 'api.openai.com';
+        reqPath = '/v1/chat/completions';
+        headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey };
+        payload = JSON.stringify({
+          model: model || 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: systemPrompt || 'You are a helpful assistant.' },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.3, max_tokens: 8192
+        });
+      } else if (provider === 'claude') {
+        hostname = 'api.anthropic.com';
+        reqPath = '/v1/messages';
+        headers = {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01'
+        };
+        payload = JSON.stringify({
+          model: model || 'claude-sonnet-4-5-20250514',
+          max_tokens: 8192,
+          system: systemPrompt || 'You are a helpful assistant.',
+          messages: [{ role: 'user', content: prompt }]
+        });
+      } else {
+        resolve({ ok: false, error: 'Unknown provider: ' + provider });
+        return;
+      }
+
+      const opts = {
+        hostname, path: reqPath, method: 'POST',
+        headers: { ...headers, 'Content-Length': Buffer.byteLength(payload) }
+      };
+
+      const req = https.request(opts, (res) => {
+        let body = '';
+        res.on('data', chunk => body += chunk);
+        res.on('end', () => {
+          try {
+            const data = JSON.parse(body);
+            let text = null;
+            if (provider === 'gemini') {
+              text = data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+            } else if (provider === 'openai') {
+              text = data.choices?.[0]?.message?.content || null;
+            } else if (provider === 'claude') {
+              text = data.content?.[0]?.text || null;
+            }
+            if (text) {
+              resolve({ ok: true, text });
+            } else {
+              console.error('[AI] No text in response:', JSON.stringify(data).substring(0, 500));
+              resolve({ ok: false, error: data.error?.message || JSON.stringify(data).substring(0, 200) });
+            }
+          } catch (e) {
+            resolve({ ok: false, error: 'Parse error: ' + e.message });
+          }
+        });
+      });
+      req.on('error', e => resolve({ ok: false, error: e.message }));
+      req.write(payload);
+      req.end();
+    } catch (e) {
+      resolve({ ok: false, error: e.message });
+    }
+  });
+});
 
 ipcMain.handle('supa-request', async (_event, { path, method, body, token }) => {
   return supaFetch(path, method, body, token);
