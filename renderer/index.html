@@ -3889,6 +3889,19 @@ async function handleGoogleAuth(){
 }
 function onAuthSuccess(user){
   hideAuthOverlay();
+
+  // Check if this is a different user than last session — reset data if so
+  var lastUserId=localStorage.getItem('pmr_last_user_id')||'';
+  if(lastUserId&&lastUserId!==user.id){
+    console.log('Different user detected — clearing previous user data');
+    _resetLocalData();
+  }
+  localStorage.setItem('pmr_last_user_id',user.id);
+
+  // Load this user's profile (scoped by user ID)
+  loadProfileSettings(user.id);
+
+  // Set email from auth if profile is blank
   if(!userProfile.email&&user.email) userProfile.email=user.email;
   if(!userProfile.name&&user.user_metadata&&user.user_metadata.full_name){
     userProfile.name=user.user_metadata.full_name;
@@ -3898,6 +3911,32 @@ function onAuthSuccess(user){
   updateRoleBadge(); applyRBAC();
   setTimeout(function(){ loadAllCommentBadges(); loadSharedToMe(); loadUserTier(); }, 800);
   console.log('Signed in:', user.email);
+}
+
+function _resetLocalData(){
+  // Reset all in-memory data to defaults for a fresh user
+  sections=[{id:'s1',name:'Strategy',color:'#7c3aed'},{id:'s2',name:'Delivery',color:'#0369a1'}];
+  rows=[];
+  g2mAllData={};
+  todoAllData={};
+  kpiAllData={};
+  timesheetData={};
+  ucrAllData=[];
+  artifactsData=[];
+  brandGuideData={file:null,fileName:'',notes:'',colors:[],fonts:'',logoUrl:''};
+  artTemplates={};
+  capData={teams:[],members:[],sprints:[],taskTypes:[],templates:[],initiatives:[],tasks:[]};
+  tabs_data=[];
+  activeTabId='';
+  userProfile={name:'',title:'',org:'',email:'',avatarUrl:''};
+  _userRole='product_manager';
+  // Clear local storage for previous user
+  localStorage.removeItem('pmr_profile');
+  localStorage.removeItem('pmr_settings');
+  localStorage.removeItem('pmr_role');
+  // Save blank state to local file
+  if(window.electronAPI) window.electronAPI.saveData({sections:sections,rows:rows,quarters:quarters,tabs_data:tabs_data,activeTabId:activeTabId,g2mData:g2mAllData,todoData:todoAllData,kpiData:kpiAllData,timesheetData:timesheetData,ucrData:ucrAllData,artifactsData:artifactsData,brandGuideData:brandGuideData,artTemplates:artTemplates,capData:capData});
+  recomputeTimeline();renderTableHeader();render();
 }
 async function signOut(){
   await _supabase.auth.signOut();
@@ -3955,6 +3994,16 @@ async function pullCloudData(){
       if(localData.quarters && localData.quarters.length) quarters = localData.quarters;
       if(localData.tabs_data && localData.tabs_data.length) tabs_data = localData.tabs_data;
       if(localData.activeTabId) activeTabId = localData.activeTabId;
+      // Sync all feature data from cloud
+      if(localData.g2mData) g2mAllData = localData.g2mData;
+      if(localData.todoData) todoAllData = localData.todoData;
+      if(localData.kpiData) kpiAllData = localData.kpiData;
+      if(localData.timesheetData) timesheetData = localData.timesheetData;
+      if(localData.ucrData) ucrAllData = localData.ucrData;
+      if(localData.artifactsData) artifactsData = localData.artifactsData;
+      if(localData.brandGuideData) brandGuideData = localData.brandGuideData;
+      if(localData.artTemplates) artTemplates = localData.artTemplates;
+      if(localData.capData) capData = localData.capData;
       var aTab = tabs_data.find(function(t){ return t.id===activeTabId && !t.stacked; });
       if(aTab && aTab.sections){ sections=aTab.sections; rows=aTab.rows; if(aTab.quarters) quarters=aTab.quarters; }
       recomputeTimeline(); renderTableHeader(); renderTabs(); renderStackedTabs(); render();
@@ -3983,7 +4032,16 @@ async function pushCloudData(){
       rows: rows,
       quarters: quarters,
       tabs_data: tabs_data,
-      activeTabId: activeTabId
+      activeTabId: activeTabId,
+      g2mData: g2mAllData,
+      todoData: todoAllData,
+      kpiData: kpiAllData,
+      timesheetData: timesheetData,
+      ucrData: ucrAllData,
+      artifactsData: artifactsData,
+      brandGuideData: brandGuideData,
+      artTemplates: artTemplates,
+      capData: capData
     };
 
     var r = await _supabase
@@ -4039,15 +4097,29 @@ var appSettings = {
   theme: 'light'
 };
 
-function loadProfileSettings(){
+function _profileKey(suffix){
+  var uid=_currentUser?_currentUser.id:'default';
+  return 'pmr_'+suffix+'_'+uid;
+}
+
+function loadProfileSettings(userId){
   try {
-    var p = localStorage.getItem('pmr_profile');
-    var s = localStorage.getItem('pmr_settings');
-    var r = localStorage.getItem('pmr_role');
-    if(p) userProfile   = Object.assign(userProfile,   JSON.parse(p));
-    if(s) appSettings   = Object.assign(appSettings,   JSON.parse(s));
+    // Try user-scoped keys first, fall back to generic
+    var uid=userId||(_currentUser?_currentUser.id:'default');
+    var p = localStorage.getItem('pmr_profile_'+uid) || localStorage.getItem('pmr_profile');
+    var s = localStorage.getItem('pmr_settings_'+uid) || localStorage.getItem('pmr_settings');
+    var r = localStorage.getItem('pmr_role_'+uid) || localStorage.getItem('pmr_role');
+    if(p){
+      var parsed=JSON.parse(p);
+      userProfile={name:parsed.name||'',title:parsed.title||'',org:parsed.org||'',email:parsed.email||'',avatarUrl:parsed.avatarUrl||''};
+    } else {
+      userProfile={name:'',title:'',org:'',email:'',avatarUrl:''};
+    }
+    if(s) appSettings = Object.assign({fyStartMonth:'MAR',exportFormat:'excel',dateFormat:'DD/MM',theme:'light'}, JSON.parse(s));
     if(r) _userRole = r;
-  } catch(e){}
+  } catch(e){
+    userProfile={name:'',title:'',org:'',email:'',avatarUrl:''};
+  }
   applyProfileToUI();
   updateRoleBadge();
   applyRBAC();
@@ -4055,6 +4127,11 @@ function loadProfileSettings(){
 
 function saveProfileSettings(){
   try {
+    var uid=_currentUser?_currentUser.id:'default';
+    localStorage.setItem('pmr_profile_'+uid,  JSON.stringify(userProfile));
+    localStorage.setItem('pmr_settings_'+uid, JSON.stringify(appSettings));
+    localStorage.setItem('pmr_role_'+uid, _userRole);
+    // Also save to generic keys for backward compat
     localStorage.setItem('pmr_profile',  JSON.stringify(userProfile));
     localStorage.setItem('pmr_settings', JSON.stringify(appSettings));
     localStorage.setItem('pmr_role', _userRole);
