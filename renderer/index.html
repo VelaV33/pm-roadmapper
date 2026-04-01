@@ -485,6 +485,25 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .art-status.published{background:#f0fdf4;color:#065f46;border:1px solid #bbf7d0}
 .art-status.archived{background:#f1f5f9;color:#475569}
 
+/* Onboarding Tour */
+#tourOverlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;display:none}
+#tourOverlay.active{display:block}
+.tour-spotlight{position:absolute;border-radius:8px;box-shadow:0 0 0 9999px rgba(0,0,0,.6);z-index:9001;transition:all .4s ease;pointer-events:none}
+.tour-tooltip{position:absolute;z-index:9002;background:#fff;border-radius:12px;padding:20px;width:360px;max-width:90vw;box-shadow:0 12px 40px rgba(0,0,0,.3)}
+.tour-tooltip h3{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--navy);margin-bottom:6px}
+.tour-tooltip p{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:14px}
+.tour-tooltip .tour-step{font-size:10px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.tour-tooltip .tour-btns{display:flex;gap:8px;align-items:center}
+.tour-tooltip .tour-btns button{padding:7px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:inherit}
+.tour-tooltip .tour-btn-next{background:var(--navy);color:#fff}
+.tour-tooltip .tour-btn-next:hover{background:#140f50}
+.tour-tooltip .tour-btn-prev{background:#f0f3f8;color:var(--navy)}
+.tour-tooltip .tour-btn-skip{background:none;color:var(--muted);font-size:11px;margin-left:auto;cursor:pointer;border:none;padding:4px}
+.tour-progress{display:flex;gap:4px;margin-bottom:12px}
+.tour-dot{width:8px;height:8px;border-radius:50%;background:#e0e7f0}
+.tour-dot.active{background:var(--accent)}
+.tour-dot.done{background:var(--navy)}
+
 /* no-display */
 .hidden{display:none}
 
@@ -801,6 +820,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 
     <!-- Settings -->
     <button onclick="openSettings()" title="Settings — AI Config, Brand Guide, Preferences" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.8);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">⚙️</button>
+    <button onclick="startTour()" title="Product Tour & Help" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.8);border-radius:50%;width:28px;height:28px;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center">?</button>
 
     <!-- Competitive Intel -->
     <button id="compIntelBtn" onclick="openCompetitiveAnalysis()" title="AI-powered Competitive Analysis" style="background:linear-gradient(135deg,#7c3aed,#2563a8);border:1px solid rgba(124,58,237,.6);color:#fff;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;margin-right:6px">🔍 CI <span class="premium-badge">PRO</span></button>
@@ -1297,6 +1317,8 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
     </div>
   </div>
 </div>
+
+<div id="tourOverlay"><div class="tour-spotlight" id="tourSpot"></div><div class="tour-tooltip" id="tourTip"></div></div>
 
 <script>
 // ── GLOBAL ERROR HANDLER — prevent unhandled errors from crashing the page ──
@@ -3910,6 +3932,7 @@ function onAuthSuccess(user){
   saveProfileSettings(); applyProfileToUI(); enableSync();
   updateRoleBadge(); applyRBAC();
   setTimeout(function(){ loadAllCommentBadges(); loadSharedToMe(); loadUserTier(); }, 800);
+  setTimeout(checkShowTour, 2500);
   console.log('Signed in:', user.email);
 }
 
@@ -11241,6 +11264,120 @@ function generateXLSX(art,htmlContent){
     XLSX.utils.book_append_sheet(wb,ws,'Content');
   }
   XLSX.writeFile(wb,art.title.replace(/[^a-zA-Z0-9]/g,'_')+'.xlsx');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── ONBOARDING TOUR ─────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+
+var TOUR_STEPS = [
+  {title:'Welcome to PM Roadmapper!',desc:'Your all-in-one product management hub. This quick tour will show you the key features. Let\'s go!',target:null,pos:'center'},
+  {title:'📊 Roadmap View',desc:'This is your main roadmap timeline. Each row is a product initiative with timeline bars showing phases (blue=in progress, green=released, amber=at risk). Drag rows to reorder, click to edit.',target:'.table-wrap',pos:'bottom'},
+  {title:'✏ Content',desc:'Add new rows (initiatives) and sections to your roadmap. Each row can have multiple timeline bars, deliverables, links, and attachments.',target:'[onclick*="ddContent"]',pos:'bottom'},
+  {title:'💾 Data',desc:'Import your roadmap from Excel, export backups, or restore previous saves. Use the Excel template to bulk-import initiatives.',target:'[onclick*="ddData"]',pos:'bottom'},
+  {title:'🚀 G2M Checklist',desc:'Go-To-Market readiness checker. 126+ checklist items across 14 departments. Track Yes/No/N/A per product, get a readiness score, and export to Word.',target:'[onclick*="openG2M"]',pos:'bottom'},
+  {title:'📋 ToDo List',desc:'Task management with Kanban board, due dates, status tracking (Open/In Progress/Done), KPI attributes, and hour estimates. Log actual hours for timesheet integration.',target:'[onclick*="openTodo"]',pos:'bottom'},
+  {title:'📊 KPIs & Timesheet',desc:'Track your 10 PM KPIs with quarterly scoring (0-4), manager evaluation, and evidence collection. Switch to Timesheet view to see weekly time allocation pulled from your ToDo tasks.',target:'[onclick*="openKPI"]',pos:'bottom'},
+  {title:'📝 UCR',desc:'User Change Requests — formal change management with full form fields, systems impact checklist, approval workflow, and Word export for sign-off.',target:'[onclick*="openUCR"]',pos:'bottom'},
+  {title:'📄 Artifacts',desc:'Create product collateral — brochures, FAQs, data sheets, presentations. Upload brand guides, reference docs, and templates. AI generates documents in Word, PowerPoint, Excel, or PDF format.',target:'[onclick*="openArtifacts"]',pos:'bottom'},
+  {title:'⚡ CapacityIQ',desc:'Team capacity planning. Create initiatives from templates, assign tasks to teams and sprints, see capacity heatmaps across your organisation.',target:'[onclick*="openCapacity"]',pos:'bottom'},
+  {title:'⚙️ Settings',desc:'Configure your AI provider (Gemini/OpenAI/Claude), upload brand guides, manage artifact templates, and set your role.',target:'[onclick*="openSettings"]',pos:'bottom'},
+  {title:'🔒 Roles & Security',desc:'Four roles control access: Manager (full), Product Manager (full), Developer (edit TDL + CapacityIQ), Read Only (view only). Click the role badge to manage.',target:'#roleBadge',pos:'bottom'},
+  {title:'You\'re all set!',desc:'Start by importing your roadmap (💾 Data → Import), then explore G2M, ToDo, and KPIs. Click the ? button anytime to replay this tour. Happy planning!',target:null,pos:'center'}
+];
+
+var _tourStep = 0;
+var _tourActive = false;
+
+function startTour(){
+  _tourStep = 0;
+  _tourActive = true;
+  document.getElementById('tourOverlay').classList.add('active');
+  showTourStep();
+}
+
+function endTour(){
+  _tourActive = false;
+  document.getElementById('tourOverlay').classList.remove('active');
+  localStorage.setItem('pmr_tour_done','1');
+}
+
+function showTourStep(){
+  var step = TOUR_STEPS[_tourStep];
+  var spot = document.getElementById('tourSpot');
+  var tip = document.getElementById('tourTip');
+
+  // Progress dots
+  var dots = '';
+  for(var i=0;i<TOUR_STEPS.length;i++){
+    dots += '<div class="tour-dot'+(i<_tourStep?' done':'')+(i===_tourStep?' active':'')+'"></div>';
+  }
+
+  // Buttons
+  var btns = '<div class="tour-btns">';
+  if(_tourStep > 0) btns += '<button class="tour-btn-prev" onclick="prevTourStep()">← Back</button>';
+  if(_tourStep < TOUR_STEPS.length-1){
+    btns += '<button class="tour-btn-next" onclick="nextTourStep()">Next →</button>';
+  } else {
+    btns += '<button class="tour-btn-next" onclick="endTour()" style="background:#16a34a">✓ Get Started</button>';
+  }
+  btns += '<button class="tour-btn-skip" onclick="endTour()">Skip tour</button>';
+  btns += '</div>';
+
+  tip.innerHTML = '<div class="tour-step">Step ' + (_tourStep+1) + ' of ' + TOUR_STEPS.length + '</div>' +
+    '<div class="tour-progress">' + dots + '</div>' +
+    '<h3>' + step.title + '</h3>' +
+    '<p>' + step.desc + '</p>' + btns;
+
+  // Position spotlight and tooltip
+  if(step.target){
+    var el = document.querySelector(step.target);
+    if(el){
+      var rect = el.getBoundingClientRect();
+      var pad = 6;
+      spot.style.display = 'block';
+      spot.style.top = (rect.top - pad) + 'px';
+      spot.style.left = (rect.left - pad) + 'px';
+      spot.style.width = (rect.width + pad*2) + 'px';
+      spot.style.height = (rect.height + pad*2) + 'px';
+
+      // Position tooltip below or above the element
+      var tipTop = rect.bottom + 12;
+      var tipLeft = Math.max(20, Math.min(rect.left, window.innerWidth - 380));
+      if(tipTop + 250 > window.innerHeight){
+        tipTop = rect.top - 260;
+      }
+      tip.style.top = tipTop + 'px';
+      tip.style.left = tipLeft + 'px';
+    } else {
+      spot.style.display = 'none';
+      tip.style.top = '50%';
+      tip.style.left = '50%';
+      tip.style.transform = 'translate(-50%,-50%)';
+    }
+  } else {
+    spot.style.display = 'none';
+    tip.style.top = '50%';
+    tip.style.left = '50%';
+    tip.style.transform = 'translate(-50%,-50%)';
+  }
+  // Reset transform if we have a target
+  if(step.target && document.querySelector(step.target)){
+    tip.style.transform = 'none';
+  }
+}
+
+function nextTourStep(){
+  if(_tourStep < TOUR_STEPS.length-1){ _tourStep++; showTourStep(); }
+}
+function prevTourStep(){
+  if(_tourStep > 0){ _tourStep--; showTourStep(); }
+}
+
+function checkShowTour(){
+  if(!localStorage.getItem('pmr_tour_done')){
+    setTimeout(startTour, 1500);
+  }
 }
 
 function persistData() {
