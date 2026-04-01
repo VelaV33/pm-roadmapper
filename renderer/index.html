@@ -3869,6 +3869,8 @@ async function handleAuthPrimary(){
     return;
   }
   if(!password){ showAuthError('Please enter your password.'); return; }
+  // Validate email format
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showAuthError('Please enter a valid email address (e.g. name@company.com).'); return; }
   if(_authMode==='signup'){
     if(password.length<8){ showAuthError('Password must be at least 8 characters.'); return; }
     if(password!==confirm){ showAuthError('Passwords do not match.'); return; }
@@ -3879,7 +3881,7 @@ async function handleAuthPrimary(){
     : await _supabase.auth.signUp({email:email,password:password});
   setAuthLoading(false);
   if(result.error){ showAuthError(result.error.message); }
-  else if(_authMode==='signup'&&!result.data.session){ showAuthSuccess('Check your email to confirm your account, then sign in.'); switchToLogin(); }
+  else if(_authMode==='signup'&&!result.data.session){ showAuthSuccess('Account created! You can now sign in. (If you receive a confirmation email, the link may not work in the desktop app — just sign in directly.)'); switchToLogin(); }
   else if(result.data&&result.data.user){ _currentUser=result.data.user; onAuthSuccess(_currentUser); }
 }
 async function handleGoogleAuth(){
