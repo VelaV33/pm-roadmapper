@@ -4210,32 +4210,51 @@ async function pushCloudData(){
       capData: capData
     };
 
-    var now=new Date().toISOString();
     var uid=_currentUser.id;
+    var pushOk=false;
 
-    // Check if row exists for this user
-    var check=await _dbReq('/rest/v1/roadmap_data?select=user_id&user_id=eq.'+uid+'&limit=1');
-    var exists=check.ok&&Array.isArray(check.data)&&check.data.length>0;
+    // Method 1: Edge function (uses service role key, bypasses all RLS)
+    try {
+      var ef=await window.electronAPI.supaRequest({
+        path:'/functions/v1/sync-roadmap',
+        method:'POST',
+        body:{user_id:uid,data:payload},
+        token:_accessToken||null
+      });
+      if(ef.ok&&ef.data&&ef.data.ok){
+        pushOk=true;
+        console.log('Cloud push via edge function:',ef.data.action,
+          'verified:',ef.data.verified,'rows:',ef.data.rows_in_data);
+      } else {
+        console.warn('Edge function sync failed:',JSON.stringify(ef.data));
+      }
+    } catch(e){ console.warn('Edge function unavailable:',e.message); }
 
-    var r;
-    if(exists){
-      // UPDATE existing row
-      r=await _dbReq('/rest/v1/roadmap_data?user_id=eq.'+uid,'PATCH',{data:payload,updated_at:now});
-    } else {
-      // INSERT new row
-      r=await _dbReq('/rest/v1/roadmap_data','POST',{user_id:uid,data:payload,updated_at:now});
+    // Method 2: Direct REST fallback
+    if(!pushOk){
+      var check=await _dbReq('/rest/v1/roadmap_data?select=user_id&user_id=eq.'+uid+'&limit=1');
+      var exists=check.ok&&Array.isArray(check.data)&&check.data.length>0;
+      var r;
+      if(exists){
+        r=await _dbReq('/rest/v1/roadmap_data?user_id=eq.'+uid,'PATCH',{data:payload,updated_at:new Date().toISOString()});
+      } else {
+        r=await _dbReq('/rest/v1/roadmap_data','POST',[{user_id:uid,data:payload,updated_at:new Date().toISOString()}]);
+      }
+      if(r.ok){
+        pushOk=true;
+        console.log('Cloud push via REST:',exists?'updated':'inserted');
+      } else {
+        console.error('Cloud push REST failed:',r.status,JSON.stringify(r.data));
+      }
     }
 
-    if(!r.ok){
-      console.error('Cloud push failed:',exists?'PATCH':'POST','status:',r.status,'response:',JSON.stringify(r.data));
-      showSyncBadge('error');
-    } else {
+    if(pushOk){
       var ts=Date.now();
-      var pushTsKey='pmr_last_save_ts'+(_currentUser?'_'+_currentUser.id:'');
-      localStorage.setItem(pushTsKey, String(ts));
+      localStorage.setItem('pmr_last_save_ts_'+uid, String(ts));
       _lastCloudTs=ts;
       showSyncBadge('synced');
-      console.log('Cloud push success:',exists?'updated':'inserted',rows.length,'rows');
+    } else {
+      showSyncBadge('error');
     }
   } catch(e){
     console.warn('Cloud push exception:', e.message);
@@ -4563,7 +4582,11 @@ function openProfile(){
     'background:#f0fdf4;border:1px solid #86efac;color:#16a34a',
     function(){
       showSyncBadge('syncing');
-      pushCloudData().then(function(){ alert('Sync complete.'); });
+      pushCloudData().then(function(){
+        var badge=document.getElementById('cloudSyncStatus');
+        var status=badge?badge.textContent:'unknown';
+        alert('Sync finished. Status: '+status);
+      });
     }
   ));
 
