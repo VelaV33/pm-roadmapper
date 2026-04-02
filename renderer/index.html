@@ -3935,9 +3935,12 @@ async function onAuthSuccess(user){
   _syncEnabled=false;
   _commentCache={};
   _lastCloudTs=0;
+  _viewingSharedRoadmap=null;
+  _myDataBackup=null;
   appSettings={fyStartMonth:'MAR',exportFormat:'excel',dateFormat:'DD/MM',theme:'light'};
   if(typeof userAIKey!=='undefined') userAIKey={provider:'gemini',key:'',model:''};
   window._logoDataUrl=null;
+  var oldBanner=document.getElementById('sharedBanner'); if(oldBanner) oldBanner.remove();
 
   // ── STEP 3: Set active user so file I/O is scoped to THIS user ──
   if(window.electronAPI&&window.electronAPI.setActiveUser){
@@ -4036,6 +4039,8 @@ async function signOut(){
   _syncEnabled=false;
   _commentCache={};
   _lastCloudTs=0;
+  _viewingSharedRoadmap=null;
+  _myDataBackup=null;
   _currentUser=null;
   _accessToken=null;
   _refreshToken=null;
@@ -4133,7 +4138,7 @@ async function pullCloudData(){
 }
 
 function schedulePushToCloud(immediate){
-  if(!_syncEnabled) return;
+  if(!_syncEnabled || _viewingSharedRoadmap) return;
   if(_syncTimer) clearTimeout(_syncTimer);
   _syncTimer = setTimeout(pushCloudData, immediate ? 500 : 3000);
 }
@@ -4696,6 +4701,8 @@ function openHelp(){
 var _commentCache  = {};  // rowId → array of comments
 var _sharedWith    = [];  // list of share records this user owns
 var _sharedToMe    = [];  // roadmaps shared with me
+var _viewingSharedRoadmap = null; // set to share object when viewing someone else's roadmap
+var _myDataBackup  = null; // backup of user's own data while viewing shared
 
 // ── IPC helper (falls back to noop in browser) ──
 async function _dbReq(path, method, body){
@@ -4724,7 +4731,7 @@ function updateCommentBadge(rowId, comments){
 // ── Load comments for a row ──────────────────────────────────────────────────
 async function loadComments(rowId){
   if(!_currentUser) return _commentCache[rowId] || [];
-  var ownerId = _currentUser.id;
+  var ownerId = _viewingSharedRoadmap ? _viewingSharedRoadmap.owner_id : _currentUser.id;
   try {
     var r = await _dbReq('/rest/v1/roadmap_comments?select=*&roadmap_owner_id=eq.'+ownerId+'&row_id=eq.'+encodeURIComponent(rowId)+'&order=created_at.asc');
     if(r.ok && Array.isArray(r.data)){
@@ -4742,7 +4749,7 @@ async function loadComments(rowId){
 async function postComment(rowId, content, parentId){
   if(!_currentUser || !content.trim()) return null;
   var payload = {
-    roadmap_owner_id: _currentUser.id,
+    roadmap_owner_id: _viewingSharedRoadmap ? _viewingSharedRoadmap.owner_id : _currentUser.id,
     row_id: rowId,
     parent_id: parentId || null,
     author_id: _currentUser.id,
@@ -5020,14 +5027,57 @@ function renderSharedTabs(){
 }
 
 async function openSharedRoadmap(share){
-  // Load the owner's roadmap data
+  // Load the owner's roadmap data from Supabase
   var r=await _dbReq('/rest/v1/roadmap_data?select=data&user_id=eq.'+share.owner_id+'&limit=1');
   if(!r.ok || !r.data){ alert('Could not load shared roadmap.'); return; }
   var d=Array.isArray(r.data)?r.data[0]:r.data;
   if(!d||!d.data){ alert('No data found for this shared roadmap.'); return; }
-  // Open in a read-only view (new window or modal preview)
-  var snap=d.data;
-  alert('Viewing: '+share.roadmap_name+' — shared by '+share.owner_name+'. '+(snap.rows?snap.rows.length:0)+' rows. Full interactive view coming soon.');
+
+  // Backup current user's data before switching
+  _myDataBackup=buildDataPayload();
+
+  // Apply the shared roadmap data
+  applyDataPayload(d.data);
+  _viewingSharedRoadmap=share;
+
+  // Show read-only banner
+  var existingBanner=document.getElementById('sharedBanner');
+  if(existingBanner) existingBanner.remove();
+  var banner=document.createElement('div');
+  banner.id='sharedBanner';
+  banner.style.cssText='background:linear-gradient(135deg,#1e40af,#7c3aed);color:#fff;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;z-index:500';
+  banner.innerHTML='<span>Viewing: '+share.roadmap_name+' — shared by '+share.owner_name+' ('+share.owner_email+') — Read Only</span>';
+  var backBtn=document.createElement('button');
+  backBtn.textContent='Back to my roadmap';
+  backBtn.style.cssText='background:#fff;color:#1e40af;border:none;padding:6px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer';
+  backBtn.onclick=exitSharedView;
+  banner.appendChild(backBtn);
+  var toolbar=document.querySelector('.toolbar');
+  if(toolbar&&toolbar.nextSibling) toolbar.parentNode.insertBefore(banner,toolbar.nextSibling);
+  else document.body.insertBefore(banner,document.body.firstElementChild);
+
+  // Apply read-only: disable the table editing area
+  var tableWrap=document.querySelector('.table-wrap');
+  if(tableWrap) tableWrap.classList.add('rbac-disabled');
+
+  // Re-render with shared data
+  recomputeTimeline(); renderTableHeader(); renderTabs(); renderStackedTabs(); render();
+}
+
+function exitSharedView(){
+  _viewingSharedRoadmap=null;
+  // Remove banner
+  var banner=document.getElementById('sharedBanner');
+  if(banner) banner.remove();
+  // Remove read-only
+  var tableWrap=document.querySelector('.table-wrap');
+  if(tableWrap) tableWrap.classList.remove('rbac-disabled');
+  // Restore user's own data
+  if(_myDataBackup){
+    applyDataPayload(_myDataBackup);
+    _myDataBackup=null;
+  }
+  recomputeTimeline(); renderTableHeader(); renderTabs(); renderStackedTabs(); render();
 }
 
 async function shareRoadmapWith(email){
@@ -5093,18 +5143,31 @@ function openShare(){
   emailInp.onfocus=function(){ emailInp.style.borderColor='var(--accent)'; };
   emailInp.onblur=function(){ emailInp.style.borderColor='var(--border)'; };
   var addBtn=document.createElement('button'); addBtn.className='btn-save'; addBtn.textContent='Share';
+  var statusMsg=document.createElement('div'); statusMsg.style.cssText='font-size:12px;padding:8px 12px;border-radius:6px;margin-bottom:12px;display:none';
   addBtn.onclick=async function(){
     var email=emailInp.value.trim();
-    if(!email||!email.includes('@')){ emailInp.style.borderColor='#dc2626'; return; }
-    addBtn.disabled=true; addBtn.textContent='Sharing…';
+    if(!email||!email.includes('@')){ emailInp.style.borderColor='#dc2626'; statusMsg.style.display='none'; return; }
+    addBtn.disabled=true; addBtn.textContent='Sharing…'; statusMsg.style.display='none';
     var res=await shareRoadmapWith(email);
     addBtn.disabled=false; addBtn.textContent='Share';
-    if(res.ok){ emailInp.value=''; renderSharedList(listWrap); }
-    else alert('Error: '+(res.error||'Could not share'));
+    if(res.ok){
+      emailInp.value=''; renderSharedList(listWrap);
+      if(res.warning){
+        statusMsg.textContent='Shared with '+email+', but invite email may not have sent.';
+        statusMsg.style.cssText='font-size:12px;padding:8px 12px;border-radius:6px;margin-bottom:12px;display:block;background:#fef3c7;color:#92400e;border:1px solid #fcd34d';
+      } else {
+        statusMsg.textContent='Invite sent to '+email;
+        statusMsg.style.cssText='font-size:12px;padding:8px 12px;border-radius:6px;margin-bottom:12px;display:block;background:#d1fae5;color:#065f46;border:1px solid #6ee7b7';
+      }
+    } else {
+      statusMsg.textContent='Error: '+(res.error||'Could not share');
+      statusMsg.style.cssText='font-size:12px;padding:8px 12px;border-radius:6px;margin-bottom:12px;display:block;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5';
+    }
   };
   emailInp.addEventListener('keydown',function(e){ if(e.key==='Enter') addBtn.click(); });
   addRow.appendChild(emailInp); addRow.appendChild(addBtn);
   body.appendChild(addRow);
+  body.appendChild(statusMsg);
 
   // Shared with list
   var listHdr=document.createElement('div');
@@ -11477,6 +11540,7 @@ function checkShowTour(){
 
 function persistData() {
   if (!window.electronAPI) return;
+  if (_viewingSharedRoadmap) return; // never save while viewing shared data
   var el = document.getElementById('saveStatus');
   if (el) { el.textContent = '◌ Saving…'; el.className = 'saving'; }
   clearTimeout(_saveTimer);
