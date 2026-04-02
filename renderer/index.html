@@ -3991,10 +3991,10 @@ async function onAuthSuccess(user){
 
   // ── STEP 9: Enable sync and seed cloud if needed ──
   enableSync();
-  // If we loaded from local but cloud was empty, push to cloud now
+  // If we loaded from local but cloud was empty, push to cloud immediately
   if(!cloudLoaded&&rows.length>0){
     console.log('Seeding cloud with local data');
-    schedulePushToCloud(true);
+    pushCloudData();
   }
   // Save local cache of whatever we loaded (for offline access)
   if(cloudLoaded&&window.electronAPI){
@@ -4014,6 +4014,7 @@ function _resetLocalData(){
   artTemplates={};capData={teams:[],members:[],sprints:[],taskTypes:[],templates:[],initiatives:[],tasks:[]};
   tabs_data=[];activeTabId='';
   if(window.electronAPI) window.electronAPI.saveData({sections:sections,rows:rows,quarters:quarters,tabs_data:tabs_data,activeTabId:activeTabId,g2mData:g2mAllData,todoData:todoAllData,kpiData:kpiAllData,timesheetData:timesheetData,ucrData:ucrAllData,artifactsData:artifactsData,brandGuideData:brandGuideData,artTemplates:artTemplates,capData:capData});
+  schedulePushToCloud(true);
   recomputeTimeline();renderTableHeader();render();
 }
 async function signOut(){
