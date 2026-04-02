@@ -3909,8 +3909,13 @@ async function handleAuthPrimary(){
 async function handleGoogleAuth(){
   await _supabase.auth.signInWithOAuth({provider:'google'});
 }
-function onAuthSuccess(user){
+async function onAuthSuccess(user){
   hideAuthOverlay();
+
+  // Tell main process which user is active FIRST so file paths are scoped correctly
+  if(window.electronAPI&&window.electronAPI.setActiveUser){
+    await window.electronAPI.setActiveUser(user.id);
+  }
 
   // Check if this is a different user than last session — reset data if so
   var lastUserId=localStorage.getItem('pmr_last_user_id')||'';
@@ -3919,6 +3924,29 @@ function onAuthSuccess(user){
     _resetLocalData();
   }
   localStorage.setItem('pmr_last_user_id',user.id);
+
+  // Load this user's scoped local data file
+  if(window.electronAPI){
+    var res=await window.electronAPI.loadData();
+    if(res&&res.ok&&res.data){
+      if(res.data.sections&&res.data.sections.length) sections=res.data.sections;
+      if(res.data.rows&&res.data.rows.length) rows=res.data.rows;
+      if(res.data.quarters&&res.data.quarters.length) quarters=res.data.quarters;
+      if(res.data.tabs_data&&res.data.tabs_data.length) tabs_data=res.data.tabs_data;
+      if(res.data.activeTabId) activeTabId=res.data.activeTabId;
+      if(res.data.g2mData) g2mAllData=res.data.g2mData;
+      if(res.data.todoData) todoAllData=res.data.todoData;
+      if(res.data.kpiData) kpiAllData=res.data.kpiData;
+      if(res.data.timesheetData) timesheetData=res.data.timesheetData;
+      if(res.data.ucrData) ucrAllData=res.data.ucrData;
+      if(res.data.artifactsData) artifactsData=res.data.artifactsData;
+      if(res.data.brandGuideData) brandGuideData=res.data.brandGuideData;
+      if(res.data.artTemplates) artTemplates=res.data.artTemplates;
+      if(res.data.capData) capData=res.data.capData;
+      var aTab=tabs_data.find(function(t){return t.id===activeTabId&&!t.stacked;});
+      if(aTab&&aTab.sections){sections=aTab.sections;rows=aTab.rows;if(aTab.quarters)quarters=aTab.quarters;}
+    }
+  }
 
   // Load this user's profile (scoped by user ID)
   loadProfileSettings(user.id);
@@ -3930,6 +3958,7 @@ function onAuthSuccess(user){
     if(user.user_metadata.avatar_url) userProfile.avatarUrl=user.user_metadata.avatar_url;
   }
   saveProfileSettings(); applyProfileToUI(); enableSync();
+  recomputeTimeline(); renderTableHeader(); renderTabs(); renderStackedTabs(); render();
   updateRoleBadge(); applyRBAC();
   setTimeout(function(){ loadAllCommentBadges(); loadSharedToMe(); loadUserTier(); }, 800);
   setTimeout(checkShowTour, 2500);
@@ -3963,6 +3992,13 @@ function _resetLocalData(){
 }
 async function signOut(){
   await _supabase.auth.signOut();
+  // Clear in-memory data so next user doesn't see it
+  _resetLocalData();
+  _syncEnabled=false;
+  if(_syncTimer) clearTimeout(_syncTimer);
+  _commentCache={};
+  // Tell main process no user is active
+  if(window.electronAPI&&window.electronAPI.setActiveUser) window.electronAPI.setActiveUser(null);
   var ov=document.getElementById('authOverlay'); if(ov){ ov.classList.remove('hidden'); switchToLogin(); }
 }
 document.addEventListener('DOMContentLoaded',function(){
@@ -4009,7 +4045,8 @@ async function pullCloudData(){
     var localData = r.data.data;
 
     // Compare timestamps: only overwrite local if cloud is newer
-    var localTs = parseInt(localStorage.getItem('pmr_last_save_ts') || '0');
+    var tsKey='pmr_last_save_ts'+(_currentUser?'_'+_currentUser.id:'');
+    var localTs = parseInt(localStorage.getItem(tsKey) || '0');
     if(cloudTs > localTs && localData){
       console.log('Cloud data is newer — syncing down');
       if(localData.sections && localData.sections.length) sections = localData.sections;
@@ -4080,7 +4117,8 @@ async function pushCloudData(){
       showSyncBadge('error');
     } else {
       var now = Date.now();
-      localStorage.setItem('pmr_last_save_ts', String(now));
+      var pushTsKey='pmr_last_save_ts'+(_currentUser?'_'+_currentUser.id:'');
+      localStorage.setItem(pushTsKey, String(now));
       _lastCloudTs = now;
       showSyncBadge('synced');
     }
@@ -4127,11 +4165,11 @@ function _profileKey(suffix){
 
 function loadProfileSettings(userId){
   try {
-    // Try user-scoped keys first, fall back to generic
+    // User-scoped keys only — no fallback to generic keys
     var uid=userId||(_currentUser?_currentUser.id:'default');
-    var p = localStorage.getItem('pmr_profile_'+uid) || localStorage.getItem('pmr_profile');
-    var s = localStorage.getItem('pmr_settings_'+uid) || localStorage.getItem('pmr_settings');
-    var r = localStorage.getItem('pmr_role_'+uid) || localStorage.getItem('pmr_role');
+    var p = localStorage.getItem('pmr_profile_'+uid);
+    var s = localStorage.getItem('pmr_settings_'+uid);
+    var r = localStorage.getItem('pmr_role_'+uid);
     if(p){
       var parsed=JSON.parse(p);
       userProfile={name:parsed.name||'',title:parsed.title||'',org:parsed.org||'',email:parsed.email||'',avatarUrl:parsed.avatarUrl||''};
@@ -4154,10 +4192,6 @@ function saveProfileSettings(){
     localStorage.setItem('pmr_profile_'+uid,  JSON.stringify(userProfile));
     localStorage.setItem('pmr_settings_'+uid, JSON.stringify(appSettings));
     localStorage.setItem('pmr_role_'+uid, _userRole);
-    // Also save to generic keys for backward compat
-    localStorage.setItem('pmr_profile',  JSON.stringify(userProfile));
-    localStorage.setItem('pmr_settings', JSON.stringify(appSettings));
-    localStorage.setItem('pmr_role', _userRole);
   } catch(e){}
 }
 
@@ -11751,39 +11785,8 @@ async function init() {
       }
     });
 
-    // Try loading saved data
-    var res = await window.electronAPI.loadData();
-    if (res && res.ok && res.data) {
-      if (res.data.sections && res.data.sections.length) sections = res.data.sections;
-      if (res.data.rows && res.data.rows.length) rows = res.data.rows;
-      if (res.data.quarters && res.data.quarters.length) quarters = res.data.quarters;
-      if (res.data.tabs_data && res.data.tabs_data.length) tabs_data = res.data.tabs_data;
-      if (res.data.activeTabId) activeTabId = res.data.activeTabId;
-      if (res.data.g2mData) g2mAllData = res.data.g2mData;
-      if (res.data.todoData) todoAllData = res.data.todoData;
-      if (res.data.kpiData) kpiAllData = res.data.kpiData;
-      if (res.data.timesheetData) timesheetData = res.data.timesheetData;
-      if (res.data.ucrData) ucrAllData = res.data.ucrData;
-      if (res.data.artifactsData) artifactsData = res.data.artifactsData;
-      if (res.data.brandGuideData) brandGuideData = res.data.brandGuideData;
-      if (res.data.artTemplates) artTemplates = res.data.artTemplates;
-      if (res.data.capData) capData = res.data.capData;
-      if (res.data.kpiCustomKPIs) {
-        res.data.kpiCustomKPIs.forEach(function(ck){
-          var grp=KPI_TEMPLATE.find(function(g){return g.group===ck.group;});
-          if(!grp){grp={group:ck.group,color:ck.color||'#64748b',items:[]};KPI_TEMPLATE.push(grp);}
-          if(!grp.items.find(function(i){return i.id===ck.item.id;})) grp.items.push(ck.item);
-        });
-      }
-      // Restore active non-stacked tab's data
-      var aTab=tabs_data.find(function(t){return t.id===activeTabId&&!t.stacked;});
-      if(aTab&&aTab.sections){sections=aTab.sections;rows=aTab.rows;if(aTab.quarters)quarters=aTab.quarters;}
-    } else {
-      // First run — start with a BLANK canvas (no demo data shown to users)
-      sections = [{id:'s1',name:'Strategy',color:'#7c3aed'},{id:'s2',name:'Delivery',color:'#0369a1'}];
-      rows = [];
-      window.electronAPI.saveData({ sections: sections, rows: rows, quarters: quarters, tabs_data: tabs_data, activeTabId: activeTabId });
-    }
+    // Data loading is now handled by onAuthSuccess() after user is identified,
+    // so the correct user-scoped file is loaded. No data load here.
   }
   // Restore quarters if saved
   loadProfileSettings();

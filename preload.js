@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
+  setActiveUser:(userId)      => ipcRenderer.invoke('set-active-user', userId),
   loadData:     ()            => ipcRenderer.invoke('load-data'),
   saveData:     (data)        => ipcRenderer.invoke('save-data', data),
   exportBackup: ()            => ipcRenderer.invoke('export-backup'),

@@ -5,8 +5,12 @@ let pdfParse, mammoth;
 try { pdfParse = require('pdf-parse-new'); } catch(e) { try { pdfParse = require('pdf-parse'); } catch(e2) { console.warn('pdf-parse not available:', e2.message); } }
 try { mammoth = require('mammoth'); } catch(e) { console.warn('mammoth not available:', e.message); }
 
-// ── Data file path (stored in OS user data dir) ───────────────────────────────
-function getDataPath() {
+// ── Data file path (stored in OS user data dir, scoped by user ID) ───────────
+let _activeUserId = null;
+
+function getDataPath(userId) {
+  const uid = userId || _activeUserId;
+  if (uid) return path.join(app.getPath('userData'), 'roadmap-data-' + uid + '.json');
   return path.join(app.getPath('userData'), 'roadmap-data.json');
 }
 
@@ -107,6 +111,26 @@ function createWindow() {
 }
 
 // ── IPC Handlers ───────────────────────────────────────────────────────────────
+
+// Set the active user ID so data files are scoped per user
+ipcMain.handle('set-active-user', (_event, userId) => {
+  const previousId = _activeUserId;
+  _activeUserId = userId || null;
+  // Migrate old shared file to user-scoped file if it exists and user file doesn't
+  if (userId) {
+    const oldPath = path.join(app.getPath('userData'), 'roadmap-data.json');
+    const oldBak = oldPath + '.bak';
+    const newPath = getDataPath(userId);
+    if (!fs.existsSync(newPath)) {
+      // Try main file first, then backup
+      const source = fs.existsSync(oldPath) ? oldPath : (fs.existsSync(oldBak) ? oldBak : null);
+      if (source) {
+        try { fs.copyFileSync(source, newPath); console.log('Migrated', source, '->', newPath); } catch(e) { console.warn('Migration copy failed:', e.message); }
+      }
+    }
+  }
+  return { ok: true, previousUserId: previousId };
+});
 
 // Load data — tries main file, then .bak, then falls back to built-in defaults
 ipcMain.handle('load-data', () => {
