@@ -73,8 +73,12 @@ serve(async (req) => {
               <p style="margin:6px 0 0;font-size:16px;font-weight:700;color:#1a1464">${roadmap_name}</p>
             </div>
             <p style="color:#374151;font-size:14px">Log in to PM Roadmapper to view it — the roadmap will appear as a tab when you sign in.</p>
+            <div style="text-align:center;margin:24px 0">
+              <a href="https://github.com/VelaV33/pm-roadmapper/releases/latest" style="display:inline-block;background:#1a1464;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600">Download PM Roadmapper</a>
+            </div>
             <p style="color:#9ca3af;font-size:12px;margin-top:32px;border-top:1px solid #e5e7eb;padding-top:16px">
               This invite was sent by ${owner_name} (${owner_email}).<br>
+              If you don't have PM Roadmapper yet, download it from the link above and create a free account.<br>
               If you weren't expecting this, you can safely ignore it.
             </p>
           </div>
