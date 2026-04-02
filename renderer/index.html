@@ -4055,9 +4055,18 @@ async function signOut(){
   // ── Tell main process no user is active ──
   if(window.electronAPI&&window.electronAPI.setActiveUser) window.electronAPI.setActiveUser(null);
 
-  // ── Dismiss tour if active ──
+  // ── Close ALL overlays, modals, and the tour ──
+  // Tour overlay
   var tourOv=document.getElementById('tourOverlay');
-  if(tourOv&&tourOv.classList.contains('active')) endTour();
+  if(tourOv) tourOv.classList.remove('active');
+  // Feature overlays (G2M, Todo, KPI, UCR, CapacityIQ, Artifacts, Preview)
+  ['g2mOverlay','todoOverlay','kpiOverlay','ucrOverlay','capOverlay','artOverlay','previewOverlay'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.style.display='none';
+  });
+  // Any open modal overlays
+  document.querySelectorAll('.modal-overlay').forEach(function(el){ el.remove(); });
+  // Shared roadmap banner
+  var sb=document.getElementById('sharedBanner'); if(sb) sb.remove();
 
   // ── Re-render blank state and show login ──
   recomputeTimeline();renderTableHeader();renderTabs();renderStackedTabs();render();
