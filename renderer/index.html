@@ -5115,6 +5115,9 @@ async function revokeShare(shareId){
 }
 
 function openShare(){
+  // Dismiss tour overlay if active — its 9999px box-shadow blocks all input
+  var tourOv=document.getElementById('tourOverlay');
+  if(tourOv&&tourOv.classList.contains('active')){ endTour(); }
   var ex=document.getElementById('shareModal'); if(ex) ex.remove();
   var ov=document.createElement('div');
   ov.id='shareModal'; ov.className='modal-overlay'; ov.style.zIndex='9500';
