@@ -4055,6 +4055,10 @@ async function signOut(){
   // ── Tell main process no user is active ──
   if(window.electronAPI&&window.electronAPI.setActiveUser) window.electronAPI.setActiveUser(null);
 
+  // ── Dismiss tour if active ──
+  var tourOv=document.getElementById('tourOverlay');
+  if(tourOv&&tourOv.classList.contains('active')) endTour();
+
   // ── Re-render blank state and show login ──
   recomputeTimeline();renderTableHeader();renderTabs();renderStackedTabs();render();
   applyProfileToUI();
@@ -11641,6 +11645,9 @@ function prevTourStep(){
 }
 
 function checkShowTour(){
+  // Don't start tour if auth overlay is showing
+  var authOv=document.getElementById('authOverlay');
+  if(authOv&&!authOv.classList.contains('hidden')) return;
   if(!localStorage.getItem(_lsKey('pmr_tour_done'))){
     setTimeout(startTour, 1500);
   }
