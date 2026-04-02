@@ -592,9 +592,10 @@ ipcMain.handle('supa-db-request', async (_event, { path, method, body, token }) 
     const m = (method || 'GET').toUpperCase();
     const payload = body ? JSON.stringify(body) : null;
     // Only send Prefer on writes — GET requests reject it
+    // resolution=merge-duplicates is required for upserts to update existing rows
     const preferHeader = m === 'GET' || m === 'DELETE'
       ? {}
-      : { 'Prefer': 'return=representation' };
+      : { 'Prefer': 'return=representation,resolution=merge-duplicates' };
     const opts = {
       hostname: SUPA_URL,
       path: path,

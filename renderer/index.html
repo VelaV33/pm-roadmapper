@@ -5059,12 +5059,21 @@ function renderSharedTabs(){
 }
 
 async function openSharedRoadmap(share){
-  // Load the owner's roadmap data from Supabase
-  var r=await _dbReq('/rest/v1/roadmap_data?select=data&user_id=eq.'+share.owner_id+'&limit=1');
-  if(!r.ok){ alert('Could not load shared roadmap. Please check your connection and try again.'); return; }
-  var arr=Array.isArray(r.data)?r.data:r.data?[r.data]:[];
-  var d=arr[0];
-  if(!d||!d.data){ alert('The owner has not synced their roadmap to the cloud yet. Ask '+share.owner_name+' to open PM Roadmapper and make sure their data is synced.'); return; }
+  // Try to load the owner's roadmap via the edge function (uses service role, bypasses RLS)
+  var r=await window.electronAPI.supaRequest({
+    path:'/functions/v1/get-shared-roadmap',
+    method:'POST',
+    body:{owner_id:share.owner_id, share_id:share.id},
+    token:_accessToken||null
+  });
+  // Fallback: try direct REST query if edge function doesn't exist
+  if(!r.ok || !r.data || !r.data.data){
+    r=await _dbReq('/rest/v1/roadmap_data?select=data&user_id=eq.'+share.owner_id+'&limit=1');
+    if(r.ok && Array.isArray(r.data) && r.data[0]) r={ok:true,data:r.data[0]};
+  }
+  if(!r.ok){ alert('Could not load shared roadmap. Please check your connection.'); return; }
+  var d=r.data;
+  if(!d||!d.data){ alert('The owner has not synced their roadmap yet. Ask '+share.owner_name+' to share it again.'); return; }
 
   // Backup current user's data before switching
   _myDataBackup=buildDataPayload();
