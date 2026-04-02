@@ -4071,7 +4071,20 @@ async function signOut(){
   // ── Re-render blank state and show login ──
   recomputeTimeline();renderTableHeader();renderTabs();renderStackedTabs();render();
   applyProfileToUI();
-  var ov=document.getElementById('authOverlay'); if(ov){ ov.classList.remove('hidden'); switchToLogin(); }
+  var ov=document.getElementById('authOverlay');
+  if(ov){
+    ov.classList.remove('hidden');
+    switchToLogin();
+    // Force keyboard focus — Electron loses input focus after overlay changes
+    setTimeout(function(){
+      window.focus(); // Restore keyboard focus to the webContents
+      document.body.click(); // Force a click to re-engage input
+      var emailField=document.getElementById('authEmail');
+      if(emailField){ emailField.value=''; emailField.focus(); }
+      var passField=document.getElementById('authPassword');
+      if(passField) passField.value='';
+    }, 200);
+  }
 }
 document.addEventListener('DOMContentLoaded',function(){
   ['authEmail','authPassword','authConfirm'].forEach(function(id){
