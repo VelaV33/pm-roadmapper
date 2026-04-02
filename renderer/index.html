@@ -3963,7 +3963,10 @@ async function onAuthSuccess(user){
         console.log('Cloud data loaded:',sections.length,'sections,',rows.length,'rows');
       }
     }
-  } catch(e){ console.warn('Cloud pull on login failed (offline?):', e.message); }
+  } catch(e){
+    console.warn('Cloud pull on login failed (offline?):', e.message);
+    showSyncBadge('error');
+  }
 
   // ── STEP 5: If cloud had nothing, fall back to local file ──
   if(!cloudLoaded&&window.electronAPI){
@@ -3991,14 +3994,17 @@ async function onAuthSuccess(user){
 
   // ── STEP 9: Enable sync and seed cloud if needed ──
   enableSync();
-  // If we loaded from local but cloud was empty, push to cloud immediately
-  if(!cloudLoaded&&rows.length>0){
+  if(cloudLoaded){
+    showSyncBadge('synced');
+    // Save local cache for offline access
+    if(window.electronAPI) window.electronAPI.saveData(buildDataPayload());
+  } else if(rows.length>0){
+    // Local data loaded but cloud was empty — push to cloud immediately
     console.log('Seeding cloud with local data');
-    pushCloudData();
-  }
-  // Save local cache of whatever we loaded (for offline access)
-  if(cloudLoaded&&window.electronAPI){
-    window.electronAPI.saveData(buildDataPayload());
+    pushCloudData(); // this now sets badge to syncing→synced internally
+  } else {
+    // New user, no data anywhere — that's fine
+    showSyncBadge('synced');
   }
 
   setTimeout(function(){ loadAllCommentBadges(); loadSharedToMe(); loadUserTier(); }, 800);
@@ -4168,6 +4174,7 @@ async function pullCloudData(){
     }
   } catch(e){
     console.warn('Cloud pull exception:', e.message);
+    showSyncBadge('error');
   }
 }
 
@@ -4178,9 +4185,13 @@ function schedulePushToCloud(immediate){
 }
 
 async function pushCloudData(){
-  if(!_supabase || !_currentUser || !_syncEnabled) return;
-  // Never push blank data — content-based guard
-  if(rows.length===0 && sections.length<=2) { console.log('pushCloudData: skipping — data is blank'); return; }
+  if(!_supabase || !_currentUser || !_syncEnabled){
+    console.warn('pushCloudData: skipping — not ready (supabase:',!!_supabase,'user:',!!_currentUser,'sync:',_syncEnabled,')');
+    return;
+  }
+  // Nothing to push if data is blank — this is not an error
+  if(rows.length===0 && sections.length<=2) { showSyncBadge('synced'); return; }
+  showSyncBadge('syncing');
   try {
     var payload = {
       sections: sections,
