@@ -5034,9 +5034,10 @@ function renderSharedTabs(){
 async function openSharedRoadmap(share){
   // Load the owner's roadmap data from Supabase
   var r=await _dbReq('/rest/v1/roadmap_data?select=data&user_id=eq.'+share.owner_id+'&limit=1');
-  if(!r.ok || !r.data){ alert('Could not load shared roadmap.'); return; }
-  var d=Array.isArray(r.data)?r.data[0]:r.data;
-  if(!d||!d.data){ alert('No data found for this shared roadmap.'); return; }
+  if(!r.ok){ alert('Could not load shared roadmap. Please check your connection and try again.'); return; }
+  var arr=Array.isArray(r.data)?r.data:r.data?[r.data]:[];
+  var d=arr[0];
+  if(!d||!d.data){ alert('The owner has not synced their roadmap to the cloud yet. Ask '+share.owner_name+' to open PM Roadmapper and make sure their data is synced.'); return; }
 
   // Backup current user's data before switching
   _myDataBackup=buildDataPayload();
@@ -5089,6 +5090,19 @@ async function shareRoadmapWith(email){
   if(!_currentUser) return {error:'Not logged in'};
   var ownerName = userProfile.name || _currentUser.email.split('@')[0];
   var roadmapName = (document.getElementById('roadmapTitle') && document.getElementById('roadmapTitle').textContent.trim()) || 'Product Roadmap';
+
+  // Ensure our roadmap data is in Supabase so recipient can load it
+  if(rows.length>0||sections.length>2){
+    try {
+      var payload=buildDataPayload();
+      await _supabase.from('roadmap_data').upsert({
+        user_id:_currentUser.id,
+        data:payload,
+        updated_at:new Date().toISOString()
+      },{onConflict:'user_id'});
+      console.log('Pre-share: pushed roadmap data to cloud');
+    } catch(e){ console.warn('Pre-share push failed:', e.message); }
+  }
 
   // Call Edge Function — it saves the share record AND sends the invite email
   var r = await window.electronAPI.supaRequest({
