@@ -499,6 +499,16 @@ function supaFetch(path, method, body, token) {
   });
 }
 
+// Force keyboard focus back to the window (fixes Electron losing input after overlay changes)
+ipcMain.handle('refocus-window', () => {
+  if (win) {
+    win.blur();
+    win.focus();
+    win.webContents.focus();
+  }
+  return { ok: true };
+});
+
 // ── AI API Proxy (routes through main process to bypass CORS) ──
 ipcMain.handle('ai-request', async (_event, { provider, apiKey, model, prompt, systemPrompt }) => {
   return new Promise((resolve) => {

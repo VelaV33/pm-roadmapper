@@ -4075,15 +4075,19 @@ async function signOut(){
   if(ov){
     ov.classList.remove('hidden');
     switchToLogin();
-    // Force keyboard focus — Electron loses input focus after overlay changes
-    setTimeout(function(){
-      window.focus(); // Restore keyboard focus to the webContents
-      document.body.click(); // Force a click to re-engage input
-      var emailField=document.getElementById('authEmail');
-      if(emailField){ emailField.value=''; emailField.focus(); }
-      var passField=document.getElementById('authPassword');
-      if(passField) passField.value='';
-    }, 200);
+    // Clear old values
+    var emailField=document.getElementById('authEmail');
+    var passField=document.getElementById('authPassword');
+    if(emailField) emailField.value='';
+    if(passField) passField.value='';
+    // Force Electron to restore keyboard focus via main process
+    if(window.electronAPI&&window.electronAPI.refocusWindow){
+      setTimeout(function(){
+        window.electronAPI.refocusWindow().then(function(){
+          if(emailField) emailField.focus();
+        });
+      }, 150);
+    }
   }
 }
 document.addEventListener('DOMContentLoaded',function(){

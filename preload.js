@@ -18,4 +18,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   readFile:        (opts)      => ipcRenderer.invoke('read-file', opts),
   transcribeAudio: (opts)      => ipcRenderer.invoke('transcribe-audio', opts),
   aiRequest:       (opts)      => ipcRenderer.invoke('ai-request', opts),
+  refocusWindow:   ()          => ipcRenderer.invoke('refocus-window'),
 });
