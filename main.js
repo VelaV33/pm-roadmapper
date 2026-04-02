@@ -624,6 +624,9 @@ ipcMain.handle('supa-db-request', async (_event, { path, method, body, token }) 
       res.on('end', () => {
         try {
           const parsed = data.trim() ? JSON.parse(data) : (m === 'DELETE' ? [] : {});
+          if (res.statusCode >= 300) {
+            console.error('[SUPABASE]', m, path, '→', res.statusCode, JSON.stringify(parsed).substring(0, 300));
+          }
           resolve({ ok: res.statusCode < 300, status: res.statusCode, data: parsed });
         } catch(e) {
           resolve({ ok: false, status: res.statusCode, data: { message: 'Parse error: '+data.slice(0,100) } });

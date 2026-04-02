@@ -4210,23 +4210,32 @@ async function pushCloudData(){
       capData: capData
     };
 
-    var r = await _supabase
-      .from('roadmap_data')
-      .upsert({
-        user_id: _currentUser.id,
-        data: payload,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'user_id' });
+    var now=new Date().toISOString();
+    var uid=_currentUser.id;
 
-    if(r.error){
-      console.warn('Cloud push error:', r.error.message);
+    // Check if row exists for this user
+    var check=await _dbReq('/rest/v1/roadmap_data?select=user_id&user_id=eq.'+uid+'&limit=1');
+    var exists=check.ok&&Array.isArray(check.data)&&check.data.length>0;
+
+    var r;
+    if(exists){
+      // UPDATE existing row
+      r=await _dbReq('/rest/v1/roadmap_data?user_id=eq.'+uid,'PATCH',{data:payload,updated_at:now});
+    } else {
+      // INSERT new row
+      r=await _dbReq('/rest/v1/roadmap_data','POST',{user_id:uid,data:payload,updated_at:now});
+    }
+
+    if(!r.ok){
+      console.error('Cloud push failed:',exists?'PATCH':'POST','status:',r.status,'response:',JSON.stringify(r.data));
       showSyncBadge('error');
     } else {
-      var now = Date.now();
+      var ts=Date.now();
       var pushTsKey='pmr_last_save_ts'+(_currentUser?'_'+_currentUser.id:'');
-      localStorage.setItem(pushTsKey, String(now));
-      _lastCloudTs = now;
+      localStorage.setItem(pushTsKey, String(ts));
+      _lastCloudTs=ts;
       showSyncBadge('synced');
+      console.log('Cloud push success:',exists?'updated':'inserted',rows.length,'rows');
     }
   } catch(e){
     console.warn('Cloud push exception:', e.message);
@@ -5145,13 +5154,8 @@ async function shareRoadmapWith(email){
   // Ensure our roadmap data is in Supabase so recipient can load it
   if(rows.length>0||sections.length>2){
     try {
-      var payload=buildDataPayload();
-      await _supabase.from('roadmap_data').upsert({
-        user_id:_currentUser.id,
-        data:payload,
-        updated_at:new Date().toISOString()
-      },{onConflict:'user_id'});
-      console.log('Pre-share: pushed roadmap data to cloud');
+      await pushCloudData();
+      console.log('Pre-share: roadmap data pushed to cloud');
     } catch(e){ console.warn('Pre-share push failed:', e.message); }
   }
 
