@@ -112,24 +112,12 @@ function createWindow() {
 
 // ── IPC Handlers ───────────────────────────────────────────────────────────────
 
-// Set the active user ID so data files are scoped per user
+// Set the active user ID so data files are scoped per user.
+// No automatic migration — data comes from Supabase (cloud-first).
+// Local files are an offline cache only.
 ipcMain.handle('set-active-user', (_event, userId) => {
-  const previousId = _activeUserId;
   _activeUserId = userId || null;
-  // Migrate old shared file to user-scoped file if it exists and user file doesn't
-  if (userId) {
-    const oldPath = path.join(app.getPath('userData'), 'roadmap-data.json');
-    const oldBak = oldPath + '.bak';
-    const newPath = getDataPath(userId);
-    if (!fs.existsSync(newPath)) {
-      // Try main file first, then backup
-      const source = fs.existsSync(oldPath) ? oldPath : (fs.existsSync(oldBak) ? oldBak : null);
-      if (source) {
-        try { fs.copyFileSync(source, newPath); console.log('Migrated', source, '->', newPath); } catch(e) { console.warn('Migration copy failed:', e.message); }
-      }
-    }
-  }
-  return { ok: true, previousUserId: previousId };
+  return { ok: true };
 });
 
 // Load data — tries main file, then .bak, then falls back to built-in defaults

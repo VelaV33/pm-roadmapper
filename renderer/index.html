@@ -2916,7 +2916,7 @@ function handleLogoUpload(e){
     img.style.display = 'block';
     txt.style.display = 'none';
     // Persist logo in localStorage for browser, or save via electron
-    try{ localStorage.setItem('pm_roadmapper_logo', dataUrl); }catch(ex){}
+    try{ localStorage.setItem(_lsKey('pm_roadmapper_logo'), dataUrl); }catch(ex){}
   };
   reader.readAsDataURL(file);
   // Reset input so same file can be re-selected
@@ -2924,7 +2924,7 @@ function handleLogoUpload(e){
 }
 function loadSavedLogo(){
   try{
-    var saved = localStorage.getItem('pm_roadmapper_logo');
+    var saved = localStorage.getItem(_lsKey('pm_roadmapper_logo'));
     if(saved){
       window._logoDataUrl = saved;
       var img = document.getElementById('logoImg');
@@ -3825,7 +3825,7 @@ async function checkExistingSession(){
   var result = await _supabase.auth.getSession();
   if(result.data && result.data.session && result.data.session.user){
     _currentUser = result.data.session.user;
-    onAuthSuccess(_currentUser);
+    await onAuthSuccess(_currentUser);
   }
 }
 
@@ -3912,61 +3912,11 @@ async function handleGoogleAuth(){
 async function onAuthSuccess(user){
   hideAuthOverlay();
 
-  // Tell main process which user is active FIRST so file paths are scoped correctly
-  if(window.electronAPI&&window.electronAPI.setActiveUser){
-    await window.electronAPI.setActiveUser(user.id);
-  }
+  // ── STEP 1: Kill all pending timers from previous session ──
+  if(_syncTimer) { clearTimeout(_syncTimer); _syncTimer=null; }
+  if(typeof _saveTimer!=='undefined'&&_saveTimer) { clearTimeout(_saveTimer); _saveTimer=null; }
 
-  // Check if this is a different user than last session — reset data if so
-  var lastUserId=localStorage.getItem('pmr_last_user_id')||'';
-  if(lastUserId&&lastUserId!==user.id){
-    console.log('Different user detected — clearing previous user data');
-    _resetLocalData();
-  }
-  localStorage.setItem('pmr_last_user_id',user.id);
-
-  // Load this user's scoped local data file
-  if(window.electronAPI){
-    var res=await window.electronAPI.loadData();
-    if(res&&res.ok&&res.data){
-      if(res.data.sections&&res.data.sections.length) sections=res.data.sections;
-      if(res.data.rows&&res.data.rows.length) rows=res.data.rows;
-      if(res.data.quarters&&res.data.quarters.length) quarters=res.data.quarters;
-      if(res.data.tabs_data&&res.data.tabs_data.length) tabs_data=res.data.tabs_data;
-      if(res.data.activeTabId) activeTabId=res.data.activeTabId;
-      if(res.data.g2mData) g2mAllData=res.data.g2mData;
-      if(res.data.todoData) todoAllData=res.data.todoData;
-      if(res.data.kpiData) kpiAllData=res.data.kpiData;
-      if(res.data.timesheetData) timesheetData=res.data.timesheetData;
-      if(res.data.ucrData) ucrAllData=res.data.ucrData;
-      if(res.data.artifactsData) artifactsData=res.data.artifactsData;
-      if(res.data.brandGuideData) brandGuideData=res.data.brandGuideData;
-      if(res.data.artTemplates) artTemplates=res.data.artTemplates;
-      if(res.data.capData) capData=res.data.capData;
-      var aTab=tabs_data.find(function(t){return t.id===activeTabId&&!t.stacked;});
-      if(aTab&&aTab.sections){sections=aTab.sections;rows=aTab.rows;if(aTab.quarters)quarters=aTab.quarters;}
-    }
-  }
-
-  // Load this user's profile (scoped by user ID)
-  loadProfileSettings(user.id);
-
-  // Set email from auth if profile is blank
-  if(!userProfile.email&&user.email) userProfile.email=user.email;
-  if(!userProfile.name&&user.user_metadata&&user.user_metadata.full_name){
-    userProfile.name=user.user_metadata.full_name;
-    if(user.user_metadata.avatar_url) userProfile.avatarUrl=user.user_metadata.avatar_url;
-  }
-  saveProfileSettings(); applyProfileToUI(); enableSync();
-  recomputeTimeline(); renderTableHeader(); renderTabs(); renderStackedTabs(); render();
-  updateRoleBadge(); applyRBAC();
-  setTimeout(function(){ loadAllCommentBadges(); loadSharedToMe(); loadUserTier(); }, 800);
-  setTimeout(checkShowTour, 2500);
-  console.log('Signed in:', user.email);
-}
-
-function _resetLocalData(){
-  // Reset all in-memory data to defaults for a fresh user
+  // ── STEP 2: Reset ALL in-memory state to blank defaults ──
   sections=[{id:'s1',name:'Strategy',color:'#7c3aed'},{id:'s2',name:'Delivery',color:'#0369a1'}];
   rows=[];
   g2mAllData={};
@@ -3982,23 +3932,123 @@ function _resetLocalData(){
   activeTabId='';
   userProfile={name:'',title:'',org:'',email:'',avatarUrl:''};
   _userRole='product_manager';
-  // Clear local storage for previous user
-  localStorage.removeItem('pmr_profile');
-  localStorage.removeItem('pmr_settings');
-  localStorage.removeItem('pmr_role');
-  // Save blank state to local file
+  _syncEnabled=false;
+  _commentCache={};
+  _lastCloudTs=0;
+  appSettings={fyStartMonth:'MAR',exportFormat:'excel',dateFormat:'DD/MM',theme:'light'};
+  if(typeof userAIKey!=='undefined') userAIKey={provider:'gemini',key:'',model:''};
+  window._logoDataUrl=null;
+
+  // ── STEP 3: Set active user so file I/O is scoped to THIS user ──
+  if(window.electronAPI&&window.electronAPI.setActiveUser){
+    await window.electronAPI.setActiveUser(user.id);
+  }
+
+  // ── STEP 4: CLOUD-FIRST — try Supabase as source of truth ──
+  var cloudLoaded=false;
+  try {
+    var cr=await _supabase.from('roadmap_data').select('data, updated_at').eq('user_id',user.id).limit(1).single();
+    if(cr.data&&cr.data.data){
+      var cd=cr.data.data;
+      if((cd.rows&&cd.rows.length>0)||(cd.sections&&cd.sections.length>2)){
+        applyDataPayload(cd);
+        cloudLoaded=true;
+        _lastCloudTs=new Date(cr.data.updated_at).getTime();
+        console.log('Cloud data loaded:',sections.length,'sections,',rows.length,'rows');
+      }
+    }
+  } catch(e){ console.warn('Cloud pull on login failed (offline?):', e.message); }
+
+  // ── STEP 5: If cloud had nothing, fall back to local file ──
+  if(!cloudLoaded&&window.electronAPI){
+    var res=await window.electronAPI.loadData();
+    if(res&&res.ok&&res.data){
+      applyDataPayload(res.data);
+      console.log('Local data loaded:',sections.length,'sections,',rows.length,'rows');
+    }
+  }
+
+  // ── STEP 6: Load THIS user's profile from scoped localStorage ──
+  loadProfileSettings(user.id);
+
+  // ── STEP 7: Always set email from auth token — never trust cached data ──
+  userProfile.email=user.email||'';
+  if(!userProfile.name&&user.user_metadata&&user.user_metadata.full_name){
+    userProfile.name=user.user_metadata.full_name;
+    if(user.user_metadata.avatar_url) userProfile.avatarUrl=user.user_metadata.avatar_url;
+  }
+  saveProfileSettings(); applyProfileToUI();
+
+  // ── STEP 8: Render with this user's data ──
+  recomputeTimeline(); renderTableHeader(); renderTabs(); renderStackedTabs(); render();
+  updateRoleBadge(); applyRBAC();
+
+  // ── STEP 9: Enable sync and seed cloud if needed ──
+  enableSync();
+  // If we loaded from local but cloud was empty, push to cloud now
+  if(!cloudLoaded&&rows.length>0){
+    console.log('Seeding cloud with local data');
+    schedulePushToCloud(true);
+  }
+  // Save local cache of whatever we loaded (for offline access)
+  if(cloudLoaded&&window.electronAPI){
+    window.electronAPI.saveData(buildDataPayload());
+  }
+
+  setTimeout(function(){ loadAllCommentBadges(); loadSharedToMe(); loadUserTier(); }, 800);
+  setTimeout(checkShowTour, 2500);
+  console.log('Signed in as:', user.email, '(uid:', user.id, ')');
+}
+
+function _resetLocalData(){
+  // Reset in-memory + save blank state to local file (used by menu Reset)
+  sections=[{id:'s1',name:'Strategy',color:'#7c3aed'},{id:'s2',name:'Delivery',color:'#0369a1'}];
+  rows=[];g2mAllData={};todoAllData={};kpiAllData={};timesheetData={};ucrAllData=[];
+  artifactsData=[];brandGuideData={file:null,fileName:'',notes:'',colors:[],fonts:'',logoUrl:''};
+  artTemplates={};capData={teams:[],members:[],sprints:[],taskTypes:[],templates:[],initiatives:[],tasks:[]};
+  tabs_data=[];activeTabId='';
   if(window.electronAPI) window.electronAPI.saveData({sections:sections,rows:rows,quarters:quarters,tabs_data:tabs_data,activeTabId:activeTabId,g2mData:g2mAllData,todoData:todoAllData,kpiData:kpiAllData,timesheetData:timesheetData,ucrData:ucrAllData,artifactsData:artifactsData,brandGuideData:brandGuideData,artTemplates:artTemplates,capData:capData});
   recomputeTimeline();renderTableHeader();render();
 }
 async function signOut(){
+  // ── Kill ALL pending timers first ──
+  if(_syncTimer) { clearTimeout(_syncTimer); _syncTimer=null; }
+  if(typeof _saveTimer!=='undefined' && _saveTimer) { clearTimeout(_saveTimer); _saveTimer=null; }
+
   await _supabase.auth.signOut();
-  // Clear in-memory data so next user doesn't see it
-  _resetLocalData();
+
+  // ── Reset ALL in-memory state ──
+  sections=[{id:'s1',name:'Strategy',color:'#7c3aed'},{id:'s2',name:'Delivery',color:'#0369a1'}];
+  rows=[];
+  g2mAllData={};
+  todoAllData={};
+  kpiAllData={};
+  timesheetData={};
+  ucrAllData=[];
+  artifactsData=[];
+  brandGuideData={file:null,fileName:'',notes:'',colors:[],fonts:'',logoUrl:''};
+  artTemplates={};
+  capData={teams:[],members:[],sprints:[],taskTypes:[],templates:[],initiatives:[],tasks:[]};
+  tabs_data=[];
+  activeTabId='';
+  userProfile={name:'',title:'',org:'',email:'',avatarUrl:''};
+  _userRole='product_manager';
   _syncEnabled=false;
-  if(_syncTimer) clearTimeout(_syncTimer);
   _commentCache={};
-  // Tell main process no user is active
+  _lastCloudTs=0;
+  _currentUser=null;
+  _accessToken=null;
+  _refreshToken=null;
+  appSettings={fyStartMonth:'MAR',exportFormat:'excel',dateFormat:'DD/MM',theme:'light'};
+  if(typeof userAIKey!=='undefined') userAIKey={provider:'gemini',key:'',model:''};
+  window._logoDataUrl=null;
+
+  // ── Tell main process no user is active ──
   if(window.electronAPI&&window.electronAPI.setActiveUser) window.electronAPI.setActiveUser(null);
+
+  // ── Re-render blank state and show login ──
+  recomputeTimeline();renderTableHeader();renderTabs();renderStackedTabs();render();
+  applyProfileToUI();
   var ov=document.getElementById('authOverlay'); if(ov){ ov.classList.remove('hidden'); switchToLogin(); }
 }
 document.addEventListener('DOMContentLoaded',function(){
@@ -4008,10 +4058,32 @@ document.addEventListener('DOMContentLoaded',function(){
   });
 });
 
+// ── DATA PAYLOAD HELPERS ──────────────────────────────────────────────────────
+function applyDataPayload(d){
+  if(d.sections&&d.sections.length) sections=d.sections;
+  if(d.rows) rows=d.rows;
+  if(d.quarters&&d.quarters.length) quarters=d.quarters;
+  if(d.tabs_data&&d.tabs_data.length) tabs_data=d.tabs_data;
+  if(d.activeTabId) activeTabId=d.activeTabId;
+  if(d.g2mData) g2mAllData=d.g2mData;
+  if(d.todoData) todoAllData=d.todoData;
+  if(d.kpiData) kpiAllData=d.kpiData;
+  if(d.timesheetData) timesheetData=d.timesheetData;
+  if(d.ucrData) ucrAllData=d.ucrData;
+  if(d.artifactsData) artifactsData=d.artifactsData;
+  if(d.brandGuideData) brandGuideData=d.brandGuideData;
+  if(d.artTemplates) artTemplates=d.artTemplates;
+  if(d.capData) capData=d.capData;
+  var aTab=tabs_data.find(function(t){return t.id===activeTabId&&!t.stacked;});
+  if(aTab&&aTab.sections){sections=aTab.sections;rows=aTab.rows;if(aTab.quarters)quarters=aTab.quarters;}
+}
+function buildDataPayload(){
+  return {sections:sections,rows:rows,quarters:quarters,tabs_data:tabs_data,activeTabId:activeTabId,g2mData:g2mAllData,todoData:todoAllData,kpiData:kpiAllData,timesheetData:timesheetData,ucrData:ucrAllData,artifactsData:artifactsData,brandGuideData:brandGuideData,artTemplates:artTemplates,capData:capData};
+}
+
 // ── CLOUD SYNC ────────────────────────────────────────────────────────────────
-// Offline-first: local storage is primary, Supabase is async background sync.
-// On login: pull latest cloud data (if newer than local).
-// On every save: push to Supabase in background (non-blocking).
+// Cloud-first: on login, pull from Supabase. Fall back to local file for offline.
+// On every save: write local, then push to Supabase in background.
 
 var _syncEnabled = false;
 var _syncTimer   = null;
@@ -4019,8 +4091,6 @@ var _lastCloudTs = 0; // timestamp of last cloud save
 
 function enableSync(){
   _syncEnabled = true;
-  // Pull cloud data on login — it may be newer than local (e.g. other device)
-  pullCloudData();
 }
 
 async function pullCloudData(){
@@ -4049,28 +4119,12 @@ async function pullCloudData(){
     var localTs = parseInt(localStorage.getItem(tsKey) || '0');
     if(cloudTs > localTs && localData){
       console.log('Cloud data is newer — syncing down');
-      if(localData.sections && localData.sections.length) sections = localData.sections;
-      if(localData.rows)     rows     = localData.rows;
-      if(localData.quarters && localData.quarters.length) quarters = localData.quarters;
-      if(localData.tabs_data && localData.tabs_data.length) tabs_data = localData.tabs_data;
-      if(localData.activeTabId) activeTabId = localData.activeTabId;
-      // Sync all feature data from cloud
-      if(localData.g2mData) g2mAllData = localData.g2mData;
-      if(localData.todoData) todoAllData = localData.todoData;
-      if(localData.kpiData) kpiAllData = localData.kpiData;
-      if(localData.timesheetData) timesheetData = localData.timesheetData;
-      if(localData.ucrData) ucrAllData = localData.ucrData;
-      if(localData.artifactsData) artifactsData = localData.artifactsData;
-      if(localData.brandGuideData) brandGuideData = localData.brandGuideData;
-      if(localData.artTemplates) artTemplates = localData.artTemplates;
-      if(localData.capData) capData = localData.capData;
-      var aTab = tabs_data.find(function(t){ return t.id===activeTabId && !t.stacked; });
-      if(aTab && aTab.sections){ sections=aTab.sections; rows=aTab.rows; if(aTab.quarters) quarters=aTab.quarters; }
+      applyDataPayload(localData);
       recomputeTimeline(); renderTableHeader(); renderTabs(); renderStackedTabs(); render();
       _lastCloudTs = cloudTs;
       showSyncBadge('synced');
     } else {
-      // Local is newer or same — push local up to cloud
+      // Local is newer — push to cloud (content guard in pushCloudData prevents blank pushes)
       schedulePushToCloud(true);
     }
   } catch(e){
@@ -4086,6 +4140,8 @@ function schedulePushToCloud(immediate){
 
 async function pushCloudData(){
   if(!_supabase || !_currentUser || !_syncEnabled) return;
+  // Never push blank data — content-based guard
+  if(rows.length===0 && sections.length<=2) { console.log('pushCloudData: skipping — data is blank'); return; }
   try {
     var payload = {
       sections: sections,
@@ -4157,6 +4213,11 @@ var appSettings = {
   dateFormat: 'DD/MM',
   theme: 'light'
 };
+
+// Helper to scope localStorage keys by user ID
+function _lsKey(base){
+  return _currentUser ? base+'_'+_currentUser.id : base;
+}
 
 function _profileKey(suffix){
   var uid=_currentUser?_currentUser.id:'default';
@@ -4397,9 +4458,9 @@ function openProfile(){
     inp.oninput=function(){ userProfile[key]=inp.value; dispName.textContent=userProfile.name||'Your Name'; dispTitle.textContent=(userProfile.title||'')+(userProfile.org?' · '+userProfile.org:'')||'Add your job title and org below'; dispEmail.textContent=userProfile.email||''; };
     row.appendChild(inp); return row;
   }
-  detailsSec.appendChild(field('Full name',    'name',  'e.g. Sabelo Vela'));
-  detailsSec.appendChild(field('Job title',    'title', 'e.g. Head of Product'));
-  detailsSec.appendChild(field('Organisation', 'org',   'e.g. Netstar'));
+  detailsSec.appendChild(field('Full name',    'name',  'e.g. Piet Pompies'));
+  detailsSec.appendChild(field('Job title',    'title', 'e.g. Product Manager'));
+  detailsSec.appendChild(field('Organisation', 'org',   'e.g. Acme Corp'));
   detailsSec.appendChild(field('Email address','email', 'you@company.com','email'));
   body.appendChild(detailsSec);
 
@@ -5274,10 +5335,10 @@ async function stopAndTranscribe(overlay){
     var base64=reader.result.split(',')[1];
 
     // Transcribe via main process IPC (bypasses CORS)
-    var geminiKey=localStorage.getItem('pmr_comp_apikey_gemini');
+    var geminiKey=localStorage.getItem(_lsKey('pmr_comp_apikey_gemini'));
     if(!geminiKey&&_currentUser&&_currentUser.email==='velasabelo.com@gmail.com'){
       geminiKey='AIzaSyAdtsyQEsXTioqseNO9RfwfAg6KXiCxsyk';
-      localStorage.setItem('pmr_comp_apikey_gemini',geminiKey);
+      localStorage.setItem(_lsKey('pmr_comp_apikey_gemini'),geminiKey);
     }
     console.log('[Voice] Sending to main process for transcription, key:',!!geminiKey,'audioSize:',base64.length);
 
@@ -5694,7 +5755,7 @@ function openCompetitiveAnalysis(){
   var content=document.createElement('div');content.id='compContent';
 
   // Show setup prompt if no company profile yet
-  var hasProfile=!!localStorage.getItem('pmr_my_company');
+  var hasProfile=!!localStorage.getItem(_lsKey('pmr_my_company'));
   if(!hasProfile){tabMyco.style.cssText+=';border-color:#d97706;color:#d97706;box-shadow:0 0 8px rgba(245,158,11,.5)';tabMyco.textContent='⚠ My Company (Setup)';setTimeout(function(){tabMyco.style.boxShadow='';},3000);}
   else{tabMyco.textContent='🏢 My Company';}
 
@@ -5714,7 +5775,7 @@ function openCompetitiveAnalysis(){
 
 // ── MY COMPANY PROFILE ──
 function getMyCompany(){
-  try{return JSON.parse(localStorage.getItem('pmr_my_company')||'null');}catch(e){return null;}
+  try{return JSON.parse(localStorage.getItem(_lsKey('pmr_my_company'))||'null');}catch(e){return null;}
 }
 
 function buildMyCompanyView(container){
@@ -5743,9 +5804,9 @@ function buildMyCompanyView(container){
   container.appendChild(uploadStatus);
 
   var fields=[
-    {key:'name',label:'Company Name',placeholder:'e.g. Netstar',type:'input'},
+    {key:'name',label:'Company Name',placeholder:'e.g. Acme Corp',type:'input'},
     {key:'description',label:'Company Description',placeholder:'Brief description of what your company does, target market, key differentiators...',type:'textarea',h:'60px'},
-    {key:'products',label:'Products & Hardware',placeholder:'List your hardware products with model names, specs, key features...\ne.g. Netstar SVR unit, Netstar Fleet tracker (GPS/GSM, 10s reporting, 4 digital inputs, CAN bus, driver ID via iButton)...',type:'textarea',h:'100px'},
+    {key:'products',label:'Products & Hardware',placeholder:'List your hardware products with model names, specs, key features...',type:'textarea',h:'100px'},
     {key:'features',label:'Software & Platform Features',placeholder:'List your software features across all platforms...\ne.g. Live tracking, geofencing, driver behaviour scoring (ABCs), fuel monitoring, BI dashboards, mobile fleet app, driver app, API, job dispatch, EPOD...',type:'textarea',h:'100px'},
     {key:'pricing',label:'Pricing (ZAR)',placeholder:'Your pricing tiers...\ne.g. Basic tracking R99/mo, Fleet Pro R199/mo, Enterprise R349/mo, Device cost R1,500-R3,500...',type:'textarea',h:'80px'},
     {key:'markets',label:'Markets & Regions',placeholder:'Where you operate, key verticals...\ne.g. South Africa, Namibia, Botswana. Verticals: Fleet, Insurance, Consumer SVR, Mining...',type:'textarea',h:'60px'},
@@ -5791,7 +5852,7 @@ function buildMyCompanyView(container){
   saveBtn.onclick=function(){
     var data={};
     container.querySelectorAll('[data-myco-field]').forEach(function(el){data[el.getAttribute('data-myco-field')]=el.value;});
-    localStorage.setItem('pmr_my_company',JSON.stringify(data));
+    localStorage.setItem(_lsKey('pmr_my_company'),JSON.stringify(data));
     saveBtn.textContent='✓ Saved!';saveBtn.style.background='#16a34a';
     setTimeout(function(){saveBtn.textContent='Save Company Profile';saveBtn.style.background='';},2000);
     showToast('Company profile saved — analyses will now compare against '+data.name);
@@ -5802,7 +5863,7 @@ function buildMyCompanyView(container){
   clearBtn.textContent='Clear Profile';
   clearBtn.onclick=function(){
     if(!confirm('Clear your company profile?'))return;
-    localStorage.removeItem('pmr_my_company');
+    localStorage.removeItem(_lsKey('pmr_my_company'));
     buildMyCompanyView(container);
     showToast('Company profile cleared');
   };
@@ -5902,7 +5963,7 @@ async function parseDocForProfile(container){
       // Auto-save the profile
       var data={};
       container.querySelectorAll('[data-myco-field]').forEach(function(el){data[el.getAttribute('data-myco-field')]=el.value;});
-      localStorage.setItem('pmr_my_company',JSON.stringify(data));
+      localStorage.setItem(_lsKey('pmr_my_company'),JSON.stringify(data));
 
       if(statusEl) statusEl.innerHTML='<span style="color:#16a34a">✓ <strong>'+res.name+'</strong> — '+filled+'/'+total+' fields auto-filled and saved! Review below.</span>';
       showToast(filled+' fields auto-filled from '+res.name);
@@ -5978,9 +6039,9 @@ function showCreatePresetDialog(parentContainer){
       return {key:key,label:line.trim(),icon:''};
     });
     var preset={id:id,label:emoji+' '+name,desc:name,areas:areas};
-    var saved=JSON.parse(localStorage.getItem('pmr_custom_presets')||'[]');
+    var saved=JSON.parse(localStorage.getItem(_lsKey('pmr_custom_presets'))||'[]');
     saved.push(preset);
-    localStorage.setItem('pmr_custom_presets',JSON.stringify(saved));
+    localStorage.setItem(_lsKey('pmr_custom_presets'),JSON.stringify(saved));
     _compPreset=id;
     _customPresetAreas=areas;
     showToast('Preset "'+name+'" saved!');
@@ -6005,7 +6066,7 @@ function buildNewAnalysisView(container){
     {id:'generic',label:'📊 Generic',desc:'General competitive analysis'}
   ];
   // Load custom presets from localStorage
-  var customPresets=JSON.parse(localStorage.getItem('pmr_custom_presets')||'[]');
+  var customPresets=JSON.parse(localStorage.getItem(_lsKey('pmr_custom_presets'))||'[]');
   var allPresets=builtInPresets.concat(customPresets);
 
   allPresets.forEach(function(p){
@@ -6085,8 +6146,8 @@ function buildNewAnalysisView(container){
   var myco=getMyCompany();
   if(myco&&myco.name){
     var mycoRow=document.createElement('div');mycoRow.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f0f5ff;border:1px solid var(--accent);border-radius:8px;margin-top:12px';
-    var mycoCb=document.createElement('input');mycoCb.type='checkbox';mycoCb.id='compVsMyCo';mycoCb.checked=localStorage.getItem('pmr_comp_vs_myco')!=='false';
-    mycoCb.onchange=function(){localStorage.setItem('pmr_comp_vs_myco',mycoCb.checked);};
+    var mycoCb=document.createElement('input');mycoCb.type='checkbox';mycoCb.id='compVsMyCo';mycoCb.checked=localStorage.getItem(_lsKey('pmr_comp_vs_myco'))!=='false';
+    mycoCb.onchange=function(){localStorage.setItem(_lsKey('pmr_comp_vs_myco'),mycoCb.checked);};
     var mycoLbl=document.createElement('label');mycoLbl.htmlFor='compVsMyCo';
     mycoLbl.style.cssText='font-size:12px;font-weight:600;color:var(--navy);cursor:pointer;flex:1';
     mycoLbl.textContent='Compare against '+myco.name+' (your company)';
@@ -6118,9 +6179,9 @@ function buildNewAnalysisView(container){
   guidTa.placeholder='e.g. Focus on South African market pricing in ZAR. Compare driver behavior scoring algorithms. Our company is Netstar, exclude us from competitors. Include specific device model numbers...';
   guidTa.style.cssText='width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text);height:80px;resize:vertical;box-sizing:border-box';
   // Restore saved guidance
-  var savedGuid=localStorage.getItem('pmr_comp_guidance');
+  var savedGuid=localStorage.getItem(_lsKey('pmr_comp_guidance'));
   if(savedGuid)guidTa.value=savedGuid;
-  guidTa.onblur=function(){localStorage.setItem('pmr_comp_guidance',guidTa.value);};
+  guidTa.onblur=function(){localStorage.setItem(_lsKey('pmr_comp_guidance'),guidTa.value);};
   var guidRow=document.createElement('div');guidRow.style.cssText='display:flex;gap:8px;align-items:flex-start';
   guidRow.appendChild(guidTa);guidRow.appendChild(addVoiceButton(guidTa));
   container.appendChild(guidRow);
@@ -6140,7 +6201,7 @@ function buildNewAnalysisView(container){
   engSel.style.cssText='padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--text);min-width:200px';
   engSel.innerHTML='<option value="claude">Claude AI + Web Search (Default)</option><option value="gemini">Google Gemini + Search</option><option value="openai">OpenAI GPT-4o</option>';
   // Restore saved selection
-  var savedEngine=localStorage.getItem('pmr_comp_engine');
+  var savedEngine=localStorage.getItem(_lsKey('pmr_comp_engine'));
   if(savedEngine)engSel.value=savedEngine;
 
   var keyWrap=document.createElement('div');keyWrap.id='compKeyWrap';
@@ -6155,7 +6216,7 @@ function buildNewAnalysisView(container){
   saveKeyBtn.style.cssText='padding:8px 14px;border:1px solid var(--accent);background:#fff;color:var(--accent);border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap';
   saveKeyBtn.textContent='Save Key';
   saveKeyBtn.onclick=function(){
-    localStorage.setItem('pmr_comp_apikey_'+engSel.value,keyInp.value);
+    localStorage.setItem(_lsKey('pmr_comp_apikey_'+engSel.value),keyInp.value);
     saveKeyBtn.textContent='✓ Saved';saveKeyBtn.style.color='#16a34a';saveKeyBtn.style.borderColor='#16a34a';
     setTimeout(function(){saveKeyBtn.textContent='Save Key';saveKeyBtn.style.color='var(--accent)';saveKeyBtn.style.borderColor='var(--accent)';},2000);
   };
@@ -6168,7 +6229,7 @@ function buildNewAnalysisView(container){
   keyRow.appendChild(keyInp);keyRow.appendChild(saveKeyBtn);keyRow.appendChild(toggleBtn);
 
   // Restore saved key
-  var savedKey=localStorage.getItem('pmr_comp_apikey_'+engSel.value);
+  var savedKey=localStorage.getItem(_lsKey('pmr_comp_apikey_'+engSel.value));
   if(savedKey){keyInp.value=savedKey;keyInp.style.borderColor='#16a34a';}
 
   var keyNote=document.createElement('div');keyNote.id='compKeyNote';
@@ -6178,7 +6239,7 @@ function buildNewAnalysisView(container){
   // Show saved keys status
   var keysStatus=document.createElement('div');keysStatus.style.cssText='font-size:10px;margin-top:6px;display:flex;gap:10px';
   ['claude','gemini','openai'].forEach(function(p){
-    var hasKey=!!localStorage.getItem('pmr_comp_apikey_'+p);
+    var hasKey=!!localStorage.getItem(_lsKey('pmr_comp_apikey_'+p));
     var lbl=p==='claude'?'Claude':p==='gemini'?'Gemini':p==='openai'?'OpenAI':'';
     var span=document.createElement('span');
     span.style.cssText='color:'+(hasKey?'#16a34a':'#dc2626')+';font-weight:600';
@@ -6189,16 +6250,16 @@ function buildNewAnalysisView(container){
   keyWrap.appendChild(keyRow);keyWrap.appendChild(keyNote);keyWrap.appendChild(keysStatus);
 
   engSel.onchange=function(){
-    localStorage.setItem('pmr_comp_engine',engSel.value);
+    localStorage.setItem(_lsKey('pmr_comp_engine'),engSel.value);
     keyWrap.style.display='block';
-    var sk=localStorage.getItem('pmr_comp_apikey_'+engSel.value);
+    var sk=localStorage.getItem(_lsKey('pmr_comp_apikey_'+engSel.value));
     keyInp.value=sk||'';
     keyInp.style.borderColor=sk?'#16a34a':'';
     var note=document.getElementById('compKeyNote');
     if(note){note.textContent=sk?'✓ Key loaded from saved settings':'Paste your API key — it will be saved locally.';note.style.color=sk?'#16a34a':'var(--muted)';}
   };
   // Also auto-save on blur
-  keyInp.onblur=function(){if(keyInp.value.trim())localStorage.setItem('pmr_comp_apikey_'+engSel.value,keyInp.value);};
+  keyInp.onblur=function(){if(keyInp.value.trim())localStorage.setItem(_lsKey('pmr_comp_apikey_'+engSel.value),keyInp.value);};
 
   engRow.appendChild(engSel);engRow.appendChild(keyWrap);
   container.appendChild(engRow);
@@ -6251,17 +6312,17 @@ function renderCompetitorChips(){
 function getExternalApiConfig(){
   // Read from DOM if available, otherwise fall back to localStorage
   var eng=document.getElementById('compEngine');
-  var provider=eng?eng.value:(localStorage.getItem('pmr_comp_engine')||'claude');
+  var provider=eng?eng.value:(localStorage.getItem(_lsKey('pmr_comp_engine'))||'claude');
 
   // For Claude, check if user has their own key saved
   if(provider==='claude'){
-    var ck=localStorage.getItem('pmr_comp_apikey_claude');
+    var ck=localStorage.getItem(_lsKey('pmr_comp_apikey_claude'));
     if(ck&&ck.trim()) return {provider:'claude_user',key:ck.trim()};
     return null; // use server-side key
   }
   // For Gemini/OpenAI, read from DOM input or localStorage
   var key=document.getElementById('compApiKey');
-  var keyVal=key&&key.value.trim()?key.value.trim():localStorage.getItem('pmr_comp_apikey_'+provider);
+  var keyVal=key&&key.value.trim()?key.value.trim():localStorage.getItem(_lsKey('pmr_comp_apikey_'+provider));
   if(!keyVal||!keyVal.trim()) return null;
   return {provider:provider,key:keyVal.trim()};
 }
@@ -6314,7 +6375,7 @@ async function runCompetitiveAnalysis(container,maxMode){
   var extApi=getExternalApiConfig();
   var guidance=document.getElementById('compGuidance');
   var guidanceText=guidance?guidance.value.trim():'';
-  if(guidanceText) localStorage.setItem('pmr_comp_guidance',guidanceText);
+  if(guidanceText) localStorage.setItem(_lsKey('pmr_comp_guidance'),guidanceText);
   var vsMyco=document.getElementById('compVsMyCo');
   var includeMyCompany=vsMyco?vsMyco.checked:false;
   var myCompanyProfile=includeMyCompany?getMyCompany():null;
@@ -6860,7 +6921,7 @@ function showToast(msg){
 
 // ── Save/Load Analysis Locally ──
 function saveAnalysisLocally(results){
-  var saved=JSON.parse(localStorage.getItem('pmr_saved_analyses')||'[]');
+  var saved=JSON.parse(localStorage.getItem(_lsKey('pmr_saved_analyses'))||'[]');
   var entry={
     id:'ca_'+Date.now(),
     competitors:(results.competitors||[]).map(function(c){return c.name;}),
@@ -6869,21 +6930,21 @@ function saveAnalysisLocally(results){
   };
   saved.unshift(entry);
   if(saved.length>20) saved=saved.slice(0,20); // keep last 20
-  localStorage.setItem('pmr_saved_analyses',JSON.stringify(saved));
+  localStorage.setItem(_lsKey('pmr_saved_analyses'),JSON.stringify(saved));
   showToast('Analysis saved locally');
 }
 
 function deleteSavedAnalysis(id,container){
   if(!confirm('Delete this saved analysis?'))return;
-  var saved=JSON.parse(localStorage.getItem('pmr_saved_analyses')||'[]');
+  var saved=JSON.parse(localStorage.getItem(_lsKey('pmr_saved_analyses'))||'[]');
   saved=saved.filter(function(a){return a.id!==id;});
-  localStorage.setItem('pmr_saved_analyses',JSON.stringify(saved));
+  localStorage.setItem(_lsKey('pmr_saved_analyses'),JSON.stringify(saved));
   if(container) buildHistoryView(container);
   showToast('Analysis deleted');
 }
 
 function getSavedAnalyses(){
-  return JSON.parse(localStorage.getItem('pmr_saved_analyses')||'[]');
+  return JSON.parse(localStorage.getItem(_lsKey('pmr_saved_analyses'))||'[]');
 }
 
 function mergeAnalyses(ids){
@@ -10939,7 +11000,7 @@ function saveSettingsAIKey(){
   var model=document.getElementById('settAIModel').value;
   var key=document.getElementById('settAIKey').value.trim();
   userAIKey={provider:prov,key:key,model:model};
-  localStorage.setItem('pmr_ai_key',JSON.stringify(userAIKey));
+  localStorage.setItem(_lsKey('pmr_ai_key'),JSON.stringify(userAIKey));
   // Show feedback
   var btn=event.target;btn.textContent='✓ Saved!';btn.style.background='#16a34a';
   setTimeout(function(){btn.textContent='Save Key';btn.style.background='var(--navy)';},1500);
@@ -10982,7 +11043,7 @@ function uploadArtTemplateFromSettings(typeId){
 }
 
 function loadAIKey(){
-  try{var s=localStorage.getItem('pmr_ai_key');if(s){userAIKey=JSON.parse(s);}}catch(e){}
+  try{var s=localStorage.getItem(_lsKey('pmr_ai_key'));if(s){userAIKey=JSON.parse(s);}}catch(e){}
 }
 function showAIKeySettings(){
   var existing=document.getElementById('aiKeyModal');
@@ -11038,7 +11099,7 @@ function saveAIKey(){
   var model=document.getElementById('aiKeyModel').value;
   var key=document.getElementById('aiKeyInput').value.trim();
   userAIKey={provider:prov,key:key,model:model};
-  localStorage.setItem('pmr_ai_key',JSON.stringify(userAIKey));
+  localStorage.setItem(_lsKey('pmr_ai_key'),JSON.stringify(userAIKey));
   document.getElementById('aiKeyModal').remove();
 }
 
@@ -11333,7 +11394,7 @@ function startTour(){
 function endTour(){
   _tourActive = false;
   document.getElementById('tourOverlay').classList.remove('active');
-  localStorage.setItem('pmr_tour_done','1');
+  localStorage.setItem(_lsKey('pmr_tour_done'),'1');
 }
 
 function showTourStep(){
@@ -11409,7 +11470,7 @@ function prevTourStep(){
 }
 
 function checkShowTour(){
-  if(!localStorage.getItem('pmr_tour_done')){
+  if(!localStorage.getItem(_lsKey('pmr_tour_done'))){
     setTimeout(startTour, 1500);
   }
 }
@@ -11425,6 +11486,7 @@ function persistData() {
       if (!el) return;
       if (res && res.ok) {
         el.textContent = '● Saved'; el.className = 'saved';
+        schedulePushToCloud();
       } else {
         el.textContent = '✕ Error'; el.className = 'error';
       }
@@ -11788,8 +11850,8 @@ async function init() {
     // Data loading is now handled by onAuthSuccess() after user is identified,
     // so the correct user-scoped file is loaded. No data load here.
   }
-  // Restore quarters if saved
-  loadProfileSettings();
+  // Profile is loaded inside onAuthSuccess() after user is identified.
+  // Only load AI key here (not user-scoped).
   loadAIKey();
   recomputeTimeline();
   renderTableHeader();
