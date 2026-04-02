@@ -782,6 +782,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
     <div style="margin-left:auto;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
       <!-- Collaboration -->
       <button onclick="openShare()" title="Share roadmap with your team" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.85);border-radius:6px;padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.1)'"><span style="font-size:13px">🔗</span> Share</button>
+      <button onclick="openNotifications()" id="notifBtn" title="Notifications" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.85);border-radius:6px;padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;position:relative" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.1)'"><span style="font-size:13px">🔔</span> Notifications<span id="notifBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#dc2626;color:#fff;font-size:8px;font-weight:700;min-width:14px;height:14px;border-radius:7px;display:none;align-items:center;justify-content:center;padding:0 3px"></span></button>
       <div style="width:1px;height:18px;background:rgba(255,255,255,.15);margin:0 4px"></div>
       <!-- App -->
       <button onclick="openHelp()" title="Help &amp; User Guide" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.85);border-radius:6px;padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.1)'">? Help</button>
@@ -1391,6 +1392,8 @@ function renderTabs(){
   addBtn.title = 'Add a new roadmap tab';
   addBtn.onclick = openAddTabModal;
   el.appendChild(addBtn);
+  // Re-add shared roadmap tabs (they get cleared by innerHTML='')
+  if(_sharedToMe&&_sharedToMe.length) renderSharedTabs();
 }
 
 function switchTab(tabId){
@@ -4999,19 +5002,21 @@ async function loadSharedWith(){
 
 async function loadSharedToMe(){
   if(!_currentUser) return;
-  var email=encodeURIComponent(_currentUser.email);
+  var email=encodeURIComponent(_currentUser.email.toLowerCase());
   var r=await _dbReq('/rest/v1/shared_roadmaps?select=*&recipient_email=eq.'+email+'&order=created_at.asc');
   if(r.ok && Array.isArray(r.data)){
     _sharedToMe=r.data;
     renderSharedTabs();
+    loadNotifications();
   }
 }
 
 function renderSharedTabs(){
-  // Remove old shared tabs
   var tabsEl=document.getElementById('tabs');
+  if(!tabsEl) return;
+  // Remove old shared tabs
   tabsEl.querySelectorAll('.shared-from-tab').forEach(function(el){ el.remove(); });
-  if(!_sharedToMe.length) return;
+  if(!_sharedToMe||!_sharedToMe.length) return;
 
   // Insert shared tabs before the + New Tab button
   var addBtn=tabsEl.querySelector('.tab-add');
@@ -5099,19 +5104,107 @@ async function shareRoadmapWith(email){
     token: _accessToken || null
   });
 
-  if(r.ok || (r.data && !r.data.error)){
+  if(r.ok && r.data && r.data.ok){
     await loadSharedWith();
-    if(r.data && r.data.warning){
-      return {ok:true, warning: r.data.warning};
-    }
-    return {ok:true};
+    return {ok:true, email_sent:!!r.data.email_sent};
   }
+  // Edge function may have saved the share record even if email failed
+  await loadSharedWith();
   return {error:(r.data&&(r.data.error||r.data.message))||'Failed to share'};
 }
 
 async function revokeShare(shareId){
   await _dbReq('/rest/v1/shared_roadmaps?id=eq.'+shareId,'DELETE');
   _sharedWith=_sharedWith.filter(function(s){ return s.id!==shareId; });
+}
+
+// ── NOTIFICATIONS ─────────────────────────────────────────────────────────────
+var _notifications = [];
+
+function loadNotifications(){
+  _notifications = [];
+  // Shared roadmaps received
+  if(_sharedToMe && _sharedToMe.length){
+    _sharedToMe.forEach(function(s){
+      _notifications.push({
+        type:'share',
+        icon:'🔗',
+        title: s.owner_name+' shared a roadmap with you',
+        detail: s.roadmap_name,
+        time: s.created_at,
+        action: function(){ openSharedRoadmap(s); }
+      });
+    });
+  }
+  // Update badge
+  var badge=document.getElementById('notifBadge');
+  if(badge){
+    if(_notifications.length>0){
+      badge.textContent=String(_notifications.length);
+      badge.style.display='flex';
+    } else {
+      badge.style.display='none';
+    }
+  }
+}
+
+function openNotifications(){
+  var ex=document.getElementById('notifModal'); if(ex) ex.remove();
+  loadNotifications();
+  var ov=document.createElement('div');
+  ov.id='notifModal'; ov.className='modal-overlay'; ov.style.zIndex='9500';
+
+  var modal=document.createElement('div');
+  modal.className='modal'; modal.style.width='480px';
+
+  var hdr=document.createElement('div'); hdr.className='modal-hdr';
+  hdr.innerHTML='<h2>🔔 Notifications</h2>';
+  var cx=document.createElement('button'); cx.className='close'; cx.innerHTML='✕';
+  cx.onclick=function(){ ov.remove(); }; hdr.appendChild(cx);
+  modal.appendChild(hdr);
+
+  var body=document.createElement('div'); body.className='modal-body';
+
+  if(!_notifications.length){
+    body.innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:32px 0;font-style:italic">No notifications yet.</div>';
+  } else {
+    _notifications.forEach(function(n){
+      var item=document.createElement('div');
+      item.style.cssText='display:flex;align-items:flex-start;gap:12px;padding:12px;border-bottom:1px solid var(--border);cursor:pointer;border-radius:6px;transition:background .15s';
+      item.onmouseover=function(){item.style.background='#f8faff';};
+      item.onmouseout=function(){item.style.background='transparent';};
+      if(n.action) item.onclick=function(){ ov.remove(); n.action(); };
+
+      var iconEl=document.createElement('span');
+      iconEl.style.cssText='font-size:20px;flex-shrink:0;margin-top:2px';
+      iconEl.textContent=n.icon;
+
+      var textWrap=document.createElement('div'); textWrap.style.cssText='flex:1;min-width:0';
+      var titleEl=document.createElement('div');
+      titleEl.style.cssText='font-size:13px;font-weight:600;color:var(--navy)';
+      titleEl.textContent=n.title;
+      var detailEl=document.createElement('div');
+      detailEl.style.cssText='font-size:12px;color:var(--muted);margin-top:2px';
+      detailEl.textContent=n.detail;
+      var timeEl=document.createElement('div');
+      timeEl.style.cssText='font-size:10px;color:var(--muted);margin-top:4px';
+      timeEl.textContent=n.time ? formatCommentTime(n.time) : '';
+
+      textWrap.appendChild(titleEl);
+      textWrap.appendChild(detailEl);
+      textWrap.appendChild(timeEl);
+      item.appendChild(iconEl);
+      item.appendChild(textWrap);
+      body.appendChild(item);
+    });
+  }
+
+  modal.appendChild(body);
+  var footer=document.createElement('div'); footer.className='modal-footer';
+  var doneBtn=document.createElement('button'); doneBtn.className='btn-save'; doneBtn.textContent='Close';
+  doneBtn.onclick=function(){ ov.remove(); };
+  footer.appendChild(doneBtn); modal.appendChild(footer);
+  ov.appendChild(modal); document.body.appendChild(ov);
 }
 
 function openShare(){
@@ -5155,14 +5248,11 @@ function openShare(){
     addBtn.disabled=false; addBtn.textContent='Share';
     if(res.ok){
       emailInp.value=''; renderSharedList(listWrap);
-      if(res.warning){
-        statusMsg.textContent='Shared with '+email+', but invite email may not have sent.';
-        statusMsg.style.cssText='font-size:12px;padding:8px 12px;border-radius:6px;margin-bottom:12px;display:block;background:#fef3c7;color:#92400e;border:1px solid #fcd34d';
-      } else {
-        statusMsg.textContent='Invite sent to '+email;
-        statusMsg.style.cssText='font-size:12px;padding:8px 12px;border-radius:6px;margin-bottom:12px;display:block;background:#d1fae5;color:#065f46;border:1px solid #6ee7b7';
-      }
+      statusMsg.textContent='Roadmap shared with '+email+(res.email_sent?' — invite email sent':' — they will see it when they log in');
+      statusMsg.style.cssText='font-size:12px;padding:8px 12px;border-radius:6px;margin-bottom:12px;display:block;background:#d1fae5;color:#065f46;border:1px solid #6ee7b7';
     } else {
+      // Share record may still have been saved even if email failed
+      renderSharedList(listWrap);
       statusMsg.textContent='Error: '+(res.error||'Could not share');
       statusMsg.style.cssText='font-size:12px;padding:8px 12px;border-radius:6px;margin-bottom:12px;display:block;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5';
     }

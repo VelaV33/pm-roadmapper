@@ -91,15 +91,15 @@ serve(async (req) => {
     console.log("Resend response:", JSON.stringify(resendData));
 
     if (!resendRes.ok) {
-      return new Response(JSON.stringify({ 
-        ok: true, 
-        warning: `Share saved but email failed: ${resendData.message || JSON.stringify(resendData)}` 
+      return new Response(JSON.stringify({
+        error: `Email failed to send: ${resendData.message || JSON.stringify(resendData)}. Share record was saved — recipient can still see it when they log in.`
       }), {
+        status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
-    return new Response(JSON.stringify({ ok: true, email_id: resendData.id }), {
+    return new Response(JSON.stringify({ ok: true, email_sent: true, email_id: resendData.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
 
