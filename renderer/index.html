@@ -4101,6 +4101,18 @@ document.addEventListener('DOMContentLoaded',function(){
     var el=document.getElementById(id);
     if(el) el.addEventListener('keydown',function(e){ if(e.key==='Enter') handleAuthPrimary(); });
   });
+
+  // Global fix for Electron keyboard focus loss:
+  // When user clicks ANY input/textarea, force window + webContents focus
+  document.addEventListener('mousedown',function(e){
+    var tag=e.target&&e.target.tagName;
+    if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'){
+      window.focus();
+      if(window.electronAPI&&window.electronAPI.refocusWindow){
+        window.electronAPI.refocusWindow();
+      }
+    }
+  },true);
 });
 
 // ── DATA PAYLOAD HELPERS ──────────────────────────────────────────────────────
