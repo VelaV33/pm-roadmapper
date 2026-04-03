@@ -9966,6 +9966,182 @@ function pullTDLToTimesheet(){
   renderTimesheet();
 }
 
+// ── CALENDAR SCREENSHOT IMPORT ────────────────────────────────────────────────
+function openCalendarScreenshotImport(){
+  var ex=document.getElementById('calImportModal'); if(ex) ex.remove();
+  var ov=document.createElement('div');
+  ov.id='calImportModal'; ov.className='modal-overlay'; ov.style.zIndex='9500';
+  var modal=document.createElement('div'); modal.className='modal'; modal.style.width='680px';
+
+  var hdr=document.createElement('div'); hdr.className='modal-hdr';
+  hdr.innerHTML='<h2>📅 Import from Calendar Screenshot</h2>';
+  var cx=document.createElement('button'); cx.className='close'; cx.innerHTML='✕';
+  cx.onclick=function(){ ov.remove(); }; hdr.appendChild(cx);
+  modal.appendChild(hdr);
+
+  var body=document.createElement('div'); body.className='modal-body';
+
+  var info=document.createElement('p');
+  info.style.cssText='font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6';
+  info.innerHTML='Take a screenshot of your <b>Outlook</b> or <b>Google Calendar</b> (weekly or daily view), then upload or paste it here. AI will extract all meetings and add them as tasks with time estimates.';
+  body.appendChild(info);
+
+  // Drop zone / file input
+  var dropZone=document.createElement('div');
+  dropZone.style.cssText='border:2px dashed var(--border);border-radius:12px;padding:40px 20px;text-align:center;cursor:pointer;transition:all .15s;margin-bottom:16px;background:var(--bg)';
+  dropZone.innerHTML='<div style="font-size:32px;margin-bottom:8px">📸</div><div style="font-size:13px;color:var(--muted);font-weight:500">Click to upload or drag & drop a screenshot</div><div style="font-size:11px;color:var(--muted);margin-top:4px">Or press Ctrl+V to paste from clipboard</div>';
+
+  var fileInp=document.createElement('input'); fileInp.type='file'; fileInp.accept='image/*'; fileInp.style.display='none';
+  var imagePreview=document.createElement('img'); imagePreview.style.cssText='max-width:100%;border-radius:8px;margin-bottom:16px;display:none;border:1px solid var(--border)';
+  var imageBase64=null; var imageMime=null;
+
+  function handleImage(file){
+    if(!file||!file.type.startsWith('image/')) return;
+    imageMime=file.type;
+    var reader=new FileReader();
+    reader.onload=function(e){
+      imagePreview.src=e.target.result;
+      imagePreview.style.display='block';
+      imageBase64=e.target.result.split(',')[1]; // strip data:image/...;base64,
+      dropZone.style.display='none';
+      extractBtn.disabled=false;
+      extractBtn.style.opacity='1';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  dropZone.onclick=function(){ fileInp.click(); };
+  fileInp.onchange=function(){ if(fileInp.files[0]) handleImage(fileInp.files[0]); };
+  dropZone.ondragover=function(e){ e.preventDefault(); dropZone.style.borderColor='var(--accent)';dropZone.style.background='var(--light-blue-bg)'; };
+  dropZone.ondragleave=function(){ dropZone.style.borderColor='var(--border)';dropZone.style.background='var(--bg)'; };
+  dropZone.ondrop=function(e){ e.preventDefault(); dropZone.style.borderColor='var(--border)'; if(e.dataTransfer.files[0]) handleImage(e.dataTransfer.files[0]); };
+
+  // Paste from clipboard
+  document.addEventListener('paste',function _pasteCal(e){
+    if(!document.getElementById('calImportModal')) { document.removeEventListener('paste',_pasteCal); return; }
+    var items=e.clipboardData&&e.clipboardData.items;
+    if(!items) return;
+    for(var i=0;i<items.length;i++){
+      if(items[i].type.indexOf('image')>=0){
+        handleImage(items[i].getAsFile());
+        break;
+      }
+    }
+  });
+
+  body.appendChild(fileInp);
+  body.appendChild(dropZone);
+  body.appendChild(imagePreview);
+
+  // Results area
+  var resultsDiv=document.createElement('div'); resultsDiv.id='calImportResults';
+  body.appendChild(resultsDiv);
+  modal.appendChild(body);
+
+  var footer=document.createElement('div'); footer.className='modal-footer';
+  var extractBtn=document.createElement('button'); extractBtn.className='btn-save';
+  extractBtn.textContent='Extract Meetings with AI';
+  extractBtn.disabled=true; extractBtn.style.opacity='.5';
+  extractBtn.onclick=async function(){
+    if(!imageBase64){ alert('Please upload or paste a screenshot first.'); return; }
+    if(!userAIKey||!userAIKey.key){ alert('Please configure an AI API key in Settings first (Gemini recommended for image analysis).'); return; }
+
+    extractBtn.disabled=true; extractBtn.textContent='Analyzing...';
+    resultsDiv.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">🤖 AI is reading your calendar screenshot...</div>';
+
+    try {
+      var prompt='Analyze this calendar screenshot. Extract ALL meetings and events visible.\n\nFor each event, return a JSON array with objects containing:\n- "name": meeting/event title\n- "date": date in YYYY-MM-DD format\n- "startTime": start time in HH:MM format (24h)\n- "endTime": end time in HH:MM format (24h)\n- "duration": duration in hours (decimal, e.g. 1.5 for 90 min)\n\nIMPORTANT: Return ONLY the JSON array, no other text. If you cannot read dates clearly, use best estimates. Example:\n[{"name":"Team Standup","date":"2026-04-03","startTime":"09:00","endTime":"09:30","duration":0.5}]';
+
+      var result=await window.electronAPI.aiRequest({
+        provider:userAIKey.provider||'gemini',
+        apiKey:userAIKey.key,
+        model:userAIKey.model||'gemini-2.5-flash',
+        prompt:prompt,
+        imageBase64:imageBase64,
+        imageMime:imageMime||'image/png'
+      });
+
+      extractBtn.textContent='Extract Meetings with AI'; extractBtn.disabled=false;
+
+      if(!result.ok){ resultsDiv.innerHTML='<div style="color:var(--r1);padding:12px">AI error: '+(result.error||'Unknown error')+'</div>'; return; }
+
+      // Parse JSON from response
+      var text=result.text||'';
+      var jsonMatch=text.match(/\[[\s\S]*\]/);
+      if(!jsonMatch){ resultsDiv.innerHTML='<div style="color:var(--r1);padding:12px">Could not parse meetings from AI response. Try a clearer screenshot.</div>'; return; }
+
+      var meetings=JSON.parse(jsonMatch[0]);
+      if(!meetings.length){ resultsDiv.innerHTML='<div style="color:var(--muted);padding:12px">No meetings found in the screenshot.</div>'; return; }
+
+      // Show preview table
+      var html='<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--accent);margin:16px 0 10px">Found '+meetings.length+' meetings</div>';
+      html+='<table style="width:100%;border-collapse:collapse;font-size:13px">';
+      html+='<thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:8px;font-weight:600;color:var(--muted);font-size:11px"><input type="checkbox" checked id="calSelectAll" onchange="document.querySelectorAll(\'.cal-import-check\').forEach(function(c){c.checked=document.getElementById(\'calSelectAll\').checked})"></th><th style="text-align:left;padding:8px;font-weight:600;color:var(--muted);font-size:11px">MEETING</th><th style="text-align:left;padding:8px;font-weight:600;color:var(--muted);font-size:11px">DATE</th><th style="text-align:left;padding:8px;font-weight:600;color:var(--muted);font-size:11px">TIME</th><th style="text-align:right;padding:8px;font-weight:600;color:var(--muted);font-size:11px">DURATION</th></tr></thead><tbody>';
+      meetings.forEach(function(m,i){
+        html+='<tr style="border-bottom:1px solid #f0f3f8"><td style="padding:8px"><input type="checkbox" checked class="cal-import-check" data-idx="'+i+'"></td><td style="padding:8px;font-weight:500">'+escHtml(m.name)+'</td><td style="padding:8px;color:var(--muted)">'+(m.date||'')+'</td><td style="padding:8px;color:var(--muted)">'+(m.startTime||'')+' - '+(m.endTime||'')+'</td><td style="padding:8px;text-align:right;font-weight:600">'+(m.duration||0)+'h</td></tr>';
+      });
+      html+='</tbody></table>';
+
+      var addBtn2='<div style="margin-top:16px;text-align:right"><button onclick="_importCalendarMeetings()" class="btn-save" style="background:var(--accent);border:none;padding:10px 24px;border-radius:10px;color:#fff;font-weight:600;cursor:pointer">Add Selected to ToDo List</button></div>';
+
+      resultsDiv.innerHTML=html+addBtn2;
+      window._calendarMeetings=meetings;
+
+    } catch(e){
+      extractBtn.textContent='Extract Meetings with AI'; extractBtn.disabled=false;
+      resultsDiv.innerHTML='<div style="color:var(--r1);padding:12px">Error: '+e.message+'</div>';
+    }
+  };
+
+  var cancelBtn=document.createElement('button'); cancelBtn.className='btn-cancel'; cancelBtn.textContent='Cancel';
+  cancelBtn.onclick=function(){ ov.remove(); };
+  footer.appendChild(cancelBtn); footer.appendChild(extractBtn);
+  modal.appendChild(footer);
+  ov.appendChild(modal); document.body.appendChild(ov);
+}
+
+function _importCalendarMeetings(){
+  if(!window._calendarMeetings) return;
+  var meetings=window._calendarMeetings;
+  var checks=document.querySelectorAll('.cal-import-check');
+  var initiative='Calendar Meetings';
+  if(!todoAllData[initiative]) todoAllData[initiative]=[];
+
+  var added=0;
+  checks.forEach(function(chk){
+    if(!chk.checked) return;
+    var idx=parseInt(chk.getAttribute('data-idx'));
+    var m=meetings[idx]; if(!m) return;
+
+    // Check for duplicates
+    var isDup=todoAllData[initiative].some(function(t){ return t.text===m.name && t.due===m.date; });
+    if(isDup) return;
+
+    todoAllData[initiative].push({
+      id:'td'+Date.now()+''+added,
+      text:m.name+(m.startTime?' ('+m.startTime+'-'+m.endTime+')':''),
+      status:'open',
+      due:m.date||'',
+      estimate:String(m.duration||0.5),
+      kpiId:'',
+      comments:'Imported from calendar screenshot',
+      actualHours:'',
+      links:[],
+      createdAt:Date.now()
+    });
+    added++;
+  });
+
+  persistData();
+  var modal=document.getElementById('calImportModal');
+  if(modal) modal.remove();
+
+  // Refresh capacity view
+  if(_kpiView==='capacity') renderCapacityView();
+
+  alert(added+' meeting(s) added to ToDo list under "Calendar Meetings".\n\nThey will now appear in your Capacity view with their time estimates.');
+}
+
 // ── MY CAPACITY VIEW ─────────────────────────────────────────────────────────
 var _capacityHoursPerWeek = 40;
 var _capacityDrilldown = 'weekly'; // 'weekly' | 'monthly' | 'yearly'
@@ -9978,9 +10154,12 @@ function renderCapacityView(){
   var weekStart=weekDates[0];
   var DAYS=['Mon','Tue','Wed','Thu','Fri'];
 
-  // ── Drilldown toggle ──
+  // ── Import + Drilldown row ──
+  var topRow=document.createElement('div');
+  topRow.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:20px';
+
   var drillRow=document.createElement('div');
-  drillRow.style.cssText='display:flex;gap:4px;margin-bottom:20px';
+  drillRow.style.cssText='display:flex;gap:4px';
   ['weekly','monthly','yearly'].forEach(function(mode){
     var btn=document.createElement('button');
     btn.textContent=mode.charAt(0).toUpperCase()+mode.slice(1);
@@ -9989,7 +10168,16 @@ function renderCapacityView(){
     btn.onclick=function(){ _capacityDrilldown=mode; renderCapacityView(); };
     drillRow.appendChild(btn);
   });
-  body.appendChild(drillRow);
+  topRow.appendChild(drillRow);
+
+  var importBtn=document.createElement('button');
+  importBtn.style.cssText='padding:7px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--accent);background:var(--light-blue-bg);color:var(--accent);display:flex;align-items:center;gap:6px;transition:all .15s';
+  importBtn.innerHTML='📅 Import from Calendar Screenshot';
+  importBtn.onmouseover=function(){importBtn.style.background='var(--accent)';importBtn.style.color='#fff';};
+  importBtn.onmouseout=function(){importBtn.style.background='var(--light-blue-bg)';importBtn.style.color='var(--accent)';};
+  importBtn.onclick=openCalendarScreenshotImport;
+  topRow.appendChild(importBtn);
+  body.appendChild(topRow);
 
   if(_capacityDrilldown==='weekly') renderCapacityWeekly(body, weekStart);
   else if(_capacityDrilldown==='monthly') renderCapacityMonthly(body, weekStart);

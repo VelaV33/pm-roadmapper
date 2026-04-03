@@ -510,7 +510,7 @@ ipcMain.handle('refocus-window', () => {
 });
 
 // ── AI API Proxy (routes through main process to bypass CORS) ──
-ipcMain.handle('ai-request', async (_event, { provider, apiKey, model, prompt, systemPrompt }) => {
+ipcMain.handle('ai-request', async (_event, { provider, apiKey, model, prompt, systemPrompt, imageBase64, imageMime }) => {
   return new Promise((resolve) => {
     try {
       let hostname, reqPath, headers, payload;
@@ -519,8 +519,14 @@ ipcMain.handle('ai-request', async (_event, { provider, apiKey, model, prompt, s
         hostname = 'generativelanguage.googleapis.com';
         reqPath = '/v1beta/models/' + (model || 'gemini-2.5-flash') + ':generateContent?key=' + apiKey;
         headers = { 'Content-Type': 'application/json' };
+        // Support image input for vision
+        var parts = [];
+        if (imageBase64) {
+          parts.push({ inlineData: { mimeType: imageMime || 'image/png', data: imageBase64 } });
+        }
+        parts.push({ text: (systemPrompt ? systemPrompt + '\n\n' : '') + prompt });
         payload = JSON.stringify({
-          contents: [{ parts: [{ text: (systemPrompt ? systemPrompt + '\n\n' : '') + prompt }] }],
+          contents: [{ parts: parts }],
           generationConfig: { temperature: 0.3, maxOutputTokens: 8192 }
         });
       } else if (provider === 'openai') {
