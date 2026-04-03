@@ -407,6 +407,21 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .ts-kpi-sel{font-family:inherit}
 
 /* CapacityIQ */
+#reportsOverlay{position:fixed;inset:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
+#reportsOverlay.open{display:flex}
+.rpt-header{background:var(--navy);color:#fff;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.rpt-header h2{font-weight:700;font-size:16px;letter-spacing:-0.01em}
+.rpt-body{display:flex;flex:1;overflow:hidden}
+.rpt-sidebar{width:220px;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;padding:12px 0}
+.rpt-sidebar-item{padding:10px 20px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .12s;border-left:3px solid transparent}
+.rpt-sidebar-item:hover{background:var(--light-blue-bg);color:var(--text)}
+.rpt-sidebar-item.active{color:var(--accent);border-left-color:var(--accent);background:var(--light-blue-bg);font-weight:600}
+.rpt-content{flex:1;overflow-y:auto;padding:28px 32px}
+.rpt-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.rpt-card h3{font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;letter-spacing:-0.01em}
+.rpt-stat{display:flex;flex-direction:column;align-items:center;padding:16px;text-align:center}
+.rpt-stat-value{font-size:28px;font-weight:700;letter-spacing:-0.02em}
+.rpt-stat-label{font-size:11px;font-weight:500;color:var(--muted);margin-top:2px}
 #capOverlay{position:fixed;inset:0;background:#0f172a;z-index:3000;display:none;flex-direction:column;overflow:hidden}
 #capOverlay.open{display:flex}
 .cap-sidebar{width:220px;background:#1e293b;border-right:1px solid #334155;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
@@ -823,6 +838,9 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
         <button class="tb-dd-item" onclick="exportPDF();closeDds()"><span class="dd-icon">📄</span><span class="dd-label">Export PDF<span class="dd-sub">A3 landscape</span></span></button>
         <button class="tb-dd-item" onclick="exportBackup();closeDds()"><span class="dd-icon">💾</span><span class="dd-label">Save Backup<span class="dd-sub">Download JSON</span></span></button>
         <button class="tb-dd-item" onclick="importBackup();closeDds()"><span class="dd-icon">📂</span><span class="dd-label">Import Data<span class="dd-sub">Load backup or Excel</span></span></button>
+        <div class="tb-dd-divider"></div>
+        <div style="padding:6px 14px 4px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Reports</div>
+        <button class="tb-dd-item" onclick="openReports();closeDds()"><span class="dd-icon">📈</span><span class="dd-label">Reports Dashboard<span class="dd-sub">Initiative health, portfolio, capacity</span></span></button>
       </div>
     </div>
 
@@ -1241,6 +1259,18 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 </div>
 
 <!-- ══ CAPACITYIQ OVERLAY ══ -->
+<!-- REPORTS OVERLAY -->
+<div id="reportsOverlay">
+  <div class="rpt-header">
+    <h2>📈 Reports Dashboard</h2>
+    <button onclick="closeReports()" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:22px;cursor:pointer;transition:color .12s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.6)'">&times;</button>
+  </div>
+  <div class="rpt-body">
+    <div class="rpt-sidebar" id="rptSidebar"></div>
+    <div class="rpt-content" id="rptContent"></div>
+  </div>
+</div>
+
 <div id="capOverlay">
   <div style="display:flex;flex:1;overflow:hidden">
     <div class="cap-sidebar">
@@ -9964,6 +9994,361 @@ function pullTDLToTimesheet(){
   }
   persistData();
   renderTimesheet();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── REPORTS DASHBOARD ────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+
+var _rptCurrentReport='initiative-health';
+var RPT_REPORTS=[
+  {id:'initiative-health',name:'Initiative Health',icon:'🏥',desc:'Status of every roadmap initiative'},
+  {id:'portfolio-overview',name:'Portfolio Overview',icon:'🗂',desc:'All roadmaps in one view'},
+  {id:'weekly-capacity',name:'Weekly Capacity',icon:'⏱',desc:'Time allocation this week'},
+  {id:'qbr-pack',name:'QBR Pack',icon:'📦',desc:'Quarterly Business Review summary'},
+  {id:'deliverables-tracker',name:'Deliverables Tracker',icon:'✅',desc:'What was promised vs delivered'}
+];
+
+function openReports(){
+  document.getElementById('reportsOverlay').classList.add('open');
+  renderReportsSidebar();
+  renderReport(_rptCurrentReport);
+}
+function closeReports(){
+  document.getElementById('reportsOverlay').classList.remove('open');
+}
+
+function renderReportsSidebar(){
+  var sb=document.getElementById('rptSidebar'); sb.innerHTML='';
+  RPT_REPORTS.forEach(function(r){
+    var item=document.createElement('div');
+    item.className='rpt-sidebar-item'+(r.id===_rptCurrentReport?' active':'');
+    item.innerHTML='<span style="font-size:16px">'+r.icon+'</span><div><div>'+r.name+'</div><div style="font-size:10px;color:var(--muted);font-weight:400">'+r.desc+'</div></div>';
+    item.onclick=function(){ _rptCurrentReport=r.id; renderReportsSidebar(); renderReport(r.id); };
+    sb.appendChild(item);
+  });
+}
+
+function renderReport(id){
+  var c=document.getElementById('rptContent'); c.innerHTML='';
+  if(id==='initiative-health') rptInitiativeHealth(c);
+  else if(id==='portfolio-overview') rptPortfolioOverview(c);
+  else if(id==='weekly-capacity') rptWeeklyCapacity(c);
+  else if(id==='qbr-pack') rptQBRPack(c);
+  else if(id==='deliverables-tracker') rptDeliverablesTracker(c);
+}
+
+// ── HELPERS ──
+function _rptStatusColor(c){ return {g:'#00C48C',b:'#2D6BF4',o:'#FF8A47',s:'#6B7A99',r:'#FF6B8A'}[c]||'#6B7A99'; }
+function _rptStatusLabel(c){ return {g:'Released',b:'In Progress',o:'Delayed',s:'Strategy',r:'At Risk'}[c]||'Unknown'; }
+function _rptTodoStats(initiative){
+  var todos=todoAllData[initiative]||[];
+  var total=todos.length, done=0, progress=0, open=0, estHrs=0, actHrs=0;
+  todos.forEach(function(t){ if(t.status==='done') done++; else if(t.status==='progress') progress++; else open++; estHrs+=parseFloat(t.estimate)||0; actHrs+=parseFloat(t.actualHours)||0; });
+  return {total:total,done:done,progress:progress,open:open,pct:total>0?Math.round(done/total*100):0,estHrs:estHrs,actHrs:actHrs};
+}
+function _rptG2MScore(rowName){
+  var d=g2mAllData[rowName]; if(!d||!d.items) return null;
+  var yes=0,applicable=0;
+  d.items.forEach(function(it){ if(it.value==='yes') yes++; if(it.value&&it.value!=='na') applicable++; });
+  return applicable>0?Math.round(yes/applicable*100):null;
+}
+
+// ══ REPORT 1: Initiative Health Dashboard ══
+function rptInitiativeHealth(container){
+  var title=document.createElement('h2'); title.style.cssText='font-size:20px;font-weight:700;margin-bottom:4px;color:var(--text)';
+  title.textContent='Initiative Health Dashboard';
+  var sub=document.createElement('p'); sub.style.cssText='font-size:13px;color:var(--muted);margin-bottom:24px';
+  sub.textContent='Status overview of all roadmap initiatives with task completion and G2M readiness.';
+  container.appendChild(title); container.appendChild(sub);
+
+  // Summary cards
+  var statusCounts={g:0,b:0,o:0,s:0,r:0};
+  rows.forEach(function(row){ if(row.bars&&row.bars.length){ var lastBar=row.bars[row.bars.length-1]; statusCounts[lastBar.c]=(statusCounts[lastBar.c]||0)+1; }});
+  var cards=document.createElement('div'); cards.style.cssText='display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px';
+  [{c:'g',label:'Released'},{c:'b',label:'In Progress'},{c:'o',label:'Delayed'},{c:'s',label:'Strategy'},{c:'r',label:'At Risk'}].forEach(function(s){
+    var card=document.createElement('div'); card.className='rpt-card'; card.style.cssText+='text-align:center;padding:16px;border-left:4px solid '+_rptStatusColor(s.c);
+    card.innerHTML='<div class="rpt-stat-value" style="color:'+_rptStatusColor(s.c)+'">'+statusCounts[s.c]+'</div><div class="rpt-stat-label">'+s.label+'</div>';
+    cards.appendChild(card);
+  });
+  container.appendChild(cards);
+
+  // Initiative table
+  var table=document.createElement('div'); table.className='rpt-card';
+  var tbl='<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="border-bottom:2px solid var(--border)">'+
+    '<th style="text-align:left;padding:10px 12px;font-weight:600;color:var(--muted);font-size:11px">INITIATIVE</th>'+
+    '<th style="text-align:left;padding:10px 12px;font-weight:600;color:var(--muted);font-size:11px">SECTION</th>'+
+    '<th style="text-align:center;padding:10px 12px;font-weight:600;color:var(--muted);font-size:11px">STATUS</th>'+
+    '<th style="text-align:center;padding:10px 12px;font-weight:600;color:var(--muted);font-size:11px">TASKS</th>'+
+    '<th style="text-align:center;padding:10px 12px;font-weight:600;color:var(--muted);font-size:11px">G2M</th>'+
+    '<th style="text-align:center;padding:10px 12px;font-weight:600;color:var(--muted);font-size:11px">DELIVERABLES</th>'+
+    '</tr></thead><tbody>';
+  rows.forEach(function(row){
+    var sec=sections.find(function(s){return s.id===row.sec;})||{name:'—',color:'#999'};
+    var lastBar=row.bars&&row.bars.length?row.bars[row.bars.length-1]:null;
+    var status=lastBar?lastBar.c:'s';
+    var todo=_rptTodoStats(row.name);
+    var g2m=_rptG2MScore(row.name);
+    var delivCount=(row.deliverables||[]).length;
+    tbl+='<tr style="border-bottom:1px solid #f0f3f8">'+
+      '<td style="padding:10px 12px;font-weight:600">'+escHtml(row.name)+'<div style="font-size:11px;color:var(--muted);font-weight:400">'+escHtml(row.sub||'')+'</div></td>'+
+      '<td style="padding:10px 12px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+sec.color+';margin-right:6px"></span>'+escHtml(sec.name)+'</td>'+
+      '<td style="padding:10px 12px;text-align:center"><span style="font-size:10px;font-weight:600;padding:3px 10px;border-radius:10px;background:'+_rptStatusColor(status)+';color:#fff">'+_rptStatusLabel(status)+'</span></td>'+
+      '<td style="padding:10px 12px;text-align:center">'+(todo.total>0?'<div style="font-weight:600">'+todo.done+'/'+todo.total+'</div><div style="height:4px;background:#eef1f6;border-radius:2px;margin-top:4px"><div style="height:100%;width:'+todo.pct+'%;background:var(--g1);border-radius:2px"></div></div>':'<span style="color:var(--muted)">—</span>')+'</td>'+
+      '<td style="padding:10px 12px;text-align:center">'+(g2m!==null?'<span style="font-weight:600;color:'+(g2m>=80?'var(--g1)':g2m>=50?'var(--o1)':'var(--r1)')+'">'+g2m+'%</span>':'<span style="color:var(--muted)">—</span>')+'</td>'+
+      '<td style="padding:10px 12px;text-align:center;font-weight:600">'+(delivCount||'—')+'</td></tr>';
+  });
+  tbl+='</tbody></table>';
+  table.innerHTML=tbl;
+  container.appendChild(table);
+}
+
+// ══ REPORT 2: Portfolio Overview ══
+function rptPortfolioOverview(container){
+  var title=document.createElement('h2'); title.style.cssText='font-size:20px;font-weight:700;margin-bottom:4px;color:var(--text)';
+  title.textContent='Portfolio Roadmap Overview';
+  var sub=document.createElement('p'); sub.style.cssText='font-size:13px;color:var(--muted);margin-bottom:24px';
+  sub.textContent='Executive summary across all roadmaps including shared roadmaps.';
+  container.appendChild(title); container.appendChild(sub);
+
+  // Aggregate stats
+  var totalInitiatives=rows.length;
+  var totalBars=0; rows.forEach(function(r){totalBars+=(r.bars||[]).length;});
+  var totalDeliverables=0; rows.forEach(function(r){totalDeliverables+=(r.deliverables||[]).length;});
+  var totalTodos=0,doneTodos=0;
+  Object.keys(todoAllData).forEach(function(k){var ts=todoAllData[k]||[];totalTodos+=ts.length;ts.forEach(function(t){if(t.status==='done')doneTodos++;});});
+  var sharedCount=_sharedToMe?_sharedToMe.length:0;
+
+  // Summary grid
+  var grid=document.createElement('div'); grid.style.cssText='display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px';
+  [{v:totalInitiatives,l:'Initiatives',c:'var(--accent)',ic:'🎯'},{v:sections.length,l:'Sections',c:'var(--purple)',ic:'📂'},
+    {v:totalDeliverables,l:'Deliverables',c:'var(--g1)',ic:'📦'},{v:totalTodos>0?Math.round(doneTodos/totalTodos*100):0,l:'Tasks Done %',c:'var(--o1)',ic:'✅'},
+    {v:sharedCount,l:'Shared With Me',c:'var(--accent)',ic:'🔗'}].forEach(function(s){
+    var card=document.createElement('div'); card.className='rpt-card rpt-stat';
+    card.innerHTML='<span style="font-size:20px">'+s.ic+'</span><div class="rpt-stat-value" style="color:'+s.c+'">'+(typeof s.v==='number'&&s.l.indexOf('%')>=0?s.v+'%':s.v)+'</div><div class="rpt-stat-label">'+s.l+'</div>';
+    grid.appendChild(card);
+  });
+  container.appendChild(grid);
+
+  // Section breakdown
+  var secCard=document.createElement('div'); secCard.className='rpt-card';
+  secCard.innerHTML='<h3>Initiatives by Section</h3>';
+  var secGrid=document.createElement('div'); secGrid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px';
+  sections.forEach(function(sec){
+    var secRows=rows.filter(function(r){return r.sec===sec.id;});
+    var statuses={g:0,b:0,o:0,s:0,r:0};
+    secRows.forEach(function(r){if(r.bars&&r.bars.length){var c=r.bars[r.bars.length-1].c;statuses[c]=(statuses[c]||0)+1;}});
+    var div=document.createElement('div');
+    div.style.cssText='border:1px solid var(--border);border-radius:10px;padding:14px;border-left:4px solid '+sec.color;
+    var dots='';
+    ['g','b','o','s','r'].forEach(function(c){for(var i=0;i<statuses[c];i++) dots+='<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+_rptStatusColor(c)+';margin:1px"></span>';});
+    div.innerHTML='<div style="font-weight:600;font-size:13px;margin-bottom:4px">'+escHtml(sec.name)+'</div><div style="font-size:12px;color:var(--muted);margin-bottom:6px">'+secRows.length+' initiatives</div><div>'+dots+'</div>';
+    secGrid.appendChild(div);
+  });
+  secCard.appendChild(secGrid);
+  container.appendChild(secCard);
+
+  // Timeline overview
+  var tlCard=document.createElement('div'); tlCard.className='rpt-card';
+  tlCard.innerHTML='<h3>Timeline Coverage</h3>';
+  var tlInfo=document.createElement('div'); tlInfo.style.cssText='font-size:13px;color:var(--muted)';
+  tlInfo.textContent=quarters.length+' quarters ('+quarters[0].label+' to '+quarters[quarters.length-1].label+'), '+rows.length+' initiatives with '+totalBars+' timeline bars';
+  tlCard.appendChild(tlInfo);
+  container.appendChild(tlCard);
+}
+
+// ══ REPORT 3: Weekly Capacity Summary ══
+function rptWeeklyCapacity(container){
+  var title=document.createElement('h2'); title.style.cssText='font-size:20px;font-weight:700;margin-bottom:4px;color:var(--text)';
+  title.textContent='Weekly Capacity Summary';
+  var sub=document.createElement('p'); sub.style.cssText='font-size:13px;color:var(--muted);margin-bottom:24px';
+  sub.textContent='Time allocation and availability for the current week. Exportable format.';
+  container.appendChild(title); container.appendChild(sub);
+
+  if(!_tsCurrentWeek) _tsCurrentWeek=_getISOWeek(new Date());
+  var weekDates=_weekDates(_tsCurrentWeek);
+  var weekStart=weekDates[0];
+  var available=_capacityHoursPerWeek;
+
+  // Gather data
+  var todos=_getTodosForWeek(weekStart);
+  var plannedHrs=0; todos.forEach(function(t){plannedHrs+=t.hours;});
+  var tsData=timesheetData[_tsCurrentWeek];
+  var loggedHrs=0; if(tsData&&tsData.tasks) tsData.tasks.forEach(function(t){loggedHrs+=parseFloat(t.hours)||0;});
+  var remaining=Math.max(0,available-plannedHrs);
+  var pct=Math.round(plannedHrs/available*100);
+
+  // Week label
+  var weekLabel=document.createElement('div');
+  weekLabel.style.cssText='font-size:14px;font-weight:600;color:var(--accent);margin-bottom:16px';
+  weekLabel.textContent='Week: '+_weekLabel(_tsCurrentWeek);
+  container.appendChild(weekLabel);
+
+  // Cards
+  var cards=document.createElement('div'); cards.style.cssText='display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px';
+  [{v:available+'h',l:'Available',c:'var(--accent)',ic:'🕐'},{v:plannedHrs.toFixed(1)+'h',l:'Planned',c:'var(--o1)',ic:'📋'},
+    {v:loggedHrs.toFixed(1)+'h',l:'Logged',c:'var(--g1)',ic:'✅'},{v:remaining.toFixed(1)+'h',l:'Remaining',c:pct>95?'var(--r1)':'var(--g1)',ic:'⏳'}].forEach(function(s){
+    var card=document.createElement('div'); card.className='rpt-card rpt-stat';
+    card.innerHTML='<span style="font-size:20px">'+s.ic+'</span><div class="rpt-stat-value" style="color:'+s.c+'">'+s.v+'</div><div class="rpt-stat-label">'+s.l+'</div>';
+    cards.appendChild(card);
+  });
+  container.appendChild(cards);
+
+  // Capacity bar
+  var barCard=document.createElement('div'); barCard.className='rpt-card';
+  barCard.innerHTML='<h3>Utilization: '+pct+'%</h3>';
+  var barBg=document.createElement('div'); barBg.style.cssText='height:16px;background:#eef1f6;border-radius:8px;overflow:hidden;margin-top:8px';
+  var barFill=document.createElement('div');
+  barFill.style.cssText='height:100%;border-radius:8px;background:'+(pct<=75?'var(--g1)':pct<=95?'var(--o1)':'var(--r1)')+';width:'+Math.min(pct,100)+'%';
+  barBg.appendChild(barFill); barCard.appendChild(barBg);
+  container.appendChild(barCard);
+
+  // Task breakdown by initiative
+  var byInit={};
+  todos.forEach(function(t){ if(!byInit[t.initiative]) byInit[t.initiative]={hours:0,tasks:[]}; byInit[t.initiative].hours+=t.hours; byInit[t.initiative].tasks.push(t); });
+
+  var breakCard=document.createElement('div'); breakCard.className='rpt-card';
+  breakCard.innerHTML='<h3>Time Allocation by Initiative</h3>';
+  if(Object.keys(byInit).length===0){
+    breakCard.innerHTML+='<div style="color:var(--muted);font-size:13px;padding:16px 0;text-align:center;font-style:italic">No tasks planned this week. Add due dates and estimates to your ToDo items.</div>';
+  } else {
+    Object.keys(byInit).forEach(function(init){
+      var d=byInit[init];
+      var initPct=available>0?Math.round(d.hours/available*100):0;
+      breakCard.innerHTML+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f3f8"><div><span style="font-weight:600;font-size:13px">'+escHtml(init)+'</span><span style="color:var(--muted);font-size:12px;margin-left:8px">'+d.tasks.length+' task(s)</span></div><div style="font-weight:700;color:var(--accent)">'+d.hours.toFixed(1)+'h ('+initPct+'%)</div></div>';
+    });
+  }
+  container.appendChild(breakCard);
+}
+
+// ══ REPORT 4: QBR Pack ══
+function rptQBRPack(container){
+  var title=document.createElement('h2'); title.style.cssText='font-size:20px;font-weight:700;margin-bottom:4px;color:var(--text)';
+  title.textContent='Quarterly Business Review Pack';
+  var sub=document.createElement('p'); sub.style.cssText='font-size:13px;color:var(--muted);margin-bottom:24px';
+  sub.textContent='Auto-generated QBR summary with roadmap progress, KPI scores, G2M readiness, and capacity utilization.';
+  container.appendChild(title); container.appendChild(sub);
+
+  // Roadmap progress
+  var progCard=document.createElement('div'); progCard.className='rpt-card';
+  progCard.innerHTML='<h3>Roadmap Progress</h3>';
+  var statuses={g:0,b:0,o:0,s:0,r:0};
+  rows.forEach(function(r){if(r.bars&&r.bars.length){var c=r.bars[r.bars.length-1].c;statuses[c]++;}});
+  var total=rows.length||1;
+  var progGrid='<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px">';
+  [{c:'g',l:'Released'},{c:'b',l:'In Progress'},{c:'o',l:'Delayed'},{c:'s',l:'Strategy'},{c:'r',l:'At Risk'}].forEach(function(s){
+    var pct=Math.round(statuses[s.c]/total*100);
+    progGrid+='<div style="text-align:center"><div style="font-size:20px;font-weight:700;color:'+_rptStatusColor(s.c)+'">'+pct+'%</div><div style="font-size:10px;color:var(--muted)">'+s.l+' ('+statuses[s.c]+')</div></div>';
+  });
+  progGrid+='</div>';
+  progCard.innerHTML+= progGrid;
+  container.appendChild(progCard);
+
+  // KPI scores
+  var kpiCard=document.createElement('div'); kpiCard.className='rpt-card';
+  kpiCard.innerHTML='<h3>KPI Scores (Current Quarter)</h3>';
+  var q=typeof _currentQuarter==='function'?_currentQuarter():'FY26-Q1';
+  var kData=kpiAllData[q];
+  if(kData&&kData.items){
+    var kpiGrid='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:12px">';
+    KPI_TEMPLATE.forEach(function(grp){
+      grp.items.forEach(function(kpi){
+        var item=kData.items[kpi.id];
+        var score=item?parseFloat(item.pmScore)||0:0;
+        var target=item?parseFloat(item.target)||3:3;
+        var color=score>=target?'var(--g1)':score>=target-1?'var(--o1)':'var(--r1)';
+        kpiGrid+='<div style="border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:700;color:'+color+'">'+score.toFixed(1)+'/'+kpi.maxScore+'</div><div style="font-size:10px;color:var(--muted);margin-top:2px">'+escHtml(kpi.name.substring(0,30))+'</div></div>';
+      });
+    });
+    kpiGrid+='</div>';
+    kpiCard.innerHTML+=kpiGrid;
+  } else {
+    kpiCard.innerHTML+='<div style="color:var(--muted);font-size:13px;padding:12px 0;font-style:italic">No KPI data for '+q+'</div>';
+  }
+  container.appendChild(kpiCard);
+
+  // G2M readiness
+  var g2mCard=document.createElement('div'); g2mCard.className='rpt-card';
+  g2mCard.innerHTML='<h3>G2M Readiness</h3>';
+  var g2mProducts=Object.keys(g2mAllData);
+  if(g2mProducts.length>0){
+    var g2mGrid='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-top:12px">';
+    g2mProducts.forEach(function(prod){
+      var score=_rptG2MScore(prod);
+      if(score===null) return;
+      var color=score>=80?'var(--g1)':score>=50?'var(--o1)':'var(--r1)';
+      g2mGrid+='<div style="border:1px solid var(--border);border-radius:8px;padding:12px"><div style="font-weight:600;font-size:12px;margin-bottom:4px">'+escHtml(prod)+'</div><div style="height:6px;background:#eef1f6;border-radius:3px"><div style="height:100%;width:'+score+'%;background:'+color+';border-radius:3px"></div></div><div style="font-size:11px;color:'+color+';font-weight:600;margin-top:4px">'+score+'% ready</div></div>';
+    });
+    g2mGrid+='</div>';
+    g2mCard.innerHTML+=g2mGrid;
+  } else {
+    g2mCard.innerHTML+='<div style="color:var(--muted);font-size:13px;padding:12px 0;font-style:italic">No G2M checklists configured yet.</div>';
+  }
+  container.appendChild(g2mCard);
+
+  // Task completion
+  var taskCard=document.createElement('div'); taskCard.className='rpt-card';
+  taskCard.innerHTML='<h3>Task Completion</h3>';
+  var totalT=0,doneT=0;
+  Object.keys(todoAllData).forEach(function(k){var ts=todoAllData[k]||[];totalT+=ts.length;ts.forEach(function(t){if(t.status==='done')doneT++;});});
+  var taskPct=totalT>0?Math.round(doneT/totalT*100):0;
+  taskCard.innerHTML+='<div style="display:flex;align-items:center;gap:16px;margin-top:12px"><div style="font-size:32px;font-weight:700;color:var(--accent)">'+taskPct+'%</div><div><div style="font-size:13px;font-weight:600">'+doneT+' of '+totalT+' tasks completed</div><div style="height:8px;width:200px;background:#eef1f6;border-radius:4px;margin-top:6px"><div style="height:100%;width:'+taskPct+'%;background:var(--g1);border-radius:4px"></div></div></div></div>';
+  container.appendChild(taskCard);
+}
+
+// ══ REPORT 5: Deliverables Tracker ══
+function rptDeliverablesTracker(container){
+  var title=document.createElement('h2'); title.style.cssText='font-size:20px;font-weight:700;margin-bottom:4px;color:var(--text)';
+  title.textContent='Deliverables Tracker';
+  var sub=document.createElement('p'); sub.style.cssText='font-size:13px;color:var(--muted);margin-bottom:24px';
+  sub.textContent='All deliverables across initiatives — what was promised and current status.';
+  container.appendChild(title); container.appendChild(sub);
+
+  // Collect all deliverables
+  var allDeliverables=[];
+  rows.forEach(function(row){
+    var sec=sections.find(function(s){return s.id===row.sec;})||{name:'—',color:'#999'};
+    var lastBar=row.bars&&row.bars.length?row.bars[row.bars.length-1]:null;
+    var status=lastBar?lastBar.c:'s';
+    (row.deliverables||[]).forEach(function(d){
+      allDeliverables.push({text:d, initiative:row.name, section:sec.name, sectionColor:sec.color, status:status});
+    });
+  });
+
+  // Summary
+  var sumCard=document.createElement('div'); sumCard.className='rpt-card';
+  sumCard.style.cssText+='display:grid;grid-template-columns:repeat(3,1fr);gap:12px';
+  var byStatus={g:0,b:0,o:0,s:0,r:0};
+  allDeliverables.forEach(function(d){byStatus[d.status]=(byStatus[d.status]||0)+1;});
+  [{v:allDeliverables.length,l:'Total Deliverables',c:'var(--accent)'},{v:byStatus.g||0,l:'Released/Complete',c:'var(--g1)'},{v:(byStatus.o||0)+(byStatus.r||0),l:'At Risk/Delayed',c:'var(--r1)'}].forEach(function(s){
+    var stat=document.createElement('div'); stat.className='rpt-stat';
+    stat.innerHTML='<div class="rpt-stat-value" style="color:'+s.c+'">'+s.v+'</div><div class="rpt-stat-label">'+s.l+'</div>';
+    sumCard.appendChild(stat);
+  });
+  container.appendChild(sumCard);
+
+  // Deliverables table
+  var tblCard=document.createElement('div'); tblCard.className='rpt-card';
+  if(allDeliverables.length===0){
+    tblCard.innerHTML='<div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;font-style:italic">No deliverables found. Add deliverables to your roadmap initiatives via the row editor.</div>';
+  } else {
+    var tbl='<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="border-bottom:2px solid var(--border)">'+
+      '<th style="text-align:left;padding:10px 12px;font-weight:600;color:var(--muted);font-size:11px">DELIVERABLE</th>'+
+      '<th style="text-align:left;padding:10px 12px;font-weight:600;color:var(--muted);font-size:11px">INITIATIVE</th>'+
+      '<th style="text-align:left;padding:10px 12px;font-weight:600;color:var(--muted);font-size:11px">SECTION</th>'+
+      '<th style="text-align:center;padding:10px 12px;font-weight:600;color:var(--muted);font-size:11px">STATUS</th>'+
+      '</tr></thead><tbody>';
+    allDeliverables.forEach(function(d){
+      tbl+='<tr style="border-bottom:1px solid #f0f3f8">'+
+        '<td style="padding:10px 12px;font-weight:500">'+escHtml(d.text)+'</td>'+
+        '<td style="padding:10px 12px;color:var(--muted)">'+escHtml(d.initiative)+'</td>'+
+        '<td style="padding:10px 12px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+d.sectionColor+';margin-right:6px"></span>'+escHtml(d.section)+'</td>'+
+        '<td style="padding:10px 12px;text-align:center"><span style="font-size:10px;font-weight:600;padding:3px 10px;border-radius:10px;background:'+_rptStatusColor(d.status)+';color:#fff">'+_rptStatusLabel(d.status)+'</span></td></tr>';
+    });
+    tbl+='</tbody></table>';
+    tblCard.innerHTML=tbl;
+  }
+  container.appendChild(tblCard);
 }
 
 // ── CALENDAR SCREENSHOT IMPORT ────────────────────────────────────────────────
