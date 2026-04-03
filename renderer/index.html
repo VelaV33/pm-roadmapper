@@ -818,6 +818,8 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
     <div class="tb-dropdown" style="margin-right:8px">
       <button class="tb-dd-btn" onclick="toggleDd('ddBurger')" style="font-size:16px;padding:4px 10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1)">☰</button>
       <div class="tb-dd-menu" id="ddBurger" style="min-width:240px;max-height:80vh;overflow-y:auto">
+        <button class="tb-dd-item" onclick="openReports();closeDds()" style="background:var(--light-blue-bg);border-radius:8px;margin:4px 6px;font-weight:600"><span class="dd-icon">📈</span><span class="dd-label">Reports Dashboard<span class="dd-sub">Health, portfolio, capacity, QBR</span></span></button>
+        <div class="tb-dd-divider"></div>
         <div style="padding:6px 14px 4px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Modules</div>
         <button class="tb-dd-item" onclick="openG2M();closeDds()"><span class="dd-icon">🚀</span><span class="dd-label">G2M Checklist<span class="dd-sub">Go-To-Market Readiness</span></span></button>
         <button class="tb-dd-item" onclick="openTodo();closeDds()"><span class="dd-icon">📋</span><span class="dd-label">ToDo List<span class="dd-sub">Tasks per Initiative</span></span></button>
@@ -838,9 +840,6 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
         <button class="tb-dd-item" onclick="exportPDF();closeDds()"><span class="dd-icon">📄</span><span class="dd-label">Export PDF<span class="dd-sub">A3 landscape</span></span></button>
         <button class="tb-dd-item" onclick="exportBackup();closeDds()"><span class="dd-icon">💾</span><span class="dd-label">Save Backup<span class="dd-sub">Download JSON</span></span></button>
         <button class="tb-dd-item" onclick="importBackup();closeDds()"><span class="dd-icon">📂</span><span class="dd-label">Import Data<span class="dd-sub">Load backup or Excel</span></span></button>
-        <div class="tb-dd-divider"></div>
-        <div style="padding:6px 14px 4px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Reports</div>
-        <button class="tb-dd-item" onclick="openReports();closeDds()"><span class="dd-icon">📈</span><span class="dd-label">Reports Dashboard<span class="dd-sub">Initiative health, portfolio, capacity</span></span></button>
       </div>
     </div>
 
