@@ -837,6 +837,10 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
         <button class="tb-dd-item" onclick="toggleAddSection();closeDds()">
           <span class="dd-icon">📂</span><span class="dd-label">Add Section<span class="dd-sub">Create a group header</span></span>
         </button>
+        <div class="tb-dd-divider"></div>
+        <button class="tb-dd-item" onclick="openPasteFromSpreadsheet();closeDds()">
+          <span class="dd-icon">📋</span><span class="dd-label">Paste from Spreadsheet<span class="dd-sub">Paste rows from Excel or Google Sheets</span></span>
+        </button>
       </div>
     </div>
 
@@ -12045,16 +12049,115 @@ function importBackup(){
 
 function downloadXlsxTemplate(){
   try {
-    var bin = atob(XLSX_TEMPLATE_B64);
-    var arr = new Uint8Array(bin.length);
-    for(var i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
-    var blob = new Blob([arr], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url; a.download = 'PM_Roadmapper_Import_Template.xlsx';
-    document.body.appendChild(a); a.click();
-    setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); }, 500);
+    if(window.electronAPI&&window.electronAPI.saveBinaryFile){
+      // Electron: use native save dialog
+      window.electronAPI.saveBinaryFile({
+        base64:XLSX_TEMPLATE_B64,
+        defaultName:'PM_Roadmapper_Import_Template.xlsx',
+        ext:'xlsx',
+        label:'Excel Template'
+      }).then(function(res){
+        if(res&&res.ok) alert('Template saved to:\n'+res.path+'\n\nFill in the Sections and Initiatives sheets, then import it back.');
+      });
+    } else {
+      // Browser fallback
+      var bin=atob(XLSX_TEMPLATE_B64);
+      var arr=new Uint8Array(bin.length);
+      for(var i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+      var blob=new Blob([arr],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+      var url=URL.createObjectURL(blob);
+      var a=document.createElement('a'); a.href=url; a.download='PM_Roadmapper_Import_Template.xlsx';
+      document.body.appendChild(a); a.click();
+      setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); }, 500);
+    }
   } catch(e){ alert('Download failed: '+e.message); }
+}
+
+function openPasteFromSpreadsheet(){
+  var ex=document.getElementById('pasteModal'); if(ex) ex.remove();
+  var ov=document.createElement('div');
+  ov.id='pasteModal'; ov.className='modal-overlay'; ov.style.zIndex='9500';
+  var modal=document.createElement('div'); modal.className='modal'; modal.style.width='640px';
+  var hdr=document.createElement('div'); hdr.className='modal-hdr';
+  hdr.innerHTML='<h2>📋 Paste from Spreadsheet</h2>';
+  var cx=document.createElement('button'); cx.className='close'; cx.innerHTML='✕';
+  cx.onclick=function(){ ov.remove(); }; hdr.appendChild(cx);
+  modal.appendChild(hdr);
+
+  var body=document.createElement('div'); body.className='modal-body';
+  var info=document.createElement('p');
+  info.style.cssText='font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5';
+  info.innerHTML='Copy rows from Excel or Google Sheets and paste below. Use <b>tab-separated</b> columns:<br><code>Section &nbsp; Name &nbsp; Description &nbsp; Status &nbsp; Start Month &nbsp; End Month</code>';
+  body.appendChild(info);
+
+  var ta=document.createElement('textarea');
+  ta.style.cssText='width:100%;min-height:180px;padding:10px;border:1px solid var(--border);border-radius:7px;font-size:12px;font-family:monospace;resize:vertical;box-sizing:border-box';
+  ta.placeholder='Paste here...\ne.g.:\nStrategy\tVBU850\tCustom FW release\tIn Progress\tMAR\tAUG\nDelivery\tVBU444\tField trials\tAt Risk\tJUN\tNOV';
+  body.appendChild(ta);
+
+  var statusDiv=document.createElement('div');
+  statusDiv.style.cssText='margin-top:10px;font-size:12px;display:none';
+  body.appendChild(statusDiv);
+  modal.appendChild(body);
+
+  var footer=document.createElement('div'); footer.className='modal-footer';
+  var cancelBtn=document.createElement('button'); cancelBtn.className='btn-cancel'; cancelBtn.textContent='Cancel';
+  cancelBtn.onclick=function(){ ov.remove(); };
+  var importBtn=document.createElement('button'); importBtn.className='btn-save'; importBtn.textContent='Import Rows';
+  importBtn.onclick=function(){
+    var text=ta.value.trim();
+    if(!text){ statusDiv.textContent='Nothing to import.'; statusDiv.style.cssText='margin-top:10px;font-size:12px;display:block;color:#dc2626'; return; }
+    var lines=text.split('\\n').filter(function(l){return l.trim();});
+    var MONTH_IDX={JAN:0,FEB:1,MAR:2,APR:3,MAY:4,JUN:5,JUL:6,AUG:7,SEP:8,OCT:9,NOV:10,DEC:11};
+    var STATUS_MAP={'released':'g','in progress':'b','delayed':'o','strategy':'s','at risk':'r','done':'g','planned':'s'};
+    var added=0;
+    lines.forEach(function(line){
+      var cols=line.split('\\t');
+      if(cols.length<2) cols=line.split('|').map(function(c){return c.trim();});
+      if(cols.length<2) return;
+      // Skip header rows
+      if(cols[0].toLowerCase().trim()==='section'||cols[0].toLowerCase().trim()==='section name') return;
+
+      var secName=(cols[0]||'').trim();
+      var rowName=(cols[1]||'').trim();
+      var rowDesc=(cols[2]||'').trim();
+      var status=(cols[3]||'').trim();
+      var fromMon=(cols[4]||'').trim().toUpperCase().substring(0,3);
+      var toMon=(cols[5]||'').trim().toUpperCase().substring(0,3);
+      if(!secName||!rowName) return;
+
+      // Find or create section
+      var sec=sections.find(function(s){return s.name.toLowerCase()===secName.toLowerCase();});
+      if(!sec){
+        sec={id:'ps'+Date.now()+''+Math.random().toString(36).substr(2,4), name:secName, color:'#1a1464'};
+        sections.push(sec);
+      }
+
+      // Create bar if months provided
+      var bars=[];
+      if(fromMon&&MONTH_IDX[fromMon]!==undefined){
+        var si=MONTHS.indexOf(fromMon); if(si<0) si=0;
+        var ei=toMon&&MONTH_IDX[toMon]!==undefined?MONTHS.indexOf(toMon):si; if(ei<si) ei=si;
+        bars.push({s:si,e:ei+1,c:STATUS_MAP[(status||'').toLowerCase()]||'b',t:rowName,desc:rowDesc});
+      }
+
+      rows.push({id:'pr'+Date.now()+''+Math.random().toString(36).substr(2,4),sec:sec.id,name:rowName,sub:rowDesc,bars:bars,priorities:[],deliverables:[]});
+      added++;
+    });
+    if(added>0){
+      recomputeTimeline(); renderTableHeader(); render(); persistData();
+      statusDiv.textContent=added+' row(s) imported successfully!';
+      statusDiv.style.cssText='margin-top:10px;font-size:12px;display:block;color:#16a34a;font-weight:600';
+      ta.value='';
+    } else {
+      statusDiv.textContent='No valid rows found. Make sure each line has at least: Section [tab] Name';
+      statusDiv.style.cssText='margin-top:10px;font-size:12px;display:block;color:#dc2626';
+    }
+  };
+  footer.appendChild(cancelBtn); footer.appendChild(importBtn);
+  modal.appendChild(footer);
+  ov.appendChild(modal); document.body.appendChild(ov);
+  setTimeout(function(){ ta.focus(); },100);
 }
 
 function importFromExcel(file){
@@ -12073,16 +12176,21 @@ function importFromExcel(file){
       if(wb.SheetNames.indexOf('Sections') >= 0){
         var ws = wb.Sheets['Sections'];
         var rows_sec = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
-        // Find header row (contains "Section Name")
+        // Find header row (search for common header patterns)
         var dataStart = -1;
+        var headerPatterns=['section name','section','name'];
         for(var ri=0;ri<rows_sec.length;ri++){
           var row = rows_sec[ri];
           for(var ci=0;ci<row.length;ci++){
-            if(String(row[ci]).toLowerCase().indexOf('section name')>=0){ dataStart=ri+1; break; }
+            var cell=String(row[ci]).toLowerCase().trim();
+            for(var hp=0;hp<headerPatterns.length;hp++){
+              if(cell.indexOf(headerPatterns[hp])>=0){ dataStart=ri+1; break; }
+            }
+            if(dataStart>=0) break;
           }
           if(dataStart>=0) break;
         }
-        if(dataStart < 0) dataStart = 5; // fallback: row 6 (0-indexed 5)
+        if(dataStart < 0) dataStart = 1; // fallback: row 2 (skip first row as header)
         for(var ri2=dataStart; ri2<rows_sec.length; ri2++){
           var r = rows_sec[ri2];
           // Find col B = index 1 (section name), col C = index 2 (colour)
@@ -12107,16 +12215,21 @@ function importFromExcel(file){
         var ws2 = wb.Sheets['Initiatives'];
         var rows_init = XLSX.utils.sheet_to_json(ws2, {header:1, defval:''});
 
-        // Find header row
+        // Find header row (search for common patterns)
         var initStart = -1;
+        var initPatterns=['section name','section','initiative'];
         for(var ri3=0;ri3<rows_init.length;ri3++){
           var rr = rows_init[ri3];
           for(var ci2=0;ci2<rr.length;ci2++){
-            if(String(rr[ci2]).toLowerCase().indexOf('section name')>=0){ initStart=ri3+1; break; }
+            var cellVal=String(rr[ci2]).toLowerCase().trim();
+            for(var ip=0;ip<initPatterns.length;ip++){
+              if(cellVal.indexOf(initPatterns[ip])>=0){ initStart=ri3+1; break; }
+            }
+            if(initStart>=0) break;
           }
           if(initStart>=0) break;
         }
-        if(initStart<0) initStart=6;
+        if(initStart<0) initStart=1; // fallback: row 2
 
         var MONTH_IDX = {JAN:0,FEB:1,MAR:2,APR:3,MAY:4,JUN:5,JUL:6,AUG:7,SEP:8,OCT:9,NOV:10,DEC:11};
         var STATUS_MAP = {'released':'g','in progress':'b','delayed':'o','strategy':'s','at risk':'r'};
@@ -12185,7 +12298,11 @@ function importFromExcel(file){
         }
       }
 
-      if(!newRows.length){ alert('No initiative data found. Check the Initiatives sheet has data starting from row 7.'); return; }
+      if(!newRows.length){
+        var sheetNames=wb.SheetNames.join(', ');
+        alert('No initiative data found.\n\nSheets in file: '+sheetNames+'\n\nMake sure your Excel file has:\n1. A sheet called "Initiatives"\n2. A header row with "Section Name" in one of the columns\n3. Data rows below the header with: Section Name, Row Label, Initiative Name, Status, Description, Start Month, Start Day, End Month, End Day\n\nTip: Download the template first (Data → Import Data → Download Template) and fill it in.');
+        if(statusEl){ statusEl.textContent=''; } return;
+      }
 
       // ── MERGE into existing data (don't replace) ──
 
