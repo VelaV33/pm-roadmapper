@@ -796,106 +796,45 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
     </div>
   </div>
 
-  <!-- Row 2: Dropdown groups -->
+  <!-- Row 2: Burger menu + AI bar -->
   <div class="toolbar-btns">
 
+    <!-- Burger Menu -->
+    <div class="tb-dropdown" style="margin-right:8px">
+      <button class="tb-dd-btn" onclick="toggleDd('ddBurger')" style="font-size:16px;padding:4px 10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1)">☰</button>
+      <div class="tb-dd-menu" id="ddBurger" style="min-width:240px">
+        <div style="padding:6px 14px 4px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Modules</div>
+        <button class="tb-dd-item" onclick="openG2M();closeDds()"><span class="dd-icon">🚀</span><span class="dd-label">G2M Checklist<span class="dd-sub">Go-To-Market Readiness</span></span></button>
+        <button class="tb-dd-item" onclick="openTodo();closeDds()"><span class="dd-icon">📋</span><span class="dd-label">ToDo List<span class="dd-sub">Tasks per Initiative</span></span></button>
+        <button class="tb-dd-item" onclick="openKPI();closeDds()"><span class="dd-icon">📊</span><span class="dd-label">KPI Scorecard<span class="dd-sub">Track Key Metrics</span></span></button>
+        <button class="tb-dd-item" onclick="openUCR();closeDds()"><span class="dd-icon">📝</span><span class="dd-label">UCR<span class="dd-sub">User Change Requests</span></span></button>
+        <button class="tb-dd-item" onclick="openArtifacts();closeDds()"><span class="dd-icon">📄</span><span class="dd-label">Artifacts<span class="dd-sub">Product Collateral</span></span></button>
+        <button class="tb-dd-item" onclick="openCapacity();closeDds()"><span class="dd-icon">⚡</span><span class="dd-label">CapacityIQ<span class="dd-sub">Team Capacity Planning</span></span></button>
+        <button class="tb-dd-item" onclick="openCompetitiveAnalysis();closeDds()"><span class="dd-icon">🔍</span><span class="dd-label">Competitive Intel <span style="background:var(--purple);color:#fff;font-size:8px;padding:1px 5px;border-radius:8px;font-weight:600">PRO</span><span class="dd-sub">AI-powered Analysis</span></span></button>
+        <div class="tb-dd-divider"></div>
+        <div style="padding:6px 14px 4px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Roadmap</div>
+        <button class="tb-dd-item" onclick="openAddRowModal(null);closeDds()"><span class="dd-icon">＋</span><span class="dd-label">Add Row<span class="dd-sub">Add a new initiative</span></span></button>
+        <button class="tb-dd-item" onclick="toggleAddSection();closeDds()"><span class="dd-icon">📂</span><span class="dd-label">Add Section<span class="dd-sub">Create a group header</span></span></button>
+        <button class="tb-dd-item" onclick="openPasteFromSpreadsheet();closeDds()"><span class="dd-icon">📋</span><span class="dd-label">Paste from Spreadsheet<span class="dd-sub">Bulk import from Excel</span></span></button>
+        <div class="tb-dd-divider"></div>
+        <div style="padding:6px 14px 4px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Data</div>
+        <button class="tb-dd-item" onclick="openEditQuarters();closeDds()"><span class="dd-icon">🗓</span><span class="dd-label">Edit Timeline<span class="dd-sub">Configure quarters</span></span></button>
+        <button class="tb-dd-item" onclick="exportExcel();closeDds()"><span class="dd-icon">📊</span><span class="dd-label">Export Excel<span class="dd-sub">Download as .xls</span></span></button>
+        <button class="tb-dd-item" onclick="exportPDF();closeDds()"><span class="dd-icon">📄</span><span class="dd-label">Export PDF<span class="dd-sub">A3 landscape</span></span></button>
+        <button class="tb-dd-item" onclick="exportBackup();closeDds()"><span class="dd-icon">💾</span><span class="dd-label">Save Backup<span class="dd-sub">Download JSON</span></span></button>
+        <button class="tb-dd-item" onclick="importBackup();closeDds()"><span class="dd-icon">📂</span><span class="dd-label">Import Data<span class="dd-sub">Load backup or Excel</span></span></button>
+      </div>
+    </div>
+
     <!-- AI Assistant command bar -->
-    <div id="aiCmdBar" style="display:flex;align-items:center;gap:4px;flex:1;max-width:420px;margin-right:6px">
-      <input id="aiCmdInput" placeholder="🤖 Tell AI what to add... e.g. Add initiative for VBU850 from June to Nov" style="flex:1;padding:5px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:11px;color:#fff;background:rgba(255,255,255,.1);outline:none;font-family:inherit" onfocus="this.style.borderColor='rgba(124,58,237,.8)';this.style.background='rgba(255,255,255,.15)'" onblur="this.style.borderColor='rgba(255,255,255,.25)';this.style.background='rgba(255,255,255,.1)'">
-      <button onclick="runAiCommand()" title="Send to AI" style="background:linear-gradient(135deg,#7c3aed,#2563a8);border:none;color:#fff;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">Go</button>
-      <button onclick="toggleAiVoiceCmd()" id="aiVoiceBtn" title="Voice command" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:6px;padding:5px 8px;font-size:13px;cursor:pointer">🎤</button>
+    <div id="aiCmdBar" style="display:flex;align-items:center;gap:4px;flex:1;max-width:480px;margin-right:6px">
+      <input id="aiCmdInput" placeholder="🤖 Ask AI... e.g. Add VBU850 under Strategy from June to Nov" style="flex:1;padding:7px 12px;border:1px solid rgba(255,255,255,.15);border-radius:8px;font-size:12px;color:#fff;background:rgba(255,255,255,.06);outline:none;font-family:inherit" onfocus="this.style.borderColor='rgba(45,107,244,.6)';this.style.background='rgba(255,255,255,.1)'" onblur="this.style.borderColor='rgba(255,255,255,.15)';this.style.background='rgba(255,255,255,.06)'">
+      <button onclick="runAiCommand()" title="Send to AI" style="background:var(--accent);border:none;color:#fff;border-radius:8px;padding:7px 14px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">Go</button>
+      <button onclick="toggleAiVoiceCmd()" id="aiVoiceBtn" title="Voice command" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer">🎤</button>
     </div>
 
-    <!-- G2M Checklist -->
-    <button onclick="openG2M()" title="Go-To-Market Business Readiness Checklist" style="background:linear-gradient(135deg,#0f766e,#16a34a);border:1px solid rgba(22,163,74,.6);color:#fff;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;margin-right:6px">🚀 G2M</button>
-
-    <!-- ToDo List -->
-    <button onclick="openTodo()" title="ToDo List per Initiative" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);border:1px solid rgba(124,58,237,.6);color:#fff;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;margin-right:6px">📋 ToDo</button>
-
-    <!-- KPI Scorecard -->
-    <button onclick="openKPI()" title="KPI Scorecard" style="background:linear-gradient(135deg,#065f46,#0d9488);border:1px solid rgba(13,148,136,.6);color:#fff;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;margin-right:6px">📊 KPIs</button>
-
-    <!-- UCR -->
-    <button onclick="openUCR()" title="User Change Requests" style="background:linear-gradient(135deg,#b91c1c,#dc2626);border:1px solid rgba(185,28,28,.6);color:#fff;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;margin-right:6px">📝 UCR</button>
-
-    <!-- Artifacts -->
-    <button onclick="openArtifacts()" title="Product Artifacts & Collateral" style="background:linear-gradient(135deg,#7c3aed,#a78bfa);border:1px solid rgba(124,58,237,.6);color:#fff;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;margin-right:6px">📄 Artifacts</button>
-
-    <!-- CapacityIQ -->
-    <button onclick="openCapacity()" title="CapacityIQ — Team Capacity Planning" style="background:linear-gradient(135deg,#0d9488,#0f766e);border:1px solid rgba(13,148,136,.6);color:#fff;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;margin-right:6px">⚡ CapacityIQ</button>
-
-    <!-- Settings -->
-    <button onclick="openSettings()" title="Settings — AI Config, Brand Guide, Preferences" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.8);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px">⚙️</button>
-    <button onclick="startTour()" title="Product Tour & Help" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.8);border-radius:50%;width:28px;height:28px;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center">?</button>
-
-    <!-- Competitive Intel -->
-    <button id="compIntelBtn" onclick="openCompetitiveAnalysis()" title="AI-powered Competitive Analysis" style="background:linear-gradient(135deg,#7c3aed,#2563a8);border:1px solid rgba(124,58,237,.6);color:#fff;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;margin-right:6px">🔍 CI <span class="premium-badge">PRO</span></button>
-
-    <!-- Content dropdown -->
-    <div class="tb-dropdown">
-      <button class="tb-dd-btn" onclick="toggleDd('ddContent')">✏ Content <span class="caret">▼</span></button>
-      <div class="tb-dd-menu" id="ddContent">
-        <button class="tb-dd-item" onclick="openAddRowModal(null);closeDds()">
-          <span class="dd-icon">＋</span><span class="dd-label">Add Row<span class="dd-sub">Add a new initiative row</span></span>
-        </button>
-        <button class="tb-dd-item" onclick="toggleAddSection();closeDds()">
-          <span class="dd-icon">📂</span><span class="dd-label">Add Section<span class="dd-sub">Create a group header</span></span>
-        </button>
-        <div class="tb-dd-divider"></div>
-        <button class="tb-dd-item" onclick="openPasteFromSpreadsheet();closeDds()">
-          <span class="dd-icon">📋</span><span class="dd-label">Paste from Spreadsheet<span class="dd-sub">Paste rows from Excel or Google Sheets</span></span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Timeline dropdown -->
-    <div class="tb-dropdown">
-      <button class="tb-dd-btn" onclick="toggleDd('ddTimeline')">📅 Timeline <span class="caret">▼</span></button>
-      <div class="tb-dd-menu" id="ddTimeline">
-        <button class="tb-dd-item" onclick="addQuarter();closeDds()">
-          <span class="dd-icon">＋</span><span class="dd-label">Add Quarter<span class="dd-sub">Append one quarter</span></span>
-        </button>
-        <button class="tb-dd-item" onclick="addFinancialYear();closeDds()">
-          <span class="dd-icon">📆</span><span class="dd-label">Add Financial Year<span class="dd-sub">Append 4 quarters at once</span></span>
-        </button>
-        <button class="tb-dd-item" onclick="removeLastQuarter();closeDds()">
-          <span class="dd-icon">－</span><span class="dd-label">Remove Last Quarter<span class="dd-sub">Trim from the end</span></span>
-        </button>
-        <div class="tb-dd-divider"></div>
-        <button class="tb-dd-item" onclick="openEditQuarters();closeDds()">
-          <span class="dd-icon">✏</span><span class="dd-label">Edit Quarters<span class="dd-sub">Rename, reorder, set months</span></span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Export dropdown -->
-    <div class="tb-dropdown">
-      <button class="tb-dd-btn" onclick="toggleDd('ddExport')">⬇ Export <span class="caret">▼</span></button>
-      <div class="tb-dd-menu right" id="ddExport">
-        <button class="tb-dd-item" onclick="exportExcel();closeDds()">
-          <span class="dd-icon">📊</span><span class="dd-label">Export Excel<span class="dd-sub">Full roadmap as .xls</span></span>
-        </button>
-        <button class="tb-dd-item" onclick="exportPDF();closeDds()">
-          <span class="dd-icon">📄</span><span class="dd-label">Export PDF<span class="dd-sub">A3 landscape print-ready</span></span>
-        </button>
-        <button class="tb-dd-item" onclick="openExportByQuarter();closeDds()">
-          <span class="dd-icon">🗓</span><span class="dd-label">Export by Quarter<span class="dd-sub">Select specific quarters</span></span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Data dropdown -->
-    <div class="tb-dropdown">
-      <button class="tb-dd-btn" onclick="toggleDd('ddData')">💾 Data <span class="caret">▼</span></button>
-      <div class="tb-dd-menu right" id="ddData">
-        <button class="tb-dd-item" onclick="exportBackup();closeDds()">
-          <span class="dd-icon">💾</span><span class="dd-label">Save Backup<span class="dd-sub">Download JSON backup</span></span>
-        </button>
-        <button class="tb-dd-item" onclick="importBackup();closeDds()">
-          <span class="dd-icon">📂</span><span class="dd-label">Import Data<span class="dd-sub">Load backup or Excel template</span></span>
-        </button>
-      </div>
-    </div>
+    <!-- Sync status -->
+    <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
 
     <!-- Status — right -->
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
