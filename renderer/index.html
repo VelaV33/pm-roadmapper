@@ -4260,6 +4260,19 @@ async function pushCloudData(){
       }
     }
 
+    // VERIFY: read back from Supabase to confirm data actually landed
+    if(pushOk){
+      try {
+        var verify=await _dbReq('/rest/v1/roadmap_data?select=user_id&user_id=eq.'+uid+'&limit=1');
+        if(!verify.ok||!Array.isArray(verify.data)||verify.data.length===0){
+          console.error('SYNC VERIFICATION FAILED: push reported success but no row found in Supabase');
+          pushOk=false;
+        } else {
+          console.log('Sync verified: row exists in Supabase for user',uid);
+        }
+      } catch(e){ console.warn('Verification query failed:',e.message); }
+    }
+
     if(pushOk){
       var ts=Date.now();
       localStorage.setItem('pmr_last_save_ts_'+uid, String(ts));
@@ -5118,27 +5131,48 @@ function renderSharedTabs(){
 }
 
 async function openSharedRoadmap(share){
-  // Try to load the owner's roadmap via the edge function (uses service role, bypasses RLS)
-  var r=await window.electronAPI.supaRequest({
-    path:'/functions/v1/get-shared-roadmap',
-    method:'POST',
-    body:{owner_id:share.owner_id, share_id:share.id},
-    token:_accessToken||null
-  });
-  // Fallback: try direct REST query if edge function doesn't exist
-  if(!r.ok || !r.data || !r.data.data){
-    r=await _dbReq('/rest/v1/roadmap_data?select=data&user_id=eq.'+share.owner_id+'&limit=1');
-    if(r.ok && Array.isArray(r.data) && r.data[0]) r={ok:true,data:r.data[0]};
+  var roadmapPayload=null;
+
+  // Method 1: Edge function (uses service role, bypasses RLS)
+  try {
+    var ef=await window.electronAPI.supaRequest({
+      path:'/functions/v1/get-shared-roadmap',
+      method:'POST',
+      body:{owner_id:share.owner_id, share_id:share.id},
+      token:_accessToken||null
+    });
+    // Edge function returns {ok:true, data:<roadmap_payload>}
+    if(ef.ok&&ef.data&&ef.data.ok&&ef.data.data){
+      roadmapPayload=ef.data.data;
+      console.log('Shared roadmap loaded via edge function');
+    } else {
+      console.warn('Edge function returned:',JSON.stringify(ef.data));
+    }
+  } catch(e){ console.warn('get-shared-roadmap edge function error:',e.message); }
+
+  // Method 2: Direct REST fallback
+  if(!roadmapPayload){
+    try {
+      var r=await _dbReq('/rest/v1/roadmap_data?select=data&user_id=eq.'+share.owner_id+'&limit=1');
+      if(r.ok&&Array.isArray(r.data)&&r.data[0]&&r.data[0].data){
+        roadmapPayload=r.data[0].data;
+        console.log('Shared roadmap loaded via REST');
+      } else {
+        console.warn('REST query returned:',r.status,JSON.stringify(r.data));
+      }
+    } catch(e){ console.warn('REST fallback error:',e.message); }
   }
-  if(!r.ok){ alert('Could not load shared roadmap. Please check your connection.'); return; }
-  var d=r.data;
-  if(!d||!d.data){ alert('The owner has not synced their roadmap yet. Ask '+share.owner_name+' to share it again.'); return; }
+
+  if(!roadmapPayload){
+    alert('Could not load shared roadmap.\n\nThis usually means the owner needs to:\n1. Open PM Roadmapper\n2. Click Sync now in their Account page\n3. Verify the badge shows green "Synced"\n\nThen try opening this shared roadmap again.');
+    return;
+  }
 
   // Backup current user's data before switching
   _myDataBackup=buildDataPayload();
 
   // Apply the shared roadmap data
-  applyDataPayload(d.data);
+  applyDataPayload(roadmapPayload);
   _viewingSharedRoadmap=share;
 
   // Show read-only banner

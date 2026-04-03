@@ -54,17 +54,25 @@ serve(async (req) => {
       });
     }
 
-    // Verify the data was saved by reading it back
-    const { data: verify } = await supabase
+    // Verify the data was saved by reading it back (check actual data content)
+    const { data: verify, error: verifyErr } = await supabase
       .from("roadmap_data")
-      .select("updated_at")
+      .select("data, updated_at")
       .eq("user_id", user_id)
       .limit(1);
 
+    const dataVerified = verify && verify.length > 0 && verify[0].data !== null;
+    const savedRows = dataVerified ? (verify[0].data.rows || []).length : 0;
+
+    if (!dataVerified) {
+      console.error("VERIFICATION FAILED: row exists but data is null/missing", verifyErr);
+    }
+
     return new Response(JSON.stringify({
-      ok: true,
+      ok: dataVerified,
       action: existing && existing.length > 0 ? "updated" : "inserted",
-      verified: verify && verify.length > 0,
+      verified: dataVerified,
+      saved_rows: savedRows,
       rows_in_data: (data.rows || []).length
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" }
