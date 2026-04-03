@@ -1347,7 +1347,7 @@ function renderTabs(){
   el.innerHTML = '';
   tabs_data.forEach(function(tab){
     var btn = document.createElement('button');
-    btn.className = 'tab' + (tab.id === activeTabId && !_viewingSharedRoadmap ? ' active' : '');
+    btn.className = 'tab' + (tab.id === activeTabId ? ' active' : '');
     btn.title = 'Click to switch';
 
     var nameSpan = document.createElement('span');
@@ -1398,10 +1398,6 @@ function renderTabs(){
 }
 
 function switchTab(tabId){
-  // If viewing a shared roadmap, exit shared view first and restore user's data
-  if(_viewingSharedRoadmap){
-    exitSharedView();
-  }
   // Save current tab's data before switching
   var curTab = tabs_data.find(function(t){ return t.id===activeTabId; });
   if(curTab && !curTab.stacked){
@@ -3566,6 +3562,8 @@ function renderStackedTabs(){
     block.appendChild(wrap);
     page.appendChild(block);
   });
+  // Also render any shared stacked roadmaps
+  if(typeof renderSharedStacked==='function') renderSharedStacked();
 }
 
 function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -4201,7 +4199,7 @@ async function pullCloudData(){
 }
 
 function schedulePushToCloud(immediate){
-  if(!_syncEnabled || _viewingSharedRoadmap) return;
+  if(!_syncEnabled) return;
   if(_syncTimer) clearTimeout(_syncTimer);
   _syncTimer = setTimeout(pushCloudData, immediate ? 500 : 3000);
 }
@@ -4803,8 +4801,8 @@ function openHelp(){
 var _commentCache  = {};  // rowId → array of comments
 var _sharedWith    = [];  // list of share records this user owns
 var _sharedToMe    = [];  // roadmaps shared with me
-var _viewingSharedRoadmap = null; // set to share object when viewing someone else's roadmap
-var _myDataBackup  = null; // backup of user's own data while viewing shared
+var _viewingSharedRoadmap = null; // legacy — kept for comment system compatibility
+var _myDataBackup  = null; // unused
 
 // ── IPC helper (falls back to noop in browser) ──
 async function _dbReq(path, method, body){
@@ -5135,21 +5133,29 @@ function renderSharedTabs(){
   var addBtn=tabsEl.querySelector('.tab-add');
   _sharedToMe.forEach(function(share){
     var btn=document.createElement('button');
-    var isActive=_viewingSharedRoadmap&&_viewingSharedRoadmap.id===share.id;
-    btn.className='tab shared-from-tab'+(isActive?' active':'');
-    btn.style.cssText='border-color:#2563a8;color:#2563a8'+(isActive?';background:#eff6ff':'');
-    btn.title='Shared roadmap from '+share.owner_name+' ('+share.owner_email+')';
+    var isStacked=!!_sharedStackedData[share.id];
+    btn.className='tab shared-from-tab'+(isStacked?' active':'');
+    btn.style.cssText='border-color:#2563a8;color:#2563a8'+(isStacked?';background:#eff6ff':'');
+    btn.title='Click to '+(isStacked?'hide':'show')+' shared roadmap from '+share.owner_name;
     btn.innerHTML=escHtml(share.roadmap_name)+' <span class="shared-badge">SHARED</span>';
     btn.onclick=function(){ openSharedRoadmap(share); };
     tabsEl.insertBefore(btn, addBtn);
   });
 }
 
-async function openSharedRoadmap(share){
-  var roadmapPayload=null;
-  var debugInfo='Share: owner_id='+share.owner_id+' share_id='+share.id+'\n';
+var _sharedStackedData = {}; // shareId → {share, data} for currently stacked shared roadmaps
 
-  // Method 1: Edge function (uses service role, bypasses RLS)
+async function openSharedRoadmap(share){
+  // Toggle: if already stacked, close it
+  if(_sharedStackedData[share.id]){
+    delete _sharedStackedData[share.id];
+    renderSharedStacked();
+    renderSharedTabs();
+    return;
+  }
+
+  // Load the shared roadmap data
+  var roadmapPayload=null;
   try {
     var ef=await window.electronAPI.supaRequest({
       path:'/functions/v1/get-shared-roadmap',
@@ -5157,82 +5163,206 @@ async function openSharedRoadmap(share){
       body:{owner_id:share.owner_id, share_id:share.id},
       token:_accessToken||null
     });
-    debugInfo+='Edge function: HTTP ok='+ef.ok+' status='+ef.status+'\n';
-    debugInfo+='ef.data exists='+(!!ef.data)+' ef.data.ok='+(ef.data&&ef.data.ok)+' ef.data.data exists='+(!!( ef.data&&ef.data.data))+'\n';
-    if(ef.data&&ef.data.error) debugInfo+='ef.data.error='+ef.data.error+'\n';
-    if(ef.ok&&ef.data&&ef.data.ok&&ef.data.data){
-      roadmapPayload=ef.data.data;
-      debugInfo+='SUCCESS via edge function: rows='+(roadmapPayload.rows||[]).length+'\n';
-    } else if(ef.ok&&ef.data&&ef.data.data){
-      // Edge function returned ok at HTTP level, data exists but no .ok flag
-      roadmapPayload=ef.data.data;
-      debugInfo+='SUCCESS via edge function (no ok flag): rows='+(roadmapPayload.rows||[]).length+'\n';
-    }
-  } catch(e){ debugInfo+='Edge function EXCEPTION: '+e.message+'\n'; }
-
-  // Method 2: Direct REST fallback
-  if(!roadmapPayload){
-    try {
-      var r=await _dbReq('/rest/v1/roadmap_data?select=data&user_id=eq.'+share.owner_id+'&limit=1');
-      debugInfo+='REST: ok='+r.ok+' status='+r.status+' isArray='+Array.isArray(r.data)+' length='+(Array.isArray(r.data)?r.data.length:'N/A')+'\n';
-      if(r.ok&&Array.isArray(r.data)&&r.data[0]&&r.data[0].data){
-        roadmapPayload=r.data[0].data;
-        debugInfo+='SUCCESS via REST: rows='+(roadmapPayload.rows||[]).length+'\n';
-      }
-    } catch(e){ debugInfo+='REST EXCEPTION: '+e.message+'\n'; }
-  }
+    if(ef.ok&&ef.data&&ef.data.data) roadmapPayload=ef.data.data;
+    else if(ef.ok&&ef.data&&ef.data.ok&&ef.data.data) roadmapPayload=ef.data.data;
+  } catch(e){ console.warn('Edge function error:',e.message); }
 
   if(!roadmapPayload){
-    console.error('Could not load shared roadmap:', debugInfo);
     alert('Could not load shared roadmap. Please try again or ask the owner to re-share.');
     return;
   }
 
-  // Backup current user's data before switching
-  _myDataBackup=buildDataPayload();
-
-  // Apply the shared roadmap data
-  applyDataPayload(roadmapPayload);
-  _viewingSharedRoadmap=share;
-
-  // Show read-only banner
-  var existingBanner=document.getElementById('sharedBanner');
-  if(existingBanner) existingBanner.remove();
-  var banner=document.createElement('div');
-  banner.id='sharedBanner';
-  banner.style.cssText='background:linear-gradient(135deg,#1e40af,#7c3aed);color:#fff;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;z-index:500';
-  banner.innerHTML='<span>Viewing: '+share.roadmap_name+' — shared by '+share.owner_name+' ('+share.owner_email+') — Read Only</span>';
-  var backBtn=document.createElement('button');
-  backBtn.textContent='Back to my roadmap';
-  backBtn.style.cssText='background:#fff;color:#1e40af;border:none;padding:6px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer';
-  backBtn.onclick=exitSharedView;
-  banner.appendChild(backBtn);
-  var toolbar=document.querySelector('.toolbar');
-  if(toolbar&&toolbar.nextSibling) toolbar.parentNode.insertBefore(banner,toolbar.nextSibling);
-  else document.body.insertBefore(banner,document.body.firstElementChild);
-
-  // Apply read-only: disable the table editing area
-  var tableWrap=document.querySelector('.table-wrap');
-  if(tableWrap) tableWrap.classList.add('shared-readonly');
-
-  // Re-render with shared data
-  recomputeTimeline(); renderTableHeader(); renderTabs(); renderStackedTabs(); render();
+  // Store and render as stacked block below main roadmap
+  _sharedStackedData[share.id]={share:share, data:roadmapPayload};
+  renderSharedStacked();
+  renderSharedTabs();
 }
 
-function exitSharedView(){
-  _viewingSharedRoadmap=null;
-  // Remove banner
-  var banner=document.getElementById('sharedBanner');
-  if(banner) banner.remove();
-  // Remove read-only
-  var tableWrap=document.querySelector('.table-wrap');
-  if(tableWrap) tableWrap.classList.remove('shared-readonly');
-  // Restore user's own data
-  if(_myDataBackup){
-    applyDataPayload(_myDataBackup);
-    _myDataBackup=null;
+function renderSharedStacked(){
+  // Remove existing shared stacked blocks
+  document.querySelectorAll('.shared-stacked-block').forEach(function(el){ el.remove(); });
+  var page=document.querySelector('.page');
+  if(!page) return;
+
+  Object.keys(_sharedStackedData).forEach(function(shareId){
+    var entry=_sharedStackedData[shareId];
+    var share=entry.share;
+    var d=entry.data;
+    var tabSections=d.sections||[];
+    var tabRows=d.rows||[];
+    var tabQuarters=d.quarters||quarters;
+
+    // Compute timeline
+    var tMONTHS=[],tQB=[],col=0;
+    tabQuarters.forEach(function(q){
+      q.months.forEach(function(m,i){ tMONTHS.push(m); if(i===q.months.length-1)tQB.push(col); col++; });
+    });
+    var tNM=tMONTHS.length;
+
+    var block=document.createElement('div');
+    block.className='shared-stacked-block';
+    block.style.cssText='margin-top:32px';
+
+    // Header
+    var bHdr=document.createElement('div');
+    bHdr.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:linear-gradient(135deg,#1e40af,#2563a8);color:#fff;border-radius:10px 10px 0 0';
+    var bTitle=document.createElement('span');
+    bTitle.style.cssText='font-size:16px;font-weight:800;letter-spacing:.04em';
+    bTitle.innerHTML=escHtml(share.roadmap_name)+' <span style="font-size:11px;opacity:.7;font-weight:400">— shared by '+escHtml(share.owner_name)+'</span>';
+    bHdr.appendChild(bTitle);
+
+    var bBtns=document.createElement('div');
+    bBtns.style.cssText='display:flex;gap:6px';
+
+    // Merge button
+    var mergeBtn=document.createElement('button');
+    mergeBtn.textContent='Merge Roadmap';
+    mergeBtn.style.cssText='padding:4px 12px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.15);color:#fff;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer';
+    mergeBtn.onclick=function(){ mergeSharedRoadmap(share, d); };
+    bBtns.appendChild(mergeBtn);
+
+    // Close button
+    var closeBtn=document.createElement('button');
+    closeBtn.textContent='\u2715 Close';
+    closeBtn.style.cssText='padding:4px 8px;border:1px solid rgba(255,100,100,.4);background:rgba(220,38,38,.15);color:#fca5a5;border-radius:5px;font-size:11px;cursor:pointer';
+    closeBtn.onclick=function(){ delete _sharedStackedData[shareId]; renderSharedStacked(); renderSharedTabs(); };
+    bBtns.appendChild(closeBtn);
+    bHdr.appendChild(bBtns);
+    block.appendChild(bHdr);
+
+    // Mini table (same pattern as renderStackedTabs)
+    var wrap=document.createElement('div');
+    wrap.className='table-wrap';
+    wrap.style.borderRadius='0 0 10px 10px';
+    var table=document.createElement('table');
+    table.style.cssText='border-collapse:collapse;table-layout:fixed;min-width:1100px;width:100%';
+
+    var cg=document.createElement('colgroup');
+    cg.innerHTML='<col style="width:220px">';
+    tMONTHS.forEach(function(){ cg.innerHTML+='<col style="width:42px">'; });
+    table.appendChild(cg);
+
+    var thead=document.createElement('thead');
+    var r1='<tr><th class="th-lbl">INITIATIVE</th>';
+    tabQuarters.forEach(function(q){ r1+='<th class="qh" colspan="'+q.months.length+'" style="background:'+Q_BG[q.q-1]+'">'+escHtml(q.label)+'</th>'; });
+    r1+='</tr><tr><th class="th-lbl">MONTH</th>';
+    tMONTHS.forEach(function(m,mi){ r1+='<th class="mh'+(tQB.indexOf(mi)>=0?' qb':'')+'">'+m+'</th>'; });
+    r1+='</tr>';
+    thead.innerHTML=r1;
+    table.appendChild(thead);
+
+    var tbody=document.createElement('tbody');
+    var lastSec=null;
+    tabRows.forEach(function(row){
+      var sec=tabSections.find(function(s){return s.id===row.sec;});
+      if(!sec) return;
+      if(row.sec!==lastSec){
+        lastSec=row.sec;
+        var sh=document.createElement('tr'); sh.className='sec-hdr';
+        var std=document.createElement('td'); std.colSpan=tNM+1; std.style.background=sec.color;
+        std.innerHTML='<span class="sec-name-wrap"><span class="sec-name-text">'+escHtml(sec.name)+'</span></span>';
+        sh.appendChild(std); tbody.appendChild(sh);
+      }
+      var tr=document.createElement('tr'); tr.className='data-row';
+      var lbl=document.createElement('td'); lbl.className='td td-lbl';
+      lbl.innerHTML='<div class="lbl-inner"><div class="lbl-text"><div class="name" style="color:'+sec.color+'">'+escHtml(row.name)+'</div><div class="sub">'+escHtml(row.sub||'')+'</div></div></div>';
+      tr.appendChild(lbl);
+
+      var barMap={};
+      (row.bars||[]).forEach(function(bar){ var sc=Math.floor(bar.s); if(!barMap[sc])barMap[sc]=bar; });
+      for(var mi=0;mi<tNM;mi++){
+        var td=document.createElement('td');
+        td.className='td td-mo'+(tQB.indexOf(mi)>=0?' qb':'');
+        var bar=barMap[mi];
+        if(bar){
+          var span=Math.min(Math.ceil(bar.e)-Math.floor(bar.s),tNM-mi);
+          td.colSpan=Math.max(1,span);td.style.padding='3px 2px';
+          var div=document.createElement('div');div.className='bar '+bar.c;div.title=bar.t;
+          div.style.background=GRADIENTS[bar.c];
+          div.innerHTML='<span class="bar-txt">'+escHtml(bar.t)+'</span>';
+          td.appendChild(div);
+          for(var skip=1;skip<span;skip++) mi++;
+        }
+        tr.appendChild(td);
+      }
+      tbody.appendChild(tr);
+    });
+    if(tabRows.length===0){
+      var empty=document.createElement('tr');
+      empty.innerHTML='<td colspan="'+(tNM+1)+'" style="text-align:center;padding:20px;color:var(--muted);font-size:13px;font-style:italic">This shared roadmap is empty.</td>';
+      tbody.appendChild(empty);
+    }
+    table.appendChild(tbody);
+    wrap.appendChild(table);
+    block.appendChild(wrap);
+    page.appendChild(block);
+  });
+}
+
+function mergeSharedRoadmap(share, sharedData){
+  // Combine user's current roadmap with the shared roadmap into a new tab
+  var mySections=JSON.parse(JSON.stringify(sections));
+  var myRows=JSON.parse(JSON.stringify(rows));
+  var sharedSections=JSON.parse(JSON.stringify(sharedData.sections||[]));
+  var sharedRows=JSON.parse(JSON.stringify(sharedData.rows||[]));
+
+  // Build merged sections: keep all of user's, add shared ones that don't exist
+  var mergedSections=mySections.slice();
+  var secMap={};
+  mergedSections.forEach(function(s){ secMap[s.name.toLowerCase()]=s.id; });
+
+  var secIdRemap={}; // old shared section id → merged section id
+  sharedSections.forEach(function(ss){
+    var key=ss.name.toLowerCase();
+    if(secMap[key]){
+      secIdRemap[ss.id]=secMap[key]; // map to existing
+    } else {
+      var newId='ms'+Date.now()+''+Math.random().toString(36).substr(2,5);
+      var merged={id:newId, name:ss.name, color:ss.color};
+      mergedSections.push(merged);
+      secIdRemap[ss.id]=newId;
+      secMap[key]=newId;
+    }
+  });
+
+  // Build merged rows: all user rows + shared rows (remapped to merged sections)
+  var mergedRows=myRows.slice();
+  var existingNames={};
+  mergedRows.forEach(function(r){ existingNames[(r.name||'').toLowerCase()]=true; });
+
+  sharedRows.forEach(function(sr){
+    var newRow=JSON.parse(JSON.stringify(sr));
+    newRow.id='mr'+Date.now()+''+Math.random().toString(36).substr(2,5);
+    newRow.sec=secIdRemap[sr.sec]||sr.sec;
+    // Add "(shared)" suffix if name already exists
+    if(existingNames[(sr.name||'').toLowerCase()]){
+      newRow.name=(sr.name||'')+' (shared)';
+    }
+    mergedRows.push(newRow);
+  });
+
+  // Create new tab
+  var newTabId='merged'+Date.now();
+  var newTab={
+    id:newTabId,
+    name:'Merged — '+share.roadmap_name,
+    stacked:false,
+    sections:mergedSections,
+    rows:mergedRows,
+    quarters:JSON.parse(JSON.stringify(quarters))
+  };
+
+  // Save current tab data
+  var curTab=tabs_data.find(function(t){return t.id===activeTabId&&!t.stacked;});
+  if(curTab){
+    curTab.sections=JSON.parse(JSON.stringify(sections));
+    curTab.rows=JSON.parse(JSON.stringify(rows));
+    curTab.quarters=JSON.parse(JSON.stringify(quarters));
   }
-  recomputeTimeline(); renderTableHeader(); renderTabs(); renderStackedTabs(); render();
+
+  tabs_data.push(newTab);
+  switchTab(newTabId);
+  persistData();
 }
 
 async function shareRoadmapWith(email){
@@ -11790,7 +11920,6 @@ function checkShowTour(){
 
 function persistData() {
   if (!window.electronAPI) return;
-  if (_viewingSharedRoadmap) return; // never save while viewing shared data
   var el = document.getElementById('saveStatus');
   if (el) { el.textContent = '◌ Saving…'; el.className = 'saving'; }
   clearTimeout(_saveTimer);
