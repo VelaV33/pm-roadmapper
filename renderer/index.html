@@ -5095,19 +5095,33 @@ function loadAllCommentBadges(){
 // ── SHARING ───────────────────────────────────────────────────────────────────
 async function loadSharedWith(){
   if(!_currentUser) return;
-  var r=await _dbReq('/rest/v1/shared_roadmaps?select=*&owner_id=eq.'+_currentUser.id+'&order=created_at.asc');
-  if(r.ok && Array.isArray(r.data)) _sharedWith=r.data;
+  await _loadAllShares();
 }
 
 async function loadSharedToMe(){
   if(!_currentUser) return;
-  var email=encodeURIComponent(_currentUser.email.toLowerCase());
-  var r=await _dbReq('/rest/v1/shared_roadmaps?select=*&recipient_email=eq.'+email+'&order=created_at.asc');
-  if(r.ok && Array.isArray(r.data)){
-    _sharedToMe=r.data;
-    renderSharedTabs();
-    loadNotifications();
-  }
+  await _loadAllShares();
+}
+
+async function _loadAllShares(){
+  if(!_currentUser) return;
+  try {
+    var r=await window.electronAPI.supaRequest({
+      path:'/functions/v1/get-my-shares',
+      method:'POST',
+      body:{email:_currentUser.email, user_id:_currentUser.id},
+      token:_accessToken||null
+    });
+    if(r.ok&&r.data&&r.data.ok){
+      _sharedWith=r.data.shared_by_me||[];
+      _sharedToMe=r.data.shared_to_me||[];
+      renderSharedTabs();
+      loadNotifications();
+      console.log('Shares loaded: shared_by_me='+_sharedWith.length+' shared_to_me='+_sharedToMe.length);
+    } else {
+      console.warn('get-my-shares failed:',JSON.stringify(r.data));
+    }
+  } catch(e){ console.warn('_loadAllShares error:',e.message); }
 }
 
 function renderSharedTabs(){
