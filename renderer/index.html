@@ -458,6 +458,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .rbac-disabled{pointer-events:none;opacity:.5;position:relative}
 .rbac-disabled::after{content:'Read Only';position:absolute;top:2px;right:2px;background:#dc2626;color:#fff;font-size:7px;font-weight:700;padding:1px 5px;border-radius:3px;z-index:10}
 .rbac-hidden{display:none !important}
+.shared-readonly{pointer-events:none}
 .role-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
 .role-badge.manager{background:#7c3aed;color:#fff}
 .role-badge.product_manager{background:#2563eb;color:#fff}
@@ -1346,7 +1347,7 @@ function renderTabs(){
   el.innerHTML = '';
   tabs_data.forEach(function(tab){
     var btn = document.createElement('button');
-    btn.className = 'tab' + (tab.id === activeTabId ? ' active' : '');
+    btn.className = 'tab' + (tab.id === activeTabId && !_viewingSharedRoadmap ? ' active' : '');
     btn.title = 'Click to switch';
 
     var nameSpan = document.createElement('span');
@@ -1397,6 +1398,10 @@ function renderTabs(){
 }
 
 function switchTab(tabId){
+  // If viewing a shared roadmap, exit shared view first and restore user's data
+  if(_viewingSharedRoadmap){
+    exitSharedView();
+  }
   // Save current tab's data before switching
   var curTab = tabs_data.find(function(t){ return t.id===activeTabId; });
   if(curTab && !curTab.stacked){
@@ -5116,8 +5121,9 @@ function renderSharedTabs(){
   var addBtn=tabsEl.querySelector('.tab-add');
   _sharedToMe.forEach(function(share){
     var btn=document.createElement('button');
-    btn.className='tab shared-from-tab';
-    btn.style.cssText='border-color:#2563a8;color:#2563a8';
+    var isActive=_viewingSharedRoadmap&&_viewingSharedRoadmap.id===share.id;
+    btn.className='tab shared-from-tab'+(isActive?' active':'');
+    btn.style.cssText='border-color:#2563a8;color:#2563a8'+(isActive?';background:#eff6ff':'');
     btn.title='Shared roadmap from '+share.owner_name+' ('+share.owner_email+')';
     btn.innerHTML=escHtml(share.roadmap_name)+' <span class="shared-badge">SHARED</span>';
     btn.onclick=function(){ openSharedRoadmap(share); };
@@ -5127,6 +5133,7 @@ function renderSharedTabs(){
 
 async function openSharedRoadmap(share){
   var roadmapPayload=null;
+  var debugInfo='Share: owner_id='+share.owner_id+' share_id='+share.id+'\n';
 
   // Method 1: Edge function (uses service role, bypasses RLS)
   try {
@@ -5136,30 +5143,34 @@ async function openSharedRoadmap(share){
       body:{owner_id:share.owner_id, share_id:share.id},
       token:_accessToken||null
     });
-    // Edge function returns {ok:true, data:<roadmap_payload>}
+    debugInfo+='Edge function: HTTP ok='+ef.ok+' status='+ef.status+'\n';
+    debugInfo+='ef.data exists='+(!!ef.data)+' ef.data.ok='+(ef.data&&ef.data.ok)+' ef.data.data exists='+(!!( ef.data&&ef.data.data))+'\n';
+    if(ef.data&&ef.data.error) debugInfo+='ef.data.error='+ef.data.error+'\n';
     if(ef.ok&&ef.data&&ef.data.ok&&ef.data.data){
       roadmapPayload=ef.data.data;
-      console.log('Shared roadmap loaded via edge function');
-    } else {
-      console.warn('Edge function returned:',JSON.stringify(ef.data));
+      debugInfo+='SUCCESS via edge function: rows='+(roadmapPayload.rows||[]).length+'\n';
+    } else if(ef.ok&&ef.data&&ef.data.data){
+      // Edge function returned ok at HTTP level, data exists but no .ok flag
+      roadmapPayload=ef.data.data;
+      debugInfo+='SUCCESS via edge function (no ok flag): rows='+(roadmapPayload.rows||[]).length+'\n';
     }
-  } catch(e){ console.warn('get-shared-roadmap edge function error:',e.message); }
+  } catch(e){ debugInfo+='Edge function EXCEPTION: '+e.message+'\n'; }
 
   // Method 2: Direct REST fallback
   if(!roadmapPayload){
     try {
       var r=await _dbReq('/rest/v1/roadmap_data?select=data&user_id=eq.'+share.owner_id+'&limit=1');
+      debugInfo+='REST: ok='+r.ok+' status='+r.status+' isArray='+Array.isArray(r.data)+' length='+(Array.isArray(r.data)?r.data.length:'N/A')+'\n';
       if(r.ok&&Array.isArray(r.data)&&r.data[0]&&r.data[0].data){
         roadmapPayload=r.data[0].data;
-        console.log('Shared roadmap loaded via REST');
-      } else {
-        console.warn('REST query returned:',r.status,JSON.stringify(r.data));
+        debugInfo+='SUCCESS via REST: rows='+(roadmapPayload.rows||[]).length+'\n';
       }
-    } catch(e){ console.warn('REST fallback error:',e.message); }
+    } catch(e){ debugInfo+='REST EXCEPTION: '+e.message+'\n'; }
   }
 
   if(!roadmapPayload){
-    alert('Could not load shared roadmap.\n\nThis usually means the owner needs to:\n1. Open PM Roadmapper\n2. Click Sync now in their Account page\n3. Verify the badge shows green "Synced"\n\nThen try opening this shared roadmap again.');
+    console.error('Could not load shared roadmap:', debugInfo);
+    alert('Could not load shared roadmap. Please try again or ask the owner to re-share.');
     return;
   }
 
@@ -5188,7 +5199,7 @@ async function openSharedRoadmap(share){
 
   // Apply read-only: disable the table editing area
   var tableWrap=document.querySelector('.table-wrap');
-  if(tableWrap) tableWrap.classList.add('rbac-disabled');
+  if(tableWrap) tableWrap.classList.add('shared-readonly');
 
   // Re-render with shared data
   recomputeTimeline(); renderTableHeader(); renderTabs(); renderStackedTabs(); render();
@@ -5201,7 +5212,7 @@ function exitSharedView(){
   if(banner) banner.remove();
   // Remove read-only
   var tableWrap=document.querySelector('.table-wrap');
-  if(tableWrap) tableWrap.classList.remove('rbac-disabled');
+  if(tableWrap) tableWrap.classList.remove('shared-readonly');
   // Restore user's own data
   if(_myDataBackup){
     applyDataPayload(_myDataBackup);
