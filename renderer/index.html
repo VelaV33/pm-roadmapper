@@ -1186,6 +1186,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
     <div class="ts-view-toggle">
       <button class="ts-view-btn active" id="kpiViewScorecard" onclick="setKPIView('scorecard')">Scorecard</button>
       <button class="ts-view-btn" id="kpiViewTimesheet" onclick="setKPIView('timesheet')">Timesheet</button>
+      <button class="ts-view-btn" id="kpiViewCapacity" onclick="setKPIView('capacity')">Capacity</button>
     </div>
     <div id="kpiOverallScore" style="margin-left:auto;margin-right:8px"></div>
     <select id="kpiQuarterSelect" onchange="renderKPI()" style="padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);color:#fff;font-size:12px;font-weight:600;min-width:100px">
@@ -9649,15 +9650,20 @@ function setKPIView(view){
   _kpiView=view;
   document.getElementById('kpiViewScorecard').className='ts-view-btn'+(view==='scorecard'?' active':'');
   document.getElementById('kpiViewTimesheet').className='ts-view-btn'+(view==='timesheet'?' active':'');
-  document.getElementById('tsWeekNav').style.display=view==='timesheet'?'flex':'none';
+  document.getElementById('kpiViewCapacity').className='ts-view-btn'+(view==='capacity'?' active':'');
+  document.getElementById('tsWeekNav').style.display=(view==='timesheet'||view==='capacity')?'flex':'none';
   var addBtn=document.getElementById('kpiAddBtn');
   if(addBtn){
-    addBtn.textContent=view==='timesheet'?'+ Add Task':'+ Add KPI';
-    addBtn.setAttribute('onclick',view==='timesheet'?'_todoReturnTo="timesheet";closeKPI();openTodo();addTodoItem()':'showAddCustomKPI()');
+    if(view==='capacity'){ addBtn.style.display='none'; }
+    else { addBtn.style.display=''; addBtn.textContent=view==='timesheet'?'+ Add Task':'+ Add KPI';
+      addBtn.setAttribute('onclick',view==='timesheet'?'_todoReturnTo="timesheet";closeKPI();openTodo();addTodoItem()':'showAddCustomKPI()'); }
   }
   if(view==='timesheet'){
     document.getElementById('tsWeekLabel').textContent=_weekLabel(_tsCurrentWeek);
     renderTimesheet();
+  } else if(view==='capacity'){
+    document.getElementById('tsWeekLabel').textContent=_weekLabel(_tsCurrentWeek);
+    renderCapacityView();
   } else {
     renderKPI();
   }
@@ -9669,7 +9675,8 @@ function tsNavWeek(dir){
   d.setDate(d.getDate()+dir*7);
   _tsCurrentWeek=_getISOWeek(d);
   document.getElementById('tsWeekLabel').textContent=_weekLabel(_tsCurrentWeek);
-  renderTimesheet();
+  if(_kpiView==='capacity') renderCapacityView();
+  else renderTimesheet();
 }
 
 function getTimesheetWeek(week){
@@ -9957,6 +9964,256 @@ function pullTDLToTimesheet(){
   }
   persistData();
   renderTimesheet();
+}
+
+// ── MY CAPACITY VIEW ─────────────────────────────────────────────────────────
+var _capacityHoursPerWeek = 40;
+var _capacityDrilldown = 'weekly'; // 'weekly' | 'monthly' | 'yearly'
+
+function renderCapacityView(){
+  var body=document.getElementById('kpiBody');
+  body.innerHTML='';
+
+  var weekDates=_weekDates(_tsCurrentWeek);
+  var weekStart=weekDates[0];
+  var DAYS=['Mon','Tue','Wed','Thu','Fri'];
+
+  // ── Drilldown toggle ──
+  var drillRow=document.createElement('div');
+  drillRow.style.cssText='display:flex;gap:4px;margin-bottom:20px';
+  ['weekly','monthly','yearly'].forEach(function(mode){
+    var btn=document.createElement('button');
+    btn.textContent=mode.charAt(0).toUpperCase()+mode.slice(1);
+    btn.style.cssText='padding:6px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);transition:all .15s;'+
+      (_capacityDrilldown===mode?'background:var(--accent);color:#fff;border-color:var(--accent)':'background:var(--white);color:var(--text)');
+    btn.onclick=function(){ _capacityDrilldown=mode; renderCapacityView(); };
+    drillRow.appendChild(btn);
+  });
+  body.appendChild(drillRow);
+
+  if(_capacityDrilldown==='weekly') renderCapacityWeekly(body, weekStart);
+  else if(_capacityDrilldown==='monthly') renderCapacityMonthly(body, weekStart);
+  else renderCapacityYearly(body);
+}
+
+function _getTodosForWeek(weekStartDate){
+  var items=[];
+  var weekEnd=new Date(weekStartDate); weekEnd.setDate(weekEnd.getDate()+4);
+  Object.keys(todoAllData).forEach(function(init){
+    (todoAllData[init]||[]).forEach(function(t){
+      if(!t.due) return;
+      var due=new Date(t.due);
+      if(due>=weekStartDate && due<=weekEnd){
+        items.push({initiative:init, task:t, hours:parseFloat(t.estimate)||0});
+      }
+    });
+  });
+  return items;
+}
+
+function _getTodosForMonth(year, month){
+  var items=[];
+  Object.keys(todoAllData).forEach(function(init){
+    (todoAllData[init]||[]).forEach(function(t){
+      if(!t.due) return;
+      var due=new Date(t.due);
+      if(due.getFullYear()===year && due.getMonth()===month){
+        items.push({initiative:init, task:t, hours:parseFloat(t.estimate)||0});
+      }
+    });
+  });
+  return items;
+}
+
+function _capBar(allocated, available, label){
+  var pct=available>0?Math.round(allocated/available*100):0;
+  var color=pct<=75?'var(--g1)':pct<=95?'var(--o1)':'var(--r1)';
+  var remaining=Math.max(0,available-allocated);
+  var wrap=document.createElement('div');
+  wrap.style.cssText='margin-bottom:16px';
+  var hdr=document.createElement('div');
+  hdr.style.cssText='display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px';
+  hdr.innerHTML='<span style="font-size:13px;font-weight:600;color:var(--text)">'+label+'</span>'+
+    '<span style="font-size:12px;color:var(--muted)">'+allocated.toFixed(1)+'h / '+available+'h allocated ('+pct+'%)</span>';
+  wrap.appendChild(hdr);
+  var barBg=document.createElement('div');
+  barBg.style.cssText='height:12px;background:#eef1f6;border-radius:6px;overflow:hidden';
+  var barFill=document.createElement('div');
+  barFill.style.cssText='height:100%;border-radius:6px;background:'+color+';width:'+Math.min(pct,100)+'%;transition:width .3s';
+  barBg.appendChild(barFill); wrap.appendChild(barBg);
+  var sub=document.createElement('div');
+  sub.style.cssText='font-size:11px;color:var(--muted);margin-top:4px';
+  sub.textContent=remaining.toFixed(1)+'h remaining';
+  wrap.appendChild(sub);
+  return wrap;
+}
+
+function renderCapacityWeekly(body, weekStart){
+  var todos=_getTodosForWeek(weekStart);
+  var totalAllocated=0;
+  todos.forEach(function(t){ totalAllocated+=t.hours; });
+
+  // Also count timesheet logged hours
+  var tsData=timesheetData[_tsCurrentWeek];
+  var loggedHours=0;
+  if(tsData&&tsData.tasks) tsData.tasks.forEach(function(t){ loggedHours+=parseFloat(t.hours)||0; });
+
+  // Summary cards
+  var cards=document.createElement('div');
+  cards.style.cssText='display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px';
+  var cardData=[
+    {label:'Available',value:_capacityHoursPerWeek+'h',color:'var(--accent)',icon:'🕐'},
+    {label:'Planned',value:totalAllocated.toFixed(1)+'h',color:'var(--o1)',icon:'📋'},
+    {label:'Logged',value:loggedHours.toFixed(1)+'h',color:'var(--g1)',icon:'✅'},
+    {label:'Remaining',value:Math.max(0,_capacityHoursPerWeek-totalAllocated).toFixed(1)+'h',
+      color:totalAllocated>=_capacityHoursPerWeek?'var(--r1)':'var(--g1)',icon:'⏳'}
+  ];
+  cardData.forEach(function(c){
+    var card=document.createElement('div');
+    card.style.cssText='background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.04)';
+    card.innerHTML='<div style="font-size:20px;margin-bottom:4px">'+c.icon+'</div>'+
+      '<div style="font-size:24px;font-weight:700;color:'+c.color+'">'+c.value+'</div>'+
+      '<div style="font-size:11px;color:var(--muted);font-weight:500;margin-top:2px">'+c.label+'</div>';
+    cards.appendChild(card);
+  });
+  body.appendChild(cards);
+
+  // Overall capacity bar
+  body.appendChild(_capBar(totalAllocated, _capacityHoursPerWeek, 'Weekly Capacity'));
+
+  // Task breakdown
+  var secHdr=document.createElement('div');
+  secHdr.style.cssText='font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--accent);margin:24px 0 12px';
+  secHdr.textContent='Planned Tasks This Week';
+  body.appendChild(secHdr);
+
+  if(!todos.length){
+    var empty=document.createElement('div');
+    empty.style.cssText='text-align:center;padding:32px;color:var(--muted);font-size:13px;font-style:italic';
+    empty.textContent='No tasks planned for this week. Add due dates and time estimates to your ToDo items.';
+    body.appendChild(empty);
+  } else {
+    var table=document.createElement('table');
+    table.style.cssText='width:100%;border-collapse:collapse;font-size:13px';
+    table.innerHTML='<thead><tr style="border-bottom:2px solid var(--border)">'+
+      '<th style="text-align:left;padding:8px 12px;font-weight:600;color:var(--muted);font-size:11px">TASK</th>'+
+      '<th style="text-align:left;padding:8px 12px;font-weight:600;color:var(--muted);font-size:11px">INITIATIVE</th>'+
+      '<th style="text-align:left;padding:8px 12px;font-weight:600;color:var(--muted);font-size:11px">STATUS</th>'+
+      '<th style="text-align:right;padding:8px 12px;font-weight:600;color:var(--muted);font-size:11px">EST. HOURS</th>'+
+      '<th style="text-align:left;padding:8px 12px;font-weight:600;color:var(--muted);font-size:11px">DUE</th>'+
+      '</tr></thead>';
+    var tbody=document.createElement('tbody');
+    todos.forEach(function(item){
+      var statusColors={open:'var(--muted)',progress:'var(--accent)',done:'var(--g1)'};
+      var tr=document.createElement('tr');
+      tr.style.cssText='border-bottom:1px solid #f0f3f8';
+      tr.innerHTML='<td style="padding:10px 12px;font-weight:500">'+escHtml(item.task.text)+'</td>'+
+        '<td style="padding:10px 12px;color:var(--muted)">'+escHtml(item.initiative)+'</td>'+
+        '<td style="padding:10px 12px"><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:'+
+          (statusColors[item.task.status]||'var(--muted)')+';color:#fff;text-transform:uppercase">'+item.task.status+'</span></td>'+
+        '<td style="padding:10px 12px;text-align:right;font-weight:600">'+item.hours.toFixed(1)+'h</td>'+
+        '<td style="padding:10px 12px;color:var(--muted);font-size:12px">'+item.task.due+'</td>';
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    body.appendChild(table);
+  }
+}
+
+function renderCapacityMonthly(body, weekStart){
+  var year=weekStart.getFullYear();
+  var month=weekStart.getMonth();
+  var monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  // Calculate working days in month (exclude weekends)
+  var workingDays=0;
+  var d=new Date(year,month,1);
+  while(d.getMonth()===month){ if(d.getDay()!==0&&d.getDay()!==6) workingDays++; d.setDate(d.getDate()+1); }
+  var monthlyAvailable=workingDays*8;
+
+  var todos=_getTodosForMonth(year, month);
+  var totalAllocated=0;
+  todos.forEach(function(t){ totalAllocated+=t.hours; });
+
+  // Summary
+  var cards=document.createElement('div');
+  cards.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px';
+  [{label:'Working Days',value:workingDays,icon:'📅'},{label:'Available Hours',value:monthlyAvailable+'h',icon:'🕐'},{label:'Planned Hours',value:totalAllocated.toFixed(1)+'h',icon:'📋'}].forEach(function(c){
+    var card=document.createElement('div');
+    card.style.cssText='background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.04)';
+    card.innerHTML='<div style="font-size:20px;margin-bottom:4px">'+c.icon+'</div>'+
+      '<div style="font-size:24px;font-weight:700;color:var(--accent)">'+c.value+'</div>'+
+      '<div style="font-size:11px;color:var(--muted);font-weight:500;margin-top:2px">'+c.label+'</div>';
+    cards.appendChild(card);
+  });
+  body.appendChild(cards);
+  body.appendChild(_capBar(totalAllocated, monthlyAvailable, monthNames[month]+' '+year+' Capacity'));
+
+  // Week-by-week breakdown for this month
+  var secHdr=document.createElement('div');
+  secHdr.style.cssText='font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--accent);margin:24px 0 12px';
+  secHdr.textContent='Weekly Breakdown';
+  body.appendChild(secHdr);
+
+  // Generate weeks in this month
+  var firstDay=new Date(year,month,1);
+  while(firstDay.getDay()!==1) firstDay.setDate(firstDay.getDate()-1); // back to Monday
+  var weekNum=0;
+  while(true){
+    var ws=new Date(firstDay); ws.setDate(ws.getDate()+weekNum*7);
+    var we=new Date(ws); we.setDate(we.getDate()+4);
+    if(ws.getMonth()>month && ws.getFullYear()>=year) break;
+    if(we.getMonth()<month && we.getFullYear()<=year){ weekNum++; continue; }
+    var weekTodos=_getTodosForWeek(ws);
+    var weekAlloc=0; weekTodos.forEach(function(t){weekAlloc+=t.hours;});
+    var weekLabel='Week of '+ws.toLocaleDateString('en-ZA',{day:'numeric',month:'short'});
+    body.appendChild(_capBar(weekAlloc, _capacityHoursPerWeek, weekLabel));
+    weekNum++;
+    if(weekNum>6) break;
+  }
+}
+
+function renderCapacityYearly(body){
+  var now=new Date();
+  var year=now.getFullYear();
+  var monthNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  // Yearly summary
+  var yearlyAvailable=52*_capacityHoursPerWeek;
+  var totalAllocated=0;
+  for(var m=0;m<12;m++){
+    var todos=_getTodosForMonth(year,m);
+    todos.forEach(function(t){totalAllocated+=t.hours;});
+  }
+
+  var cards=document.createElement('div');
+  cards.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px';
+  [{label:'Yearly Available',value:yearlyAvailable+'h',icon:'📅'},{label:'Total Planned',value:totalAllocated.toFixed(1)+'h',icon:'📋'},
+    {label:'Utilization',value:Math.round(totalAllocated/yearlyAvailable*100)+'%',icon:'📊'}].forEach(function(c){
+    var card=document.createElement('div');
+    card.style.cssText='background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.04)';
+    card.innerHTML='<div style="font-size:20px;margin-bottom:4px">'+c.icon+'</div>'+
+      '<div style="font-size:24px;font-weight:700;color:var(--accent)">'+c.value+'</div>'+
+      '<div style="font-size:11px;color:var(--muted);font-weight:500;margin-top:2px">'+c.label+'</div>';
+    cards.appendChild(card);
+  });
+  body.appendChild(cards);
+  body.appendChild(_capBar(totalAllocated, yearlyAvailable, year+' Annual Capacity'));
+
+  // Monthly breakdown
+  var secHdr=document.createElement('div');
+  secHdr.style.cssText='font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--accent);margin:24px 0 12px';
+  secHdr.textContent='Monthly Breakdown';
+  body.appendChild(secHdr);
+
+  for(var mi=0;mi<12;mi++){
+    var mTodos=_getTodosForMonth(year,mi);
+    var mAlloc=0; mTodos.forEach(function(t){mAlloc+=t.hours;});
+    var workDays=0;
+    var dd=new Date(year,mi,1);
+    while(dd.getMonth()===mi){if(dd.getDay()!==0&&dd.getDay()!==6)workDays++;dd.setDate(dd.getDate()+1);}
+    body.appendChild(_capBar(mAlloc, workDays*8, monthNames[mi]+' '+year));
+  }
 }
 
 // ── CapacityIQ ───────────────────────────────────────────────────────────────
