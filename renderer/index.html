@@ -3993,6 +3993,13 @@ async function onAuthSuccess(user){
     }
   }
 
+  // ── STEP 5b: Ensure tabs_data always has at least one Main Roadmap tab ──
+  if(!tabs_data||!tabs_data.length){
+    tabs_data=[{id:'tab1',name:'Main Roadmap',stacked:false}];
+    activeTabId='tab1';
+  }
+  if(!activeTabId) activeTabId=tabs_data[0].id;
+
   // ── STEP 6: Load THIS user's profile from scoped localStorage ──
   loadProfileSettings(user.id);
 
