@@ -3957,9 +3957,11 @@ async function onAuthSuccess(user){
     await window.electronAPI.setActiveUser(user.id);
   }
 
-  // ── STEP 4: CLOUD-FIRST — load from Supabase via edge function (bypasses RLS) ──
+  // ── STEP 4: CLOUD-FIRST — load THIS USER's data from Supabase ──
   var cloudLoaded=false;
   try {
+    // Use get-shared-roadmap edge function with this user's ID to load their own data
+    // (bypasses RLS, uses service role)
     var cr=await window.electronAPI.supaRequest({
       path:'/functions/v1/get-shared-roadmap',
       method:'POST',
@@ -3972,7 +3974,9 @@ async function onAuthSuccess(user){
         applyDataPayload(cd);
         cloudLoaded=true;
         if(cr.data.updated_at) _lastCloudTs=new Date(cr.data.updated_at).getTime();
-        console.log('Cloud data loaded via edge function:',sections.length,'sections,',rows.length,'rows');
+        console.log('Cloud data loaded for user',user.email,':',sections.length,'sections,',rows.length,'rows');
+      } else {
+        console.log('Cloud data empty for user',user.email);
       }
     }
   } catch(e){
