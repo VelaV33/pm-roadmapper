@@ -488,7 +488,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 /* Onboarding Tour */
 #tourOverlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;display:none}
 #tourOverlay.active{display:block}
-.tour-spotlight{position:absolute;border-radius:8px;box-shadow:0 0 0 9999px rgba(0,0,0,.6);z-index:9001;transition:all .4s ease;pointer-events:none}
+.tour-spotlight{position:absolute;border-radius:8px;outline:3px solid #fff;outline-offset:2px;z-index:9001;transition:all .4s ease;pointer-events:none}
 .tour-tooltip{position:absolute;z-index:9002;background:#fff;border-radius:12px;padding:20px;width:360px;max-width:90vw;box-shadow:0 12px 40px rgba(0,0,0,.3)}
 .tour-tooltip h3{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--navy);margin-bottom:6px}
 .tour-tooltip p{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:14px}
@@ -11718,12 +11718,8 @@ function prevTourStep(){
 }
 
 function checkShowTour(){
-  // Don't start tour if auth overlay is showing
-  var authOv=document.getElementById('authOverlay');
-  if(authOv&&!authOv.classList.contains('hidden')) return;
-  if(!localStorage.getItem(_lsKey('pmr_tour_done'))){
-    setTimeout(startTour, 1500);
-  }
+  // Tour no longer auto-starts — users can click the ? button to start it manually.
+  // Auto-starting caused keyboard input to be blocked across the entire app.
 }
 
 function persistData() {
