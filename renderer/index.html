@@ -8951,44 +8951,58 @@ function getTodoCountForInitiative(name){
 // ── G2M to TDL ──
 function g2mToTdl(product,idx){
   var items=getG2MItems(product);
-  var item=items[idx];
-  if(!item) return;
-  // Show inline due date picker
-  var existing=document.getElementById('g2mTdlForm_'+idx);
-  if(existing){existing.remove();return;}
-  var parent=event.target.closest('td');
-  if(!parent) return;
-  var form=document.createElement('div');
-  form.id='g2mTdlForm_'+idx;
-  form.style.cssText='margin-top:4px;display:flex;gap:4px;align-items:center';
-  form.innerHTML='<input type="date" id="g2mTdlDue_'+idx+'" style="padding:3px 6px;border:1px solid #c5d5ea;border-radius:4px;font-size:10px;color:var(--text)">'+
-    '<button onclick="confirmG2mToTdl(\''+product.replace(/'/g,"\\'")+'\','+idx+')" style="padding:3px 8px;border-radius:4px;border:none;background:#16a34a;color:#fff;font-size:9px;font-weight:700;cursor:pointer">Add</button>'+
-    '<button onclick="this.parentElement.remove()" style="padding:3px 6px;border-radius:4px;border:none;background:#e5e7eb;font-size:9px;cursor:pointer">X</button>';
-  parent.appendChild(form);
-}
-function confirmG2mToTdl(product,idx){
-  var items=getG2MItems(product);
-  var item=items[idx];
-  if(!item) return;
-  var dueEl=document.getElementById('g2mTdlDue_'+idx);
-  var due=dueEl?dueEl.value||'':'';
-  if(!todoAllData[product]) todoAllData[product]=[];
-  todoAllData[product].push({
-    id:'td'+Date.now(),
-    text:'[G2M] '+item.text,
-    status:'open',
-    due:due,
-    comments:'From G2M: '+item.cat,
-    estimate:'',
-    createdAt:Date.now()
-  });
-  var form=document.getElementById('g2mTdlForm_'+idx);
-  // Show feedback before removing form
-  if(form){
-    form.innerHTML='<span style="color:#16a34a;font-size:10px;font-weight:700">✓ Added to ToDo List!</span>';
-    setTimeout(function(){if(form.parentElement) form.remove();},1500);
-  }
-  persistData();
+  var item=items[idx]; if(!item) return;
+  var ex=document.getElementById('g2mTdlModal'); if(ex) ex.remove();
+
+  var ov=document.createElement('div');
+  ov.id='g2mTdlModal'; ov.className='modal-overlay'; ov.style.zIndex='9600';
+  var modal=document.createElement('div'); modal.className='modal'; modal.style.width='400px';
+
+  var hdr=document.createElement('div'); hdr.className='modal-hdr';
+  hdr.innerHTML='<h2>Add to ToDo List</h2>';
+  var cx=document.createElement('button'); cx.className='close'; cx.innerHTML='✕';
+  cx.onclick=function(){ ov.remove(); }; hdr.appendChild(cx);
+  modal.appendChild(hdr);
+
+  var body=document.createElement('div'); body.className='modal-body';
+  body.innerHTML='<div class="form-row"><label>Task</label><input type="text" id="g2mTdlText" value="[G2M] '+escHtml(item.text)+'"></div>'+
+    '<div class="form-row"><label>Category</label><input type="text" value="'+escHtml(item.cat)+'" disabled style="background:var(--bg)"></div>'+
+    '<div style="display:flex;gap:12px"><div class="form-row" style="flex:1"><label>Due Date</label><input type="date" id="g2mTdlDue" value="'+(item.endDate||'')+'"></div>'+
+    '<div class="form-row" style="flex:1"><label>Est. Hours</label><input type="number" id="g2mTdlHrs" value="'+(item.estHours||'')+'" min="0" step="0.5" placeholder="0"></div></div>'+
+    '<div class="form-row"><label>Assignee</label><input type="text" id="g2mTdlAssignee" value="'+escHtml(item.assignee||'')+'" placeholder="Optional"></div>';
+  modal.appendChild(body);
+
+  var footer=document.createElement('div'); footer.className='modal-footer';
+  var cancelBtn=document.createElement('button'); cancelBtn.className='btn-cancel'; cancelBtn.textContent='Cancel';
+  cancelBtn.onclick=function(){ ov.remove(); };
+  var addBtn=document.createElement('button'); addBtn.className='btn-save'; addBtn.textContent='Add to ToDo';
+  addBtn.onclick=function(){
+    var text=document.getElementById('g2mTdlText').value.trim(); if(!text) return;
+    var due=document.getElementById('g2mTdlDue').value||'';
+    var hrs=document.getElementById('g2mTdlHrs').value||'';
+    var assignee=document.getElementById('g2mTdlAssignee').value||'';
+    if(!todoAllData[product]) todoAllData[product]=[];
+    todoAllData[product].push({
+      id:'td'+Date.now(),
+      text:text,
+      status:'open',
+      due:due,
+      estimate:hrs,
+      comments:'From G2M: '+item.cat+(assignee?' | Assigned: '+assignee:''),
+      createdAt:Date.now()
+    });
+    persistData();
+    ov.remove();
+    // Brief feedback
+    var msg=document.createElement('div');
+    msg.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--g1);color:#fff;padding:10px 24px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.15)';
+    msg.textContent='✓ Added to ToDo List';
+    document.body.appendChild(msg);
+    setTimeout(function(){ msg.style.opacity='0'; msg.style.transition='opacity .3s'; setTimeout(function(){msg.remove();},300); },2000);
+  };
+  footer.appendChild(cancelBtn); footer.appendChild(addBtn);
+  modal.appendChild(footer);
+  ov.appendChild(modal); document.body.appendChild(ov);
 }
 
 // ── MODAL INTEGRATION (G2M + ToDo in Row Edit) ──
