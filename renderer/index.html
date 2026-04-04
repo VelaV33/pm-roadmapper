@@ -7732,7 +7732,7 @@ function renderG2MTabs(){
   var bar=document.getElementById('g2mTabsBar');
   if(!bar) return;
   bar.innerHTML='';
-  var existing=Object.keys(g2mAllData).filter(function(k){return g2mAllData[k]&&g2mAllData[k].items&&g2mAllData[k].items.length>0;});
+  var existing=Object.keys(g2mAllData).filter(function(k){return g2mAllData[k]&&g2mAllData[k].items;});
   if(!existing.length){
     bar.innerHTML='<span style="font-size:12px;color:var(--muted);font-style:italic;padding:4px 0">No active G2M strategies yet. Select an initiative above to start.</span>';
     return;
@@ -7749,8 +7749,9 @@ function renderG2MTabs(){
     tab.style.cssText='padding:5px 14px;border-radius:8px;font-size:12px;font-weight:'+(isActive?'600':'500')+';cursor:pointer;border:1px solid '+(isActive?'var(--accent)':'var(--border)')+';background:'+(isActive?'var(--accent)':'var(--white)')+';color:'+(isActive?'#fff':'var(--text)')+';transition:all .12s;white-space:nowrap';
     // Count completion
     var items=g2mAllData[name].items||[];
-    var yes=0,applicable=0;
-    items.forEach(function(it){if(it.value==='yes')yes++;if(it.value&&it.value!=='na')applicable++;});
+    var naCount=items.filter(function(i){return i.value==='na';}).length;
+    var applicable=items.length-naCount;
+    var yes=items.filter(function(i){return i.value==='yes';}).length;
     var pct=applicable>0?Math.round(yes/applicable*100):0;
     tab.textContent=name+' ('+pct+'%)';
     tab.title=yes+'/'+applicable+' items complete';
@@ -7857,7 +7858,7 @@ function renderG2M(){
 
     var tbl=document.createElement('table');
     tbl.className='g2m-table';
-    tbl.innerHTML='<thead><tr><th style="width:30px">#</th><th>Checklist Item</th><th class="g2m-th-yn">YES</th><th class="g2m-th-yn">NO</th><th class="g2m-th-yn">N/A</th><th style="min-width:150px">Comments & Links</th><th style="width:50px">Actions</th></tr></thead>';
+    tbl.innerHTML='<thead><tr><th style="width:30px">#</th><th style="width:24px" title="Milestone">★</th><th>Checklist Item</th><th class="g2m-th-yn">YES</th><th class="g2m-th-yn">NO</th><th class="g2m-th-yn">N/A</th><th style="min-width:150px">Comments & Links</th><th style="width:50px">Actions</th></tr></thead>';
     var tbody=document.createElement('tbody');
     catItems.forEach(function(item){
       globalNum++;
@@ -7868,9 +7869,11 @@ function renderG2M(){
       var uid='g2m_'+idx+'_'+globalNum;
       var escapedProduct=g2mCurrentProduct.replace(/'/g,"\\'");
       var escapedComment=(item.comment||'').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+      var isMilestone=!!item.milestone;
       tr.innerHTML=
         '<td style="font-size:11px;font-weight:700;color:var(--muted);text-align:center">'+globalNum+'</td>'+
-        '<td style="font-size:12px">'+item.text+'</td>'+
+        '<td style="text-align:center"><button onclick="toggleG2MMilestone(\''+escapedProduct+'\','+idx+')" style="background:none;border:none;cursor:pointer;font-size:16px;padding:0;line-height:1;transition:all .12s;color:'+(isMilestone?'#f59e0b':'#d1d5db')+'" title="'+(isMilestone?'Remove milestone':'Mark as milestone')+'">'+(isMilestone?'★':'☆')+'</button></td>'+
+        '<td style="font-size:12px'+(isMilestone?';font-weight:600':'')+'">'+item.text+(isMilestone?' <span style="font-size:8px;font-weight:600;padding:1px 6px;border-radius:8px;background:#fef3c7;color:#92400e;vertical-align:middle">MILESTONE</span>':'')+'</td>'+
         '<td class="g2m-yn"><input type="radio" name="'+uid+'" class="g2m-radio" id="'+uid+'_y" value="yes" '+(item.value==='yes'?'checked':'')+' onchange="setG2MVal(\''+g2mCurrentProduct+'\','+idx+',\'yes\')"><label for="'+uid+'_y" class="g2m-radio-label g2m-yes">✓</label></td>'+
         '<td class="g2m-yn"><input type="radio" name="'+uid+'" class="g2m-radio" id="'+uid+'_n" value="no" '+(item.value==='no'?'checked':'')+' onchange="setG2MVal(\''+g2mCurrentProduct+'\','+idx+',\'no\')"><label for="'+uid+'_n" class="g2m-radio-label g2m-no-btn">✕</label></td>'+
         '<td class="g2m-yn"><input type="radio" name="'+uid+'" class="g2m-radio" id="'+uid+'_na" value="na" '+(item.value==='na'?'checked':'')+' onchange="setG2MVal(\''+g2mCurrentProduct+'\','+idx+',\'na\')"><label for="'+uid+'_na" class="g2m-radio-label g2m-na">—</label></td>'+
@@ -7892,6 +7895,13 @@ function renderG2M(){
     body.appendChild(div);
   });
   updateG2MScore();
+}
+
+function toggleG2MMilestone(product,idx){
+  var items=getG2MItems(product);
+  if(items[idx]) items[idx].milestone=!items[idx].milestone;
+  persistG2M();
+  renderG2M();
 }
 
 function setG2MVal(product,idx,val){
@@ -10084,9 +10094,10 @@ function _rptTodoStats(initiative){
 }
 function _rptG2MScore(rowName){
   var d=g2mAllData[rowName]; if(!d||!d.items) return null;
-  var yes=0,applicable=0;
-  d.items.forEach(function(it){ if(it.value==='yes') yes++; if(it.value&&it.value!=='na') applicable++; });
-  return applicable>0?Math.round(yes/applicable*100):null;
+  var naCount=d.items.filter(function(i){return i.value==='na';}).length;
+  var applicable=d.items.length-naCount;
+  var yes=d.items.filter(function(i){return i.value==='yes';}).length;
+  return applicable>0?Math.round(yes/applicable*100):0;
 }
 
 // ══ REPORT 1: Initiative Health Dashboard ══
