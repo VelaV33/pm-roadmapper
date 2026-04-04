@@ -7761,6 +7761,15 @@ function renderG2MTabs(){
       renderG2MTabs();
     };
     bar.appendChild(tab);
+    // Delete button for this initiative
+    if(isActive){
+      var delBtn=document.createElement('button');
+      delBtn.style.cssText='padding:3px 6px;border-radius:6px;font-size:10px;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--r1);transition:all .12s;margin-left:-2px';
+      delBtn.textContent='✕';
+      delBtn.title='Delete G2M for '+name;
+      delBtn.onclick=function(e){ e.stopPropagation(); deleteG2MInitiative(name); };
+      bar.appendChild(delBtn);
+    }
   });
 }
 function closeG2M(){
@@ -7858,7 +7867,7 @@ function renderG2M(){
 
     var tbl=document.createElement('table');
     tbl.className='g2m-table';
-    tbl.innerHTML='<thead><tr><th style="width:30px">#</th><th style="width:24px" title="Milestone">★</th><th>Checklist Item</th><th class="g2m-th-yn">YES</th><th class="g2m-th-yn">NO</th><th class="g2m-th-yn">N/A</th><th style="min-width:150px">Comments & Links</th><th style="width:50px">Actions</th></tr></thead>';
+    tbl.innerHTML='<thead><tr><th style="width:26px">#</th><th style="width:22px">★</th><th style="min-width:180px">Checklist Item</th><th class="g2m-th-yn">Y</th><th class="g2m-th-yn">N</th><th class="g2m-th-yn">—</th><th style="width:80px">Start</th><th style="width:80px">End</th><th style="width:45px">Hrs</th><th style="min-width:120px">Comments</th><th style="width:30px"></th></tr></thead>';
     var tbody=document.createElement('tbody');
     catItems.forEach(function(item){
       globalNum++;
@@ -7870,22 +7879,21 @@ function renderG2M(){
       var escapedProduct=g2mCurrentProduct.replace(/'/g,"\\'");
       var escapedComment=(item.comment||'').replace(/"/g,'&quot;').replace(/</g,'&lt;');
       var isMilestone=!!item.milestone;
+      var startDate=item.startDate||'';
+      var endDate=item.endDate||'';
+      var estHours=item.estHours||'';
       tr.innerHTML=
-        '<td style="font-size:11px;font-weight:700;color:var(--muted);text-align:center">'+globalNum+'</td>'+
-        '<td style="text-align:center"><button onclick="toggleG2MMilestone(\''+escapedProduct+'\','+idx+')" style="background:none;border:none;cursor:pointer;font-size:16px;padding:0;line-height:1;transition:all .12s;color:'+(isMilestone?'#f59e0b':'#d1d5db')+'" title="'+(isMilestone?'Remove milestone':'Mark as milestone')+'">'+(isMilestone?'★':'☆')+'</button></td>'+
-        '<td style="font-size:12px'+(isMilestone?';font-weight:600':'')+'">'+item.text+(isMilestone?' <span style="font-size:8px;font-weight:600;padding:1px 6px;border-radius:8px;background:#fef3c7;color:#92400e;vertical-align:middle">MILESTONE</span>':'')+'</td>'+
+        '<td style="font-size:10px;font-weight:600;color:var(--muted);text-align:center">'+globalNum+'</td>'+
+        '<td style="text-align:center"><button onclick="toggleG2MMilestone(\''+escapedProduct+'\','+idx+')" style="background:none;border:none;cursor:pointer;font-size:14px;padding:0;line-height:1;color:'+(isMilestone?'#f59e0b':'#d1d5db')+'">'+(isMilestone?'★':'☆')+'</button></td>'+
+        '<td style="font-size:12px'+(isMilestone?';font-weight:600':'')+'">'+item.text+(isMilestone?' <span style="font-size:7px;font-weight:600;padding:1px 5px;border-radius:6px;background:#fef3c7;color:#92400e;vertical-align:middle">MILESTONE</span>':'')+'</td>'+
         '<td class="g2m-yn"><input type="radio" name="'+uid+'" class="g2m-radio" id="'+uid+'_y" value="yes" '+(item.value==='yes'?'checked':'')+' onchange="setG2MVal(\''+g2mCurrentProduct+'\','+idx+',\'yes\')"><label for="'+uid+'_y" class="g2m-radio-label g2m-yes">✓</label></td>'+
         '<td class="g2m-yn"><input type="radio" name="'+uid+'" class="g2m-radio" id="'+uid+'_n" value="no" '+(item.value==='no'?'checked':'')+' onchange="setG2MVal(\''+g2mCurrentProduct+'\','+idx+',\'no\')"><label for="'+uid+'_n" class="g2m-radio-label g2m-no-btn">✕</label></td>'+
         '<td class="g2m-yn"><input type="radio" name="'+uid+'" class="g2m-radio" id="'+uid+'_na" value="na" '+(item.value==='na'?'checked':'')+' onchange="setG2MVal(\''+g2mCurrentProduct+'\','+idx+',\'na\')"><label for="'+uid+'_na" class="g2m-radio-label g2m-na">—</label></td>'+
-        '<td><div class="g2m-comment-cell">'+
-          '<input type="text" value="'+escapedComment+'" placeholder="Add comment..." onchange="setG2MComment(\''+escapedProduct+'\','+idx+',this.value)" style="width:100%;padding:4px 8px;border:1px solid #e0e7f0;border-radius:4px;font-size:11px;color:var(--text);background:#fff;font-family:inherit">'+
-          '<div class="g2m-links-row">'+
-            (item.links||[]).map(function(lnk,li){return '<span class="g2m-link-chip" title="'+lnk.url+'"><span onclick="window.open(\''+lnk.url.replace(/'/g,"\\'")+'\')">'+(lnk.label||lnk.url).substring(0,25)+'</span><span class="g2m-link-rm" onclick="removeG2MItemLink(\''+escapedProduct+'\','+idx+','+li+')">&times;</span></span>';}).join('')+
-            '<span class="g2m-link-chip" style="background:#f0fdf4;border-color:#bbf7d0;color:#16a34a;cursor:pointer" onclick="addG2MItemLink(\''+escapedProduct+'\','+idx+')">+ link</span>'+
-          '</div>'+
-        '</div></td>'+
-        '<td style="white-space:nowrap">'+
-          '<button style="background:none;border:none;cursor:pointer;font-size:9px;color:var(--accent);font-weight:700;padding:2px 4px;opacity:.6" onclick="g2mToTdl(\''+escapedProduct+'\','+idx+')" title="Add to ToDo List">+TDL</button>'+
+        '<td><input type="date" value="'+startDate+'" onchange="setG2MItemField(\''+escapedProduct+'\','+idx+',\'startDate\',this.value)" style="width:100%;padding:3px 4px;border:1px solid var(--border);border-radius:6px;font-size:10px;color:var(--text);font-family:inherit"></td>'+
+        '<td><input type="date" value="'+endDate+'" onchange="setG2MItemField(\''+escapedProduct+'\','+idx+',\'endDate\',this.value)" style="width:100%;padding:3px 4px;border:1px solid var(--border);border-radius:6px;font-size:10px;color:var(--text);font-family:inherit"></td>'+
+        '<td><input type="number" value="'+estHours+'" placeholder="—" min="0" step="0.5" onchange="setG2MItemField(\''+escapedProduct+'\','+idx+',\'estHours\',this.value)" style="width:100%;padding:3px 4px;border:1px solid var(--border);border-radius:6px;font-size:10px;color:var(--text);text-align:center;font-family:inherit"></td>'+
+        '<td><input type="text" value="'+escapedComment+'" placeholder="Comment..." onchange="setG2MComment(\''+escapedProduct+'\','+idx+',this.value)" style="width:100%;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:10px;color:var(--text);font-family:inherit"></td>'+
+        '<td style="text-align:center"><button onclick="g2mToTdl(\''+escapedProduct+'\','+idx+')" style="background:none;border:none;cursor:pointer;font-size:12px;padding:2px;color:var(--accent);opacity:.5" title="Add to ToDo List">📋</button>'+
           (item.custom?'<button class="g2m-del-btn" style="opacity:1" onclick="delG2MRow(\''+escapedProduct+'\','+idx+')" title="Remove">✕</button>':'')+
         '</td>';
       tbody.appendChild(tr);
@@ -7902,6 +7910,31 @@ function toggleG2MMilestone(product,idx){
   if(items[idx]) items[idx].milestone=!items[idx].milestone;
   persistG2M();
   renderG2M();
+}
+
+function setG2MItemField(product,idx,field,value){
+  var items=getG2MItems(product);
+  if(items[idx]) items[idx][field]=value;
+  persistG2M();
+}
+
+function deleteG2MInitiative(name){
+  if(!confirm('Delete the G2M strategy for "'+name+'"?\n\nThis will remove all checklist data for this initiative. This cannot be undone.')) return;
+  delete g2mAllData[name];
+  persistG2M();
+  // Reset to first available or clear
+  var remaining=Object.keys(g2mAllData);
+  if(remaining.length>0){
+    var sel=document.getElementById('g2mProductSelect');
+    if(sel) sel.value=remaining[0];
+    g2mCurrentProduct=remaining[0];
+  } else {
+    g2mCurrentProduct='';
+  }
+  renderG2MTabs();
+  loadG2MProductDesc();
+  renderG2M();
+  updateG2MScore();
 }
 
 function setG2MVal(product,idx,val){
