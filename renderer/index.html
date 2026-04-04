@@ -7870,7 +7870,7 @@ function renderG2M(){
 
     var tbl=document.createElement('table');
     tbl.className='g2m-table';
-    tbl.innerHTML='<thead><tr><th style="width:26px">#</th><th style="width:22px">★</th><th style="min-width:180px">Checklist Item</th><th class="g2m-th-yn">Y</th><th class="g2m-th-yn">N</th><th class="g2m-th-yn">—</th><th style="width:80px">Start</th><th style="width:80px">End</th><th style="width:45px">Hrs</th><th style="min-width:120px">Comments</th><th style="width:30px"></th></tr></thead>';
+    tbl.innerHTML='<thead><tr><th style="width:26px">#</th><th style="width:22px">★</th><th style="min-width:160px">Checklist Item</th><th class="g2m-th-yn">Y</th><th class="g2m-th-yn">N</th><th class="g2m-th-yn">—</th><th style="width:100px">Assigned To</th><th style="width:80px">Start</th><th style="width:80px">End</th><th style="width:45px">Hrs</th><th style="min-width:100px">Comments</th><th style="width:30px"></th></tr></thead>';
     var tbody=document.createElement('tbody');
     catItems.forEach(function(item){
       globalNum++;
@@ -7892,6 +7892,7 @@ function renderG2M(){
         '<td class="g2m-yn"><input type="radio" name="'+uid+'" class="g2m-radio" id="'+uid+'_y" value="yes" '+(item.value==='yes'?'checked':'')+' onchange="setG2MVal(\''+g2mCurrentProduct+'\','+idx+',\'yes\')"><label for="'+uid+'_y" class="g2m-radio-label g2m-yes">✓</label></td>'+
         '<td class="g2m-yn"><input type="radio" name="'+uid+'" class="g2m-radio" id="'+uid+'_n" value="no" '+(item.value==='no'?'checked':'')+' onchange="setG2MVal(\''+g2mCurrentProduct+'\','+idx+',\'no\')"><label for="'+uid+'_n" class="g2m-radio-label g2m-no-btn">✕</label></td>'+
         '<td class="g2m-yn"><input type="radio" name="'+uid+'" class="g2m-radio" id="'+uid+'_na" value="na" '+(item.value==='na'?'checked':'')+' onchange="setG2MVal(\''+g2mCurrentProduct+'\','+idx+',\'na\')"><label for="'+uid+'_na" class="g2m-radio-label g2m-na">—</label></td>'+
+        '<td><input type="text" value="'+escHtml(item.assignee||'')+'" placeholder="Name..." onchange="setG2MItemField(\''+escapedProduct+'\','+idx+',\'assignee\',this.value)" style="width:100%;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:10px;color:var(--text);font-family:inherit"></td>'+
         '<td><input type="date" value="'+startDate+'" onchange="setG2MItemField(\''+escapedProduct+'\','+idx+',\'startDate\',this.value)" style="width:100%;padding:3px 4px;border:1px solid var(--border);border-radius:6px;font-size:10px;color:var(--text);font-family:inherit"></td>'+
         '<td><input type="date" value="'+endDate+'" onchange="setG2MItemField(\''+escapedProduct+'\','+idx+',\'endDate\',this.value)" style="width:100%;padding:3px 4px;border:1px solid var(--border);border-radius:6px;font-size:10px;color:var(--text);font-family:inherit"></td>'+
         '<td><input type="number" value="'+estHours+'" placeholder="—" min="0" step="0.5" onchange="setG2MItemField(\''+escapedProduct+'\','+idx+',\'estHours\',this.value)" style="width:100%;padding:3px 4px;border:1px solid var(--border);border-radius:6px;font-size:10px;color:var(--text);text-align:center;font-family:inherit"></td>'+
