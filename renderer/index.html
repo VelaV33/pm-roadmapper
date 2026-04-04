@@ -1109,7 +1109,10 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
   <div class="g2m-toolbar">
     <label style="color:var(--accent);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">New:</label>
     <select id="g2mProductSelect" onchange="onG2MProductChange()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--text);font-size:13px;font-weight:500;min-width:260px;font-family:inherit"></select>
-    <button onclick="showG2MAddRowForm()" style="margin-left:auto;padding:7px 16px;border-radius:8px;background:var(--accent);color:#fff;border:none;font-size:12px;font-weight:600;cursor:pointer">+ Add Custom Row</button>
+    <div style="margin-left:auto;display:flex;gap:6px">
+      <button onclick="openG2MTemplateBuilder()" style="padding:7px 16px;border-radius:8px;background:var(--white);color:var(--accent);border:1px solid var(--accent);font-size:12px;font-weight:600;cursor:pointer;transition:all .12s" onmouseover="this.style.background='var(--light-blue-bg)'" onmouseout="this.style.background='var(--white)'">📄 Templates</button>
+      <button onclick="showG2MAddRowForm()" style="padding:7px 16px;border-radius:8px;background:var(--accent);color:#fff;border:none;font-size:12px;font-weight:600;cursor:pointer">+ Add Custom Row</button>
+    </div>
   </div>
   <div id="g2mTabsBar" style="padding:8px 24px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;flex-wrap:wrap;overflow-x:auto"></div>
   <div style="padding:0 24px;background:var(--bg)">
@@ -7903,6 +7906,243 @@ function renderG2M(){
     body.appendChild(div);
   });
   updateG2MScore();
+}
+
+// ── G2M TEMPLATES ──
+var g2mTemplates = []; // [{name, items:[{cat,text}]}]
+
+function _loadG2MTemplates(){
+  try { var s=localStorage.getItem(_lsKey('g2m_templates')); if(s) g2mTemplates=JSON.parse(s); } catch(e){}
+}
+function _saveG2MTemplates(){
+  try { localStorage.setItem(_lsKey('g2m_templates'),JSON.stringify(g2mTemplates)); } catch(e){}
+}
+
+function openG2MTemplateBuilder(){
+  _loadG2MTemplates();
+  var ex=document.getElementById('g2mTplModal'); if(ex) ex.remove();
+  var ov=document.createElement('div');
+  ov.id='g2mTplModal'; ov.className='modal-overlay'; ov.style.zIndex='9500';
+  var modal=document.createElement('div'); modal.className='modal'; modal.style.width='720px';
+
+  var hdr=document.createElement('div'); hdr.className='modal-hdr';
+  hdr.innerHTML='<h2>📄 G2M Templates</h2>';
+  var cx=document.createElement('button'); cx.className='close'; cx.innerHTML='✕';
+  cx.onclick=function(){ ov.remove(); }; hdr.appendChild(cx);
+  modal.appendChild(hdr);
+
+  var body=document.createElement('div'); body.className='modal-body';
+
+  // Existing templates
+  var secLabel=document.createElement('div');
+  secLabel.style.cssText='font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--accent);margin-bottom:10px';
+  secLabel.textContent='Saved Templates';
+  body.appendChild(secLabel);
+
+  if(!g2mTemplates.length){
+    var empty=document.createElement('div');
+    empty.style.cssText='padding:16px;text-align:center;color:var(--muted);font-size:13px;font-style:italic;border:1px solid var(--border);border-radius:10px;margin-bottom:16px';
+    empty.textContent='No templates yet. Create one below.';
+    body.appendChild(empty);
+  } else {
+    var tplList=document.createElement('div');
+    tplList.style.cssText='display:flex;flex-direction:column;gap:8px;margin-bottom:16px';
+    g2mTemplates.forEach(function(tpl,ti){
+      var card=document.createElement('div');
+      card.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border:1px solid var(--border);border-radius:10px;background:var(--white)';
+      var left=document.createElement('div');
+      left.innerHTML='<div style="font-weight:600;font-size:13px">'+escHtml(tpl.name)+'</div><div style="font-size:11px;color:var(--muted)">'+tpl.items.length+' checklist items</div>';
+      var btns=document.createElement('div');
+      btns.style.cssText='display:flex;gap:6px';
+
+      var useBtn=document.createElement('button');
+      useBtn.textContent='Apply to Current';
+      useBtn.style.cssText='padding:5px 12px;border-radius:8px;background:var(--accent);color:#fff;border:none;font-size:11px;font-weight:600;cursor:pointer';
+      useBtn.onclick=function(){
+        if(!g2mCurrentProduct){ alert('Please select a product initiative first.'); return; }
+        if(!confirm('Apply template "'+tpl.name+'" to '+g2mCurrentProduct+'?\n\nThis will replace the current checklist.')) return;
+        var items=tpl.items.map(function(it){ return {cat:it.cat,text:it.text,value:'',comment:'',custom:!!it.custom,milestone:false}; });
+        g2mAllData[g2mCurrentProduct]={items:items,description:(g2mAllData[g2mCurrentProduct]||{}).description||''};
+        persistG2M(); renderG2M(); updateG2MScore(); renderG2MTabs();
+        ov.remove();
+      };
+
+      var editBtn=document.createElement('button');
+      editBtn.textContent='Edit';
+      editBtn.style.cssText='padding:5px 12px;border-radius:8px;background:var(--white);color:var(--accent);border:1px solid var(--accent);font-size:11px;font-weight:600;cursor:pointer';
+      editBtn.onclick=function(){ ov.remove(); openG2MTemplateEditor(ti); };
+
+      var delBtn=document.createElement('button');
+      delBtn.textContent='✕';
+      delBtn.style.cssText='padding:5px 8px;border-radius:8px;background:var(--white);color:var(--r1);border:1px solid var(--border);font-size:11px;cursor:pointer';
+      delBtn.onclick=function(){
+        if(!confirm('Delete template "'+tpl.name+'"?')) return;
+        g2mTemplates.splice(ti,1); _saveG2MTemplates(); ov.remove(); openG2MTemplateBuilder();
+      };
+
+      btns.appendChild(useBtn); btns.appendChild(editBtn); btns.appendChild(delBtn);
+      card.appendChild(left); card.appendChild(btns);
+      tplList.appendChild(card);
+    });
+    body.appendChild(tplList);
+  }
+
+  // Create new template button
+  var newBtn=document.createElement('button');
+  newBtn.style.cssText='padding:10px 20px;border-radius:10px;background:var(--light-blue-bg);color:var(--accent);border:1px solid var(--accent);font-size:13px;font-weight:600;cursor:pointer;width:100%;transition:all .12s';
+  newBtn.textContent='+ Create New Template (from default checklist)';
+  newBtn.onmouseover=function(){newBtn.style.background='var(--accent)';newBtn.style.color='#fff';};
+  newBtn.onmouseout=function(){newBtn.style.background='var(--light-blue-bg)';newBtn.style.color='var(--accent)';};
+  newBtn.onclick=function(){ ov.remove(); openG2MTemplateEditor(-1); };
+  body.appendChild(newBtn);
+
+  modal.appendChild(body);
+  var footer=document.createElement('div'); footer.className='modal-footer';
+  var doneBtn=document.createElement('button'); doneBtn.className='btn-save'; doneBtn.textContent='Close';
+  doneBtn.onclick=function(){ ov.remove(); };
+  footer.appendChild(doneBtn); modal.appendChild(footer);
+  ov.appendChild(modal); document.body.appendChild(ov);
+}
+
+function openG2MTemplateEditor(tplIdx){
+  _loadG2MTemplates();
+  var isNew=tplIdx<0;
+  var tpl=isNew?null:g2mTemplates[tplIdx];
+  // Start with default items or existing template items
+  var editItems=[];
+  if(isNew){
+    G2M_CATEGORIES.forEach(function(cat){
+      cat.items.forEach(function(txt){ editItems.push({cat:cat.name,text:txt,included:true}); });
+    });
+  } else {
+    // Load template items as included, add missing default items as excluded
+    var tplTexts={};
+    tpl.items.forEach(function(it){ tplTexts[it.cat+'|'+it.text]=true; editItems.push({cat:it.cat,text:it.text,included:true,custom:!!it.custom}); });
+    G2M_CATEGORIES.forEach(function(cat){
+      cat.items.forEach(function(txt){
+        if(!tplTexts[cat.name+'|'+txt]) editItems.push({cat:cat.name,text:txt,included:false});
+      });
+    });
+  }
+
+  var ex=document.getElementById('g2mTplEditModal'); if(ex) ex.remove();
+  var ov=document.createElement('div');
+  ov.id='g2mTplEditModal'; ov.className='modal-overlay'; ov.style.zIndex='9600';
+  var modal=document.createElement('div'); modal.className='modal'; modal.style.width='680px';
+
+  var hdr=document.createElement('div'); hdr.className='modal-hdr';
+  hdr.innerHTML='<h2>'+(isNew?'Create New Template':'Edit Template')+'</h2>';
+  var cx=document.createElement('button'); cx.className='close'; cx.innerHTML='✕';
+  cx.onclick=function(){ ov.remove(); }; hdr.appendChild(cx);
+  modal.appendChild(hdr);
+
+  var body=document.createElement('div'); body.className='modal-body'; body.style.maxHeight='60vh'; body.style.overflowY='auto';
+
+  // Template name
+  var nameRow=document.createElement('div'); nameRow.className='form-row';
+  nameRow.innerHTML='<label>Template Name</label>';
+  var nameInp=document.createElement('input'); nameInp.type='text';
+  nameInp.value=isNew?'':tpl.name;
+  nameInp.placeholder='e.g. Software Release, Hardware Launch, Backend Service...';
+  nameRow.appendChild(nameInp);
+  body.appendChild(nameRow);
+
+  // Info
+  var info=document.createElement('p');
+  info.style.cssText='font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5';
+  info.textContent='Toggle items on/off to include them in this template. You can also add custom items at the bottom.';
+  body.appendChild(info);
+
+  // Items by category
+  var catGroups={};
+  editItems.forEach(function(it){ if(!catGroups[it.cat]) catGroups[it.cat]=[]; catGroups[it.cat].push(it); });
+
+  function renderEditorItems(){
+    var container=document.getElementById('g2mTplItemsContainer');
+    if(!container) return;
+    container.innerHTML='';
+    Object.keys(catGroups).forEach(function(catName){
+      var catItems=catGroups[catName];
+      var catDiv=document.createElement('div');
+      catDiv.style.cssText='margin-bottom:12px';
+      var catColor='#6B7A99';
+      G2M_CATEGORIES.forEach(function(c){if(c.name===catName)catColor=c.color;});
+      catDiv.innerHTML='<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:'+catColor+';margin-bottom:6px;padding:4px 0;border-bottom:1px solid var(--border)">'+escHtml(catName)+' ('+catItems.filter(function(i){return i.included;}).length+'/'+catItems.length+')</div>';
+      catItems.forEach(function(it,ii){
+        var row=document.createElement('div');
+        row.style.cssText='display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:6px;transition:background .1s;'+(it.included?'':'opacity:.4');
+        row.onmouseover=function(){row.style.background='var(--light-blue-bg)';};
+        row.onmouseout=function(){row.style.background='transparent';};
+        var chk=document.createElement('input'); chk.type='checkbox'; chk.checked=it.included;
+        chk.style.cssText='width:16px;height:16px;cursor:pointer;flex-shrink:0';
+        chk.onchange=function(){ it.included=chk.checked; renderEditorItems(); };
+        var txt=document.createElement('span');
+        txt.style.cssText='font-size:12px;flex:1;color:var(--text)';
+        txt.textContent=it.text;
+        row.appendChild(chk); row.appendChild(txt);
+        if(it.custom){
+          var rmBtn=document.createElement('button');
+          rmBtn.textContent='✕'; rmBtn.style.cssText='background:none;border:none;color:var(--r1);cursor:pointer;font-size:12px';
+          rmBtn.onclick=function(){
+            var ci=catGroups[catName].indexOf(it);
+            catGroups[catName].splice(ci,1);
+            editItems=editItems.filter(function(e){return e!==it;});
+            renderEditorItems();
+          };
+          row.appendChild(rmBtn);
+        }
+        catDiv.appendChild(row);
+      });
+      container.appendChild(catDiv);
+    });
+    // Add custom item form
+    var addRow=document.createElement('div');
+    addRow.style.cssText='display:flex;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)';
+    var addCatSel=document.createElement('select');
+    addCatSel.style.cssText='padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit';
+    G2M_CATEGORIES.forEach(function(c){ var o=document.createElement('option'); o.value=c.name; o.textContent=c.name; addCatSel.appendChild(o); });
+    var addInp=document.createElement('input'); addInp.type='text'; addInp.placeholder='Add custom item...';
+    addInp.style.cssText='flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit';
+    var addBtn=document.createElement('button');
+    addBtn.textContent='+ Add'; addBtn.style.cssText='padding:6px 14px;border-radius:8px;background:var(--accent);color:#fff;border:none;font-size:12px;font-weight:600;cursor:pointer';
+    addBtn.onclick=function(){
+      var txt=addInp.value.trim(); if(!txt) return;
+      var cat=addCatSel.value;
+      var newItem={cat:cat,text:txt,included:true,custom:true};
+      editItems.push(newItem);
+      if(!catGroups[cat]) catGroups[cat]=[];
+      catGroups[cat].push(newItem);
+      addInp.value='';
+      renderEditorItems();
+    };
+    addRow.appendChild(addCatSel); addRow.appendChild(addInp); addRow.appendChild(addBtn);
+    container.appendChild(addRow);
+  }
+
+  var itemsContainer=document.createElement('div'); itemsContainer.id='g2mTplItemsContainer';
+  body.appendChild(itemsContainer);
+  modal.appendChild(body);
+
+  var footer=document.createElement('div'); footer.className='modal-footer';
+  var cancelBtn=document.createElement('button'); cancelBtn.className='btn-cancel'; cancelBtn.textContent='Cancel';
+  cancelBtn.onclick=function(){ ov.remove(); };
+  var saveBtn=document.createElement('button'); saveBtn.className='btn-save'; saveBtn.textContent='Save Template';
+  saveBtn.onclick=function(){
+    var name=nameInp.value.trim();
+    if(!name){ nameInp.style.borderColor='var(--r1)'; nameInp.focus(); return; }
+    var included=editItems.filter(function(it){return it.included;});
+    if(!included.length){ alert('Please include at least one checklist item.'); return; }
+    var tplData={name:name,items:included.map(function(it){return {cat:it.cat,text:it.text,custom:!!it.custom};})};
+    if(isNew){ g2mTemplates.push(tplData); }
+    else { g2mTemplates[tplIdx]=tplData; }
+    _saveG2MTemplates();
+    ov.remove();
+    openG2MTemplateBuilder();
+  };
+  footer.appendChild(cancelBtn); footer.appendChild(saveBtn);
+  modal.appendChild(footer);
+  ov.appendChild(modal); document.body.appendChild(ov);
+  renderEditorItems();
 }
 
 function toggleG2MMilestone(product,idx){
