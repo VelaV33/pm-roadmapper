@@ -1103,13 +1103,13 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
     </div>
     <div style="display:flex;gap:8px">
       <button class="btn green" onclick="exportG2MWord()">📄 Export Word</button>
-      <button class="btn" onclick="closeG2M()" style="background:rgba(255,255,255,.15)">← Back to Roadmap</button>
+      <button class="btn" onclick="closeG2M()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)">← Back to Roadmap</button>
     </div>
   </div>
   <div class="g2m-toolbar">
-    <label style="color:rgba(255,255,255,.6);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em">Product Initiative:</label>
-    <select id="g2mProductSelect" onchange="onG2MProductChange()" style="padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:#2d2870;color:#fff;font-size:12px;font-weight:600;min-width:260px"></select>
-    <button class="btn accent" onclick="showG2MAddRowForm()" style="margin-left:auto">+ Add Custom Row</button>
+    <label style="color:var(--accent);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Product Initiative:</label>
+    <select id="g2mProductSelect" onchange="onG2MProductChange()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--text);font-size:13px;font-weight:500;min-width:260px;font-family:inherit"></select>
+    <button onclick="showG2MAddRowForm()" style="margin-left:auto;padding:7px 16px;border-radius:8px;background:var(--accent);color:#fff;border:none;font-size:12px;font-weight:600;cursor:pointer">+ Add Custom Row</button>
   </div>
   <div style="padding:0 24px;background:var(--bg)">
     <div id="g2mProductDesc" contenteditable="true" onblur="saveG2MProductDesc()" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;font-size:12px;font-family:inherit;color:var(--text);min-height:40px;max-height:200px;overflow-y:auto;background:#fff;outline:none" data-placeholder="Add a product description — paste images or type text..."></div>
@@ -1137,32 +1137,32 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
     </div>
     <div style="display:flex;gap:8px">
       <button class="btn green" onclick="addTodoItem()">+ Add Task</button>
-      <button class="btn" onclick="toggleTodoView()" id="todoViewToggle" style="background:rgba(255,255,255,.15)">🔲 Kanban</button>
-      <button class="btn" id="todoBackBtn" onclick="closeTodo()" style="background:rgba(255,255,255,.15)">← Back to Roadmap</button>
+      <button class="btn" onclick="toggleTodoView()" id="todoViewToggle" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)">🔲 Kanban</button>
+      <button class="btn" id="todoBackBtn" onclick="closeTodo()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)">← Back to Roadmap</button>
     </div>
   </div>
   <div class="todo-toolbar">
-    <label style="color:rgba(255,255,255,.6);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em">Filter by Initiative:</label>
-    <select id="todoFilterSelect" onchange="renderTodo()" style="padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:#3b2d7c;color:#fff;font-size:12px;font-weight:600;min-width:220px">
+    <label style="color:var(--accent);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Filter by Initiative:</label>
+    <select id="todoFilterSelect" onchange="renderTodo()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--text);font-size:13px;font-weight:500;font-family:inherit;min-width:220px">
       <option value="">All Initiatives</option>
     </select>
-    <label style="color:rgba(255,255,255,.6);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-left:12px">Status:</label>
-    <select id="todoStatusFilter" onchange="renderTodo()" style="padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:#3b2d7c;color:#fff;font-size:12px;font-weight:600">
-      <option value="" style="background:#fff;color:#1a1464">All</option>
-      <option value="open" style="background:#fff;color:#1a1464">Open</option>
-      <option value="progress" style="background:#fff;color:#1a1464">In Progress</option>
-      <option value="done" style="background:#fff;color:#1a1464">Done</option>
+    <label style="color:var(--accent);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-left:12px">Status:</label>
+    <select id="todoStatusFilter" onchange="renderTodo()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--text);font-size:13px;font-weight:500;font-family:inherit">
+      <option value="" style="background:var(--white);color:var(--text)">All</option>
+      <option value="open" style="background:var(--white);color:var(--text)">Open</option>
+      <option value="progress" style="background:var(--white);color:var(--text)">In Progress</option>
+      <option value="done" style="background:var(--white);color:var(--text)">Done</option>
     </select>
   </div>
   <!-- Inline add task form -->
-  <div id="todoAddForm" style="display:none;padding:10px 24px;background:rgba(0,0,0,.15)">
+  <div id="todoAddForm" style="display:none;padding:12px 24px;background:var(--light-blue-bg);border-bottom:1px solid var(--border)">
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <input id="todoNewText" placeholder="Task description..." style="flex:2;min-width:200px;padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:12px;background:rgba(255,255,255,.1);color:#fff;font-family:inherit">
       <select id="todoNewInit" style="flex:1;min-width:180px;padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:12px;background:#3b2d7c;color:#fff"></select>
       <input id="todoNewDue" type="date" style="padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:12px;background:rgba(255,255,255,.1);color:#fff">
       <input id="todoNewEstimate" type="number" min="0" step="0.5" placeholder="Est. hours" style="width:80px;padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:12px;background:rgba(255,255,255,.1);color:#fff">
       <select id="todoNewKPI" style="padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:11px;background:#3b2d7c;color:#fff;max-width:160px">
-        <option value="" style="background:#fff;color:#1a1464">— KPI —</option>
+        <option value="" style="background:var(--white);color:var(--text)">— KPI —</option>
       </select>
       <button class="btn green" onclick="confirmAddTodo()" style="padding:6px 14px;font-size:11px">Add</button>
       <button class="btn" onclick="document.getElementById('todoAddForm').style.display='none'" style="padding:6px 10px;font-size:11px">Cancel</button>
@@ -1178,14 +1178,14 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
     <div style="display:flex;gap:8px">
       <button class="btn green" onclick="addNewArtifact()">+ New Artifact</button>
       <button class="btn" onclick="openBrandGuide()" style="background:linear-gradient(135deg,#ec4899,#f472b6);border-color:#ec4899">🎨 Brand Guide</button>
-      <button class="btn" onclick="closeArtifacts()" style="background:rgba(255,255,255,.15)">← Back to Roadmap</button>
+      <button class="btn" onclick="closeArtifacts()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)">← Back to Roadmap</button>
     </div>
   </div>
   <div class="art-toolbar">
-    <label style="color:rgba(255,255,255,.6);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em">Initiative:</label>
-    <select id="artInitFilter" onchange="renderArtifacts()" style="padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);color:#fff;font-size:12px;font-weight:600;min-width:200px"></select>
-    <label style="color:rgba(255,255,255,.6);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-left:8px">Type:</label>
-    <select id="artTypeFilter" onchange="renderArtifacts()" style="padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);color:#fff;font-size:12px;font-weight:600"></select>
+    <label style="color:var(--accent);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Initiative:</label>
+    <select id="artInitFilter" onchange="renderArtifacts()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--text);font-size:13px;font-weight:500;font-family:inherit;min-width:200px"></select>
+    <label style="color:var(--accent);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-left:8px">Type:</label>
+    <select id="artTypeFilter" onchange="renderArtifacts()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--text);font-size:13px;font-weight:500;font-family:inherit"></select>
     <span id="artCount" style="color:rgba(255,255,255,.6);font-size:11px;font-weight:600;margin-left:auto"></span>
     <div style="margin-left:auto;display:flex;gap:6px">
       <button class="btn" onclick="showArtTemplatesTab()" id="artTemplatesBtn" style="background:rgba(255,255,255,.15);font-size:10px;padding:4px 10px">&#x1F4D0; Templates</button>
@@ -1205,7 +1205,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
       <button class="ts-view-btn" id="kpiViewCapacity" onclick="setKPIView('capacity')">Capacity</button>
     </div>
     <div id="kpiOverallScore" style="margin-left:auto;margin-right:8px"></div>
-    <select id="kpiQuarterSelect" onchange="renderKPI()" style="padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);color:#fff;font-size:12px;font-weight:600;min-width:100px">
+    <select id="kpiQuarterSelect" onchange="renderKPI()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--text);font-size:13px;font-weight:500;font-family:inherit;min-width:100px">
     </select>
     <div class="ts-week-nav" id="tsWeekNav" style="display:none">
       <button onclick="tsNavWeek(-1)">&#9664;</button>
@@ -1215,7 +1215,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
     <div style="display:flex;gap:8px">
       <button class="btn accent" id="kpiAddBtn" onclick="showAddCustomKPI()">+ Add KPI</button>
       <button class="btn green" onclick="exportKPIWord()">📄 Export Word</button>
-      <button class="btn" onclick="closeKPI()" style="background:rgba(255,255,255,.15)">← Back to Roadmap</button>
+      <button class="btn" onclick="closeKPI()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)">← Back to Roadmap</button>
     </div>
   </div>
   <!-- Add custom KPI form -->
@@ -1238,18 +1238,18 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
     <h2>📝 User Change Requests</h2>
     <div style="display:flex;gap:8px">
       <button class="btn green" onclick="addNewUCR()">+ New UCR</button>
-      <button class="btn" onclick="closeUCR()" style="background:rgba(255,255,255,.15)">← Back to Roadmap</button>
+      <button class="btn" onclick="closeUCR()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)">← Back to Roadmap</button>
     </div>
   </div>
   <div class="ucr-toolbar">
-    <label style="color:rgba(255,255,255,.6);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em">Filter:</label>
-    <select id="ucrFilterStatus" onchange="renderUCR()" style="padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);color:#fff;font-size:12px;font-weight:600">
-      <option value="" style="background:#fff;color:#1a1464">All</option>
-      <option value="Draft" style="background:#fff;color:#1a1464">Draft</option>
-      <option value="Submitted" style="background:#fff;color:#1a1464">Submitted</option>
-      <option value="Approved" style="background:#fff;color:#1a1464">Approved</option>
-      <option value="Rejected" style="background:#fff;color:#1a1464">Rejected</option>
-      <option value="Implemented" style="background:#fff;color:#1a1464">Implemented</option>
+    <label style="color:var(--accent);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Filter:</label>
+    <select id="ucrFilterStatus" onchange="renderUCR()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--text);font-size:13px;font-weight:500;font-family:inherit">
+      <option value="" style="background:var(--white);color:var(--text)">All</option>
+      <option value="Draft" style="background:var(--white);color:var(--text)">Draft</option>
+      <option value="Submitted" style="background:var(--white);color:var(--text)">Submitted</option>
+      <option value="Approved" style="background:var(--white);color:var(--text)">Approved</option>
+      <option value="Rejected" style="background:var(--white);color:var(--text)">Rejected</option>
+      <option value="Implemented" style="background:var(--white);color:var(--text)">Implemented</option>
     </select>
     <span id="ucrCount" style="color:rgba(255,255,255,.6);font-size:11px;font-weight:600;margin-left:auto"></span>
   </div>
@@ -8212,7 +8212,7 @@ function buildTodoItem(entry){
 
   div.innerHTML=
     '<select class="todo-status-sel" onchange="setTodoStatus(\''+escapedInit+'\',\''+escapedId+'\',this.value)" style="border-color:'+statusColor+'">'+
-      '<option value="open"'+(status==='open'?' selected':'')+' style="background:#fff;color:#1a1464">Open</option>'+
+      '<option value="open"'+(status==='open'?' selected':'')+' style="background:var(--white);color:var(--text)">Open</option>'+
       '<option value="progress"'+(status==='progress'?' selected':'')+' style="background:#fff;color:#d97706">In Progress</option>'+
       '<option value="done"'+(status==='done'?' selected':'')+' style="background:#fff;color:#16a34a">Done</option>'+
     '</select>'+
@@ -8340,7 +8340,7 @@ function addTodoItem(){
   if(filter) sel.value=filter;
   // Populate KPI dropdown
   var kpiSel=document.getElementById('todoNewKPI');
-  kpiSel.innerHTML='<option value="" style="background:#fff;color:#1a1464">— KPI Attribute —</option>';
+  kpiSel.innerHTML='<option value="" style="background:var(--white);color:var(--text)">— KPI Attribute —</option>';
   KPI_TEMPLATE.forEach(function(g){
     var og=document.createElement('optgroup');og.label=g.group;
     g.items.forEach(function(kpi){
