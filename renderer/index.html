@@ -1107,18 +1107,19 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
     </div>
   </div>
   <div class="g2m-toolbar">
-    <label style="color:var(--accent);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Product Initiative:</label>
+    <label style="color:var(--accent);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">New:</label>
     <select id="g2mProductSelect" onchange="onG2MProductChange()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--text);font-size:13px;font-weight:500;min-width:260px;font-family:inherit"></select>
     <button onclick="showG2MAddRowForm()" style="margin-left:auto;padding:7px 16px;border-radius:8px;background:var(--accent);color:#fff;border:none;font-size:12px;font-weight:600;cursor:pointer">+ Add Custom Row</button>
   </div>
+  <div id="g2mTabsBar" style="padding:8px 24px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;flex-wrap:wrap;overflow-x:auto"></div>
   <div style="padding:0 24px;background:var(--bg)">
     <div id="g2mProductDesc" contenteditable="true" onblur="saveG2MProductDesc()" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;font-size:12px;font-family:inherit;color:var(--text);min-height:40px;max-height:200px;overflow-y:auto;background:#fff;outline:none" data-placeholder="Add a product description — paste images or type text..."></div>
   </div>
   <!-- Inline add custom row form -->
-  <div id="g2mAddRowForm" style="display:none;padding:8px 24px;background:rgba(0,0,0,.15)">
+  <div id="g2mAddRowForm" style="display:none;padding:10px 24px;background:var(--light-blue-bg);border-bottom:1px solid var(--border)">
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <input id="g2mNewRowText" placeholder="Checklist item text..." style="flex:2;min-width:200px;padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:12px;background:rgba(255,255,255,.1);color:#fff;font-family:inherit">
-      <select id="g2mNewRowCat" style="flex:1;min-width:160px;padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:12px;background:rgba(255,255,255,.1);color:#fff"></select>
+      <input id="g2mNewRowText" placeholder="Checklist item text..." style="flex:2;min-width:200px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--white);color:var(--text);font-family:inherit">
+      <select id="g2mNewRowCat" style="flex:1;min-width:160px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--white);color:var(--text);font-family:inherit"></select>
       <button class="btn green" onclick="confirmG2MAddRow()" style="padding:6px 14px;font-size:11px">Add</button>
       <button class="btn" onclick="document.getElementById('g2mAddRowForm').style.display='none'" style="padding:6px 10px;font-size:11px">Cancel</button>
     </div>
@@ -4101,7 +4102,7 @@ document.addEventListener('DOMContentLoaded',function(){
   // When user clicks ANY input/textarea, force window + webContents focus
   document.addEventListener('mousedown',function(e){
     var tag=e.target&&e.target.tagName;
-    if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'){
+    if(tag==='INPUT'||tag==='TEXTAREA'){
       window.focus();
       if(window.electronAPI&&window.electronAPI.refocusWindow){
         window.electronAPI.refocusWindow();
@@ -7722,8 +7723,44 @@ var todoAllData={};
 function openG2M(){
   document.getElementById('g2mOverlay').classList.add('open');
   populateG2MProductSelect();
+  renderG2MTabs();
   loadG2MProductDesc();
   renderG2M();
+}
+
+function renderG2MTabs(){
+  var bar=document.getElementById('g2mTabsBar');
+  if(!bar) return;
+  bar.innerHTML='';
+  var existing=Object.keys(g2mAllData).filter(function(k){return g2mAllData[k]&&g2mAllData[k].items&&g2mAllData[k].items.length>0;});
+  if(!existing.length){
+    bar.innerHTML='<span style="font-size:12px;color:var(--muted);font-style:italic;padding:4px 0">No active G2M strategies yet. Select an initiative above to start.</span>';
+    return;
+  }
+  var label=document.createElement('span');
+  label.style.cssText='font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--accent);margin-right:8px';
+  label.textContent='Existing:';
+  bar.appendChild(label);
+  var sel=document.getElementById('g2mProductSelect');
+  var currentProduct=sel?sel.value:'';
+  existing.forEach(function(name){
+    var tab=document.createElement('button');
+    var isActive=name===currentProduct;
+    tab.style.cssText='padding:5px 14px;border-radius:8px;font-size:12px;font-weight:'+(isActive?'600':'500')+';cursor:pointer;border:1px solid '+(isActive?'var(--accent)':'var(--border)')+';background:'+(isActive?'var(--accent)':'var(--white)')+';color:'+(isActive?'#fff':'var(--text)')+';transition:all .12s;white-space:nowrap';
+    // Count completion
+    var items=g2mAllData[name].items||[];
+    var yes=0,applicable=0;
+    items.forEach(function(it){if(it.value==='yes')yes++;if(it.value&&it.value!=='na')applicable++;});
+    var pct=applicable>0?Math.round(yes/applicable*100):0;
+    tab.textContent=name+' ('+pct+'%)';
+    tab.title=yes+'/'+applicable+' items complete';
+    tab.onclick=function(){
+      if(sel) sel.value=name;
+      onG2MProductChange();
+      renderG2MTabs();
+    };
+    bar.appendChild(tab);
+  });
 }
 function closeG2M(){
   document.getElementById('g2mOverlay').classList.remove('open');
@@ -7749,7 +7786,6 @@ function populateG2MProductSelect(){
       var o=document.createElement('option');
       o.value=r.name;
       o.textContent=r.name;
-      o.style.cssText='background:#fff;color:#1a1464';
       og.appendChild(o);
       allOpts.push(r.name);
     });
@@ -7773,6 +7809,7 @@ function onG2MProductChange(){
   g2mCurrentProduct=document.getElementById('g2mProductSelect').value;
   loadG2MProductDesc();
   renderG2M();
+  renderG2MTabs();
 }
 
 function getG2MItems(product){
