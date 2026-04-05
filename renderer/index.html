@@ -815,11 +815,11 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
       <span>Roadmapper</span>
     </span>
     <nav class="toolbar-nav" id="mainNav">
-      <a onclick="showDashboard();return false;">Dashboard</a>
-      <a class="active" onclick="closeDashboard();return false;">Roadmap</a>
-      <a onclick="openG2M();return false;">Checklist</a>
-      <a onclick="openReports();return false;">Strategy</a>
-      <a onclick="openKPI();return false;">Insights</a>
+      <a onclick="showDashboard();updateNavActive('Dashboard');return false;">Dashboard</a>
+      <a class="active" onclick="closeAllOverlays();document.getElementById('roadmapPage').style.display='block';updateNavActive('Roadmap');return false;">Roadmap</a>
+      <a onclick="closeAllOverlays();document.getElementById('roadmapPage').style.display='block';openG2M();updateNavActive('Checklist');return false;">Checklist</a>
+      <a onclick="closeAllOverlays();document.getElementById('roadmapPage').style.display='block';openReports();updateNavActive('Strategy');return false;">Strategy</a>
+      <a onclick="closeAllOverlays();document.getElementById('roadmapPage').style.display='block';openKPI();updateNavActive('Insights');return false;">Insights</a>
     </nav>
     <div style="margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
       <!-- Collaboration -->
@@ -838,7 +838,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 
     <!-- Burger Menu -->
     <div class="tb-dropdown" style="margin-right:8px">
-      <button class="tb-dd-btn" onclick="toggleDd('ddBurger')" style="font-size:16px;padding:4px 10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1)">☰</button>
+      <button class="tb-dd-btn" onclick="toggleDd('ddBurger')" style="font-size:18px;padding:6px 12px;background:var(--white);border:1px solid var(--border);color:var(--text);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.06)">☰</button>
       <div class="tb-dd-menu" id="ddBurger" style="min-width:240px;max-height:80vh;overflow-y:auto">
         <button class="tb-dd-item" onclick="openReports();closeDds()" style="background:var(--light-blue-bg);border-radius:8px;margin:4px 6px;font-weight:600"><span class="dd-icon">📈</span><span class="dd-label">Reports Dashboard<span class="dd-sub">Health, portfolio, capacity, QBR</span></span></button>
         <div class="tb-dd-divider"></div>
@@ -865,11 +865,10 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
       </div>
     </div>
 
-    <!-- AI Assistant command bar -->
-    <div id="aiCmdBar" style="display:flex;align-items:center;gap:4px;flex:1;max-width:480px;margin-right:6px">
-      <input id="aiCmdInput" placeholder="🤖 Ask AI... e.g. Add VBU850 under Strategy from June to Nov" style="flex:1;padding:7px 12px;border:1px solid rgba(255,255,255,.15);border-radius:8px;font-size:12px;color:#fff;background:rgba(255,255,255,.06);outline:none;font-family:inherit" onfocus="this.style.borderColor='rgba(45,107,244,.6)';this.style.background='rgba(255,255,255,.1)'" onblur="this.style.borderColor='rgba(255,255,255,.15)';this.style.background='rgba(255,255,255,.06)'">
-      <button onclick="runAiCommand()" title="Send to AI" style="background:var(--accent);border:none;color:#fff;border-radius:8px;padding:7px 14px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">Go</button>
-      <button onclick="toggleAiVoiceCmd()" id="aiVoiceBtn" title="Voice command" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer">🎤</button>
+    <!-- AI/Voice archived — hidden for now -->
+    <div id="aiCmdBar" style="display:none">
+      <input id="aiCmdInput" style="display:none">
+      <button id="aiVoiceBtn" style="display:none"></button>
     </div>
 
     <!-- Status — right -->
@@ -10513,13 +10512,27 @@ function pullTDLToTimesheet(){
 
 var _showingDashboard=false;
 
+function closeAllOverlays(){
+  ['g2mOverlay','todoOverlay','kpiOverlay','ucrOverlay','capOverlay','artOverlay','previewOverlay','reportsOverlay'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el){ el.classList.remove('open'); el.style.display='none'; }
+  });
+  document.querySelectorAll('.modal-overlay').forEach(function(el){el.remove();});
+  closeDashboard();
+}
+
+function updateNavActive(tabName){
+  var nav=document.getElementById('mainNav');
+  if(!nav) return;
+  nav.querySelectorAll('a').forEach(function(a){ a.classList.remove('active'); if(a.textContent.trim()===tabName) a.classList.add('active'); });
+}
+
 function showDashboard(){
+  closeAllOverlays();
   _showingDashboard=true;
   document.getElementById('dashboardPage').style.display='block';
   document.getElementById('roadmapPage').style.display='none';
-  // Update nav tabs
-  var nav=document.getElementById('mainNav');
-  if(nav){ nav.querySelectorAll('a').forEach(function(a){a.classList.remove('active');}); }
+  updateNavActive('Dashboard');
   populateDashboard();
 }
 
