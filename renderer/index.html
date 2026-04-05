@@ -815,7 +815,8 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
       <span>Roadmapper</span>
     </span>
     <nav class="toolbar-nav" id="mainNav">
-      <a class="active" onclick="return false;">Roadmap</a>
+      <a onclick="showDashboard();return false;">Dashboard</a>
+      <a class="active" onclick="closeDashboard();return false;">Roadmap</a>
       <a onclick="openG2M();return false;">Checklist</a>
       <a onclick="openReports();return false;">Strategy</a>
       <a onclick="openKPI();return false;">Insights</a>
@@ -892,7 +893,72 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 </div>
 </div>
 
-<div class="page">
+<!-- DASHBOARD -->
+<div id="dashboardPage" class="page" style="display:none">
+  <div style="margin-bottom:32px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="padding:3px 10px;background:rgba(0,91,177,.08);color:var(--accent);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;border-radius:6px">Dashboard</span>
+    </div>
+    <h1 style="font-size:32px;font-weight:800;letter-spacing:-0.04em;color:var(--text);margin-bottom:8px" id="dashGreeting">Good morning</h1>
+    <p style="font-size:14px;color:var(--muted);max-width:600px;line-height:1.6">Your product strategy overview. Track initiatives, monitor readiness, and stay aligned with your team.</p>
+  </div>
+
+  <!-- Bento Stats Grid -->
+  <div id="dashStats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px"></div>
+
+  <!-- Main Content Grid -->
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;margin-bottom:32px">
+    <!-- Initiative Health Summary -->
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.04)">
+      <h3 style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:16px">Initiative Health</h3>
+      <div id="dashHealthList"></div>
+    </div>
+    <!-- Quick Actions -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="background:linear-gradient(135deg,#001b3d,#0073dd);border-radius:16px;padding:24px;color:#fff;position:relative;overflow:hidden">
+        <div style="position:absolute;right:-20px;bottom:-20px;width:120px;height:120px;background:rgba(255,255,255,.06);border-radius:50%;"></div>
+        <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.5)">Quick Actions</span>
+        <h3 style="font-size:18px;font-weight:700;margin:8px 0 16px;letter-spacing:-0.02em">What would you like to do?</h3>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button onclick="closeDashboard();openAddRowModal(null)" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;text-align:left;transition:all .12s;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">+ Add Initiative</button>
+          <button onclick="closeDashboard();openG2M()" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;text-align:left;transition:all .12s;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">G2M Checklist</button>
+          <button onclick="closeDashboard();openReports()" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;text-align:left;transition:all .12s;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">View Reports</button>
+        </div>
+      </div>
+      <!-- Capacity Mini -->
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.04);flex:1">
+        <h3 style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:12px">This Week's Capacity</h3>
+        <div id="dashCapacity"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Grid -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+    <div onclick="closeDashboard();openTodo()" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04)" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div style="font-size:20px;margin-bottom:8px">📋</div>
+      <h5 style="font-weight:700;font-size:13px;margin-bottom:4px">ToDo List</h5>
+      <p style="font-size:11px;color:var(--muted)" id="dashTodoSummary">—</p>
+    </div>
+    <div onclick="closeDashboard();openKPI()" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04)" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div style="font-size:20px;margin-bottom:8px">📊</div>
+      <h5 style="font-weight:700;font-size:13px;margin-bottom:4px">KPI Scorecard</h5>
+      <p style="font-size:11px;color:var(--muted)">Track performance metrics</p>
+    </div>
+    <div onclick="closeDashboard();openCapacity()" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04)" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div style="font-size:20px;margin-bottom:8px">⚡</div>
+      <h5 style="font-weight:700;font-size:13px;margin-bottom:4px">CapacityIQ</h5>
+      <p style="font-size:11px;color:var(--muted)">Team capacity planning</p>
+    </div>
+    <div onclick="closeDashboard();openShare()" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04)" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div style="font-size:20px;margin-bottom:8px">🔗</div>
+      <h5 style="font-weight:700;font-size:13px;margin-bottom:4px">Share Roadmap</h5>
+      <p style="font-size:11px;color:var(--muted)" id="dashShareSummary">—</p>
+    </div>
+  </div>
+</div>
+
+<div id="roadmapPage" class="page">
 
 <!-- HEADER -->
 <div class="header">
@@ -954,6 +1020,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
   <span>Confidential — Internal Use Only</span>
   <span>March 2027</span>
 </div>
+</div><!-- /roadmapPage -->
 </div>
 
 <!-- PREVIEW OVERLAY -->
@@ -4028,6 +4095,8 @@ async function onAuthSuccess(user){
   setTimeout(function(){ loadAllCommentBadges(); loadSharedToMe(); loadUserTier(); }, 800);
   setTimeout(checkShowTour, 2500);
   console.log('Signed in as:', user.email, '(uid:', user.id, ')');
+  // Show dashboard as default view on login
+  setTimeout(showDashboard, 500);
 }
 
 function _resetLocalData(){
@@ -10438,6 +10507,115 @@ function pullTDLToTimesheet(){
   }
   persistData();
   renderTimesheet();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── DASHBOARD HOMEPAGE ───────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+
+var _showingDashboard=false;
+
+function showDashboard(){
+  _showingDashboard=true;
+  document.getElementById('dashboardPage').style.display='block';
+  document.getElementById('roadmapPage').style.display='none';
+  // Update nav tabs
+  var nav=document.getElementById('mainNav');
+  if(nav){ nav.querySelectorAll('a').forEach(function(a){a.classList.remove('active');}); }
+  populateDashboard();
+}
+
+function closeDashboard(){
+  _showingDashboard=false;
+  document.getElementById('dashboardPage').style.display='none';
+  document.getElementById('roadmapPage').style.display='block';
+  var nav=document.getElementById('mainNav');
+  if(nav){ var first=nav.querySelector('a'); if(first) first.classList.add('active'); }
+}
+
+function populateDashboard(){
+  // Greeting
+  var hr=new Date().getHours();
+  var greeting=hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
+  var el=document.getElementById('dashGreeting');
+  if(el) el.textContent=greeting+(userProfile.name?', '+userProfile.name.split(' ')[0]:'');
+
+  // Stats
+  var statsEl=document.getElementById('dashStats');
+  if(statsEl){
+    var totalInit=rows.length;
+    var totalTodos=0,doneTodos=0;
+    Object.keys(todoAllData).forEach(function(k){var ts=todoAllData[k]||[];totalTodos+=ts.length;ts.forEach(function(t){if(t.status==='done')doneTodos++;});});
+    var taskPct=totalTodos>0?Math.round(doneTodos/totalTodos*100):0;
+    var g2mProducts=Object.keys(g2mAllData).length;
+    var sharedCount=(_sharedToMe||[]).length;
+
+    var stats=[
+      {icon:'🎯',value:totalInit,label:'Initiatives',color:'var(--accent)'},
+      {icon:'✅',value:taskPct+'%',label:'Tasks Complete',color:'var(--g1)'},
+      {icon:'🚀',value:g2mProducts,label:'G2M Strategies',color:'var(--purple)'},
+      {icon:'🔗',value:sharedCount,label:'Shared With Me',color:'var(--accent)'}
+    ];
+    statsEl.innerHTML='';
+    stats.forEach(function(s){
+      var card=document.createElement('div');
+      card.style.cssText='background:var(--white);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.04);cursor:pointer;transition:all .15s';
+      card.onmouseover=function(){card.style.boxShadow='0 4px 16px rgba(0,0,0,.08)';};
+      card.onmouseout=function(){card.style.boxShadow='0 1px 3px rgba(0,0,0,.04)';};
+      card.innerHTML='<div style="font-size:24px;margin-bottom:8px">'+s.icon+'</div><div style="font-size:28px;font-weight:800;letter-spacing:-0.03em;color:'+s.color+'">'+s.value+'</div><div style="font-size:11px;font-weight:600;color:var(--muted);margin-top:4px">'+s.label+'</div>';
+      statsEl.appendChild(card);
+    });
+  }
+
+  // Health list (top 6 initiatives)
+  var healthEl=document.getElementById('dashHealthList');
+  if(healthEl){
+    healthEl.innerHTML='';
+    var statusColors={g:'#10b981',b:'#005bb1',o:'#f59e0b',s:'#7c3aed',r:'#ef4444'};
+    var statusLabels={g:'Released',b:'In Progress',o:'Delayed',s:'Strategy',r:'At Risk'};
+    rows.slice(0,6).forEach(function(row){
+      var sec=sections.find(function(s){return s.id===row.sec;})||{name:'—'};
+      var lastBar=row.bars&&row.bars.length?row.bars[row.bars.length-1]:null;
+      var status=lastBar?lastBar.c:'s';
+      var div=document.createElement('div');
+      div.style.cssText='display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)';
+      div.innerHTML='<div style="width:8px;height:8px;border-radius:50%;background:'+(statusColors[status]||'#94a3b8')+';flex-shrink:0"></div>'+
+        '<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(row.name)+'</div><div style="font-size:11px;color:var(--muted)">'+escHtml(sec.name)+'</div></div>'+
+        '<span style="font-size:10px;font-weight:600;padding:3px 10px;border-radius:9999px;background:'+(statusColors[status]||'#94a3b8')+'15;color:'+(statusColors[status]||'#94a3b8')+'">'+statusLabels[status]+'</span>';
+      healthEl.appendChild(div);
+    });
+    if(!rows.length) healthEl.innerHTML='<p style="color:var(--muted);font-size:13px;padding:16px 0;text-align:center;font-style:italic">No initiatives yet. Add one from the roadmap.</p>';
+  }
+
+  // Capacity mini
+  var capEl=document.getElementById('dashCapacity');
+  if(capEl){
+    if(!_tsCurrentWeek) _tsCurrentWeek=_getISOWeek(new Date());
+    var weekDates=_weekDates(_tsCurrentWeek);
+    var todos=_getTodosForWeek(weekDates[0]);
+    var planned=0; todos.forEach(function(t){planned+=t.hours;});
+    var avail=_capacityHoursPerWeek;
+    var pct=Math.round(planned/avail*100);
+    var color=pct<=75?'var(--g1)':pct<=95?'var(--o1)':'var(--r1)';
+    capEl.innerHTML='<div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:13px;font-weight:600">'+planned.toFixed(1)+'h / '+avail+'h</span><span style="font-size:13px;font-weight:700;color:'+color+'">'+pct+'%</span></div>'+
+      '<div style="height:8px;background:var(--surface-high);border-radius:4px;overflow:hidden"><div style="height:100%;width:'+Math.min(pct,100)+'%;background:'+color+';border-radius:4px;transition:width .3s"></div></div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:6px">'+Math.max(0,avail-planned).toFixed(1)+'h remaining this week</div>';
+  }
+
+  // Todo summary
+  var todoSum=document.getElementById('dashTodoSummary');
+  if(todoSum){
+    var total=0,open=0;
+    Object.keys(todoAllData).forEach(function(k){var ts=todoAllData[k]||[];total+=ts.length;ts.forEach(function(t){if(t.status==='open')open++;});});
+    todoSum.textContent=open+' open of '+total+' total tasks';
+  }
+
+  // Share summary
+  var shareSum=document.getElementById('dashShareSummary');
+  if(shareSum){
+    var cnt=(_sharedToMe||[]).length;
+    shareSum.textContent=cnt>0?cnt+' roadmap(s) shared with you':'No shared roadmaps';
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
