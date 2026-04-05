@@ -254,7 +254,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 #previewFrame{width:100%;max-width:1200px;flex:1;border:none;border-radius:12px;background:#fff;min-height:0}
 
 /* ── G2M CHECKLIST ── */
-#g2mOverlay{position:fixed;left:0;right:0;bottom:0;top:0;background:var(--bg);z-index:4000;display:none;flex-direction:column;overflow:hidden;padding-top:0}
+#g2mOverlay{position:fixed;inset:0;background:var(--bg);z-index:4000;display:none;flex-direction:column;overflow:hidden}
 #g2mOverlay.open{display:flex}
 .g2m-header{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;border-bottom:1px solid var(--border)}
 .g2m-header h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
@@ -10515,10 +10515,12 @@ var _showingDashboard=false;
 function closeAllOverlays(){
   ['g2mOverlay','todoOverlay','kpiOverlay','ucrOverlay','capOverlay','artOverlay','previewOverlay','reportsOverlay'].forEach(function(id){
     var el=document.getElementById(id);
-    if(el){ el.classList.remove('open'); el.style.display='none'; }
+    if(el){ el.classList.remove('open'); el.removeAttribute('style'); }
   });
   document.querySelectorAll('.modal-overlay').forEach(function(el){el.remove();});
-  closeDashboard();
+  _showingDashboard=false;
+  document.getElementById('dashboardPage').style.display='none';
+  document.getElementById('roadmapPage').style.display='block';
 }
 
 function updateNavActive(tabName){
@@ -10528,7 +10530,12 @@ function updateNavActive(tabName){
 }
 
 function showDashboard(){
-  closeAllOverlays();
+  // Close any open overlays first
+  ['g2mOverlay','todoOverlay','kpiOverlay','ucrOverlay','capOverlay','artOverlay','previewOverlay','reportsOverlay'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el){ el.classList.remove('open'); el.removeAttribute('style'); }
+  });
+  document.querySelectorAll('.modal-overlay').forEach(function(el){el.remove();});
   _showingDashboard=true;
   document.getElementById('dashboardPage').style.display='block';
   document.getElementById('roadmapPage').style.display='none';
