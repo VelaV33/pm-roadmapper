@@ -422,6 +422,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .ts-kpi-sel{font-family:inherit}
 
 /* CapacityIQ */
+#insightsOverlay.open{display:flex}
 #reportsOverlay{position:fixed;top:88px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
 #reportsOverlay.open{display:flex}
 .rpt-header{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);color:var(--text);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:1px solid var(--border)}
@@ -820,7 +821,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
       <a class="active" onclick="closeAllOverlays();document.getElementById('roadmapPage').style.display='block';updateNavActive('Roadmap');return false;">Roadmap</a>
       <a onclick="closeAllOverlays();document.getElementById('roadmapPage').style.display='block';openG2M();updateNavActive('Checklist');return false;">Checklist</a>
       <a onclick="closeAllOverlays();document.getElementById('roadmapPage').style.display='block';_rptCurrentReport='initiative-health';openReports();updateNavActive('Strategy');return false;">Strategy</a>
-      <a onclick="closeAllOverlays();document.getElementById('roadmapPage').style.display='block';openKPI();updateNavActive('Insights');return false;">Insights</a>
+      <a onclick="closeAllOverlays();document.getElementById('roadmapPage').style.display='block';openInsights();updateNavActive('Insights');return false;">Insights</a>
     </nav>
     <div style="margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
       <!-- Collaboration -->
@@ -1345,6 +1346,15 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 </div>
 
 <!-- ══ CAPACITYIQ OVERLAY ══ -->
+<!-- INSIGHTS OVERLAY -->
+<div id="insightsOverlay" style="position:fixed;top:88px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden">
+  <div style="background:rgba(249,249,250,.9);backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0">
+    <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.03em;color:var(--text)">Insights</h2>
+    <button onclick="closeInsights()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">&times;</button>
+  </div>
+  <div id="insightsBody" style="flex:1;overflow-y:auto;padding:28px 32px"></div>
+</div>
+
 <!-- REPORTS OVERLAY -->
 <div id="reportsOverlay">
   <div class="rpt-header">
@@ -10521,7 +10531,7 @@ function pullTDLToTimesheet(){
 var _showingDashboard=false;
 
 function closeAllOverlays(){
-  ['g2mOverlay','todoOverlay','kpiOverlay','ucrOverlay','capOverlay','artOverlay','previewOverlay','reportsOverlay'].forEach(function(id){
+  ['g2mOverlay','todoOverlay','kpiOverlay','ucrOverlay','capOverlay','artOverlay','previewOverlay','reportsOverlay','insightsOverlay'].forEach(function(id){
     var el=document.getElementById(id);
     if(el){ el.classList.remove('open'); el.removeAttribute('style'); }
   });
@@ -10539,7 +10549,7 @@ function updateNavActive(tabName){
 
 function showDashboard(){
   // Close any open overlays first
-  ['g2mOverlay','todoOverlay','kpiOverlay','ucrOverlay','capOverlay','artOverlay','previewOverlay','reportsOverlay'].forEach(function(id){
+  ['g2mOverlay','todoOverlay','kpiOverlay','ucrOverlay','capOverlay','artOverlay','previewOverlay','reportsOverlay','insightsOverlay'].forEach(function(id){
     var el=document.getElementById(id);
     if(el){ el.classList.remove('open'); el.removeAttribute('style'); }
   });
@@ -10641,6 +10651,226 @@ function populateDashboard(){
   if(shareSum){
     var cnt=(_sharedToMe||[]).length;
     shareSum.textContent=cnt>0?cnt+' roadmap(s) shared with you':'No shared roadmaps';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── INSIGHTS ENGINE ──────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+
+function openInsights(){
+  document.getElementById('insightsOverlay').classList.add('open');
+  renderInsights();
+}
+function closeInsights(){
+  document.getElementById('insightsOverlay').classList.remove('open');
+}
+
+function renderInsights(){
+  var body=document.getElementById('insightsBody');
+  body.innerHTML='';
+
+  // Gather all insights
+  var alerts=[]; // {icon,type:'danger'|'warning'|'info'|'success',title,detail}
+  var metrics=[]; // {label,value,trend,color}
+
+  // ── ROADMAP INSIGHTS ──
+  var atRisk=rows.filter(function(r){return r.bars&&r.bars.length&&r.bars[r.bars.length-1].c==='r';});
+  var delayed=rows.filter(function(r){return r.bars&&r.bars.length&&r.bars[r.bars.length-1].c==='o';});
+  var released=rows.filter(function(r){return r.bars&&r.bars.length&&r.bars[r.bars.length-1].c==='g';});
+  var inProgress=rows.filter(function(r){return r.bars&&r.bars.length&&r.bars[r.bars.length-1].c==='b';});
+
+  if(atRisk.length) alerts.push({icon:'🔴',type:'danger',title:atRisk.length+' initiative(s) at risk',detail:atRisk.map(function(r){return r.name;}).join(', ')});
+  if(delayed.length) alerts.push({icon:'🟠',type:'warning',title:delayed.length+' initiative(s) delayed',detail:delayed.map(function(r){return r.name;}).join(', ')});
+  if(released.length) alerts.push({icon:'🟢',type:'success',title:released.length+' initiative(s) released',detail:'Successfully shipped to market'});
+
+  // Section balance
+  var secCounts={};
+  rows.forEach(function(r){secCounts[r.sec]=(secCounts[r.sec]||0)+1;});
+  var secNames={}; sections.forEach(function(s){secNames[s.id]=s.name;});
+  var maxSec='',maxCount=0,minSec='',minCount=999;
+  Object.keys(secCounts).forEach(function(k){
+    if(secCounts[k]>maxCount){maxCount=secCounts[k];maxSec=secNames[k]||k;}
+    if(secCounts[k]<minCount){minCount=secCounts[k];minSec=secNames[k]||k;}
+  });
+  if(maxCount>3*minCount&&Object.keys(secCounts).length>1) alerts.push({icon:'⚖️',type:'info',title:'Portfolio imbalance detected',detail:maxSec+' has '+maxCount+' initiatives while '+minSec+' has only '+minCount});
+
+  // ── TODO INSIGHTS ──
+  var totalTodos=0,doneTodos=0,openTodos=0,overdueTodos=0,blockedTodos=0;
+  var now=new Date();
+  Object.keys(todoAllData).forEach(function(k){
+    (todoAllData[k]||[]).forEach(function(t){
+      totalTodos++;
+      if(t.status==='done') doneTodos++;
+      else if(t.status==='open') openTodos++;
+      if(t.status==='progress'){
+        var age=(now.getTime()-t.createdAt)/(1000*60*60*24);
+        if(age>14) blockedTodos++;
+      }
+      if(t.due&&t.status!=='done'){
+        var due=new Date(t.due);
+        if(due<now) overdueTodos++;
+      }
+    });
+  });
+
+  if(overdueTodos>0) alerts.push({icon:'⏰',type:'danger',title:overdueTodos+' task(s) overdue',detail:'These tasks are past their due date and need attention'});
+  if(blockedTodos>0) alerts.push({icon:'🚧',type:'warning',title:blockedTodos+' task(s) likely blocked',detail:'In progress for 14+ days without completion'});
+
+  // Estimate accuracy
+  var estTotal=0,actTotal=0,estCount=0;
+  Object.keys(todoAllData).forEach(function(k){
+    (todoAllData[k]||[]).forEach(function(t){
+      if(t.status==='done'&&t.estimate&&t.actualHours){
+        estTotal+=parseFloat(t.estimate)||0;
+        actTotal+=parseFloat(t.actualHours)||0;
+        estCount++;
+      }
+    });
+  });
+  if(estCount>=3){
+    var accuracy=Math.round(actTotal/estTotal*100);
+    if(accuracy>120) alerts.push({icon:'📊',type:'warning',title:'Tasks taking '+accuracy+'% of estimated time',detail:'You may be under-estimating — actual hours exceed estimates by '+(accuracy-100)+'%'});
+    else if(accuracy<80) alerts.push({icon:'📊',type:'info',title:'Tasks completing in '+accuracy+'% of estimated time',detail:'Your estimates are conservative — you have more capacity than planned'});
+  }
+
+  // ── G2M INSIGHTS ──
+  var g2mProducts=Object.keys(g2mAllData);
+  var lowReadiness=[],highReadiness=[];
+  g2mProducts.forEach(function(name){
+    var items=g2mAllData[name].items||[];
+    var naCount=items.filter(function(i){return i.value==='na';}).length;
+    var applicable=items.length-naCount;
+    var yes=items.filter(function(i){return i.value==='yes';}).length;
+    var pct=applicable>0?Math.round(yes/applicable*100):0;
+    if(pct<30&&applicable>0) lowReadiness.push({name:name,pct:pct});
+    if(pct>=80) highReadiness.push({name:name,pct:pct});
+    // Unassigned items
+    var unassigned=items.filter(function(i){return !i.assignee&&i.value!=='yes'&&i.value!=='na';}).length;
+    if(unassigned>5) alerts.push({icon:'👤',type:'info',title:name+': '+unassigned+' G2M items unassigned',detail:'Assign team members to pending checklist items'});
+  });
+  if(lowReadiness.length) alerts.push({icon:'🚀',type:'warning',title:lowReadiness.length+' product(s) below 30% G2M readiness',detail:lowReadiness.map(function(r){return r.name+' ('+r.pct+'%)';}).join(', ')});
+  if(highReadiness.length) alerts.push({icon:'✅',type:'success',title:highReadiness.length+' product(s) near launch-ready',detail:highReadiness.map(function(r){return r.name+' ('+r.pct+'%)';}).join(', ')});
+
+  // G2M department bottlenecks
+  var catNoCount={};
+  g2mProducts.forEach(function(name){
+    (g2mAllData[name].items||[]).forEach(function(it){
+      if(it.value==='no'){ catNoCount[it.cat]=(catNoCount[it.cat]||0)+1; }
+    });
+  });
+  var worstCat='',worstCount=0;
+  Object.keys(catNoCount).forEach(function(k){if(catNoCount[k]>worstCount){worstCount=catNoCount[k];worstCat=k;}});
+  if(worstCount>=3) alerts.push({icon:'🏢',type:'info',title:'Department bottleneck: '+worstCat,detail:worstCount+' "No" items across all products — this department may need support'});
+
+  // ── CAPACITY INSIGHTS ──
+  if(_tsCurrentWeek){
+    var weekDates=_weekDates(_tsCurrentWeek);
+    var weekTodos=_getTodosForWeek(weekDates[0]);
+    var planned=0; weekTodos.forEach(function(t){planned+=t.hours;});
+    var pctCap=Math.round(planned/_capacityHoursPerWeek*100);
+    if(pctCap>95) alerts.push({icon:'🔥',type:'danger',title:'Capacity overloaded this week: '+pctCap+'%',detail:planned.toFixed(1)+'h planned against '+_capacityHoursPerWeek+'h available'});
+    else if(pctCap<30&&totalTodos>0) alerts.push({icon:'💡',type:'info',title:'Low utilization this week: '+pctCap+'%',detail:'Only '+planned.toFixed(1)+'h planned — capacity available for new work'});
+  }
+
+  // ── UCR INSIGHTS ──
+  var pendingUCR=ucrAllData.filter(function(u){return u.status==='Submitted';}).length;
+  var draftUCR=ucrAllData.filter(function(u){return u.status==='Draft';}).length;
+  if(pendingUCR>0) alerts.push({icon:'📝',type:'info',title:pendingUCR+' UCR(s) awaiting approval',detail:'Submitted change requests need review'});
+  if(draftUCR>2) alerts.push({icon:'📝',type:'warning',title:draftUCR+' draft UCRs',detail:'Consider submitting or discarding old drafts'});
+
+  // ── SHARED ROADMAP INSIGHTS ──
+  if(_sharedToMe&&_sharedToMe.length>0) alerts.push({icon:'🔗',type:'info',title:_sharedToMe.length+' roadmap(s) shared with you',detail:'From: '+_sharedToMe.map(function(s){return s.owner_name;}).join(', ')});
+
+  // ── METRICS ──
+  metrics.push({label:'Total Initiatives',value:rows.length,color:'var(--accent)'});
+  metrics.push({label:'Tasks Done',value:totalTodos>0?Math.round(doneTodos/totalTodos*100)+'%':'—',color:'var(--g1)'});
+  metrics.push({label:'Open Tasks',value:openTodos,color:openTodos>10?'var(--r1)':'var(--muted)'});
+  metrics.push({label:'G2M Products',value:g2mProducts.length,color:'var(--purple)'});
+  metrics.push({label:'At Risk',value:atRisk.length,color:atRisk.length>0?'#ef4444':'var(--g1)'});
+  metrics.push({label:'Released',value:released.length,color:'var(--g1)'});
+
+  // ── RENDER ──
+
+  // Metrics grid
+  var metricsGrid=document.createElement('div');
+  metricsGrid.style.cssText='display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:28px';
+  metrics.forEach(function(m){
+    var card=document.createElement('div');
+    card.style.cssText='background:var(--white);border:1px solid var(--border);border-radius:16px;padding:18px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.04)';
+    card.innerHTML='<div style="font-size:28px;font-weight:800;letter-spacing:-0.03em;color:'+m.color+'">'+m.value+'</div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.04em">'+m.label+'</div>';
+    metricsGrid.appendChild(card);
+  });
+  body.appendChild(metricsGrid);
+
+  // Alerts section
+  if(alerts.length){
+    var alertLabel=document.createElement('div');
+    alertLabel.style.cssText='font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:12px';
+    alertLabel.textContent='Insights & Alerts ('+alerts.length+')';
+    body.appendChild(alertLabel);
+
+    var typeColors={danger:'#ef4444',warning:'#f59e0b',info:'var(--accent)',success:'#10b981'};
+    var typeBg={danger:'rgba(239,68,68,.05)',warning:'rgba(245,158,11,.05)',info:'rgba(0,91,177,.04)',success:'rgba(16,185,129,.05)'};
+
+    alerts.forEach(function(a){
+      var card=document.createElement('div');
+      card.style.cssText='background:'+typeBg[a.type]+';border:1px solid var(--border);border-left:4px solid '+typeColors[a.type]+';border-radius:12px;padding:16px 20px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px';
+      card.innerHTML='<span style="font-size:18px;flex-shrink:0;margin-top:2px">'+a.icon+'</span>'+
+        '<div><div style="font-weight:700;font-size:14px;color:var(--text);margin-bottom:2px">'+escHtml(a.title)+'</div>'+
+        '<div style="font-size:12px;color:var(--muted);line-height:1.5">'+escHtml(a.detail)+'</div></div>';
+      body.appendChild(card);
+    });
+  } else {
+    var empty=document.createElement('div');
+    empty.style.cssText='text-align:center;padding:48px;color:var(--muted);font-size:14px';
+    empty.innerHTML='<div style="font-size:32px;margin-bottom:12px">✨</div>Everything looks good! No alerts at this time.';
+    body.appendChild(empty);
+  }
+
+  // Recommendations section
+  var recLabel=document.createElement('div');
+  recLabel.style.cssText='font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:24px 0 12px';
+  recLabel.textContent='Recommendations';
+  body.appendChild(recLabel);
+
+  var recs=[];
+  // Generate recommendations
+  rows.forEach(function(r){
+    var todos=todoAllData[r.name]||[];
+    var allDone=todos.length>0&&todos.every(function(t){return t.status==='done';});
+    var lastBar=r.bars&&r.bars.length?r.bars[r.bars.length-1]:null;
+    if(allDone&&lastBar&&lastBar.c==='b') recs.push({text:'Consider moving "'+r.name+'" to Released — all tasks are complete',action:'review'});
+    var g2m=g2mAllData[r.name];
+    if(g2m&&g2m.items){
+      var techItems=g2m.items.filter(function(i){return i.cat&&i.cat.indexOf('Technology')>=0&&i.value!=='yes'&&i.value!=='na';});
+      if(techItems.length>5) recs.push({text:'"'+r.name+'" needs '+techItems.length+' Technology items completed in G2M',action:'g2m'});
+    }
+  });
+  if(!recs.length) recs.push({text:'Keep monitoring your initiatives and task completion rates',action:'none'});
+
+  recs.forEach(function(rec){
+    var card=document.createElement('div');
+    card.style.cssText='background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px 20px;margin-bottom:8px;display:flex;align-items:center;gap:12px';
+    card.innerHTML='<span style="font-size:16px;flex-shrink:0">💡</span><span style="font-size:13px;color:var(--text);flex:1">'+escHtml(rec.text)+'</span>';
+    body.appendChild(card);
+  });
+
+  // Competitive Intel section
+  var savedAnalyses=[];
+  try { var s=localStorage.getItem(_lsKey('pmr_saved_analyses')); if(s) savedAnalyses=JSON.parse(s); } catch(e){}
+  if(savedAnalyses.length){
+    var ciLabel=document.createElement('div');
+    ciLabel.style.cssText='font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:24px 0 12px';
+    ciLabel.textContent='Competitive Intelligence';
+    body.appendChild(ciLabel);
+    savedAnalyses.slice(0,3).forEach(function(a){
+      var card=document.createElement('div');
+      card.style.cssText='background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:8px';
+      card.innerHTML='<div style="font-weight:700;font-size:13px;margin-bottom:4px">'+escHtml(a.title||a.competitors||'Analysis')+'</div>'+
+        '<div style="font-size:11px;color:var(--muted)">'+escHtml((a.summary||a.date||'').substring(0,200))+'</div>';
+      body.appendChild(card);
+    });
   }
 }
 
