@@ -422,6 +422,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .ts-kpi-sel{font-family:inherit}
 
 /* CapacityIQ */
+#insightsOverlay{position:fixed;top:88px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
 #insightsOverlay.open{display:flex}
 #reportsOverlay{position:fixed;top:88px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
 #reportsOverlay.open{display:flex}
@@ -1347,7 +1348,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 
 <!-- ══ CAPACITYIQ OVERLAY ══ -->
 <!-- INSIGHTS OVERLAY -->
-<div id="insightsOverlay" style="position:fixed;top:88px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden">
+<div id="insightsOverlay">
   <div style="background:rgba(249,249,250,.9);backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0">
     <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.03em;color:var(--text)">Insights</h2>
     <button onclick="closeInsights()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">&times;</button>
