@@ -43,17 +43,17 @@ h1,h2,h3,h4{font-weight:700;letter-spacing:-0.02em;line-height:1.2;color:var(--t
 .sep{width:1px;height:20px;background:var(--border);margin:0 6px}
 
 /* ── PAGE ── */
-.page{padding:32px 40px 80px;max-width:1440px;margin:0 auto}
+.page{padding:16px 32px 60px;max-width:1440px;margin:0 auto}
 
 /* ── HEADER ── */
-.header{display:flex;align-items:center;justify-content:space-between;padding-bottom:24px;margin-bottom:32px}
-.logo{height:44px;min-width:44px;display:flex;align-items:center;justify-content:center;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;border:2px dashed transparent;transition:border .2s}.logo:hover{border-color:var(--accent)}.logo img{height:100%;width:auto;max-width:160px;object-fit:contain;display:block}.logo .logo-text{background:var(--navy);color:#fff;font-weight:700;font-size:18px;padding:6px 16px;border-radius:8px;letter-spacing:-0.01em;white-space:nowrap}.logo .logo-hint{position:absolute;inset:0;background:rgba(0,0,0,.5);color:#fff;font-size:9px;font-weight:500;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;text-align:center}.logo:hover .logo-hint{opacity:1}
-.hdr-center h1{font-weight:800;font-size:28px;color:var(--text);letter-spacing:-0.04em;text-align:center}
-.hdr-center p{font-size:11px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-top:4px;text-align:center;font-weight:500}
+.header{display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;margin-bottom:12px}
+.logo{height:32px;min-width:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;overflow:hidden;cursor:pointer;position:relative;border:2px dashed transparent;transition:border .2s}.logo:hover{border-color:var(--accent)}.logo img{height:100%;width:auto;max-width:160px;object-fit:contain;display:block}.logo .logo-text{background:var(--navy);color:#fff;font-weight:700;font-size:18px;padding:6px 16px;border-radius:8px;letter-spacing:-0.01em;white-space:nowrap}.logo .logo-hint{position:absolute;inset:0;background:rgba(0,0,0,.5);color:#fff;font-size:9px;font-weight:500;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;text-align:center}.logo:hover .logo-hint{opacity:1}
+.hdr-center h1{font-weight:700;font-size:16px;color:var(--text);letter-spacing:-0.02em;text-align:center}
+.hdr-center p{font-size:10px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-top:2px;text-align:center;font-weight:500}
 .badge{background:var(--accent);color:#fff;font-weight:600;font-size:11px;padding:4px 14px;border-radius:20px;letter-spacing:.02em;text-transform:uppercase}
 
 /* ── TABS (text-style with blue underline active indicator) ── */
-.tabs{display:flex;gap:4px;margin-bottom:20px;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:0}
+.tabs{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:0}
 .tab{padding:8px 16px;border-radius:0;font-size:13px;font-weight:600;cursor:pointer;border:none;border-bottom:2px solid transparent;background:transparent;color:var(--muted);transition:all .15s;display:flex;align-items:center;gap:6px;user-select:none;margin-bottom:-1px}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent);background:transparent}
 .tab:hover:not(.active){color:var(--text);background:transparent}
@@ -63,7 +63,7 @@ h1,h2,h3,h4{font-weight:700;letter-spacing:-0.02em;line-height:1.2;color:var(--t
 .tab-add:hover{color:var(--accent)}
 
 /* ── LEGEND ── */
-.legend{display:flex;align-items:center;gap:16px;background:var(--white);border:1px solid var(--border);border-radius:10px;padding:10px 18px;margin-bottom:16px;flex-wrap:wrap;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.legend{display:flex;align-items:center;gap:14px;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:6px 14px;margin-bottom:10px;flex-wrap:wrap;box-shadow:0 1px 2px rgba(0,0,0,.03)}
 .leg{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text);font-weight:500}
 .swatch{width:28px;height:8px;border-radius:4px;flex-shrink:0}
 
@@ -978,14 +978,12 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
     <span class="logo-hint">📷 Upload<br>Logo</span>
     <input type="file" id="logoFileInput" accept="image/*" style="display:none" onchange="handleLogoUpload(event)">
   </div>
-  <div class="hdr-center">
-    <h1 id="roadmapTitle" contenteditable="true" spellcheck="false" title="Click to edit the roadmap title">Product Roadmap</h1>
-    <p id="roadmapSubtitle" contenteditable="true" spellcheck="false" title="Click to edit the subtitle / period label">FY27 · Combined High Level Overview</p>
-    <p id="roadmapDesc" contenteditable="true" spellcheck="false" title="Click to add a description" style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic;min-width:200px;min-height:16px">Click to add a description…</p>
-    <p style="font-size:10px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:4px;justify-content:center">
-      <span style="letter-spacing:.06em;text-transform:uppercase;font-size:9px">Author:</span>
-      <span id="roadmapAuthor" contenteditable="true" spellcheck="false" title="Click to set author name" style="font-weight:700;color:var(--navy);min-width:60px">Your Name</span>
-    </p>
+  <div class="hdr-center" style="display:flex;align-items:baseline;gap:12px;flex:1;justify-content:center">
+    <h1 id="roadmapTitle" contenteditable="true" spellcheck="false" title="Click to edit">Product Roadmap</h1>
+    <span id="roadmapSubtitle" contenteditable="true" spellcheck="false" title="Click to edit" style="font-size:11px;color:var(--muted);font-weight:500">FY27 · High Level Overview</span>
+    <span style="font-size:10px;color:var(--muted)">·</span>
+    <span id="roadmapAuthor" contenteditable="true" spellcheck="false" title="Click to set author" style="font-size:11px;font-weight:600;color:var(--muted);min-width:40px">Your Name</span>
+    <p id="roadmapDesc" contenteditable="true" spellcheck="false" title="Click to add a description" style="font-size:10px;color:var(--muted);font-style:italic;min-width:80px;display:none">Click to add a description…</p>
   </div>
   <div class="badge" id="roadmapBadge" contenteditable="true" spellcheck="false" title="Click to edit the portfolio badge label">Portfolio</div>
 </div>
