@@ -26,7 +26,7 @@ button,input,select,textarea{font-family:'Inter',system-ui,-apple-system,sans-se
 h1,h2,h3,h4{font-weight:700;letter-spacing:-0.02em;line-height:1.2;color:var(--text)}
 
 /* ── TOOLBAR (glassmorphic top bar) ── */
-.toolbar{background:rgba(249,249,250,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);position:sticky;top:0;z-index:5000;border-bottom:1px solid var(--border)}.toolbar-top{display:flex;align-items:center;padding:12px 24px;flex-wrap:wrap;gap:8px}.toolbar-btns{display:flex;align-items:center;gap:6px;padding:6px 24px;flex-wrap:wrap;border-top:1px solid var(--border)}.tbg{display:flex;align-items:center;gap:5px;padding:0 8px;border-right:1px solid rgba(255,255,255,.06)}.tbg:last-child{border-right:none;margin-left:auto}.tbg-label{font-size:8px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.25);display:block;margin-bottom:2px;text-align:left;padding-left:1px}.tbg-wrap{display:flex;flex-direction:column}
+.toolbar{background:rgba(249,249,250,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}.toolbar-top{display:flex;align-items:center;padding:12px 24px;flex-wrap:wrap;gap:8px}.toolbar-btns{display:flex;align-items:center;gap:6px;padding:6px 24px;flex-wrap:wrap;border-top:1px solid var(--border)}.tbg{display:flex;align-items:center;gap:5px;padding:0 8px;border-right:1px solid rgba(255,255,255,.06)}.tbg:last-child{border-right:none;margin-left:auto}.tbg-label{font-size:8px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.25);display:block;margin-bottom:2px;text-align:left;padding-left:1px}.tbg-wrap{display:flex;flex-direction:column}
 .toolbar-title{color:var(--accent);font-weight:800;font-size:18px;font-style:italic;letter-spacing:-0.02em;margin-right:12px;white-space:nowrap}
 .toolbar-nav{display:flex;gap:24px;margin-left:32px}
 .toolbar-nav a{font-size:14px;font-weight:500;color:var(--muted);padding-bottom:2px;cursor:pointer;transition:color .15s;text-decoration:none}
@@ -50,7 +50,7 @@ h1,h2,h3,h4{font-weight:700;letter-spacing:-0.02em;line-height:1.2;color:var(--t
 .logo{height:32px;min-width:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;overflow:hidden;cursor:pointer;position:relative;border:2px dashed transparent;transition:border .2s}.logo:hover{border-color:var(--accent)}.logo img{height:100%;width:auto;max-width:160px;object-fit:contain;display:block}.logo .logo-text{background:var(--navy);color:#fff;font-weight:700;font-size:18px;padding:6px 16px;border-radius:8px;letter-spacing:-0.01em;white-space:nowrap}.logo .logo-hint{position:absolute;inset:0;background:rgba(0,0,0,.5);color:#fff;font-size:9px;font-weight:500;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;text-align:center}.logo:hover .logo-hint{opacity:1}
 .hdr-center h1{font-weight:700;font-size:16px;color:var(--text);letter-spacing:-0.02em;text-align:center}
 .hdr-center p{font-size:10px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-top:2px;text-align:center;font-weight:500}
-.badge{background:var(--accent);color:#fff;font-weight:600;font-size:11px;padding:4px 14px;border-radius:20px;letter-spacing:.02em;text-transform:uppercase}
+.badge{background:rgba(0,91,177,.08);color:var(--accent);font-weight:600;font-size:10px;padding:4px 12px;border-radius:9999px;letter-spacing:.02em;text-transform:uppercase;border:1px solid rgba(0,91,177,.15)}
 
 /* ── TABS (text-style with blue underline active indicator) ── */
 .tabs{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:0}
@@ -233,10 +233,10 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 #roadmapTitle[contenteditable]:focus,#roadmapSubtitle[contenteditable]:focus,#roadmapBadge[contenteditable]:focus{background:rgba(255,255,255,.2);border-radius:3px;padding:1px 4px}
 
 /* ── SAVE STATUS ── */
-#saveStatus{font-size:11px;font-weight:600;padding:4px 10px;border-radius:12px;transition:all .3s}
-#saveStatus.saved{color:#22c55e}
-#saveStatus.saving{color:#f59e0b}
-#saveStatus.error{color:#ef4444}
+#saveStatus{font-size:10px;font-weight:600;padding:4px 12px;border-radius:9999px;transition:all .3s;border:1px solid}
+#saveStatus.saved{color:#10b981;background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.2)}
+#saveStatus.saving{color:#f59e0b;background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.2)}
+#saveStatus.error{color:#ef4444;background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2)}
 .btn.backup{background:#0f766e;border-color:#0f766e}
 .btn.backup:hover{background:#0d5f59}
 
@@ -819,7 +819,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
       <a class="active" onclick="closeAllOverlays();document.getElementById('roadmapPage').style.display='block';updateNavActive('Roadmap');return false;">Roadmap</a>
       <a onclick="closeAllOverlays();document.getElementById('roadmapPage').style.display='block';openG2M();updateNavActive('Checklist');return false;">Checklist</a>
       <a onclick="closeAllOverlays();document.getElementById('roadmapPage').style.display='block';openReports();updateNavActive('Strategy');return false;">Strategy</a>
-      <a onclick="closeAllOverlays();document.getElementById('roadmapPage').style.display='block';openKPI();updateNavActive('Insights');return false;">Insights</a>
+      <a onclick="closeAllOverlays();document.getElementById('roadmapPage').style.display='block';_rptCurrentReport='portfolio-overview';openReports();updateNavActive('Insights');return false;">Insights</a>
     </nav>
     <div style="margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
       <!-- Collaboration -->
@@ -875,7 +875,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
       <span id="saveStatus" class="saved">● Saved</span>
       <span id="roleBadge" onclick="openRoleManager()" style="cursor:pointer" title="Click to manage roles"></span>
-      <span id="cloudSyncStatus" style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:12px;color:#94a3b8" title="Cloud sync status">☁</span>
+      <span id="cloudSyncStatus" style="font-size:10px;font-weight:600;padding:4px 12px;border-radius:9999px;color:#94a3b8;border:1px solid var(--border)" title="Cloud sync status">☁</span>
     </div>
 
   </div></div>
@@ -4366,13 +4366,13 @@ function showSyncBadge(state){
   if(!el) return;
   if(state === 'synced'){
     el.textContent = '☁ Synced';
-    el.style.color = '#22c55e';
+    el.style.color = '#10b981'; el.style.background='rgba(16,185,129,.08)'; el.style.borderColor='rgba(16,185,129,.2)';
   } else if(state === 'syncing'){
     el.textContent = '☁ Syncing…';
-    el.style.color = '#f59e0b';
+    el.style.color = '#f59e0b'; el.style.background='rgba(245,158,11,.08)'; el.style.borderColor='rgba(245,158,11,.2)';
   } else {
     el.textContent = '☁ Offline';
-    el.style.color = '#ef4444';
+    el.style.color = '#ef4444'; el.style.background='rgba(239,68,68,.08)'; el.style.borderColor='rgba(239,68,68,.2)';
   }
 }
 
