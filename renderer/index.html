@@ -27,7 +27,7 @@ h1,h2,h3,h4{font-weight:700;letter-spacing:-0.02em;line-height:1.2;color:var(--t
 
 /* ── TOOLBAR (glassmorphic top bar) ── */
 .toolbar{background:rgba(249,249,250,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);position:fixed;top:0;left:0;right:0;z-index:5000;border-bottom:1px solid var(--border)}
-.toolbar-spacer{height:88px}.toolbar-top{display:flex;align-items:center;padding:12px 24px;flex-wrap:wrap;gap:8px}.toolbar-btns{display:flex;align-items:center;gap:6px;padding:6px 24px;flex-wrap:wrap;border-top:1px solid var(--border)}.tbg{display:flex;align-items:center;gap:5px;padding:0 8px;border-right:1px solid rgba(255,255,255,.06)}.tbg:last-child{border-right:none;margin-left:auto}.tbg-label{font-size:8px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.25);display:block;margin-bottom:2px;text-align:left;padding-left:1px}.tbg-wrap{display:flex;flex-direction:column}
+.toolbar-spacer{height:52px}.toolbar-top{display:flex;align-items:center;padding:12px 24px;flex-wrap:wrap;gap:8px}.toolbar-btns{display:flex;align-items:center;gap:6px;padding:6px 24px;flex-wrap:wrap;border-top:1px solid var(--border)}.tbg{display:flex;align-items:center;gap:5px;padding:0 8px;border-right:1px solid rgba(255,255,255,.06)}.tbg:last-child{border-right:none;margin-left:auto}.tbg-label{font-size:8px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.25);display:block;margin-bottom:2px;text-align:left;padding-left:1px}.tbg-wrap{display:flex;flex-direction:column}
 .toolbar-title{color:var(--accent);font-weight:800;font-size:18px;font-style:italic;letter-spacing:-0.02em;margin-right:12px;white-space:nowrap}
 .toolbar-nav{display:flex;gap:24px;margin-left:32px}
 .toolbar-nav a{font-size:14px;font-weight:500;color:var(--muted);padding-bottom:2px;cursor:pointer;transition:color .15s;text-decoration:none}
@@ -255,7 +255,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 #previewFrame{width:100%;max-width:1200px;flex:1;border:none;border-radius:12px;background:#fff;min-height:0}
 
 /* ── G2M CHECKLIST ── */
-#g2mOverlay{position:fixed;top:88px;left:0;right:0;bottom:0;background:var(--bg);z-index:4000;display:none;flex-direction:column;overflow:hidden}
+#g2mOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:4000;display:none;flex-direction:column;overflow:hidden}
 #g2mOverlay.open{display:flex}
 .g2m-header{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;border-bottom:1px solid var(--border)}
 .g2m-header h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
@@ -293,7 +293,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .g2m-links-row{display:flex;flex-wrap:wrap;align-items:center;gap:2px;min-height:0}
 
 /* ── TODO OVERLAY ── */
-#todoOverlay{position:fixed;top:88px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
+#todoOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
 #todoOverlay.open{display:flex}
 .todo-header{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;border-bottom:1px solid var(--border)}
 .todo-header h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
@@ -355,7 +355,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .modal-todo-outstanding .todo-out-item{font-size:11px;color:#991b1b;padding:2px 0;display:flex;align-items:center;gap:4px}
 
 /* ── KPI OVERLAY ── */
-#kpiOverlay{position:fixed;top:88px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
+#kpiOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
 #kpiOverlay.open{display:flex}
 .kpi-header{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;gap:16px;flex-shrink:0;flex-wrap:wrap;border-bottom:1px solid var(--border)}
 .kpi-header h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
@@ -369,7 +369,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .kpi-score-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(45,107,244,.1)}
 
 /* ── UCR OVERLAY ── */
-#ucrOverlay{position:fixed;top:88px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
+#ucrOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
 #ucrOverlay.open{display:flex}
 .ucr-header{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;border-bottom:1px solid var(--border)}
 .ucr-header h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
@@ -422,9 +422,9 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .ts-kpi-sel{font-family:inherit}
 
 /* CapacityIQ */
-#insightsOverlay{position:fixed;top:88px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
+#insightsOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
 #insightsOverlay.open{display:flex}
-#reportsOverlay{position:fixed;top:88px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
+#reportsOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
 #reportsOverlay.open{display:flex}
 .rpt-header{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);color:var(--text);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:1px solid var(--border)}
 .rpt-header h2{font-weight:800;font-size:20px;letter-spacing:-0.03em;color:var(--text)}
@@ -439,7 +439,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .rpt-stat{display:flex;flex-direction:column;align-items:center;padding:16px;text-align:center}
 .rpt-stat-value{font-size:28px;font-weight:700;letter-spacing:-0.02em}
 .rpt-stat-label{font-size:11px;font-weight:500;color:var(--muted);margin-top:2px}
-#capOverlay{position:fixed;top:88px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
+#capOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
 #capOverlay.open{display:flex}
 .cap-sidebar{width:220px;background:var(--navy);border-right:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
 .cap-sidebar-item{padding:10px 16px;font-size:13px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s;border-left:3px solid transparent}
@@ -503,7 +503,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .role-manage-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
 
 /* ── ARTIFACTS OVERLAY ── */
-#artOverlay{position:fixed;top:88px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
+#artOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
 #artOverlay.open{display:flex}
 .art-header{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;border-bottom:1px solid var(--border)}
 .art-header h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
@@ -803,8 +803,36 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 <!-- TOOLBAR -->
 <div class="toolbar">
 
-  <!-- Row 1: Logo only -->
+  <!-- Single row toolbar -->
   <div class="toolbar-top">
+    <!-- Burger Menu (next to logo) -->
+    <div class="tb-dropdown" style="margin-right:4px">
+      <button class="tb-dd-btn" onclick="toggleDd('ddBurger')" style="font-size:18px;padding:6px 12px;background:var(--white);border:1px solid var(--border);color:var(--text);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.06)">☰</button>
+      <div class="tb-dd-menu" id="ddBurger" style="min-width:240px;max-height:80vh;overflow-y:auto">
+        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openReports()" style="background:var(--light-blue-bg);border-radius:8px;margin:4px 6px;font-weight:600"><span class="dd-icon">📈</span><span class="dd-label">Reports Dashboard<span class="dd-sub">Health, portfolio, capacity, QBR</span></span></button>
+        <div class="tb-dd-divider"></div>
+        <div style="padding:6px 14px 4px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Modules</div>
+        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openG2M()"><span class="dd-icon">🚀</span><span class="dd-label">G2M Checklist<span class="dd-sub">Go-To-Market Readiness</span></span></button>
+        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openTodo()"><span class="dd-icon">📋</span><span class="dd-label">ToDo List<span class="dd-sub">Tasks per Initiative</span></span></button>
+        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openKPI()"><span class="dd-icon">📊</span><span class="dd-label">KPI Scorecard<span class="dd-sub">Track Key Metrics</span></span></button>
+        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openUCR()"><span class="dd-icon">📝</span><span class="dd-label">UCR<span class="dd-sub">User Change Requests</span></span></button>
+        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openArtifacts()"><span class="dd-icon">📄</span><span class="dd-label">Artifacts<span class="dd-sub">Product Collateral</span></span></button>
+        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openCapacity()"><span class="dd-icon">⚡</span><span class="dd-label">CapacityIQ<span class="dd-sub">Team Capacity Planning</span></span></button>
+        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openCompetitiveAnalysis()"><span class="dd-icon">🔍</span><span class="dd-label">Competitive Intel <span style="background:var(--purple);color:#fff;font-size:8px;padding:1px 5px;border-radius:8px;font-weight:600">PRO</span><span class="dd-sub">AI-powered Analysis</span></span></button>
+        <div class="tb-dd-divider"></div>
+        <div style="padding:6px 14px 4px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Roadmap</div>
+        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openAddRowModal(null)"><span class="dd-icon">＋</span><span class="dd-label">Add Row<span class="dd-sub">Add a new initiative</span></span></button>
+        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();toggleAddSection()"><span class="dd-icon">📂</span><span class="dd-label">Add Section<span class="dd-sub">Create a group header</span></span></button>
+        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openPasteFromSpreadsheet()"><span class="dd-icon">📋</span><span class="dd-label">Paste from Spreadsheet<span class="dd-sub">Bulk import from Excel</span></span></button>
+        <div class="tb-dd-divider"></div>
+        <div style="padding:6px 14px 4px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Data</div>
+        <button class="tb-dd-item" onclick="closeDds();openEditQuarters()"><span class="dd-icon">🗓</span><span class="dd-label">Edit Timeline<span class="dd-sub">Configure quarters</span></span></button>
+        <button class="tb-dd-item" onclick="closeDds();exportExcel()"><span class="dd-icon">📊</span><span class="dd-label">Export Excel<span class="dd-sub">Download as .xls</span></span></button>
+        <button class="tb-dd-item" onclick="closeDds();exportPDF()"><span class="dd-icon">📄</span><span class="dd-label">Export PDF<span class="dd-sub">A3 landscape</span></span></button>
+        <button class="tb-dd-item" onclick="closeDds();exportBackup()"><span class="dd-icon">💾</span><span class="dd-label">Save Backup<span class="dd-sub">Download JSON</span></span></button>
+        <button class="tb-dd-item" onclick="closeDds();importBackup()"><span class="dd-icon">📂</span><span class="dd-label">Import Data<span class="dd-sub">Load backup or Excel</span></span></button>
+      </div>
+    </div>
     <span class="toolbar-title" style="display:flex;align-items:center;gap:10px">
       <svg width="28" height="28" viewBox="0 0 32 32" style="flex-shrink:0">
         <rect width="32" height="32" rx="7" fill="var(--accent)" opacity=".12"/>
@@ -838,49 +866,14 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
   <!-- Row 2: Burger menu + AI bar -->
   <div class="toolbar-btns">
 
-    <!-- Burger Menu -->
-    <div class="tb-dropdown" style="margin-right:8px">
-      <button class="tb-dd-btn" onclick="toggleDd('ddBurger')" style="font-size:18px;padding:6px 12px;background:var(--white);border:1px solid var(--border);color:var(--text);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.06)">☰</button>
-      <div class="tb-dd-menu" id="ddBurger" style="min-width:240px;max-height:80vh;overflow-y:auto">
-        <button class="tb-dd-item" onclick="openReports();closeDds()" style="background:var(--light-blue-bg);border-radius:8px;margin:4px 6px;font-weight:600"><span class="dd-icon">📈</span><span class="dd-label">Reports Dashboard<span class="dd-sub">Health, portfolio, capacity, QBR</span></span></button>
-        <div class="tb-dd-divider"></div>
-        <div style="padding:6px 14px 4px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Modules</div>
-        <button class="tb-dd-item" onclick="openG2M();closeDds()"><span class="dd-icon">🚀</span><span class="dd-label">G2M Checklist<span class="dd-sub">Go-To-Market Readiness</span></span></button>
-        <button class="tb-dd-item" onclick="openTodo();closeDds()"><span class="dd-icon">📋</span><span class="dd-label">ToDo List<span class="dd-sub">Tasks per Initiative</span></span></button>
-        <button class="tb-dd-item" onclick="openKPI();closeDds()"><span class="dd-icon">📊</span><span class="dd-label">KPI Scorecard<span class="dd-sub">Track Key Metrics</span></span></button>
-        <button class="tb-dd-item" onclick="openUCR();closeDds()"><span class="dd-icon">📝</span><span class="dd-label">UCR<span class="dd-sub">User Change Requests</span></span></button>
-        <button class="tb-dd-item" onclick="openArtifacts();closeDds()"><span class="dd-icon">📄</span><span class="dd-label">Artifacts<span class="dd-sub">Product Collateral</span></span></button>
-        <button class="tb-dd-item" onclick="openCapacity();closeDds()"><span class="dd-icon">⚡</span><span class="dd-label">CapacityIQ<span class="dd-sub">Team Capacity Planning</span></span></button>
-        <button class="tb-dd-item" onclick="openCompetitiveAnalysis();closeDds()"><span class="dd-icon">🔍</span><span class="dd-label">Competitive Intel <span style="background:var(--purple);color:#fff;font-size:8px;padding:1px 5px;border-radius:8px;font-weight:600">PRO</span><span class="dd-sub">AI-powered Analysis</span></span></button>
-        <div class="tb-dd-divider"></div>
-        <div style="padding:6px 14px 4px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Roadmap</div>
-        <button class="tb-dd-item" onclick="openAddRowModal(null);closeDds()"><span class="dd-icon">＋</span><span class="dd-label">Add Row<span class="dd-sub">Add a new initiative</span></span></button>
-        <button class="tb-dd-item" onclick="toggleAddSection();closeDds()"><span class="dd-icon">📂</span><span class="dd-label">Add Section<span class="dd-sub">Create a group header</span></span></button>
-        <button class="tb-dd-item" onclick="openPasteFromSpreadsheet();closeDds()"><span class="dd-icon">📋</span><span class="dd-label">Paste from Spreadsheet<span class="dd-sub">Bulk import from Excel</span></span></button>
-        <div class="tb-dd-divider"></div>
-        <div style="padding:6px 14px 4px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Data</div>
-        <button class="tb-dd-item" onclick="openEditQuarters();closeDds()"><span class="dd-icon">🗓</span><span class="dd-label">Edit Timeline<span class="dd-sub">Configure quarters</span></span></button>
-        <button class="tb-dd-item" onclick="exportExcel();closeDds()"><span class="dd-icon">📊</span><span class="dd-label">Export Excel<span class="dd-sub">Download as .xls</span></span></button>
-        <button class="tb-dd-item" onclick="exportPDF();closeDds()"><span class="dd-icon">📄</span><span class="dd-label">Export PDF<span class="dd-sub">A3 landscape</span></span></button>
-        <button class="tb-dd-item" onclick="exportBackup();closeDds()"><span class="dd-icon">💾</span><span class="dd-label">Save Backup<span class="dd-sub">Download JSON</span></span></button>
-        <button class="tb-dd-item" onclick="importBackup();closeDds()"><span class="dd-icon">📂</span><span class="dd-label">Import Data<span class="dd-sub">Load backup or Excel</span></span></button>
-      </div>
-    </div>
+    <!-- Hidden elements kept for JS compatibility -->
+    <div id="aiCmdBar" style="display:none"><input id="aiCmdInput" style="display:none"><button id="aiVoiceBtn" style="display:none"></button></div>
+    <span id="saveStatus" class="saved" style="display:none">● Saved</span>
+    <span id="roleBadge" style="display:none"></span>
+    <span id="cloudSyncStatus" style="display:none">☁</span>
 
-    <!-- AI/Voice archived — hidden for now -->
-    <div id="aiCmdBar" style="display:none">
-      <input id="aiCmdInput" style="display:none">
-      <button id="aiVoiceBtn" style="display:none"></button>
-    </div>
-
-    <!-- Status — right -->
-    <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
-      <span id="saveStatus" class="saved">● Saved</span>
-      <span id="roleBadge" onclick="openRoleManager()" style="cursor:pointer" title="Click to manage roles"></span>
-      <span id="cloudSyncStatus" style="font-size:10px;font-weight:600;padding:4px 12px;border-radius:9999px;color:#94a3b8;border:1px solid var(--border)" title="Cloud sync status">☁</span>
-    </div>
-
-  </div></div>
+  </div>
+</div>
 
 </div>
 
@@ -920,7 +913,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
       <div style="background:linear-gradient(135deg,#001b3d,#0073dd);border-radius:16px;padding:24px;color:#fff;position:relative;overflow:hidden">
         <div style="position:absolute;right:-20px;bottom:-20px;width:120px;height:120px;background:rgba(255,255,255,.06);border-radius:50%;"></div>
         <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.5)">Quick Actions</span>
-        <h3 style="font-size:18px;font-weight:700;margin:8px 0 16px;letter-spacing:-0.02em">What would you like to do?</h3>
+        <h3 style="font-size:18px;font-weight:700;margin:8px 0 16px;letter-spacing:-0.02em;color:#fff">What would you like to do?</h3>
         <div style="display:flex;flex-direction:column;gap:8px">
           <button onclick="closeDashboard();openAddRowModal(null)" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;text-align:left;transition:all .12s;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">+ Add Initiative</button>
           <button onclick="closeDashboard();openG2M()" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;text-align:left;transition:all .12s;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">G2M Checklist</button>
@@ -10575,7 +10568,8 @@ function populateDashboard(){
   var hr=new Date().getHours();
   var greeting=hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
   var el=document.getElementById('dashGreeting');
-  if(el) el.textContent=greeting+(userProfile.name?', '+userProfile.name.split(' ')[0]:'');
+  var displayName=userProfile.name||(_currentUser?_currentUser.email.split('@')[0]:'');
+  if(el) el.textContent=greeting+(displayName?', '+displayName:'');
 
   // Stats
   var statsEl=document.getElementById('dashStats');
