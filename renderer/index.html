@@ -27,7 +27,7 @@ h1,h2,h3,h4{font-weight:700;letter-spacing:-0.02em;line-height:1.2;color:var(--t
 
 /* ── TOOLBAR (glassmorphic top bar) ── */
 .toolbar{background:rgba(249,249,250,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);position:fixed;top:0;left:0;right:0;z-index:5000;border-bottom:1px solid var(--border)}
-.toolbar-spacer{height:52px}.toolbar-top{display:flex;align-items:center;padding:12px 24px;flex-wrap:wrap;gap:8px}.toolbar-btns{display:flex;align-items:center;gap:6px;padding:6px 24px;flex-wrap:wrap;border-top:1px solid var(--border)}.tbg{display:flex;align-items:center;gap:5px;padding:0 8px;border-right:1px solid rgba(255,255,255,.06)}.tbg:last-child{border-right:none;margin-left:auto}.tbg-label{font-size:8px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.25);display:block;margin-bottom:2px;text-align:left;padding-left:1px}.tbg-wrap{display:flex;flex-direction:column}
+.toolbar-spacer{height:52px}.toolbar-top{display:flex;align-items:center;padding:12px 24px;flex-wrap:wrap;gap:8px}.toolbar-btns{display:none}.tbg{display:flex;align-items:center;gap:5px;padding:0 8px;border-right:1px solid rgba(255,255,255,.06)}.tbg:last-child{border-right:none;margin-left:auto}.tbg-label{font-size:8px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.25);display:block;margin-bottom:2px;text-align:left;padding-left:1px}.tbg-wrap{display:flex;flex-direction:column}
 .toolbar-title{color:var(--accent);font-weight:800;font-size:18px;font-style:italic;letter-spacing:-0.02em;margin-right:12px;white-space:nowrap}
 .toolbar-nav{display:flex;gap:24px;margin-left:32px}
 .toolbar-nav a{font-size:14px;font-weight:500;color:var(--muted);padding-bottom:2px;cursor:pointer;transition:color .15s;text-decoration:none}
@@ -805,34 +805,6 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 
   <!-- Single row toolbar -->
   <div class="toolbar-top">
-    <!-- Burger Menu (next to logo) -->
-    <div class="tb-dropdown" style="margin-right:4px">
-      <button class="tb-dd-btn" onclick="toggleDd('ddBurger')" style="font-size:18px;padding:6px 12px;background:var(--white);border:1px solid var(--border);color:var(--text);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.06)">☰</button>
-      <div class="tb-dd-menu" id="ddBurger" style="min-width:240px;max-height:80vh;overflow-y:auto">
-        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openReports()" style="background:var(--light-blue-bg);border-radius:8px;margin:4px 6px;font-weight:600"><span class="dd-icon">📈</span><span class="dd-label">Reports Dashboard<span class="dd-sub">Health, portfolio, capacity, QBR</span></span></button>
-        <div class="tb-dd-divider"></div>
-        <div style="padding:6px 14px 4px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Modules</div>
-        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openG2M()"><span class="dd-icon">🚀</span><span class="dd-label">G2M Checklist<span class="dd-sub">Go-To-Market Readiness</span></span></button>
-        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openTodo()"><span class="dd-icon">📋</span><span class="dd-label">ToDo List<span class="dd-sub">Tasks per Initiative</span></span></button>
-        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openKPI()"><span class="dd-icon">📊</span><span class="dd-label">KPI Scorecard<span class="dd-sub">Track Key Metrics</span></span></button>
-        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openUCR()"><span class="dd-icon">📝</span><span class="dd-label">UCR<span class="dd-sub">User Change Requests</span></span></button>
-        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openArtifacts()"><span class="dd-icon">📄</span><span class="dd-label">Artifacts<span class="dd-sub">Product Collateral</span></span></button>
-        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openCapacity()"><span class="dd-icon">⚡</span><span class="dd-label">CapacityIQ<span class="dd-sub">Team Capacity Planning</span></span></button>
-        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openCompetitiveAnalysis()"><span class="dd-icon">🔍</span><span class="dd-label">Competitive Intel <span style="background:var(--purple);color:#fff;font-size:8px;padding:1px 5px;border-radius:8px;font-weight:600">PRO</span><span class="dd-sub">AI-powered Analysis</span></span></button>
-        <div class="tb-dd-divider"></div>
-        <div style="padding:6px 14px 4px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Roadmap</div>
-        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openAddRowModal(null)"><span class="dd-icon">＋</span><span class="dd-label">Add Row<span class="dd-sub">Add a new initiative</span></span></button>
-        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();toggleAddSection()"><span class="dd-icon">📂</span><span class="dd-label">Add Section<span class="dd-sub">Create a group header</span></span></button>
-        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openPasteFromSpreadsheet()"><span class="dd-icon">📋</span><span class="dd-label">Paste from Spreadsheet<span class="dd-sub">Bulk import from Excel</span></span></button>
-        <div class="tb-dd-divider"></div>
-        <div style="padding:6px 14px 4px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Data</div>
-        <button class="tb-dd-item" onclick="closeDds();openEditQuarters()"><span class="dd-icon">🗓</span><span class="dd-label">Edit Timeline<span class="dd-sub">Configure quarters</span></span></button>
-        <button class="tb-dd-item" onclick="closeDds();exportExcel()"><span class="dd-icon">📊</span><span class="dd-label">Export Excel<span class="dd-sub">Download as .xls</span></span></button>
-        <button class="tb-dd-item" onclick="closeDds();exportPDF()"><span class="dd-icon">📄</span><span class="dd-label">Export PDF<span class="dd-sub">A3 landscape</span></span></button>
-        <button class="tb-dd-item" onclick="closeDds();exportBackup()"><span class="dd-icon">💾</span><span class="dd-label">Save Backup<span class="dd-sub">Download JSON</span></span></button>
-        <button class="tb-dd-item" onclick="closeDds();importBackup()"><span class="dd-icon">📂</span><span class="dd-label">Import Data<span class="dd-sub">Load backup or Excel</span></span></button>
-      </div>
-    </div>
     <span class="toolbar-title" style="display:flex;align-items:center;gap:10px">
       <svg width="28" height="28" viewBox="0 0 32 32" style="flex-shrink:0">
         <rect width="32" height="32" rx="7" fill="var(--accent)" opacity=".12"/>
@@ -845,6 +817,33 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
       </svg>
       <span>Roadmapper</span>
     </span>
+    <div class="tb-dropdown">
+      <button class="tb-dd-btn" onclick="toggleDd('ddBurger')" style="font-size:14px;padding:5px 10px;background:var(--white);border:1px solid var(--border);color:var(--text);font-weight:600;border-radius:8px">☰</button>
+      <div class="tb-dd-menu" id="ddBurger" style="min-width:220px;max-height:80vh;overflow-y:auto">
+        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openReports()" style="background:var(--light-blue-bg);border-radius:8px;margin:4px 6px;font-weight:600"><span class="dd-icon" style="font-weight:700;font-size:12px">—</span><span class="dd-label">Reports<span class="dd-sub">Health, portfolio, QBR</span></span></button>
+        <div class="tb-dd-divider"></div>
+        <div style="padding:6px 14px 4px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)">Modules</div>
+        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openG2M()"><span class="dd-icon" style="font-weight:700;font-size:11px">G2M</span><span class="dd-label">G2M Checklist</span></button>
+        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openTodo()"><span class="dd-icon" style="font-weight:700;font-size:11px">TDL</span><span class="dd-label">ToDo List</span></button>
+        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openKPI()"><span class="dd-icon" style="font-weight:700;font-size:11px">KPI</span><span class="dd-label">KPI Scorecard</span></button>
+        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openUCR()"><span class="dd-icon" style="font-weight:700;font-size:11px">UCR</span><span class="dd-label">Change Requests</span></button>
+        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openArtifacts()"><span class="dd-icon" style="font-weight:700;font-size:11px">ART</span><span class="dd-label">Artifacts</span></button>
+        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openCapacity()"><span class="dd-icon" style="font-weight:700;font-size:11px">CAP</span><span class="dd-label">CapacityIQ</span></button>
+        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openCompetitiveAnalysis()"><span class="dd-icon" style="font-weight:700;font-size:11px">CI</span><span class="dd-label">Competitive Intel</span></button>
+        <div class="tb-dd-divider"></div>
+        <div style="padding:6px 14px 4px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)">Roadmap</div>
+        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openAddRowModal(null)"><span class="dd-icon" style="font-weight:700;font-size:13px">+</span><span class="dd-label">Add Row</span></button>
+        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();toggleAddSection()"><span class="dd-icon" style="font-weight:700;font-size:13px">§</span><span class="dd-label">Add Section</span></button>
+        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openPasteFromSpreadsheet()"><span class="dd-icon" style="font-weight:700;font-size:11px">PST</span><span class="dd-label">Paste from Spreadsheet</span></button>
+        <div class="tb-dd-divider"></div>
+        <div style="padding:6px 14px 4px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)">Data</div>
+        <button class="tb-dd-item" onclick="closeDds();openEditQuarters()"><span class="dd-icon" style="font-weight:700;font-size:11px">TL</span><span class="dd-label">Edit Timeline</span></button>
+        <button class="tb-dd-item" onclick="closeDds();exportExcel()"><span class="dd-icon" style="font-weight:700;font-size:11px">XLS</span><span class="dd-label">Export Excel</span></button>
+        <button class="tb-dd-item" onclick="closeDds();exportPDF()"><span class="dd-icon" style="font-weight:700;font-size:11px">PDF</span><span class="dd-label">Export PDF</span></button>
+        <button class="tb-dd-item" onclick="closeDds();exportBackup()"><span class="dd-icon" style="font-weight:700;font-size:11px">SAV</span><span class="dd-label">Save Backup</span></button>
+        <button class="tb-dd-item" onclick="closeDds();importBackup()"><span class="dd-icon" style="font-weight:700;font-size:11px">IMP</span><span class="dd-label">Import Data</span></button>
+      </div>
+    </div>
     <nav class="toolbar-nav" id="mainNav">
       <a onclick="showDashboard();updateNavActive('Dashboard');return false;">Dashboard</a>
       <a class="active" onclick="closeAllOverlays();document.getElementById('roadmapPage').style.display='block';updateNavActive('Roadmap');return false;">Roadmap</a>
