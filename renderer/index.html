@@ -4044,8 +4044,30 @@ async function handleAuthPrimary(){
     ? await _supabase.auth.signInWithPassword({email:email,password:password})
     : await _supabase.auth.signUp({email:email,password:password});
   setAuthLoading(false);
-  if(result.error){ showAuthError(result.error.message); }
-  else if(_authMode==='signup'&&!result.data.session){ showAuthSuccess('Account created! You can now sign in. (If you receive a confirmation email, the link may not work in the desktop app — just sign in directly.)'); switchToLogin(); }
+  if(result.error){
+    // Improve error messages
+    var msg=result.error.message;
+    if(msg.indexOf('rate limit')>=0) msg='Too many attempts. Please wait a few minutes and try again.';
+    else if(msg.indexOf('already registered')>=0||msg.indexOf('already exists')>=0) msg='This email is already registered. Try signing in instead.';
+    else if(msg.indexOf('invalid')>=0&&msg.indexOf('email')>=0) msg='This email address is not valid. Please check and try again.';
+    showAuthError(msg);
+  }
+  else if(_authMode==='signup'){
+    // Signup success
+    if(result.data&&result.data.session&&result.data.user){
+      // Auto-confirmed (no email verification required)
+      showAuthSuccess('Account created successfully! Signing you in...');
+      _currentUser=result.data.user;
+      setTimeout(function(){ onAuthSuccess(_currentUser); }, 1000);
+    } else if(result.data&&result.data.user&&result.data.user.identities&&result.data.user.identities.length===0){
+      // User already exists but Supabase returns fake success
+      showAuthError('This email is already registered. Try signing in instead.');
+    } else {
+      // Email confirmation required
+      showAuthSuccess('Account created! Please check your email ('+email+') for a confirmation link. Once confirmed, you can sign in.');
+      switchToLogin();
+    }
+  }
   else if(result.data&&result.data.user){ _currentUser=result.data.user; onAuthSuccess(_currentUser); }
 }
 async function handleGoogleAuth(){
