@@ -30,9 +30,23 @@ serve(async (req) => {
 
     // Check if user already exists
     const { data: existingUsers } = await supabase.auth.admin.listUsers();
-    const exists = existingUsers?.users?.some(u => u.email?.toLowerCase() === email.toLowerCase());
+    const existingUser = existingUsers?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase().trim());
 
-    if (exists) {
+    if (existingUser) {
+      // If user exists but is unconfirmed, auto-confirm them
+      if (!existingUser.email_confirmed_at) {
+        await supabase.auth.admin.updateUserById(existingUser.id, {
+          email_confirm: true,
+        });
+        return new Response(JSON.stringify({
+          ok: true,
+          message: "Your account has been confirmed! You can now sign in.",
+          user_id: existingUser.id,
+          email: existingUser.email
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
       return new Response(JSON.stringify({ error: "This email is already registered. Try signing in instead." }), {
         status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
