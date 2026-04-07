@@ -4012,12 +4012,15 @@ function switchToLogin(){
 function showForgot(){
   _authMode='forgot'; clearAuthMessages();
   document.getElementById('authTitle').textContent='Reset your password';
-  document.getElementById('authSub').textContent="We'll send a reset link to your email";
-  document.getElementById('authPrimaryBtn').textContent='Send Reset Email';
-  document.getElementById('authPassField').style.display='none';
-  document.getElementById('authConfirmField').style.display='none';
+  document.getElementById('authSub').textContent='Enter your email and choose a new password';
+  document.getElementById('authPrimaryBtn').textContent='Reset Password';
+  document.getElementById('authPassField').style.display='block';
+  document.getElementById('authConfirmField').style.display='block';
   document.getElementById('authForgotRow').style.display='none';
   document.getElementById('authToggle').innerHTML='<a onclick="switchToLogin()">← Back to sign in</a>';
+  // Clear password fields
+  document.getElementById('authPassword').value='';
+  document.getElementById('authConfirm').value='';
 }
 async function handleAuthPrimary(){
   clearAuthMessages();
@@ -4026,10 +4029,30 @@ async function handleAuthPrimary(){
   var confirm=document.getElementById('authConfirm').value||'';
   if(!email){ showAuthError('Please enter your email address.'); return; }
   if(_authMode==='forgot'){
+    if(!password){ showAuthError('Please enter a new password.'); return; }
+    if(password.length<8){ showAuthError('Password must be at least 8 characters.'); return; }
+    if(password!==confirm){ showAuthError('Passwords do not match.'); return; }
     setAuthLoading(true);
-    var r=await _supabase.auth.resetPasswordForEmail(email);
-    setAuthLoading(false);
-    r.error?showAuthError(r.error.message):showAuthSuccess('Reset email sent — check your inbox.');
+    try {
+      var resetRes=await window.electronAPI.supaRequest({
+        path:'/functions/v1/reset-password',
+        method:'POST',
+        body:{email:email,new_password:password},
+        token:null
+      });
+      setAuthLoading(false);
+      if(resetRes.ok&&resetRes.data&&resetRes.data.ok){
+        showAuthSuccess(resetRes.data.message||'Password reset! You can now sign in.');
+        switchToLogin();
+        var emailField=document.getElementById('authEmail');
+        if(emailField) emailField.value=email;
+      } else {
+        showAuthError((resetRes.data&&resetRes.data.error)||'Reset failed. Please try again.');
+      }
+    } catch(e){
+      setAuthLoading(false);
+      showAuthError('Connection error. Please check your internet.');
+    }
     return;
   }
   if(!password){ showAuthError('Please enter your password.'); return; }
