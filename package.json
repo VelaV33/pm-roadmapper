@@ -1,6 +1,6 @@
 {
   "name": "netstar-roadmap",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "PM Roadmapper — Product Strategy & Roadmap Tool",
   "main": "main.js",
   "scripts": {
@@ -12,6 +12,11 @@
   "build": {
     "appId": "com.pmroadmapper.app",
     "productName": "PM Roadmapper",
+    "publish": {
+      "provider": "github",
+      "owner": "VelaV33",
+      "repo": "pm-roadmapper"
+    },
     "directories": {
       "output": "dist"
     },
@@ -35,7 +40,11 @@
       "node_modules/@supabase/**/*",
       "node_modules/pdf-parse-new/**/*",
       "node_modules/mammoth/**/*",
-      "node_modules/adm-zip/**/*"
+      "node_modules/adm-zip/**/*",
+      "node_modules/electron-updater/**/*",
+      "node_modules/builder-util-runtime/**/*",
+      "node_modules/lazy-val/**/*",
+      "node_modules/semver/**/*"
     ]
   },
   "devDependencies": {
@@ -46,6 +55,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
     "adm-zip": "^0.5.16",
+    "electron-updater": "^6.8.3",
     "mammoth": "^1.12.0",
     "pdf-parse-new": "^2.0.0",
     "pptxgenjs": "^4.0.1"

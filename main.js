@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
 let pdfParse, mammoth;
@@ -462,6 +463,42 @@ app.whenReady().then(() => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+
+  // ── Auto-update ──
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on('update-available', (info) => {
+    console.log('Update available:', info.version);
+    if (win) win.webContents.send('update-available', info.version);
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log('Update downloaded:', info.version);
+    if (win) {
+      dialog.showMessageBox(win, {
+        type: 'info',
+        title: 'Update Ready',
+        message: 'Version ' + info.version + ' has been downloaded.',
+        detail: 'The update will be installed when you restart the app.',
+        buttons: ['Restart Now', 'Later'],
+        defaultId: 0
+      }).then((result) => {
+        if (result.response === 0) autoUpdater.quitAndInstall();
+      });
+    }
+  });
+
+  autoUpdater.on('error', (err) => {
+    console.log('Auto-update error:', err.message);
+  });
+
+  // Check for updates after a short delay
+  setTimeout(() => {
+    autoUpdater.checkForUpdatesAndNotify().catch(err => {
+      console.log('Update check failed:', err.message);
+    });
+  }, 5000);
 });
 
 
