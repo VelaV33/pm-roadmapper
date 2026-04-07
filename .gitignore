@@ -31,3 +31,5 @@ secrets.json
 # Temp / cache
 *.tmp
 *.bak
+dist2/
+.claude/
