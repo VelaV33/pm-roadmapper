@@ -40,6 +40,8 @@ h1,h2,h3,h4{font-weight:700;letter-spacing:-0.02em;line-height:1.2;color:var(--t
 .sidebar-item.active{background:var(--light-blue-bg);color:var(--accent);font-weight:600}
 .sidebar-item svg{width:18px;height:18px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .sidebar-divider{height:1px;background:var(--border);margin:8px 16px}
+.ico{display:inline-block;width:16px;height:16px;vertical-align:middle}
+.ico svg{width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .app-content{margin-left:220px;transition:margin-left .2s ease}
 .app-content.sidebar-collapsed{margin-left:0}.toolbar-top{display:flex;align-items:center;padding:12px 24px;flex-wrap:wrap;gap:8px}.toolbar-btns{display:none}.tbg{display:flex;align-items:center;gap:5px;padding:0 8px;border-right:1px solid rgba(255,255,255,.06)}.tbg:last-child{border-right:none;margin-left:auto}.tbg-label{font-size:8px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.25);display:block;margin-bottom:2px;text-align:left;padding-left:1px}.tbg-wrap{display:flex;flex-direction:column}
 .toolbar-title{color:var(--accent);font-weight:800;font-size:18px;font-style:italic;letter-spacing:-0.02em;margin-right:12px;white-space:nowrap}
@@ -831,7 +833,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
       </svg>
       <span>Roadmapper</span>
     </span>
-    <button onclick="toggleSidebar()" style="background:none;border:none;font-size:16px;padding:4px 8px;color:var(--muted);cursor:pointer" title="Toggle sidebar">☰</button>
+    <button onclick="toggleSidebar()" style="background:none;border:none;padding:4px 8px;color:var(--muted);cursor:pointer;display:flex;align-items:center" title="Toggle sidebar"><span class="ico" style="width:20px;height:20px"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span></button>
     <nav class="toolbar-nav" id="mainNav">
       <a onclick="showDashboard();updateNavActive('Dashboard');return false;">Dashboard</a>
       <a class="active" onclick="closeAllOverlays();document.getElementById('roadmapPage').style.display='block';updateNavActive('Roadmap');return false;">Roadmap</a>
@@ -841,12 +843,11 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
     </nav>
     <div style="margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
       <!-- Collaboration -->
-      <button onclick="openShare()" title="Share roadmap with your team" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'"><span style="font-size:13px">🔗</span> Share</button>
-      <button onclick="openNotifications()" id="notifBtn" title="Notifications" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;position:relative" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'"><span style="font-size:13px">🔔</span><span id="notifBadge" style="display:none;position:absolute;top:-2px;right:-2px;background:#ef4444;color:#fff;font-size:8px;font-weight:700;min-width:16px;height:16px;border-radius:9999px;display:none;align-items:center;justify-content:center;padding:0 3px"></span></button>
-      <!-- App -->
-      <button onclick="openHelp()" title="Help &amp; User Guide" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'">?</button>
-      <button onclick="openSettings()" title="Settings" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'">⚙</button>
-      <button onclick="openProfile()" id="profileBtn" title="Your account" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'"><span style="font-size:13px">👤</span> Account</button>
+      <button onclick="openShare()" title="Share" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'"><span class="ico"><svg viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg></span> Share</button>
+      <button onclick="openNotifications()" id="notifBtn" title="Notifications" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:8px;font-size:12px;cursor:pointer;transition:all .15s;position:relative;display:flex;align-items:center" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'"><span class="ico"><svg viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg></span><span id="notifBadge" style="display:none;position:absolute;top:-2px;right:-2px;background:#ef4444;color:#fff;font-size:8px;font-weight:700;min-width:16px;height:16px;border-radius:9999px;align-items:center;justify-content:center;padding:0 3px"></span></button>
+      <button onclick="openHelp()" title="Help" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:8px;font-size:12px;cursor:pointer;transition:all .15s;display:flex;align-items:center" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'"><span class="ico"><svg viewBox="0 0 24 24"><path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span></button>
+      <button onclick="openSettings()" title="Settings" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:8px;font-size:12px;cursor:pointer;transition:all .15s;display:flex;align-items:center" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'"><span class="ico"><svg viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span></button>
+      <button onclick="openProfile()" id="profileBtn" title="Account" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'"><span class="ico"><svg viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg></span> Account</button>
     </div>
   </div>
 
@@ -998,22 +999,22 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
   <!-- Bottom Grid -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
     <div onclick="closeDashboard();openTodo()" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04)" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
-      <div style="font-size:20px;margin-bottom:8px">📋</div>
+      <div style="margin-bottom:8px;color:var(--accent)"><span class="ico" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></span></div>
       <h5 style="font-weight:700;font-size:13px;margin-bottom:4px">ToDo List</h5>
       <p style="font-size:11px;color:var(--muted)" id="dashTodoSummary">—</p>
     </div>
     <div onclick="closeDashboard();openKPI()" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04)" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
-      <div style="font-size:20px;margin-bottom:8px">📊</div>
+      <div style="margin-bottom:8px;color:var(--accent)"><span class="ico" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path d="M16 8v8m-4-5v5m-4-2v2m-2 4h16a2 2 0 002-2V5a2 2 0 00-2-2H4a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></span></div>
       <h5 style="font-weight:700;font-size:13px;margin-bottom:4px">KPI Scorecard</h5>
       <p style="font-size:11px;color:var(--muted)">Track performance metrics</p>
     </div>
     <div onclick="closeDashboard();openCapacity()" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04)" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
-      <div style="font-size:20px;margin-bottom:8px">⚡</div>
+      <div style="margin-bottom:8px;color:var(--accent)"><span class="ico" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></span></div>
       <h5 style="font-weight:700;font-size:13px;margin-bottom:4px">CapacityIQ</h5>
       <p style="font-size:11px;color:var(--muted)">Team capacity planning</p>
     </div>
     <div onclick="closeDashboard();openShare()" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04)" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
-      <div style="font-size:20px;margin-bottom:8px">🔗</div>
+      <div style="margin-bottom:8px;color:var(--accent)"><span class="ico" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg></span></div>
       <h5 style="font-weight:700;font-size:13px;margin-bottom:4px">Share Roadmap</h5>
       <p style="font-size:11px;color:var(--muted)" id="dashShareSummary">—</p>
     </div>
@@ -10644,6 +10645,30 @@ function pullTDLToTimesheet(){
 
 var _showingDashboard=false;
 
+// SVG icon helper — returns inline SVG string
+var _ICONS={
+  clipboard:'<svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>',
+  check:'<svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+  list:'<svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>',
+  chart:'<svg viewBox="0 0 24 24"><path d="M16 8v8m-4-5v5m-4-2v2m-2 4h16a2 2 0 002-2V5a2 2 0 00-2-2H4a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>',
+  edit:'<svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>',
+  doc:'<svg viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>',
+  bolt:'<svg viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>',
+  search:'<svg viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>',
+  bulb:'<svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>',
+  plus:'<svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>',
+  share:'<svg viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>',
+  user:'<svg viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>',
+  calendar:'<svg viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>',
+  download:'<svg viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>',
+  target:'<svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>',
+  link:'<svg viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>'
+};
+function svgIcon(name,size){
+  var s=size||16;
+  return '<span class="ico" style="width:'+s+'px;height:'+s+'px">'+(_ICONS[name]||'')+'</span>';
+}
+
 function toggleSidebar(){
   var sb=document.getElementById('appSidebar');
   var ct=document.getElementById('appContent');
@@ -10710,10 +10735,10 @@ function populateDashboard(){
     var sharedCount=(_sharedToMe||[]).length;
 
     var stats=[
-      {icon:'🎯',value:totalInit,label:'Initiatives',color:'var(--accent)'},
-      {icon:'✅',value:taskPct+'%',label:'Tasks Complete',color:'var(--g1)'},
-      {icon:'🚀',value:g2mProducts,label:'G2M Strategies',color:'var(--purple)'},
-      {icon:'🔗',value:sharedCount,label:'Shared With Me',color:'var(--accent)'}
+      {icon:svgIcon('target',24),value:totalInit,label:'Initiatives',color:'var(--accent)'},
+      {icon:svgIcon('check',24),value:taskPct+'%',label:'Tasks Complete',color:'var(--g1)'},
+      {icon:svgIcon('clipboard',24),value:g2mProducts,label:'G2M Strategies',color:'var(--purple)'},
+      {icon:svgIcon('share',24),value:sharedCount,label:'Shared With Me',color:'var(--accent)'}
     ];
     statsEl.innerHTML='';
     stats.forEach(function(s){
@@ -10721,7 +10746,7 @@ function populateDashboard(){
       card.style.cssText='background:var(--white);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.04);cursor:pointer;transition:all .15s';
       card.onmouseover=function(){card.style.boxShadow='0 4px 16px rgba(0,0,0,.08)';};
       card.onmouseout=function(){card.style.boxShadow='0 1px 3px rgba(0,0,0,.04)';};
-      card.innerHTML='<div style="font-size:24px;margin-bottom:8px">'+s.icon+'</div><div style="font-size:28px;font-weight:800;letter-spacing:-0.03em;color:'+s.color+'">'+s.value+'</div><div style="font-size:11px;font-weight:600;color:var(--muted);margin-top:4px">'+s.label+'</div>';
+      card.innerHTML='<div style="margin-bottom:8px;color:'+s.color+'">'+s.icon+'</div><div style="font-size:28px;font-weight:800;letter-spacing:-0.03em;color:'+s.color+'">'+s.value+'</div><div style="font-size:11px;font-weight:600;color:var(--muted);margin-top:4px">'+s.label+'</div>';
       statsEl.appendChild(card);
     });
   }
@@ -11003,11 +11028,11 @@ function renderInsights(){
 
 var _rptCurrentReport='initiative-health';
 var RPT_REPORTS=[
-  {id:'initiative-health',name:'Initiative Health',icon:'🏥',desc:'Status of every roadmap initiative'},
-  {id:'portfolio-overview',name:'Portfolio Overview',icon:'🗂',desc:'All roadmaps in one view'},
-  {id:'weekly-capacity',name:'Weekly Capacity',icon:'⏱',desc:'Time allocation this week'},
-  {id:'qbr-pack',name:'QBR Pack',icon:'📦',desc:'Quarterly Business Review summary'},
-  {id:'deliverables-tracker',name:'Deliverables Tracker',icon:'✅',desc:'What was promised vs delivered'}
+  {id:'initiative-health',name:'Initiative Health',icon:'target',desc:'Status of every roadmap initiative'},
+  {id:'portfolio-overview',name:'Portfolio Overview',icon:'clipboard',desc:'All roadmaps in one view'},
+  {id:'weekly-capacity',name:'Weekly Capacity',icon:'calendar',desc:'Time allocation this week'},
+  {id:'qbr-pack',name:'QBR Pack',icon:'doc',desc:'Quarterly Business Review summary'},
+  {id:'deliverables-tracker',name:'Deliverables Tracker',icon:'check',desc:'What was promised vs delivered'}
 ];
 
 function openReports(){
@@ -11024,7 +11049,7 @@ function renderReportsSidebar(){
   RPT_REPORTS.forEach(function(r){
     var item=document.createElement('div');
     item.className='rpt-sidebar-item'+(r.id===_rptCurrentReport?' active':'');
-    item.innerHTML='<span style="font-size:16px">'+r.icon+'</span><div><div>'+r.name+'</div><div style="font-size:10px;color:var(--muted);font-weight:400">'+r.desc+'</div></div>';
+    item.innerHTML=svgIcon(r.icon,18)+'<div><div>'+r.name+'</div><div style="font-size:10px;color:var(--muted);font-weight:400">'+r.desc+'</div></div>';
     item.onclick=function(){ _rptCurrentReport=r.id; renderReportsSidebar(); renderReport(r.id); };
     sb.appendChild(item);
   });
