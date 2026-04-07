@@ -27,7 +27,21 @@ h1,h2,h3,h4{font-weight:700;letter-spacing:-0.02em;line-height:1.2;color:var(--t
 
 /* ── TOOLBAR (glassmorphic top bar) ── */
 .toolbar{background:rgba(249,249,250,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);position:fixed;top:0;left:0;right:0;z-index:5000;border-bottom:1px solid var(--border)}
-.toolbar-spacer{height:52px}.toolbar-top{display:flex;align-items:center;padding:12px 24px;flex-wrap:wrap;gap:8px}.toolbar-btns{display:none}.tbg{display:flex;align-items:center;gap:5px;padding:0 8px;border-right:1px solid rgba(255,255,255,.06)}.tbg:last-child{border-right:none;margin-left:auto}.tbg-label{font-size:8px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.25);display:block;margin-bottom:2px;text-align:left;padding-left:1px}.tbg-wrap{display:flex;flex-direction:column}
+.toolbar-spacer{height:52px}
+/* ── LEFT SIDEBAR ── */
+.app-sidebar{position:fixed;top:52px;left:0;bottom:0;width:220px;background:var(--white);border-right:1px solid var(--border);z-index:200;display:flex;flex-direction:column;overflow-y:auto;transition:transform .2s ease,width .2s ease;padding:16px 0}
+.app-sidebar.collapsed{transform:translateX(-220px)}
+.app-sidebar .sidebar-logo{padding:0 16px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.app-sidebar .sidebar-logo svg{flex-shrink:0}
+.app-sidebar .sidebar-logo span{font-weight:800;font-size:15px;font-style:italic;color:var(--accent);letter-spacing:-0.02em}
+.app-sidebar .sidebar-section{padding:12px 16px 4px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:8px 16px;margin:1px 8px;border-radius:10px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .12s;text-decoration:none;border:none;background:none;width:calc(100% - 16px);text-align:left;font-family:inherit}
+.sidebar-item:hover{background:var(--surface-low);color:var(--text)}
+.sidebar-item.active{background:var(--light-blue-bg);color:var(--accent);font-weight:600}
+.sidebar-item svg{width:18px;height:18px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.sidebar-divider{height:1px;background:var(--border);margin:8px 16px}
+.app-content{margin-left:220px;transition:margin-left .2s ease}
+.app-content.sidebar-collapsed{margin-left:0}.toolbar-top{display:flex;align-items:center;padding:12px 24px;flex-wrap:wrap;gap:8px}.toolbar-btns{display:none}.tbg{display:flex;align-items:center;gap:5px;padding:0 8px;border-right:1px solid rgba(255,255,255,.06)}.tbg:last-child{border-right:none;margin-left:auto}.tbg-label{font-size:8px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.25);display:block;margin-bottom:2px;text-align:left;padding-left:1px}.tbg-wrap{display:flex;flex-direction:column}
 .toolbar-title{color:var(--accent);font-weight:800;font-size:18px;font-style:italic;letter-spacing:-0.02em;margin-right:12px;white-space:nowrap}
 .toolbar-nav{display:flex;gap:24px;margin-left:32px}
 .toolbar-nav a{font-size:14px;font-weight:500;color:var(--muted);padding-bottom:2px;cursor:pointer;transition:color .15s;text-decoration:none}
@@ -817,33 +831,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
       </svg>
       <span>Roadmapper</span>
     </span>
-    <div class="tb-dropdown">
-      <button class="tb-dd-btn" onclick="toggleDd('ddBurger')" style="font-size:14px;padding:5px 10px;background:var(--white);border:1px solid var(--border);color:var(--text);font-weight:600;border-radius:8px">☰</button>
-      <div class="tb-dd-menu" id="ddBurger" style="min-width:220px;max-height:80vh;overflow-y:auto">
-        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openReports()" style="background:var(--light-blue-bg);border-radius:8px;margin:4px 6px;font-weight:600"><span class="dd-icon" style="font-weight:700;font-size:12px">—</span><span class="dd-label">Reports<span class="dd-sub">Health, portfolio, QBR</span></span></button>
-        <div class="tb-dd-divider"></div>
-        <div style="padding:6px 14px 4px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)">Modules</div>
-        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openG2M()"><span class="dd-icon" style="font-weight:700;font-size:11px">G2M</span><span class="dd-label">G2M Checklist</span></button>
-        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openTodo()"><span class="dd-icon" style="font-weight:700;font-size:11px">TDL</span><span class="dd-label">ToDo List</span></button>
-        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openKPI()"><span class="dd-icon" style="font-weight:700;font-size:11px">KPI</span><span class="dd-label">KPI Scorecard</span></button>
-        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openUCR()"><span class="dd-icon" style="font-weight:700;font-size:11px">UCR</span><span class="dd-label">Change Requests</span></button>
-        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openArtifacts()"><span class="dd-icon" style="font-weight:700;font-size:11px">ART</span><span class="dd-label">Artifacts</span></button>
-        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openCapacity()"><span class="dd-icon" style="font-weight:700;font-size:11px">CAP</span><span class="dd-label">CapacityIQ</span></button>
-        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openCompetitiveAnalysis()"><span class="dd-icon" style="font-weight:700;font-size:11px">CI</span><span class="dd-label">Competitive Intel</span></button>
-        <div class="tb-dd-divider"></div>
-        <div style="padding:6px 14px 4px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)">Roadmap</div>
-        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openAddRowModal(null)"><span class="dd-icon" style="font-weight:700;font-size:13px">+</span><span class="dd-label">Add Row</span></button>
-        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();toggleAddSection()"><span class="dd-icon" style="font-weight:700;font-size:13px">§</span><span class="dd-label">Add Section</span></button>
-        <button class="tb-dd-item" onclick="closeDds();closeAllOverlays();openPasteFromSpreadsheet()"><span class="dd-icon" style="font-weight:700;font-size:11px">PST</span><span class="dd-label">Paste from Spreadsheet</span></button>
-        <div class="tb-dd-divider"></div>
-        <div style="padding:6px 14px 4px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)">Data</div>
-        <button class="tb-dd-item" onclick="closeDds();openEditQuarters()"><span class="dd-icon" style="font-weight:700;font-size:11px">TL</span><span class="dd-label">Edit Timeline</span></button>
-        <button class="tb-dd-item" onclick="closeDds();exportExcel()"><span class="dd-icon" style="font-weight:700;font-size:11px">XLS</span><span class="dd-label">Export Excel</span></button>
-        <button class="tb-dd-item" onclick="closeDds();exportPDF()"><span class="dd-icon" style="font-weight:700;font-size:11px">PDF</span><span class="dd-label">Export PDF</span></button>
-        <button class="tb-dd-item" onclick="closeDds();exportBackup()"><span class="dd-icon" style="font-weight:700;font-size:11px">SAV</span><span class="dd-label">Save Backup</span></button>
-        <button class="tb-dd-item" onclick="closeDds();importBackup()"><span class="dd-icon" style="font-weight:700;font-size:11px">IMP</span><span class="dd-label">Import Data</span></button>
-      </div>
-    </div>
+    <button onclick="toggleSidebar()" style="background:none;border:none;font-size:16px;padding:4px 8px;color:var(--muted);cursor:pointer" title="Toggle sidebar">☰</button>
     <nav class="toolbar-nav" id="mainNav">
       <a onclick="showDashboard();updateNavActive('Dashboard');return false;">Dashboard</a>
       <a class="active" onclick="closeAllOverlays();document.getElementById('roadmapPage').style.display='block';updateNavActive('Roadmap');return false;">Roadmap</a>
@@ -877,6 +865,86 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 </div>
 
 <div class="toolbar-spacer"></div>
+
+<!-- LEFT SIDEBAR -->
+<nav class="app-sidebar" id="appSidebar">
+  <div class="sidebar-section">Modules</div>
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openReports()">
+    <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+    Reports
+  </button>
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openG2M()">
+    <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    G2M Checklist
+  </button>
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openTodo()">
+    <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+    ToDo List
+  </button>
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openKPI()">
+    <svg viewBox="0 0 24 24"><path d="M16 8v8m-4-5v5m-4-2v2m-2 4h16a2 2 0 002-2V5a2 2 0 00-2-2H4a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+    KPI Scorecard
+  </button>
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openUCR()">
+    <svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+    Change Requests
+  </button>
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openArtifacts()">
+    <svg viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+    Artifacts
+  </button>
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openCapacity()">
+    <svg viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+    CapacityIQ
+  </button>
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openCompetitiveAnalysis()">
+    <svg viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    Competitive Intel
+  </button>
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openInsights()">
+    <svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+    Insights
+  </button>
+  <div class="sidebar-divider"></div>
+  <div class="sidebar-section">Roadmap</div>
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openAddRowModal(null)">
+    <svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+    Add Row
+  </button>
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();toggleAddSection()">
+    <svg viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+    Add Section
+  </button>
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openPasteFromSpreadsheet()">
+    <svg viewBox="0 0 24 24"><path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+    Paste from Spreadsheet
+  </button>
+  <div class="sidebar-divider"></div>
+  <div class="sidebar-section">Data</div>
+  <button class="sidebar-item" onclick="closeDds();openEditQuarters()">
+    <svg viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+    Edit Timeline
+  </button>
+  <button class="sidebar-item" onclick="closeDds();exportExcel()">
+    <svg viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+    Export Excel
+  </button>
+  <button class="sidebar-item" onclick="closeDds();exportPDF()">
+    <svg viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+    Export PDF
+  </button>
+  <button class="sidebar-item" onclick="closeDds();exportBackup()">
+    <svg viewBox="0 0 24 24"><path d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+    Save Backup
+  </button>
+  <button class="sidebar-item" onclick="closeDds();importBackup()">
+    <svg viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+    Import Data
+  </button>
+</nav>
+
+<!-- MAIN CONTENT WRAPPER -->
+<div class="app-content" id="appContent">
 <!-- ADD SECTION FORM -->
 <div class="page" style="padding-bottom:0;padding-top:12px">
 <div class="add-sec-form" id="addSecForm">
@@ -1388,6 +1456,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 </div>
 
 <div id="tourOverlay"><div class="tour-spotlight" id="tourSpot"></div><div class="tour-tooltip" id="tourTip"></div></div>
+</div><!-- /app-content -->
 
 <script>
 // ── GLOBAL ERROR HANDLER — prevent unhandled errors from crashing the page ──
@@ -10522,6 +10591,14 @@ function pullTDLToTimesheet(){
 // ══════════════════════════════════════════════════════════════════════════════
 
 var _showingDashboard=false;
+
+function toggleSidebar(){
+  var sb=document.getElementById('appSidebar');
+  var ct=document.getElementById('appContent');
+  if(!sb||!ct) return;
+  sb.classList.toggle('collapsed');
+  ct.classList.toggle('sidebar-collapsed');
+}
 
 function closeAllOverlays(){
   ['g2mOverlay','todoOverlay','kpiOverlay','ucrOverlay','capOverlay','artOverlay','previewOverlay','reportsOverlay','insightsOverlay'].forEach(function(id){
