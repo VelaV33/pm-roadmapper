@@ -32,22 +32,33 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      sandbox: true,
+      webSecurity: true,
+      allowRunningInsecureContent: false,
       backgroundThrottling: false,
     },
   });
 
-  // Grant microphone permission for voice-to-text
-  win.webContents.session.setPermissionRequestHandler((webContents, permission, callback) => {
-    if (permission === 'media' || permission === 'microphone') {
-      callback(true);
-    } else {
-      callback(true);
-    }
+  // Permission policy: deny by default, allow only what we explicitly need.
+  // The renderer is local trusted code but a future XSS via shared content
+  // shouldn't be able to escalate to camera/screen capture/etc.
+  const ALLOWED_PERMS = new Set(['media', 'microphone']);
+  win.webContents.session.setPermissionRequestHandler((_wc, permission, callback) => {
+    callback(ALLOWED_PERMS.has(permission));
+  });
+  win.webContents.session.setPermissionCheckHandler((_wc, permission) => {
+    return ALLOWED_PERMS.has(permission);
   });
 
-  win.webContents.session.setPermissionCheckHandler((webContents, permission) => {
-    if (permission === 'media' || permission === 'microphone') return true;
-    return true;
+  // Block any attempt to navigate the main window away from our local file://
+  // page, and force any new-window requests through shell.openExternal with
+  // protocol validation. This neuters most XSS-to-RCE escalation paths.
+  win.webContents.on('will-navigate', (event, url) => {
+    if (!url.startsWith('file://')) event.preventDefault();
+  });
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (/^https?:\/\//i.test(url)) shell.openExternal(url);
+    return { action: 'deny' };
   });
 
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
@@ -278,9 +289,25 @@ ipcMain.handle('pick-attachments', async () => {
   return { ok: true, files: results };
 });
 
-// Open an attachment with the system default app
+// Open an attachment with the system default app.
+// SECURITY: validate that storedName cannot escape the attachments directory.
+// Without this, a renderer XSS could pass '..\\..\\..\\Windows\\System32\\cmd.exe'
+// and we'd hand it to shell.openPath.
 ipcMain.handle('open-attachment', async (_event, storedName) => {
-  const filePath = path.join(getAttachmentsDir(), storedName);
+  if (typeof storedName !== 'string' || !storedName) {
+    return { ok: false, error: 'Invalid name' };
+  }
+  // Reject any path separators or traversal segments outright.
+  if (storedName.includes('/') || storedName.includes('\\') || storedName.includes('..') || path.isAbsolute(storedName)) {
+    return { ok: false, error: 'Invalid name' };
+  }
+  const dir = getAttachmentsDir();
+  const filePath = path.resolve(dir, storedName);
+  // Defence in depth: resolved path must still live inside the attachments dir.
+  const dirResolved = path.resolve(dir);
+  if (!filePath.startsWith(dirResolved + path.sep)) {
+    return { ok: false, error: 'Invalid name' };
+  }
   if (!fs.existsSync(filePath)) return { ok: false, error: 'File not found' };
   try {
     await shell.openPath(filePath);
@@ -290,10 +317,21 @@ ipcMain.handle('open-attachment', async (_event, storedName) => {
   }
 });
 
-// Open an external URL in the default browser
+// Open an external URL in the default browser.
+// SECURITY: only http(s) and mailto are allowed. Without this check, a
+// renderer XSS could pass file:///C:/Windows/System32/cmd.exe (or other
+// dangerous schemes) and shell.openExternal would happily launch it.
 ipcMain.handle('open-external', async (_event, url) => {
   try {
-    await shell.openExternal(url);
+    if (typeof url !== 'string') return { ok: false, error: 'Invalid URL' };
+    let parsed;
+    try { parsed = new URL(url); } catch { return { ok: false, error: 'Invalid URL' }; }
+    const allowed = ['http:', 'https:', 'mailto:'];
+    if (!allowed.includes(parsed.protocol)) {
+      console.warn('[open-external] blocked scheme:', parsed.protocol);
+      return { ok: false, error: 'URL scheme not allowed' };
+    }
+    await shell.openExternal(parsed.toString());
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e.message };

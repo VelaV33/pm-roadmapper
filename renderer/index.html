@@ -845,6 +845,9 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
       <a onclick="closeAllOverlays();openInsights();updateNavActive('Insights');return false;">Insights</a>
     </nav>
     <div style="margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+      <!-- Cloud sync status (click to force sync) -->
+      <span id="cloudSyncStatusHeader" title="Click to sync now"
+            style="display:none;font-size:11px;font-weight:600;padding:6px 12px;border-radius:9999px;border:1px solid transparent;cursor:pointer;user-select:none">&#9729;</span>
       <!-- Collaboration -->
       <button onclick="openShare()" title="Share" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'"><span class="ico"><svg viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg></span> Share</button>
       <button onclick="openNotifications()" id="notifBtn" title="Notifications" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:8px;font-size:12px;cursor:pointer;transition:all .15s;position:relative;display:flex;align-items:center" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'"><span class="ico"><svg viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg></span><span id="notifBadge" style="display:none;position:absolute;top:-2px;right:-2px;background:#ef4444;color:#fff;font-size:8px;font-weight:700;min-width:16px;height:16px;border-radius:9999px;align-items:center;justify-content:center;padding:0 3px"></span></button>
@@ -861,7 +864,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
     <div id="aiCmdBar" style="display:none"><input id="aiCmdInput" style="display:none"><button id="aiVoiceBtn" style="display:none"></button></div>
     <span id="saveStatus" class="saved" style="display:none">● Saved</span>
     <span id="roleBadge" style="display:none"></span>
-    <span id="cloudSyncStatus" style="display:none">☁</span>
+    <span id="cloudSyncStatus" style="display:none;font-size:11px;font-weight:600;padding:4px 10px;border-radius:9999px;border:1px solid transparent;cursor:pointer" title="Click to sync now">☁</span>
 
   </div>
 </div>
@@ -4006,15 +4009,25 @@ function clearAuthMessages(){
 }
 function setAuthLoading(on){
   var btn=document.getElementById('authPrimaryBtn'); btn.disabled=on;
-  btn.textContent=on?'Please wait…':(_authMode==='login'?'Sign In':_authMode==='signup'?'Create Account':'Send Reset Email');
+  if(on){ btn.textContent='Please wait…'; return; }
+  if(_authMode==='login') btn.textContent='Sign In';
+  else if(_authMode==='signup') btn.textContent='Create Account';
+  else if(_authMode==='forgot') btn.textContent='Send Reset Email';
+  else if(_authMode==='resetCode') btn.textContent='Set New Password';
+  else btn.textContent='Continue';
+}
+function _hideAuthCodeField(){
+  var f=document.getElementById('authCodeField'); if(f) f.style.display='none';
 }
 function switchToSignup(){
   _authMode='signup'; clearAuthMessages();
   document.getElementById('authTitle').textContent='Create your account';
   document.getElementById('authSub').textContent='Get started with PM Roadmapper';
   document.getElementById('authPrimaryBtn').textContent='Create Account';
+  document.getElementById('authPassField').style.display='block';
   document.getElementById('authConfirmField').style.display='block';
   document.getElementById('authForgotRow').style.display='none';
+  _hideAuthCodeField();
   document.getElementById('authToggle').innerHTML='Already have an account? <a onclick="switchToLogin()">Sign in</a>';
 }
 function switchToLogin(){
@@ -4025,20 +4038,51 @@ function switchToLogin(){
   document.getElementById('authConfirmField').style.display='none';
   document.getElementById('authPassField').style.display='block';
   document.getElementById('authForgotRow').style.display='block';
+  _hideAuthCodeField();
   document.getElementById('authToggle').innerHTML="Don't have an account? <a onclick=\"switchToSignup()\">Create account</a>";
 }
 function showForgot(){
   _authMode='forgot'; clearAuthMessages();
   document.getElementById('authTitle').textContent='Reset your password';
-  document.getElementById('authSub').textContent='Enter your email and choose a new password';
-  document.getElementById('authPrimaryBtn').textContent='Reset Password';
+  document.getElementById('authSub').textContent="Enter your email and we'll send you a 6-digit code.";
+  document.getElementById('authPrimaryBtn').textContent='Send Reset Code';
+  // SECURITY: never accept a new password from this form. The user must
+  // first prove they own the email by entering the code from it.
+  document.getElementById('authPassField').style.display='none';
+  document.getElementById('authConfirmField').style.display='none';
+  document.getElementById('authForgotRow').style.display='none';
+  _hideAuthCodeField();
+  document.getElementById('authToggle').innerHTML='<a onclick="showResetCode()">I have a code</a> &middot; <a onclick="switchToLogin()">&larr; Back to sign in</a>';
+  document.getElementById('authPassword').value='';
+  document.getElementById('authConfirm').value='';
+}
+function showResetCode(){
+  _authMode='resetCode'; clearAuthMessages();
+  document.getElementById('authTitle').textContent='Enter your reset code';
+  document.getElementById('authSub').textContent='Paste the 6-digit code from your email and choose a new password.';
+  document.getElementById('authPrimaryBtn').textContent='Set New Password';
+  // Reuse the existing password fields for the new password + confirmation.
   document.getElementById('authPassField').style.display='block';
   document.getElementById('authConfirmField').style.display='block';
   document.getElementById('authForgotRow').style.display='none';
-  document.getElementById('authToggle').innerHTML='<a onclick="switchToLogin()">← Back to sign in</a>';
-  // Clear password fields
+  // Inject a code field if it doesn't exist yet.
+  var emailField=document.getElementById('authEmailField')||document.getElementById('authEmail').parentElement;
+  if(!document.getElementById('authCodeField')){
+    var wrap=document.createElement('div');
+    wrap.id='authCodeField';
+    wrap.className=emailField&&emailField.className||'';
+    wrap.style.cssText='margin-top:12px';
+    wrap.innerHTML='<label style="display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px">Reset code from email</label>'+
+      '<input type="text" id="authCode" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="Enter the code" '+
+      'style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:16px;letter-spacing:4px;font-family:Courier New,monospace;text-align:center">';
+    var passField=document.getElementById('authPassField');
+    passField.parentNode.insertBefore(wrap,passField);
+  }
+  document.getElementById('authCodeField').style.display='block';
+  document.getElementById('authToggle').innerHTML='<a onclick="showForgot()">&larr; Send a new code</a> &middot; <a onclick="switchToLogin()">Back to sign in</a>';
   document.getElementById('authPassword').value='';
   document.getElementById('authConfirm').value='';
+  var c=document.getElementById('authCode'); if(c) c.value='';
 }
 async function handleAuthPrimary(){
   clearAuthMessages();
@@ -4046,27 +4090,82 @@ async function handleAuthPrimary(){
   var password=document.getElementById('authPassword').value||'';
   var confirm=document.getElementById('authConfirm').value||'';
   if(!email){ showAuthError('Please enter your email address.'); return; }
-  if(_authMode==='forgot'){
-    if(!password){ showAuthError('Please enter a new password.'); return; }
-    if(password.length<8){ showAuthError('Password must be at least 8 characters.'); return; }
+  if(_authMode==='resetCode'){
+    // User has the code from their email + a new password.
+    var code=(document.getElementById('authCode').value||'').trim().replace(/\s+/g,'');
+    if(!/^\d{6,10}$/.test(code)){ showAuthError('Enter the numeric code from your email.'); return; }
+    if(!password||password.length<8){ showAuthError('Password must be at least 8 characters.'); return; }
     if(password!==confirm){ showAuthError('Passwords do not match.'); return; }
+    setAuthLoading(true);
+    try {
+      // Step 1: verify the OTP, which returns a fresh session token.
+      var verifyRes=await window.electronAPI.supaRequest({
+        path:'/auth/v1/verify',
+        method:'POST',
+        body:{type:'recovery', email:email, token:code},
+        token:null
+      });
+      if(!verifyRes.ok || !verifyRes.data || !verifyRes.data.access_token){
+        setAuthLoading(false);
+        showAuthError('Invalid or expired code. Request a new one.');
+        return;
+      }
+      var sessionToken=verifyRes.data.access_token;
+      // Step 2: with the recovery session, set the new password.
+      var updRes=await window.electronAPI.supaRequest({
+        path:'/auth/v1/user',
+        method:'PUT',
+        body:{password:password},
+        token:sessionToken
+      });
+      setAuthLoading(false);
+      if(updRes.ok){
+        showAuthSuccess('Password updated. You can now sign in with your new password.');
+        switchToLogin();
+        var ef=document.getElementById('authEmail'); if(ef) ef.value=email;
+      } else {
+        // The OTP was already consumed by the verify step above, so the
+        // user CANNOT just retry with a different password — they need a
+        // brand-new code. Switch them back to the forgot screen and explain.
+        var rawMsg=(updRes.data&&(updRes.data.msg||updRes.data.message||updRes.data.error_description||updRes.data.error))||'';
+        var friendly;
+        if(/same|different from the old|new password should/i.test(rawMsg)){
+          friendly='New password must be different from your old one. Click "Send Reset Code" to get a fresh code, then try again with a different password.';
+        } else if(/weak|short|character/i.test(rawMsg)){
+          friendly='Password too weak. Use at least 8 characters with a mix of letters and numbers, then request a new code to try again.';
+        } else {
+          friendly=(rawMsg||'Could not update password.')+' Request a new code to try again.';
+        }
+        // Send them back to the forgot screen with the email pre-filled.
+        showForgot();
+        var ef2=document.getElementById('authEmail'); if(ef2) ef2.value=email;
+        showAuthError(friendly);
+      }
+    } catch(e){
+      setAuthLoading(false);
+      showAuthError('Connection error. Please check your internet.');
+    }
+    return;
+  }
+  if(_authMode==='forgot'){
+    // SECURITY: we no longer set the password directly from this form. The
+    // server only emails a one-time recovery code to the address on file.
     setAuthLoading(true);
     try {
       var resetRes=await window.electronAPI.supaRequest({
         path:'/functions/v1/reset-password',
         method:'POST',
-        body:{email:email,new_password:password},
+        body:{email:email},
         token:null
       });
       setAuthLoading(false);
-      if(resetRes.ok&&resetRes.data&&resetRes.data.ok){
-        showAuthSuccess(resetRes.data.message||'Password reset! You can now sign in.');
-        switchToLogin();
-        var emailField=document.getElementById('authEmail');
-        if(emailField) emailField.value=email;
-      } else {
-        showAuthError((resetRes.data&&resetRes.data.error)||'Reset failed. Please try again.');
-      }
+      // Always show the same generic message regardless of whether the
+      // account exists — prevents user enumeration.
+      // Switch straight into the "enter code" UI so the user can paste it.
+      showResetCode();
+      var emailField=document.getElementById('authEmail');
+      if(emailField) emailField.value=email;
+      showAuthSuccess('If an account exists for that email, a 6-digit code is on its way. Enter it below with your new password.');
     } catch(e){
       setAuthLoading(false);
       showAuthError('Connection error. Please check your internet.');
@@ -4435,10 +4534,10 @@ function schedulePushToCloud(immediate){
 async function pushCloudData(){
   if(!_supabase || !_currentUser || !_syncEnabled){
     console.warn('pushCloudData: skipping — not ready (supabase:',!!_supabase,'user:',!!_currentUser,'sync:',_syncEnabled,')');
-    return;
+    return {ok:false, reason:'not_ready'};
   }
   // Nothing to push if data is blank — this is not an error
-  if(rows.length===0 && sections.length<=2) { showSyncBadge('synced'); return; }
+  if(rows.length===0 && sections.length<=2) { showSyncBadge('synced'); return {ok:true, reason:'empty', rows:0}; }
   showSyncBadge('syncing');
   try {
     var payload = {
@@ -4504,28 +4603,77 @@ async function pushCloudData(){
       localStorage.setItem('pmr_last_save_ts_'+uid, String(ts));
       _lastCloudTs=ts;
       showSyncBadge('synced');
+      return {ok:true, rows:(rows||[]).length, ts:ts};
     } else {
       showSyncBadge('error');
+      return {ok:false, reason:'push_failed'};
     }
   } catch(e){
     console.warn('Cloud push exception:', e.message);
     showSyncBadge('error');
+    return {ok:false, reason:'exception', error:e.message};
+  }
+}
+
+// Last successful sync time, used by the badge tooltip / "synced X ago" label.
+var _lastSyncedAt = 0;
+var _syncBadgeRefreshTimer = null;
+
+function _formatSyncAge(ts){
+  if(!ts) return '';
+  var s = Math.max(0, Math.floor((Date.now()-ts)/1000));
+  if(s < 5)   return 'just now';
+  if(s < 60)  return s+'s ago';
+  if(s < 3600) return Math.floor(s/60)+'m ago';
+  return Math.floor(s/3600)+'h ago';
+}
+
+function _applySyncBadgeStyle(el, state, label){
+  if(!el) return;
+  el.style.display = 'inline-block';
+  el.textContent = label;
+  if(state === 'synced'){
+    el.style.color = '#10b981'; el.style.background='rgba(16,185,129,.08)'; el.style.borderColor='rgba(16,185,129,.2)';
+    el.title = 'Last synced ' + new Date(_lastSyncedAt || Date.now()).toLocaleTimeString() + '. Click to sync now.';
+  } else if(state === 'syncing'){
+    el.style.color = '#f59e0b'; el.style.background='rgba(245,158,11,.08)'; el.style.borderColor='rgba(245,158,11,.2)';
+    el.title = 'Pushing your latest changes to the cloud…';
+  } else {
+    el.style.color = '#ef4444'; el.style.background='rgba(239,68,68,.08)'; el.style.borderColor='rgba(239,68,68,.2)';
+    el.title = 'Cloud sync failed. Click to retry.';
+  }
+  // Click-to-sync-now (wire once per element)
+  if(!el._syncWired){
+    el._syncWired = true;
+    el.addEventListener('click', function(){
+      if(!_syncEnabled || !_currentUser) return;
+      showSyncBadge('syncing');
+      pushCloudData();
+    });
   }
 }
 
 function showSyncBadge(state){
-  var el = document.getElementById('cloudSyncStatus');
-  if(!el) return;
+  var label;
   if(state === 'synced'){
-    el.textContent = '☁ Synced';
-    el.style.color = '#10b981'; el.style.background='rgba(16,185,129,.08)'; el.style.borderColor='rgba(16,185,129,.2)';
+    _lastSyncedAt = Date.now();
+    label = '\u2601 Synced ' + _formatSyncAge(_lastSyncedAt);
+    if(_syncBadgeRefreshTimer) clearInterval(_syncBadgeRefreshTimer);
+    _syncBadgeRefreshTimer = setInterval(function(){
+      if(!_lastSyncedAt) return;
+      var fresh = '\u2601 Synced ' + _formatSyncAge(_lastSyncedAt);
+      var a = document.getElementById('cloudSyncStatus');
+      var b = document.getElementById('cloudSyncStatusHeader');
+      if(a && (a.textContent||'').indexOf('Synced')===0) a.textContent = fresh;
+      if(b && (b.textContent||'').indexOf('Synced')===0) b.textContent = fresh;
+    }, 15000);
   } else if(state === 'syncing'){
-    el.textContent = '☁ Syncing…';
-    el.style.color = '#f59e0b'; el.style.background='rgba(245,158,11,.08)'; el.style.borderColor='rgba(245,158,11,.2)';
+    label = '\u2601 Syncing\u2026';
   } else {
-    el.textContent = '☁ Offline';
-    el.style.color = '#ef4444'; el.style.background='rgba(239,68,68,.08)'; el.style.borderColor='rgba(239,68,68,.2)';
+    label = '\u2601 Offline';
   }
+  _applySyncBadgeStyle(document.getElementById('cloudSyncStatus'), state, label);
+  _applySyncBadgeStyle(document.getElementById('cloudSyncStatusHeader'), state, label);
 }
 
 // ── PROFILE & SETTINGS ───────────────────────────────────────────────────────
@@ -4828,15 +4976,21 @@ function openProfile(){
   ));
 
   actionSec.appendChild(actionRow(
-    '☁','Cloud sync','Your roadmap data syncs automatically across devices',
+    '☁','Cloud sync','Auto-syncs after every change. Click the cloud icon in the header for status.',
     'Sync now',
     'background:#f0fdf4;border:1px solid #86efac;color:#16a34a',
     function(){
       showSyncBadge('syncing');
-      pushCloudData().then(function(){
-        var badge=document.getElementById('cloudSyncStatus');
-        var status=badge?badge.textContent:'unknown';
-        alert('Sync finished. Status: '+status);
+      pushCloudData().then(function(res){
+        if(res && res.ok){
+          if(res.reason==='empty'){
+            alert('Nothing to sync — your roadmap is empty.');
+          } else {
+            alert('Sync successful.\n\n'+res.rows+' initiatives saved to the cloud at '+new Date(res.ts).toLocaleTimeString()+'.');
+          }
+        } else {
+          alert('Sync failed.\n\nReason: '+(res&&res.reason||'unknown')+(res&&res.error?'\n\nDetails: '+res.error:''));
+        }
       });
     }
   ));
@@ -6147,10 +6301,10 @@ function showAiCommandPreview(actions,summary,originalCmd){
     var item=document.createElement('div');
     item.style.cssText='padding:8px 12px;background:#f8faff;border:1px solid var(--border);border-radius:6px;margin-bottom:6px;font-size:12px';
     if(a.type==='add_section'){
-      item.innerHTML='<strong>+ New Section:</strong> <span style="color:'+a.color+'">●</span> '+a.name;
+      item.innerHTML='<strong>+ New Section:</strong> <span style="color:'+escHtml(a.color||'')+'">●</span> '+escHtml(a.name||'');
     } else if(a.type==='add_row'){
       var barsDesc=(a.bars||[]).map(function(b){return b.t+' (month '+b.s+'→'+b.e+')';}).join(', ');
-      item.innerHTML='<strong>+ New Row:</strong> '+a.name+(a.sub?' — '+a.sub:'')+
+      item.innerHTML='<strong>+ New Row:</strong> '+escHtml(a.name||'')+(a.sub?' — '+escHtml(a.sub):'')+
         (barsDesc?'<div style="font-size:10px;color:var(--muted);margin-top:3px">Initiatives: '+barsDesc+'</div>':'');
     }
     list.appendChild(item);
@@ -6550,7 +6704,7 @@ async function parseDocForProfile(container){
   if(!res||!res.ok)return;
 
   var statusEl=document.getElementById('mycoUploadStatus');
-  if(statusEl){statusEl.style.display='block';statusEl.innerHTML='<strong>'+res.name+'</strong> — extracting text...';}
+  if(statusEl){statusEl.style.display='block';statusEl.innerHTML='<strong>'+escHtml(res.name)+'</strong> — extracting text...';}
 
   // Extract text content from the file
   var extractedText='';
@@ -6572,7 +6726,7 @@ async function parseDocForProfile(container){
       return;
     }
   }catch(e){
-    if(statusEl) statusEl.innerHTML='<span style="color:#dc2626">Error reading file: '+e.message+'</span>';
+    if(statusEl) statusEl.innerHTML='<span style="color:#dc2626">Error reading file: '+escHtml(e.message)+'</span>';
     return;
   }
 
@@ -6584,7 +6738,7 @@ async function parseDocForProfile(container){
   // Truncate to avoid massive prompts
   if(extractedText.length>15000) extractedText=extractedText.substring(0,15000)+'...[truncated]';
 
-  if(statusEl) statusEl.innerHTML='<strong>'+res.name+'</strong> — sending to AI for parsing... (this may take 15-30 seconds)';
+  if(statusEl) statusEl.innerHTML='<strong>'+escHtml(res.name)+'</strong> — sending to AI for parsing... (this may take 15-30 seconds)';
 
   // Send to AI to extract company profile
   try{
@@ -6637,7 +6791,7 @@ async function parseDocForProfile(container){
       container.querySelectorAll('[data-myco-field]').forEach(function(el){data[el.getAttribute('data-myco-field')]=el.value;});
       localStorage.setItem(_lsKey('pmr_my_company'),JSON.stringify(data));
 
-      if(statusEl) statusEl.innerHTML='<span style="color:#16a34a">✓ <strong>'+res.name+'</strong> — '+filled+'/'+total+' fields auto-filled and saved! Review below.</span>';
+      if(statusEl) statusEl.innerHTML='<span style="color:#16a34a">✓ <strong>'+escHtml(res.name)+'</strong> — '+filled+'/'+total+' fields auto-filled and saved! Review below.</span>';
       showToast(filled+' fields auto-filled from '+res.name);
     } else {
       // Show actual error if available
@@ -6651,7 +6805,7 @@ async function parseDocForProfile(container){
     console.error('[MyCompany] Exception:',e);
     var notesEl=container.querySelector('[data-myco-field="notes"]');
     if(notesEl) notesEl.value=(notesEl.value?notesEl.value+'\n\n':'')+extractedText.substring(0,3000);
-    if(statusEl) statusEl.innerHTML='<span style="color:#d97706">⚠ AI parsing failed: '+(e.message||e)+' — raw text added to Notes field.</span>';
+    if(statusEl) statusEl.innerHTML='<span style="color:#d97706">⚠ AI parsing failed: '+escHtml(e.message||String(e))+' — raw text added to Notes field.</span>';
   }
 }
 
@@ -7383,8 +7537,11 @@ function renderAnalysisResults(container,results){
           var recDiv=document.createElement('div');recDiv.className='comp-rec';
           var recBody=document.createElement('div');recBody.className='comp-rec-body';
           var prioColor=rec.priority==='high'?'#dc2626':rec.priority==='medium'?'#d97706':'#16a34a';
-          recBody.innerHTML='<h5>'+rec.title+(rec.priority?' <span style="font-size:9px;background:'+prioColor+';color:#fff;padding:1px 5px;border-radius:3px;text-transform:uppercase;letter-spacing:.05em">'+rec.priority+'</span>':'')+'</h5><p>'+rec.description+
-            (rec.suggested_timeline_months?' <strong>(~'+rec.suggested_timeline_months+' months)</strong>':'')+
+          // SECURITY: rec.* fields are AI-generated (untrusted). Escape every interpolation.
+          var safePrio=escHtml(rec.priority||'');
+          var safeMonths=parseInt(rec.suggested_timeline_months,10);
+          recBody.innerHTML='<h5>'+escHtml(rec.title||'')+(rec.priority?' <span style="font-size:9px;background:'+prioColor+';color:#fff;padding:1px 5px;border-radius:3px;text-transform:uppercase;letter-spacing:.05em">'+safePrio+'</span>':'')+'</h5><p>'+escHtml(rec.description||'')+
+            (isFinite(safeMonths)?' <strong>(~'+safeMonths+' months)</strong>':'')+
             '</p>';
           var addBtn=document.createElement('button');addBtn.className='comp-add-btn';
           addBtn.textContent='+ Add to Roadmap';
@@ -10927,7 +11084,7 @@ async function renderAdminPage(){
     });
 
   } catch(e){
-    body.innerHTML='<div style="color:var(--r1);padding:20px">Error: '+e.message+'</div>';
+    body.innerHTML='<div style="color:var(--r1);padding:20px">Error: '+escHtml(e.message)+'</div>';
   }
 }
 
@@ -11652,7 +11809,7 @@ function openCalendarScreenshotImport(){
 
     } catch(e){
       extractBtn.textContent='Extract Meetings with AI'; extractBtn.disabled=false;
-      resultsDiv.innerHTML='<div style="color:var(--r1);padding:12px">Error: '+e.message+'</div>';
+      resultsDiv.innerHTML='<div style="color:var(--r1);padding:12px">Error: '+escHtml(e.message)+'</div>';
     }
   };
 

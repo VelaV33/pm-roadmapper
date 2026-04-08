@@ -1,84 +1,88 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { handle, jsonResponse, errorResponse } from "../_shared/auth.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+// SECURITY NOTES:
+// - This endpoint is intentionally unauthenticated (signup).
+// - We rate-limit by IP via Deno KV.
+// - We do NOT reveal whether an email is already registered (enumeration).
+// - All new accounts are auto-confirmed via the admin API. We do NOT
+//   auto-confirm pre-existing accounts — that would let an attacker
+//   activate someone else's abandoned signup.
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-
+let kv: Deno.Kv | null = null;
+async function getKv() {
+  if (!kv) kv = await Deno.openKv();
+  return kv;
+}
+async function rateLimited(ip: string): Promise<boolean> {
+  if (!ip) return false;
   try {
-    const { email, password } = await req.json();
-
-    if (!email || !password) {
-      return new Response(JSON.stringify({ error: "Email and password are required" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-
-    if (password.length < 8) {
-      return new Response(JSON.stringify({ error: "Password must be at least 8 characters" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-
-    const SUPA_URL = Deno.env.get("SUPABASE_URL");
-    const SUPA_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const supabase = createClient(SUPA_URL!, SUPA_KEY!);
-
-    // Check if user already exists
-    const { data: existingUsers } = await supabase.auth.admin.listUsers();
-    const existingUser = existingUsers?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase().trim());
-
-    if (existingUser) {
-      // If user exists but is unconfirmed, auto-confirm them
-      if (!existingUser.email_confirmed_at) {
-        await supabase.auth.admin.updateUserById(existingUser.id, {
-          email_confirm: true,
-        });
-        return new Response(JSON.stringify({
-          ok: true,
-          message: "Your account has been confirmed! You can now sign in.",
-          user_id: existingUser.id,
-          email: existingUser.email
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        });
-      }
-      return new Response(JSON.stringify({ error: "This email is already registered. Try signing in instead." }), {
-        status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-
-    // Create user via admin API (auto-confirms, bypasses rate limits)
-    const { data, error } = await supabase.auth.admin.createUser({
-      email: email.toLowerCase().trim(),
-      password: password,
-      email_confirm: true,  // Auto-confirm — no email verification needed
-    });
-
-    if (error) {
-      console.error("Create user error:", error.message);
-      return new Response(JSON.stringify({ error: error.message }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-
-    return new Response(JSON.stringify({
-      ok: true,
-      message: "Account created successfully! You can now sign in.",
-      user_id: data.user?.id,
-      email: data.user?.email
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" }
-    });
-
+    const k = await getKv();
+    const key = ["rl", "create-user", ip];
+    const now = Date.now();
+    const windowMs = 60 * 60 * 1000; // 1 hour
+    const max = 5;
+    const entry = await k.get<{ count: number; reset: number }>(key);
+    let bucket = entry.value;
+    if (!bucket || bucket.reset < now) bucket = { count: 0, reset: now + windowMs };
+    bucket.count += 1;
+    await k.set(key, bucket, { expireIn: windowMs });
+    return bucket.count > max;
   } catch (e) {
-    console.error("create-user error:", e.message);
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
-    });
+    console.error("[create-user] kv error:", (e as Error).message);
+    return false;
   }
-});
+}
+
+const GENERIC_OK = "Account creation requested. Check your email — if this address is eligible, you'll be able to sign in shortly.";
+
+serve(handle(async (req) => {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim()
+    || req.headers.get("cf-connecting-ip")
+    || "";
+  if (await rateLimited(ip)) {
+    return errorResponse("Too many signup attempts. Please wait and try again.", 429);
+  }
+
+  const { email, password } = await req.json().catch(() => ({}));
+
+  if (!email || !password || typeof email !== "string" || typeof password !== "string") {
+    return errorResponse("Email and password are required", 400);
+  }
+  if (password.length < 8) {
+    return errorResponse("Password must be at least 8 characters", 400);
+  }
+  // Light email format check
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return errorResponse("Invalid email", 400);
+  }
+
+  const cleanEmail = email.toLowerCase().trim();
+
+  const SUPA_URL = Deno.env.get("SUPABASE_URL");
+  const SUPA_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!SUPA_URL || !SUPA_KEY) return errorResponse("Server misconfigured", 500);
+  const supabase = createClient(SUPA_URL, SUPA_KEY);
+
+  // Try to create. If the email already exists, Supabase returns an error;
+  // we map that to the generic OK message so the response is identical.
+  const { data, error } = await supabase.auth.admin.createUser({
+    email: cleanEmail,
+    password,
+    email_confirm: true,
+  });
+
+  if (error) {
+    // Log internally; do not reveal details to caller.
+    console.log("[create-user] createUser error (suppressed):", error.message);
+    return jsonResponse({ ok: true, message: GENERIC_OK });
+  }
+
+  return jsonResponse({
+    ok: true,
+    message: GENERIC_OK,
+    // We deliberately do NOT echo back user_id / email — successful signup
+    // and "email already taken" must be indistinguishable to the client.
+  });
+}));
