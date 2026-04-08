@@ -5197,6 +5197,8 @@ async function onAuthSuccess(user){
   setTimeout(refreshSystemUsersCache, 1500);
   // Pre-load this user's contacts so they appear in owner pickers immediately.
   setTimeout(refreshContactsCache, 1700);
+  // Notifications: load and start polling every 30 seconds
+  setTimeout(function(){ loadNotifications(); _startNotificationPolling(); }, 1900);
 }
 
 function _resetLocalData(){
@@ -6718,83 +6720,319 @@ async function revokeShare(shareId){
   _sharedWith=_sharedWith.filter(function(s){ return s.id!==shareId; });
 }
 
-// ── NOTIFICATIONS ─────────────────────────────────────────────────────────────
-var _notifications = [];
+// ══════════════════════════════════════════════════════════════════════════════
+// ── NOTIFICATIONS ────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+//
+// Backed by the public.notifications table. The local _notifications array
+// caches the most recent rows for the badge + inbox UI. Polled every 30s.
+// Triggered notifications are written via the notifications-api create action.
+var _notifications = [];          // table rows merged with derived items (shared, comments)
+var _notificationsCache = [];     // raw notifications-api rows (for table-backed actions)
+var _notifPollTimer = null;
+var _lastNotifPollAt = 0;
 
-function loadNotifications(){
+// Send a notification: writes an in-app row (if recipient is a registered user)
+// AND sends an email via Resend (always, registered or not).
+//
+// Self-notifications are suppressed. Errors are logged to the console + a
+// transient toast so failures are visible without breaking the trigger action.
+async function sendNotification(recipientEmail, type, title, body, link){
+  if(!recipientEmail || !_currentUser || !_accessToken) return;
+  if(_currentUser.email && String(recipientEmail).toLowerCase() === _currentUser.email.toLowerCase()) return;
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)){
+    console.warn('[sendNotification] not an email, skipping:', recipientEmail);
+    return;
+  }
+  try {
+    var res = await window.electronAPI.supaRequest({
+      path: '/functions/v1/notifications-api',
+      method: 'POST',
+      body: {
+        action: 'create',
+        recipient_email: recipientEmail,
+        type: type,
+        title: title,
+        body: body || null,
+        link: link || null
+      },
+      token: _accessToken
+    });
+    console.log('[sendNotification]', recipientEmail, '→', res);
+    if(res && res.ok && res.data){
+      if(res.data.email_sent === false){
+        // Email failed — show a non-blocking toast so the user knows
+        _showNotifToast('Notified ' + recipientEmail + ' in-app, but the email failed: ' + (res.data.email_error || 'unknown'), 'warn');
+      } else if(res.data.email_sent === true){
+        _showNotifToast('Notified ' + recipientEmail + ' (email sent)', 'success');
+      }
+    } else {
+      _showNotifToast('Failed to notify ' + recipientEmail + ': ' + ((res && res.data && res.data.error) || 'unknown'), 'warn');
+    }
+  } catch(e){
+    console.warn('[sendNotification] failed:', e && e.message);
+    _showNotifToast('Failed to notify ' + recipientEmail + ': ' + e.message, 'warn');
+  }
+}
+
+// Tiny non-blocking toast in the bottom-right corner.
+function _showNotifToast(text, kind){
+  var existing = document.getElementById('notifToast');
+  if(existing) existing.remove();
+  var bg = kind === 'warn' ? '#fef3c7' : (kind === 'success' ? '#dcfce7' : '#f1f5f9');
+  var border = kind === 'warn' ? '#fde68a' : (kind === 'success' ? '#86efac' : '#cbd5e1');
+  var color = kind === 'warn' ? '#92400e' : (kind === 'success' ? '#166534' : '#475569');
+  var t = document.createElement('div');
+  t.id = 'notifToast';
+  t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:'+bg+';border:1px solid '+border+';color:'+color+';padding:10px 18px;border-radius:9999px;font-size:12px;font-weight:600;box-shadow:0 4px 14px rgba(15,27,61,.12);z-index:9999;max-width:420px';
+  t.textContent = text;
+  document.body.appendChild(t);
+  setTimeout(function(){ if(t.parentNode) t.remove(); }, 5000);
+}
+
+async function loadNotifications(){
   _notifications = [];
-  // Shared roadmaps received
+
+  // 1. Pull persistent notifications from the database table
+  if(_currentUser && _accessToken){
+    try {
+      var r = await window.electronAPI.supaRequest({
+        path: '/functions/v1/notifications-api',
+        method: 'POST',
+        body: { action: 'list' },
+        token: _accessToken
+      });
+      if(r && r.ok && r.data && r.data.ok && Array.isArray(r.data.notifications)){
+        _notificationsCache = r.data.notifications;
+        r.data.notifications.forEach(function(n){
+          _notifications.push({
+            id: n.id,
+            persistent: true,
+            read: !!n.read,
+            type: n.type || 'info',
+            icon: _notifTypeIcon(n.type),
+            title: n.title,
+            detail: n.body || '',
+            link: n.link,
+            time: n.created_at
+          });
+        });
+      }
+    } catch(e){ console.warn('Notifications fetch failed:', e && e.message); }
+  }
+
+  // 2. Derived: shared roadmaps received (kept for backwards compatibility
+  //    until v1.16 stops triggering it as a separate signal).
   if(_sharedToMe && _sharedToMe.length){
     _sharedToMe.forEach(function(s){
       _notifications.push({
+        persistent: false,
+        read: true,  // sharing notifications are always treated as ambient
         type:'share',
-        icon:'🔗',
-        title: s.owner_name+' shared a roadmap with you',
+        icon: 'share',
+        title: (s.owner_name || s.owner_email || 'Someone')+' shared a roadmap with you',
         detail: s.roadmap_name,
         time: s.created_at,
         action: function(){ openSharedRoadmap(s); }
       });
     });
   }
-  // Update badge
+
+  // Update unread badge
+  var unread = _notifications.filter(function(n){ return !n.read; }).length;
   var badge=document.getElementById('notifBadge');
   if(badge){
-    if(_notifications.length>0){
-      badge.textContent=String(_notifications.length);
+    if(unread > 0){
+      badge.textContent = String(unread);
       badge.style.display='flex';
     } else {
       badge.style.display='none';
     }
   }
+  _lastNotifPollAt = Date.now();
 }
 
-function openNotifications(){
-  var ex=document.getElementById('notifModal'); if(ex) ex.remove();
+// Map notification type → SVG icon name (for the inbox modal rendering).
+function _notifTypeIcon(type){
+  return type || 'info';
+}
+
+// Render an SVG icon for a notification type. Outline style, 18x18.
+function _notifIconSvg(type){
+  var paths = {
+    plan_task_assigned: '<path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h.01M9 12h.01M15 12h.01"/>',
+    g2m_assigned:        '<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+    comment:             '<path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>',
+    share:               '<path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>',
+    mention:             '<path d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>'
+  };
+  var p = paths[type] || '<circle cx="12" cy="12" r="9"/><path d="M12 8v4m0 4h.01"/>';
+  return '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round">'+p+'</svg>';
+}
+
+// Click on a notification → open the relevant module via the link string.
+// Link format examples: 'plan:abc123', 'g2m:product-name', 'row:r_xyz'
+function _handleNotificationLink(link){
+  if(!link) return;
+  if(link.indexOf('plan:') === 0){
+    var planId = link.substring(5);
+    closeAllOverlays();
+    _activePlanId = planId;
+    openPlans();
+  } else if(link.indexOf('g2m:') === 0){
+    var product = link.substring(4);
+    closeAllOverlays();
+    g2mCurrentProduct = product;
+    openG2M();
+  } else if(link.indexOf('row:') === 0){
+    closeAllOverlays();
+    setTimeout(function(){ openEditModal(link.substring(4)); }, 100);
+  }
+}
+
+async function _markNotificationRead(id){
+  if(!id || !_accessToken) return;
+  try {
+    await window.electronAPI.supaRequest({
+      path: '/functions/v1/notifications-api',
+      method: 'POST',
+      body: { action: 'mark_read', id: id },
+      token: _accessToken
+    });
+  } catch(e){}
+  // Update local cache
+  var n = _notifications.find(function(x){ return x.id === id; });
+  if(n) n.read = true;
   loadNotifications();
+}
+
+async function _markAllNotificationsRead(){
+  if(!_accessToken) return;
+  try {
+    await window.electronAPI.supaRequest({
+      path: '/functions/v1/notifications-api',
+      method: 'POST',
+      body: { action: 'mark_all_read' },
+      token: _accessToken
+    });
+  } catch(e){}
+  await loadNotifications();
+  // Re-render the modal if open
+  var ov = document.getElementById('notifModal');
+  if(ov){ ov.remove(); openNotifications(); }
+}
+
+async function _deleteNotification(id){
+  if(!id || !_accessToken) return;
+  try {
+    await window.electronAPI.supaRequest({
+      path: '/functions/v1/notifications-api',
+      method: 'POST',
+      body: { action: 'delete', id: id },
+      token: _accessToken
+    });
+  } catch(e){}
+  _notifications = _notifications.filter(function(x){ return x.id !== id; });
+  await loadNotifications();
+  var ov = document.getElementById('notifModal');
+  if(ov){ ov.remove(); openNotifications(); }
+}
+
+function _startNotificationPolling(){
+  if(_notifPollTimer) clearInterval(_notifPollTimer);
+  _notifPollTimer = setInterval(function(){
+    if(_currentUser && _accessToken) loadNotifications();
+  }, 30 * 1000);
+}
+
+async function openNotifications(){
+  var ex=document.getElementById('notifModal'); if(ex) ex.remove();
+  await loadNotifications();
   var ov=document.createElement('div');
-  ov.id='notifModal'; ov.className='modal-overlay'; ov.style.zIndex='9500';
+  ov.id='notifModal'; ov.className='modal-overlay';
 
   var modal=document.createElement('div');
-  modal.className='modal'; modal.style.width='480px';
+  modal.className='modal'; modal.style.cssText='width:520px;max-height:80vh';
 
   var hdr=document.createElement('div'); hdr.className='modal-hdr';
-  hdr.innerHTML='<h2>🔔 Notifications</h2>';
-  var cx=document.createElement('button'); cx.className='close'; cx.innerHTML='✕';
+  hdr.innerHTML='<h2 style="display:flex;align-items:center;gap:10px"><svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>Notifications</h2>';
+  var cx=document.createElement('button'); cx.className='close'; cx.innerHTML='\u00D7';
   cx.onclick=function(){ ov.remove(); }; hdr.appendChild(cx);
   modal.appendChild(hdr);
 
   var body=document.createElement('div'); body.className='modal-body';
 
   if(!_notifications.length){
-    body.innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:32px 0;font-style:italic">No notifications yet.</div>';
+    body.innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:48px 20px"><div style="font-size:34px;margin-bottom:8px">\ud83d\udd14</div><div style="font-weight:600;color:var(--text);margin-bottom:4px">No notifications yet</div><div>You\'ll see notifications here when someone assigns you a task, leaves a comment, or shares a roadmap with you.</div></div>';
   } else {
+    var unread = _notifications.filter(function(n){ return !n.read; });
+    if(unread.length > 0){
+      var actions = document.createElement('div');
+      actions.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:#f8fafc;border-radius:8px;margin-bottom:10px;font-size:11px';
+      actions.innerHTML = '<span style="color:var(--muted)"><strong style="color:var(--accent)">'+unread.length+'</strong> unread</span>';
+      var markBtn = document.createElement('button');
+      markBtn.style.cssText='background:none;border:none;color:var(--accent);font-size:11px;font-weight:700;cursor:pointer';
+      markBtn.textContent = 'Mark all read';
+      markBtn.onclick = _markAllNotificationsRead;
+      actions.appendChild(markBtn);
+      body.appendChild(actions);
+    }
+
     _notifications.forEach(function(n){
       var item=document.createElement('div');
-      item.style.cssText='display:flex;align-items:flex-start;gap:12px;padding:12px;border-bottom:1px solid var(--border);cursor:pointer;border-radius:6px;transition:background .15s';
-      item.onmouseover=function(){item.style.background='#f8faff';};
-      item.onmouseout=function(){item.style.background='transparent';};
-      if(n.action) item.onclick=function(){ ov.remove(); n.action(); };
+      var bg = n.read ? 'transparent' : 'rgba(45,107,244,.04)';
+      item.style.cssText='display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer;border-radius:8px;transition:background .15s;background:'+bg+';position:relative';
+      item.onmouseover=function(){item.style.background = n.read ? '#f8fafc' : 'rgba(45,107,244,.08)';};
+      item.onmouseout=function(){item.style.background = bg;};
+      item.onclick=function(){
+        if(n.id) _markNotificationRead(n.id);
+        if(n.action){ ov.remove(); n.action(); }
+        else if(n.link){ ov.remove(); _handleNotificationLink(n.link); }
+      };
 
-      var iconEl=document.createElement('span');
-      iconEl.style.cssText='font-size:20px;flex-shrink:0;margin-top:2px';
-      iconEl.textContent=n.icon;
+      var iconWrap=document.createElement('span');
+      iconWrap.style.cssText='flex-shrink:0;width:32px;height:32px;border-radius:9999px;background:rgba(45,107,244,.10);color:var(--accent);display:flex;align-items:center;justify-content:center';
+      iconWrap.innerHTML=_notifIconSvg(n.type);
 
       var textWrap=document.createElement('div'); textWrap.style.cssText='flex:1;min-width:0';
       var titleEl=document.createElement('div');
-      titleEl.style.cssText='font-size:13px;font-weight:600;color:var(--navy)';
+      titleEl.style.cssText='font-size:13px;font-weight:'+(n.read?'500':'700')+';color:var(--text)';
       titleEl.textContent=n.title;
       var detailEl=document.createElement('div');
-      detailEl.style.cssText='font-size:12px;color:var(--muted);margin-top:2px';
+      detailEl.style.cssText='font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4';
       detailEl.textContent=n.detail;
       var timeEl=document.createElement('div');
       timeEl.style.cssText='font-size:10px;color:var(--muted);margin-top:4px';
-      timeEl.textContent=n.time ? formatCommentTime(n.time) : '';
+      timeEl.textContent= n.time ? (typeof formatCommentTime==='function' ? formatCommentTime(n.time) : new Date(n.time).toLocaleString()) : '';
 
       textWrap.appendChild(titleEl);
       textWrap.appendChild(detailEl);
       textWrap.appendChild(timeEl);
-      item.appendChild(iconEl);
+      item.appendChild(iconWrap);
       item.appendChild(textWrap);
+
+      // Unread dot
+      if(!n.read){
+        var dot = document.createElement('span');
+        dot.style.cssText='position:absolute;top:14px;right:14px;width:8px;height:8px;border-radius:50%;background:var(--accent)';
+        item.appendChild(dot);
+      }
+
+      // Delete button on hover
+      if(n.id){
+        var delBtn = document.createElement('button');
+        delBtn.innerHTML = '\u00D7';
+        delBtn.style.cssText='background:none;border:none;color:#cbd5e1;cursor:pointer;font-size:18px;padding:0 6px;flex-shrink:0;line-height:1';
+        delBtn.title = 'Delete';
+        delBtn.onmouseover=function(){ delBtn.style.color='#dc2626'; };
+        delBtn.onmouseout=function(){ delBtn.style.color='#cbd5e1'; };
+        delBtn.onclick = function(e){
+          e.stopPropagation();
+          _deleteNotification(n.id);
+        };
+        item.appendChild(delBtn);
+      }
+
       body.appendChild(item);
     });
   }
@@ -9647,8 +9885,20 @@ function toggleG2MMilestone(product,idx){
 
 function setG2MItemField(product,idx,field,value){
   var items=getG2MItems(product);
-  if(items[idx]) items[idx][field]=value;
+  if(!items[idx]) return;
+  var prev = items[idx][field];
+  items[idx][field]=value;
   persistG2M();
+  // Notify the new assignee if this was an assignment change
+  if(field === 'assignee' && value && value !== prev){
+    sendNotification(
+      value,
+      'g2m_assigned',
+      'You\'ve been assigned a G2M item',
+      '"' + (items[idx].text || 'Item') + '" in checklist "' + product + '"',
+      'g2m:' + product
+    );
+  }
 }
 
 function deleteG2MInitiative(name){
@@ -12269,6 +12519,8 @@ function onTaskFieldChange(taskId, field, value){
   if(!p) return;
   var t = getTaskById(p, taskId);
   if(!t) return;
+  // Capture previous owner BEFORE we mutate so we only notify on change
+  var prevOwner = t.owner;
   if(field === 'percentComplete'){
     t.percentComplete = Math.max(0, Math.min(100, parseInt(value,10)||0));
     if(t.percentComplete >= 100) t.status = 'done';
@@ -12288,6 +12540,16 @@ function onTaskFieldChange(taskId, field, value){
   if(field === 'startDate' || field === 'endDate'){
     normalizeTaskDates(t);
     rescheduleSuccessors(p, t.id);
+  }
+  // Owner changed → notify the new owner if they're a registered user
+  if(field === 'owner' && value && value !== prevOwner){
+    sendNotification(
+      value,
+      'plan_task_assigned',
+      'You\'ve been assigned a task',
+      '"' + t.name + '" in plan "' + (p.name || 'Untitled') + '"',
+      'plan:' + p.id
+    );
   }
   p.updatedAt = Date.now();
   persistData();
