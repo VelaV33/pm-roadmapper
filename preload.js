@@ -19,4 +19,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   transcribeAudio: (opts)      => ipcRenderer.invoke('transcribe-audio', opts),
   aiRequest:       (opts)      => ipcRenderer.invoke('ai-request', opts),
   refocusWindow:   ()          => ipcRenderer.invoke('refocus-window'),
+  saveCredentials:  (opts)     => ipcRenderer.invoke('credentials:save', opts),
+  loadCredentials:  ()         => ipcRenderer.invoke('credentials:load'),
+  clearCredentials: ()         => ipcRenderer.invoke('credentials:clear'),
 });

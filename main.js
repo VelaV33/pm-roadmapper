@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, shell, safeStorage } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
@@ -718,6 +718,67 @@ ipcMain.handle('supa-db-request', async (_event, { path, method, body, token }) 
     if (payload) req.write(payload);
     req.end();
   });
+});
+
+// ── Saved credentials ────────────────────────────────────────────────────────
+// Stored encrypted by safeStorage, which uses:
+//   • Windows: DPAPI (per-user, tied to the OS account)
+//   • macOS: Keychain
+//   • Linux: kwallet / libsecret
+// The ciphertext is meaningless on any other machine or under any other OS user.
+// We store ONE record per app — the last user who chose "Remember me".
+function getCredentialsPath() {
+  return path.join(app.getPath('userData'), 'pmr-credentials.bin');
+}
+
+ipcMain.handle('credentials:save', async (_event, { email, password }) => {
+  try {
+    if (!safeStorage.isEncryptionAvailable()) {
+      console.warn('[credentials:save] OS encryption not available — refusing to store plaintext');
+      return { ok: false, error: 'OS encryption not available' };
+    }
+    if (typeof email !== 'string' || typeof password !== 'string' || !email || !password) {
+      return { ok: false, error: 'Invalid input' };
+    }
+    const blob = JSON.stringify({ email, password, savedAt: Date.now() });
+    const cipher = safeStorage.encryptString(blob);
+    fs.writeFileSync(getCredentialsPath(), cipher);
+    return { ok: true };
+  } catch (e) {
+    console.error('[credentials:save] error:', e.message);
+    return { ok: false, error: e.message };
+  }
+});
+
+ipcMain.handle('credentials:load', async () => {
+  try {
+    const p = getCredentialsPath();
+    if (!fs.existsSync(p)) return { ok: true, found: false };
+    if (!safeStorage.isEncryptionAvailable()) {
+      return { ok: false, error: 'OS encryption not available' };
+    }
+    const cipher = fs.readFileSync(p);
+    const blob = safeStorage.decryptString(cipher);
+    const data = JSON.parse(blob);
+    if (!data || !data.email || !data.password) return { ok: true, found: false };
+    return { ok: true, found: true, email: data.email, password: data.password };
+  } catch (e) {
+    console.error('[credentials:load] error:', e.message);
+    // Corrupted blob — wipe so we don't keep failing.
+    try { fs.unlinkSync(getCredentialsPath()); } catch {}
+    return { ok: false, error: e.message };
+  }
+});
+
+ipcMain.handle('credentials:clear', async () => {
+  try {
+    const p = getCredentialsPath();
+    if (fs.existsSync(p)) fs.unlinkSync(p);
+    return { ok: true };
+  } catch (e) {
+    console.error('[credentials:clear] error:', e.message);
+    return { ok: false, error: e.message };
+  }
 });
 
 app.on('window-all-closed', () => {

@@ -464,6 +464,62 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .cap-sidebar-item svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .cap-sidebar-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9)}
 .cap-sidebar-item.active{background:rgba(45,107,244,.15);color:var(--accent);border-left-color:var(--accent)}
+
+/* ── Prioritization overlay ──────────────────────────────────────────── */
+#prioritizationOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
+#prioritizationOverlay.open{display:flex}
+.prio-sidebar{width:220px;background:var(--navy);border-right:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.prio-sidebar-item{padding:10px 16px;font-size:13px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .15s;border-left:3px solid transparent}
+.prio-sidebar-item svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.prio-sidebar-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9)}
+.prio-sidebar-item.active{background:rgba(45,107,244,.15);color:var(--accent);border-left-color:var(--accent)}
+.prio-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.prio-topbar{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.prio-topbar h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
+.prio-content{flex:1;overflow-y:auto;padding:24px 28px;background:var(--bg)}
+.prio-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);font-size:12px}
+.prio-table th{background:#f8fafc;font-weight:700;color:var(--muted);padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.prio-table th.cost{color:#dc2626}
+.prio-table th.value{color:#16a34a}
+.prio-table th.total{background:#0f172a;color:#fff;text-align:right}
+.prio-table td{padding:8px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.prio-table td.total{text-align:right;font-weight:800;font-variant-numeric:tabular-nums}
+.prio-table td.tier-high{background:rgba(16,185,129,.10);color:#047857}
+.prio-table td.tier-medium{background:rgba(251,191,36,.08);color:#b45309}
+.prio-table td.tier-low{background:rgba(148,163,184,.08);color:#475569}
+.prio-table td.tier-unscored{color:#cbd5e1}
+.prio-table tr:last-child td{border-bottom:none}
+.prio-table tr:hover td{background:#f8fafc}
+.prio-table tr:hover td.tier-high{background:rgba(16,185,129,.18)}
+.prio-table tr:hover td.tier-medium{background:rgba(251,191,36,.16)}
+.prio-table tr:hover td.tier-low{background:rgba(148,163,184,.16)}
+.prio-table input.score-cell, .prio-table select.score-cell{width:100%;border:1px solid transparent;background:transparent;padding:4px 6px;font-size:12px;font-family:inherit;border-radius:4px;text-align:right;font-variant-numeric:tabular-nums;color:var(--text)}
+.prio-table input.score-cell:focus, .prio-table select.score-cell:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 2px rgba(45,107,244,.15)}
+.prio-fwk-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:12px;cursor:pointer;transition:all .15s}
+.prio-fwk-card:hover{border-color:var(--accent);box-shadow:0 4px 12px rgba(45,107,244,.08)}
+.prio-fwk-card.active{border-color:var(--accent);background:rgba(45,107,244,.04)}
+.prio-fwk-name{font-weight:800;font-size:15px;color:var(--text);display:flex;align-items:center;gap:10px}
+.prio-fwk-pill{font-size:9px;font-weight:700;padding:2px 8px;border-radius:9999px;text-transform:uppercase;letter-spacing:.04em}
+.prio-fwk-pill.builtin{background:rgba(148,163,184,.15);color:#64748b}
+.prio-fwk-pill.custom{background:rgba(45,107,244,.12);color:var(--accent)}
+.prio-fwk-pill.activepill{background:#16a34a;color:#fff}
+.prio-fwk-desc{font-size:12px;color:var(--muted);margin-top:4px}
+.prio-fwk-criteria-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.prio-fwk-criteria-tags span{font-size:10px;padding:2px 8px;border-radius:9999px;background:#f1f5f9;color:#475569;font-weight:600}
+.prio-fwk-criteria-tags span.cost{background:rgba(220,38,38,.08);color:#dc2626}
+.prio-fwk-criteria-tags span.value{background:rgba(22,163,74,.08);color:#16a34a}
+.prio-btn{padding:8px 16px;border-radius:9999px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--text);transition:all .12s}
+.prio-btn:hover{background:var(--surface-low)}
+.prio-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.prio-btn.primary:hover{filter:brightness(.92)}
+.prio-btn.danger{color:#dc2626;border-color:#fecaca}
+.prio-btn.danger:hover{background:#fef2f2}
+.prio-row-priority-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;padding:1px 6px;border-radius:9999px;margin-left:6px;background:rgba(45,107,244,.12);color:var(--accent);font-variant-numeric:tabular-nums}
+.prio-matrix{width:100%;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.prio-matrix svg{width:100%;height:auto;display:block}
+.prio-matrix-legend{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:14px;font-size:11px;color:var(--muted)}
+.prio-empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.prio-empty h3{color:var(--text);margin-bottom:6px;font-weight:700}
 .cap-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .cap-topbar{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .cap-topbar h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
@@ -797,9 +853,13 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
       </div>
     </div>
 
-    <!-- Forgot password link (login view only) -->
-    <div id="authForgotRow" style="text-align:right;margin:-8px 0 12px">
-      <a style="font-size:11px;color:#2563a8;cursor:pointer" onclick="showForgot()">Forgot password?</a>
+    <!-- Remember me + Forgot password row (login view only) -->
+    <div id="authForgotRow" style="display:flex;align-items:center;justify-content:space-between;margin:-4px 0 12px;font-size:11px">
+      <label style="display:flex;align-items:center;gap:6px;color:#374151;cursor:pointer;user-select:none">
+        <input type="checkbox" id="authRemember" checked style="margin:0;cursor:pointer">
+        Remember me
+      </label>
+      <a style="color:#2563a8;cursor:pointer" onclick="showForgot()">Forgot password?</a>
     </div>
 
     <!-- Primary button -->
@@ -903,6 +963,10 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
   <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openCapacity()">
     <svg viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
     CapacityIQ
+  </button>
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openPrioritization()">
+    <svg viewBox="0 0 24 24"><path d="M3 4h18M3 12h12M3 20h6"/></svg>
+    Prioritization
   </button>
   <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openCompetitiveAnalysis()">
     <svg viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -1076,6 +1140,16 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
   <span class="leg"><span class="swatch" style="background:linear-gradient(90deg,#475569,#64748b)"></span>Strategy</span>
   <span class="leg"><span class="swatch" style="background:linear-gradient(90deg,#dc2626,#ef4444)"></span>At Risk</span>
   <span style="margin-left:auto;color:var(--muted);font-size:10px">MAR 2025 → FEB 2027 (FY26–FY27)</span>
+  <span style="display:flex;align-items:center;gap:6px;margin-left:14px">
+    <label for="roadmapSortSelect" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)">Sort</label>
+    <select id="roadmapSortSelect" onchange="setRoadmapSort(this.value)" style="font-size:11px;font-weight:600;border:1px solid var(--border);border-radius:9999px;padding:4px 26px 4px 10px;background:var(--white);color:var(--text);cursor:pointer">
+      <option value="default">Default order</option>
+      <option value="priority">Priority (high &rarr; low)</option>
+      <option value="name">Name (A&ndash;Z)</option>
+      <option value="startMonth">Start month</option>
+      <option value="endMonth">End month</option>
+    </select>
+  </span>
 </div>
 
 <!-- TABLE -->
@@ -1453,15 +1527,36 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
   <div style="display:flex;flex:1;overflow:hidden">
     <div class="cap-sidebar">
       <div style="padding:16px;border-bottom:1px solid #334155">
-        <div style="font-size:18px;font-weight:900;color:#0d9488;font-family:'Barlow Condensed',sans-serif;letter-spacing:.04em">⚡ CapacityIQ</div>
+        <div style="font-size:18px;font-weight:900;color:#0d9488;font-family:'Barlow Condensed',sans-serif;letter-spacing:.04em;display:flex;align-items:center;gap:8px">
+          <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:#0d9488;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          <span>CapacityIQ</span>
+        </div>
         <div style="font-size:9px;color:#64748b;margin-top:2px">Team Capacity Planning</div>
       </div>
-      <div class="cap-sidebar-item active" data-cap-nav="dashboard" onclick="capNav('dashboard')">📊 Dashboard</div>
-      <div class="cap-sidebar-item" data-cap-nav="initiatives" onclick="capNav('initiatives')">📋 Initiatives</div>
-      <div class="cap-sidebar-item" data-cap-nav="templates" onclick="capNav('templates')">📐 Templates</div>
-      <div class="cap-sidebar-item" data-cap-nav="teams" onclick="capNav('teams')">👥 Teams & People</div>
-      <div class="cap-sidebar-item" data-cap-nav="sprints" onclick="capNav('sprints')">📅 Sprints</div>
-      <div class="cap-sidebar-item" data-cap-nav="tasktypes" onclick="capNav('tasktypes')">📚 Task Reference</div>
+      <div class="cap-sidebar-item active" data-cap-nav="dashboard" onclick="capNav('dashboard')">
+        <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Dashboard
+      </div>
+      <div class="cap-sidebar-item" data-cap-nav="initiatives" onclick="capNav('initiatives')">
+        <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+        Initiatives
+      </div>
+      <div class="cap-sidebar-item" data-cap-nav="templates" onclick="capNav('templates')">
+        <svg viewBox="0 0 24 24"><path d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
+        Templates
+      </div>
+      <div class="cap-sidebar-item" data-cap-nav="teams" onclick="capNav('teams')">
+        <svg viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        Teams &amp; People
+      </div>
+      <div class="cap-sidebar-item" data-cap-nav="sprints" onclick="capNav('sprints')">
+        <svg viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Sprints
+      </div>
+      <div class="cap-sidebar-item" data-cap-nav="tasktypes" onclick="capNav('tasktypes')">
+        <svg viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Task Reference
+      </div>
       <div style="margin-top:auto;padding:12px 16px;border-top:1px solid #334155">
         <button class="cap-btn" onclick="closeCapacity()" style="width:100%">← Back to Roadmap</button>
       </div>
@@ -1472,6 +1567,43 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
         <div id="capTopActions" style="margin-left:auto;display:flex;gap:8px"></div>
       </div>
       <div class="cap-content" id="capContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PRIORITIZATION OVERLAY ─────────────────────────────────────────────── -->
+<div id="prioritizationOverlay">
+  <div style="display:flex;flex:1;overflow:hidden">
+    <div class="prio-sidebar">
+      <div style="padding:16px;border-bottom:1px solid #334155">
+        <div style="font-size:18px;font-weight:900;color:#60a5fa;font-family:'Barlow Condensed',sans-serif;letter-spacing:.04em;display:flex;align-items:center;gap:8px">
+          <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:#60a5fa;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M3 4h18M3 12h12M3 20h6"/></svg>
+          <span>Prioritization</span>
+        </div>
+        <div style="font-size:9px;color:#64748b;margin-top:2px">Score, rank &amp; decide</div>
+      </div>
+      <div class="prio-sidebar-item active" data-prio-nav="score" onclick="prioNav('score')">
+        <svg viewBox="0 0 24 24"><path d="M3 10h18M3 14h18M5 6h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z"/></svg>
+        Score
+      </div>
+      <div class="prio-sidebar-item" data-prio-nav="frameworks" onclick="prioNav('frameworks')">
+        <svg viewBox="0 0 24 24"><path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 9h-6L8 4z"/></svg>
+        Frameworks
+      </div>
+      <div class="prio-sidebar-item" data-prio-nav="matrix" onclick="prioNav('matrix')">
+        <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z M4 12h16 M12 4v16"/></svg>
+        Matrix
+      </div>
+      <div style="margin-top:auto;padding:12px 16px;border-top:1px solid #334155">
+        <button class="cap-btn" onclick="closePrioritization()" style="width:100%">&larr; Back to Roadmap</button>
+      </div>
+    </div>
+    <div class="prio-main">
+      <div class="prio-topbar">
+        <h2 id="prioPageTitle">Score Initiatives</h2>
+        <div id="prioTopActions" style="margin-left:auto;display:flex;gap:8px;align-items:center"></div>
+      </div>
+      <div class="prio-content" id="prioContent"></div>
     </div>
   </div>
 </div>
@@ -2004,18 +2136,65 @@ var editingRowId=null;
 var dragSrcRow=null;
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
+// ── Roadmap sorting helpers ─────────────────────────────────────────────────
+function setRoadmapSort(mode){
+  _roadmapSortBy = mode || 'default';
+  persistData();
+  render();
+}
+function getOrderedRowsForRender(){
+  if(!_roadmapSortBy || _roadmapSortBy === 'default') return rows.slice();
+  var copy = rows.slice();
+  if(_roadmapSortBy === 'name'){
+    copy.sort(function(a,b){ return (a.name||'').localeCompare(b.name||''); });
+  } else if(_roadmapSortBy === 'startMonth'){
+    var startOf = function(r){
+      if(!r.bars || !r.bars.length) return Infinity;
+      return Math.min.apply(null, r.bars.map(function(b){ return typeof b.s==='number'?b.s:Infinity; }));
+    };
+    copy.sort(function(a,b){ return startOf(a)-startOf(b); });
+  } else if(_roadmapSortBy === 'endMonth'){
+    var endOf = function(r){
+      if(!r.bars || !r.bars.length) return -1;
+      return Math.max.apply(null, r.bars.map(function(b){ return typeof b.e==='number'?b.e:-1; }));
+    };
+    copy.sort(function(a,b){ return endOf(b)-endOf(a); });
+  } else if(_roadmapSortBy === 'priority'){
+    var fwk = getActiveFramework();
+    copy.sort(function(a,b){
+      var sa = computePriorityScore(a, fwk);
+      var sb = computePriorityScore(b, fwk);
+      if(sa == null && sb == null) return 0;
+      if(sa == null) return 1;
+      if(sb == null) return -1;
+      return sb - sa;
+    });
+  }
+  return copy;
+}
+
 function render(){
   var tbody=document.getElementById('tbody');
   tbody.innerHTML='';
+  // Sync the sort dropdown UI with current state
+  var sortSel=document.getElementById('roadmapSortSelect');
+  if(sortSel && sortSel.value !== _roadmapSortBy) sortSel.value = _roadmapSortBy;
+
+  var orderedRows = getOrderedRowsForRender();
+  var groupBySection = (_roadmapSortBy === 'default');
+  // Pre-compute priority scores once if we're sorted by priority — used for the inline badge.
+  var prioFwk = getActiveFramework();
+  var allPrioScores = (_roadmapSortBy === 'priority') ? rows.map(function(r){ return computePriorityScore(r, prioFwk); }) : null;
+
   var lastSec=null;
   var secCount={};
-  rows.forEach(function(row){
+  orderedRows.forEach(function(row){
     var sec=sections.find(function(s){return s.id===row.sec});
     if(!sec) return;
     if(!secCount[row.sec]) secCount[row.sec]=0;
     secCount[row.sec]++;
     var ri=secCount[row.sec];
-    if(row.sec!==lastSec){
+    if(groupBySection && row.sec!==lastSec){
       lastSec=row.sec;
       var sh=document.createElement('tr');
       sh.className='sec-hdr';
@@ -2052,6 +2231,19 @@ function render(){
     var barNames=row.bars.map(function(b){return b.t;}).join(' · ');
     var subLine=barNames+(row.sub?' — '+row.sub:'');
     var prioBadge=row.priority?'<span class="prio-badge '+(row.priority||'').toLowerCase()+'">'+row.priority+'</span>':'';
+    // Inline framework score badge — only when sorted by priority.
+    var prioScoreBadge='';
+    if(_roadmapSortBy === 'priority'){
+      var __score = computePriorityScore(row, prioFwk);
+      if(__score != null){
+        prioScoreBadge = '<span class="prio-row-priority-badge" title="'+escHtml(prioFwk.name)+' score">'+__score+'</span>';
+      }
+    }
+    // When not grouping by section, surface the section as a small color dot in front of the name.
+    var sectionDot='';
+    if(!groupBySection && sec){
+      sectionDot = '<span title="'+escHtml(sec.name)+'" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+escHtml(sec.color)+';margin-right:6px;flex-shrink:0;vertical-align:middle"></span>';
+    }
     var g2mBadgeHtml='';
     var g2mRI=getG2MReadinessForRow?getG2MReadinessForRow(row.name):null;
     if(g2mRI){
@@ -2068,7 +2260,7 @@ function render(){
       '<span class="drag-handle" title="Drag up or down to reorder this row within the roadmap">⠿</span>'+
       prioBadge+
       '<div class="lbl-text">'+
-        '<div class="name" style="color:'+nc+'" onclick="openEditModal(\''+row.id+'\')">'+row.name+'</div>'+
+        '<div class="name" style="color:'+nc+'" onclick="openEditModal(\''+row.id+'\')">'+sectionDot+row.name+prioScoreBadge+'</div>'+
         '<div class="sub" title="'+subLine+'">'+subLine+' '+g2mBadgeHtml+todoBadgeHtml+'</div>'+
       '</div>'+
       '<div class="row-btns">'+
@@ -3985,10 +4177,35 @@ function hidePassword(inputId, btn){
 }
 
 async function checkExistingSession(){
+  // 1. Try the cached Supabase session (refresh-token rotation handled inside).
   var result = await _supabase.auth.getSession();
   if(result.data && result.data.session && result.data.session.user){
     _currentUser = result.data.session.user;
     await onAuthSuccess(_currentUser);
+    return;
+  }
+  // 2. No valid session — fall back to OS-keychain credentials if the user
+  //    previously ticked "Remember me". This is what makes the app feel
+  //    like a native desktop app instead of a web login screen.
+  if(!window.electronAPI || !window.electronAPI.loadCredentials) return;
+  try {
+    var creds = await window.electronAPI.loadCredentials();
+    if(creds && creds.found && creds.email && creds.password){
+      // Pre-fill the email so if auto-login fails the user just types a password.
+      var emailField=document.getElementById('authEmail');
+      if(emailField) emailField.value=creds.email;
+      var loginRes = await _supabase.auth.signInWithPassword({email:creds.email,password:creds.password});
+      if(loginRes && loginRes.data && loginRes.data.user){
+        _currentUser=loginRes.data.user;
+        await onAuthSuccess(_currentUser);
+      } else {
+        // Saved password no longer works (e.g. user changed it elsewhere).
+        // Wipe so we don't keep failing, and let the user log in normally.
+        if(window.electronAPI.clearCredentials) window.electronAPI.clearCredentials().catch(function(){});
+      }
+    }
+  } catch(e){
+    console.warn('Auto-login fallback failed:',e&&e.message);
   }
 }
 
@@ -4215,7 +4432,21 @@ async function handleAuthPrimary(){
     else if(msg.indexOf('rate limit')>=0) msg='Too many attempts. Please wait a few minutes.';
     showAuthError(msg);
   }
-  else if(result.data&&result.data.user){ _currentUser=result.data.user; onAuthSuccess(_currentUser); }
+  else if(result.data&&result.data.user){
+    // Persist or wipe credentials based on the "Remember me" checkbox.
+    var rememberBox=document.getElementById('authRemember');
+    var remember=!rememberBox || rememberBox.checked;
+    if(window.electronAPI && window.electronAPI.saveCredentials && window.electronAPI.clearCredentials){
+      if(remember){
+        window.electronAPI.saveCredentials({email:email,password:password}).catch(function(e){
+          console.warn('saveCredentials failed:',e&&e.message);
+        });
+      } else {
+        window.electronAPI.clearCredentials().catch(function(){});
+      }
+    }
+    _currentUser=result.data.user; onAuthSuccess(_currentUser);
+  }
 }
 async function handleGoogleAuth(){
   await _supabase.auth.signInWithOAuth({provider:'google'});
@@ -4357,6 +4588,12 @@ async function signOut(){
   if(_autoSyncInterval) { clearInterval(_autoSyncInterval); _autoSyncInterval=null; }
   if(typeof _saveTimer!=='undefined' && _saveTimer) { clearTimeout(_saveTimer); _saveTimer=null; }
 
+  // Wipe saved credentials so the next launch goes back to the auth screen.
+  // Without this, "Sign out" would be a no-op for users who ticked "Remember me".
+  if(window.electronAPI && window.electronAPI.clearCredentials){
+    try { await window.electronAPI.clearCredentials(); } catch(e) {}
+  }
+
   await _supabase.auth.signOut();
 
   // ── Reset ALL in-memory state ──
@@ -4460,11 +4697,19 @@ function applyDataPayload(d){
   if(d.brandGuideData) brandGuideData=d.brandGuideData;
   if(d.artTemplates) artTemplates=d.artTemplates;
   if(d.capData) capData=d.capData;
+  if(d.prioritization && typeof d.prioritization==='object'){
+    prioritizationData = {
+      activeFrameworkId: d.prioritization.activeFrameworkId || 'rice',
+      frameworks: Array.isArray(d.prioritization.frameworks) ? d.prioritization.frameworks : [],
+      scores: (d.prioritization.scores && typeof d.prioritization.scores==='object') ? d.prioritization.scores : {}
+    };
+  }
+  if(typeof d.roadmapSortBy === 'string') _roadmapSortBy = d.roadmapSortBy;
   var aTab=tabs_data.find(function(t){return t.id===activeTabId&&!t.stacked;});
   if(aTab&&aTab.sections){sections=aTab.sections;rows=aTab.rows;if(aTab.quarters)quarters=aTab.quarters;}
 }
 function buildDataPayload(){
-  return {sections:sections,rows:rows,quarters:quarters,tabs_data:tabs_data,activeTabId:activeTabId,g2mData:g2mAllData,todoData:todoAllData,kpiData:kpiAllData,timesheetData:timesheetData,ucrData:ucrAllData,artifactsData:artifactsData,brandGuideData:brandGuideData,artTemplates:artTemplates,capData:capData};
+  return {sections:sections,rows:rows,quarters:quarters,tabs_data:tabs_data,activeTabId:activeTabId,g2mData:g2mAllData,todoData:todoAllData,kpiData:kpiAllData,timesheetData:timesheetData,ucrData:ucrAllData,artifactsData:artifactsData,brandGuideData:brandGuideData,artTemplates:artTemplates,capData:capData,prioritization:prioritizationData,roadmapSortBy:_roadmapSortBy};
 }
 
 // ── CLOUD SYNC ────────────────────────────────────────────────────────────────
@@ -4554,7 +4799,9 @@ async function pushCloudData(){
       artifactsData: artifactsData,
       brandGuideData: brandGuideData,
       artTemplates: artTemplates,
-      capData: capData
+      capData: capData,
+      prioritization: prioritizationData,
+      roadmapSortBy: _roadmapSortBy
     };
 
     var uid=_currentUser.id;
@@ -9537,6 +9784,580 @@ var capData = {
 };
 var _capPage = 'dashboard';
 
+// ══════════════════════════════════════════════════════════════════════════════
+// PRIORITIZATION (Phase 1) — frameworks, scores, sorting, 2x2 matrix
+// ══════════════════════════════════════════════════════════════════════════════
+//
+// Data is persisted inside the existing `data.prioritization` JSON blob,
+// which auto-syncs to Supabase via the regular sync pipeline. No new tables.
+//
+// Shape:
+//   prioritizationData = {
+//     activeFrameworkId: 'rice',
+//     frameworks: [ { id, name, builtIn, formula, criteria:[...] }, ... ],
+//     scores: { '<rowId>': { '<criterionId>': numericValue, ... }, ... }
+//   }
+
+var PRIORITIZATION_MAX_CRITERIA = 8;
+
+var BUILTIN_FRAMEWORKS = [
+  {
+    id: 'rice', name: 'RICE', builtIn: true, formula: 'rice',
+    description: 'Reach \u00d7 Impact \u00d7 Confidence \u00f7 Effort. The Intercom classic.',
+    criteria: [
+      { id: 'reach',      name: 'Reach',      type: 'value', weight: 1, scale: 'numeric', min: 0,    max: 100000, step: 100, hint: 'How many people affected per quarter' },
+      { id: 'impact',     name: 'Impact',     type: 'value', weight: 1, scale: 'enum',    options: [{label:'Massive (3)',value:3},{label:'High (2)',value:2},{label:'Medium (1)',value:1},{label:'Low (0.5)',value:0.5},{label:'Minimal (0.25)',value:0.25}] },
+      { id: 'confidence', name: 'Confidence', type: 'value', weight: 1, scale: 'percent', min: 0, max: 100, step: 10, hint: 'How sure are you about reach and impact, in %' },
+      { id: 'effort',     name: 'Effort',     type: 'cost',  weight: 1, scale: 'numeric', min: 0.5, max: 100, step: 0.5, hint: 'Person-months of work' }
+    ]
+  },
+  {
+    id: 'ice', name: 'ICE', builtIn: true, formula: 'ice',
+    description: 'Impact \u00d7 Confidence \u00d7 Ease. Faster than RICE, less rigorous.',
+    criteria: [
+      { id: 'impact',     name: 'Impact',     type: 'value', weight: 1, scale: 'numeric', min: 1, max: 10, step: 1 },
+      { id: 'confidence', name: 'Confidence', type: 'value', weight: 1, scale: 'numeric', min: 1, max: 10, step: 1 },
+      { id: 'ease',       name: 'Ease',       type: 'value', weight: 1, scale: 'numeric', min: 1, max: 10, step: 1 }
+    ]
+  },
+  {
+    id: 'value-effort', name: 'Value vs Effort', builtIn: true, formula: 'value-effort',
+    description: 'The simplest 2D model. Plot it on the matrix view.',
+    criteria: [
+      { id: 'value',  name: 'Business Value', type: 'value', weight: 1, scale: 'numeric', min: 1, max: 10, step: 1 },
+      { id: 'effort', name: 'Effort',         type: 'cost',  weight: 1, scale: 'numeric', min: 1, max: 10, step: 1 }
+    ]
+  },
+  {
+    id: 'moscow', name: 'MoSCoW', builtIn: true, formula: 'moscow',
+    description: 'Must / Should / Could / Won\u2019t. Use when scoring numerically feels like overkill.',
+    criteria: [
+      { id: 'category', name: 'Category', type: 'value', weight: 1, scale: 'enum', options: [
+        {label:'Must (4)',value:4},{label:'Should (3)',value:3},{label:'Could (2)',value:2},{label:"Won\u2019t (1)",value:1}
+      ]}
+    ]
+  },
+  {
+    id: 'kano', name: 'Kano', builtIn: true, formula: 'kano',
+    description: 'Excitement / Performance / Basic / Indifferent. Customer-satisfaction lens.',
+    criteria: [
+      { id: 'category', name: 'Category', type: 'value', weight: 1, scale: 'enum', options: [
+        {label:'Excitement (4)',value:4},{label:'Performance (3)',value:3},{label:'Basic (2)',value:2},{label:'Indifferent (1)',value:1}
+      ]}
+    ]
+  },
+  {
+    id: 'wsjf', name: 'WSJF', builtIn: true, formula: 'wsjf',
+    description: 'Weighted Shortest Job First (SAFe). Cost of Delay \u00f7 Job Size.',
+    criteria: [
+      { id: 'businessValue', name: 'Business Value',     type: 'value', weight: 1, scale: 'numeric', min: 1, max: 13, step: 1, hint: 'Fibonacci 1\u201313' },
+      { id: 'urgency',       name: 'Time Criticality',   type: 'value', weight: 1, scale: 'numeric', min: 1, max: 13, step: 1 },
+      { id: 'risk',          name: 'Risk / Opportunity', type: 'value', weight: 1, scale: 'numeric', min: 1, max: 13, step: 1 },
+      { id: 'jobSize',       name: 'Job Size',           type: 'cost',  weight: 1, scale: 'numeric', min: 1, max: 13, step: 1 }
+    ]
+  }
+];
+
+var prioritizationData = {
+  activeFrameworkId: 'rice',
+  frameworks: [],   // populated lazily — built-ins are merged in at read time
+  scores: {}        // { rowId: { criterionId: number } }
+};
+var _prioPage = 'score'; // 'score' | 'frameworks' | 'matrix'
+var _prioEditingFrameworkId = null;
+
+// Roadmap sort state (Phase 1 of Phase 4 — sort dropdown on the roadmap view)
+var _roadmapSortBy = 'default'; // 'default' | 'priority' | 'name' | 'startMonth' | 'endMonth'
+
+// Return the merged framework list (built-ins always first, then user customs).
+// Built-ins live in code so the user can never accidentally delete or corrupt
+// them, even if their stored JSON gets weird.
+function getAllFrameworks(){
+  var customs = (prioritizationData.frameworks || []).filter(function(f){ return f && !f.builtIn; });
+  return BUILTIN_FRAMEWORKS.concat(customs);
+}
+
+function getFrameworkById(id){
+  var all = getAllFrameworks();
+  return all.find(function(f){ return f.id === id; }) || all[0];
+}
+
+function getActiveFramework(){
+  return getFrameworkById(prioritizationData.activeFrameworkId);
+}
+
+// Compute the priority score for a single row under the given framework.
+// Returns a number (or null if the row has zero scored criteria).
+function computePriorityScore(row, framework){
+  if(!row || !framework) return null;
+  var scores = (prioritizationData.scores || {})[row.id] || {};
+  var hasAny = framework.criteria.some(function(c){ return scores[c.id] != null && scores[c.id] !== ''; });
+  if(!hasAny) return null;
+  var f = framework.formula;
+  if(f === 'rice'){
+    var r = +scores.reach || 0;
+    var i = +scores.impact || 0;
+    var c = (+scores.confidence || 0) / 100;
+    var e = +scores.effort || 0;
+    if(e <= 0) return null;
+    return Math.round((r * i * c) / e);
+  }
+  if(f === 'ice'){
+    var im = +scores.impact || 0, cf = +scores.confidence || 0, ea = +scores.ease || 0;
+    return Math.round((im * cf * ea) / 10 * 10) / 10;
+  }
+  if(f === 'value-effort'){
+    var v = +scores.value || 0, ef = +scores.effort || 0;
+    if(ef <= 0) return null;
+    return Math.round((v / ef) * 100) / 100;
+  }
+  if(f === 'moscow' || f === 'kano'){
+    return +scores.category || 0;
+  }
+  if(f === 'wsjf'){
+    var cod = (+scores.businessValue || 0) + (+scores.urgency || 0) + (+scores.risk || 0);
+    var js  = +scores.jobSize || 0;
+    if(js <= 0) return null;
+    return Math.round((cod / js) * 10) / 10;
+  }
+  // Generic weighted: sum(value*weight) / max(1, sum(cost*weight))
+  var valueSum = 0, costSum = 0;
+  framework.criteria.forEach(function(crit){
+    var val = (+scores[crit.id] || 0) * (crit.weight || 1);
+    if(crit.type === 'cost') costSum += val;
+    else valueSum += val;
+  });
+  if(costSum <= 0) return Math.round(valueSum * 10) / 10;
+  return Math.round((valueSum / costSum) * 100) / 100;
+}
+
+// Get priority "tier" for color coding: top 25% = high, mid 50% = medium, bottom 25% = low.
+function getPriorityTier(score, allScores){
+  if(score == null) return 'unscored';
+  var sorted = allScores.filter(function(s){ return s != null; }).slice().sort(function(a,b){ return b - a; });
+  if(!sorted.length) return 'unscored';
+  var pos = sorted.indexOf(score);
+  var pct = pos / sorted.length;
+  if(pct < 0.25) return 'high';
+  if(pct < 0.75) return 'medium';
+  return 'low';
+}
+
+// ── Open / close / nav ──────────────────────────────────────────────────────
+function openPrioritization(){
+  var ov = document.getElementById('prioritizationOverlay');
+  if(!ov) return;
+  ov.classList.add('open');
+  prioNav(_prioPage || 'score');
+}
+function closePrioritization(){
+  var ov = document.getElementById('prioritizationOverlay');
+  if(ov) ov.classList.remove('open');
+}
+function prioNav(page){
+  _prioPage = page;
+  document.querySelectorAll('.prio-sidebar-item').forEach(function(el){
+    el.classList.toggle('active', el.dataset.prioNav === page);
+  });
+  var titles = { score: 'Score Initiatives', frameworks: 'Frameworks', matrix: 'Value vs Effort Matrix' };
+  document.getElementById('prioPageTitle').textContent = titles[page] || page;
+  document.getElementById('prioTopActions').innerHTML = '';
+  if(page === 'score') renderPrioScoreTab();
+  else if(page === 'frameworks') renderPrioFrameworksTab();
+  else if(page === 'matrix') renderPrioMatrixTab();
+}
+
+// ── Score tab ───────────────────────────────────────────────────────────────
+function renderPrioScoreTab(){
+  var content = document.getElementById('prioContent');
+  var actions = document.getElementById('prioTopActions');
+  var fwk = getActiveFramework();
+  var allFwks = getAllFrameworks();
+
+  // Top bar: framework selector + edit button
+  var sel = '<select id="prioFwkSelector" class="prio-btn" style="padding:8px 30px 8px 14px" onchange="setActivePrioFramework(this.value)">' +
+    allFwks.map(function(f){
+      return '<option value="'+escHtml(f.id)+'"'+(f.id===fwk.id?' selected':'')+'>'+escHtml(f.name)+(f.builtIn?'':' (custom)')+'</option>';
+    }).join('') + '</select>';
+  actions.innerHTML = sel +
+    '<button class="prio-btn" onclick="prioNav(\'frameworks\');setTimeout(function(){editPrioFramework(\''+escHtml(fwk.id)+'\')},50)">Edit framework</button>';
+
+  if(!rows || rows.length === 0){
+    content.innerHTML = '<div class="prio-empty"><h3>No initiatives yet</h3><p>Add some rows to your roadmap, then come back to score them.</p></div>';
+    return;
+  }
+
+  // Compute scores for all rows under the active framework so we can tier them.
+  var allScores = rows.map(function(r){ return computePriorityScore(r, fwk); });
+  var sortedRowIdsByScore = rows.slice().map(function(r,i){
+    return { row: r, score: allScores[i] };
+  }).sort(function(a,b){
+    if(a.score == null && b.score == null) return 0;
+    if(a.score == null) return 1;
+    if(b.score == null) return -1;
+    return b.score - a.score;
+  });
+
+  // Build the table
+  var html = '<div style="margin-bottom:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">';
+  var scoredCount = allScores.filter(function(s){ return s != null; }).length;
+  html += '<div style="font-size:13px;color:var(--muted)"><strong style="color:var(--text)">'+scoredCount+'</strong> of <strong style="color:var(--text)">'+rows.length+'</strong> initiatives scored under <strong style="color:var(--text)">'+escHtml(fwk.name)+'</strong></div>';
+  if(fwk.description){
+    html += '<div style="font-size:12px;color:var(--muted);font-style:italic">'+escHtml(fwk.description)+'</div>';
+  }
+  html += '</div>';
+
+  html += '<div style="overflow-x:auto"><table class="prio-table"><thead><tr>';
+  html += '<th style="min-width:180px">Initiative</th><th style="min-width:120px">Section</th>';
+  fwk.criteria.forEach(function(c){
+    html += '<th class="'+(c.type==='cost'?'cost':'value')+'" title="'+escHtml(c.hint||'')+'">'+escHtml(c.name)+'<div style="font-size:9px;font-weight:500;text-transform:none;color:#94a3b8">'+(c.type==='cost'?'cost':'value')+'</div></th>';
+  });
+  html += '<th class="total">Score</th></tr></thead><tbody>';
+
+  sortedRowIdsByScore.forEach(function(item){
+    var r = item.row;
+    var score = item.score;
+    var tier = getPriorityTier(score, allScores);
+    var sec = sections.find(function(s){ return s.id === r.sec; });
+    var secName = sec ? sec.name : '\u2014';
+    var secColor = sec ? sec.color : '#64748b';
+    html += '<tr>';
+    html += '<td><div style="font-weight:600;color:var(--text)">'+escHtml(r.name||'')+'</div>'+(r.sub?'<div style="font-size:10px;color:var(--muted)">'+escHtml(r.sub)+'</div>':'')+'</td>';
+    html += '<td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+escHtml(secColor)+';margin-right:6px"></span>'+escHtml(secName)+'</td>';
+    var rowScores = (prioritizationData.scores || {})[r.id] || {};
+    fwk.criteria.forEach(function(c){
+      html += '<td>'+_renderScoreCell(r.id, c, rowScores[c.id])+'</td>';
+    });
+    html += '<td class="total tier-'+tier+'">'+(score == null ? '\u2014' : score)+'</td>';
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+
+  content.innerHTML = html;
+
+  // Wire up cell edits
+  content.querySelectorAll('input.score-cell, select.score-cell').forEach(function(el){
+    el.addEventListener('change', function(){
+      var rowId = el.dataset.rowId;
+      var critId = el.dataset.critId;
+      var val = el.value;
+      if(!prioritizationData.scores) prioritizationData.scores = {};
+      if(!prioritizationData.scores[rowId]) prioritizationData.scores[rowId] = {};
+      if(val === '' || val == null){
+        delete prioritizationData.scores[rowId][critId];
+      } else {
+        prioritizationData.scores[rowId][critId] = parseFloat(val);
+      }
+      persistData();
+      // Re-render to update the total + tier coloring
+      renderPrioScoreTab();
+    });
+  });
+}
+
+function _renderScoreCell(rowId, criterion, currentValue){
+  var v = currentValue == null ? '' : currentValue;
+  if(criterion.scale === 'enum'){
+    var opts = '<option value="">\u2014</option>' + (criterion.options||[]).map(function(o){
+      var sel = (v !== '' && +v === +o.value) ? ' selected' : '';
+      return '<option value="'+escHtml(o.value)+'"'+sel+'>'+escHtml(o.label)+'</option>';
+    }).join('');
+    return '<select class="score-cell" data-row-id="'+escHtml(rowId)+'" data-crit-id="'+escHtml(criterion.id)+'">'+opts+'</select>';
+  }
+  var min = criterion.min == null ? 0 : criterion.min;
+  var max = criterion.max == null ? 100 : criterion.max;
+  var step = criterion.step == null ? 1 : criterion.step;
+  return '<input type="number" class="score-cell" data-row-id="'+escHtml(rowId)+'" data-crit-id="'+escHtml(criterion.id)+'" value="'+escHtml(v)+'" min="'+min+'" max="'+max+'" step="'+step+'" placeholder="\u2014">';
+}
+
+function setActivePrioFramework(id){
+  prioritizationData.activeFrameworkId = id;
+  persistData();
+  if(_prioPage === 'score') renderPrioScoreTab();
+  else if(_prioPage === 'matrix') renderPrioMatrixTab();
+  // Also re-render roadmap if it's currently sorted by priority
+  if(_roadmapSortBy === 'priority' && typeof render === 'function') render();
+}
+
+// ── Frameworks tab ──────────────────────────────────────────────────────────
+function renderPrioFrameworksTab(){
+  var content = document.getElementById('prioContent');
+  var actions = document.getElementById('prioTopActions');
+  actions.innerHTML = '<button class="prio-btn primary" onclick="createCustomPrioFramework()">+ New custom framework</button>';
+
+  var all = getAllFrameworks();
+  var activeId = prioritizationData.activeFrameworkId;
+  var html = '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">Pick a framework, customise it, or create your own. Built-in frameworks can\'t be edited \u2014 clone them first if you want to tweak.</div>';
+
+  all.forEach(function(f){
+    var isActive = f.id === activeId;
+    html += '<div class="prio-fwk-card'+(isActive?' active':'')+'" onclick="editPrioFramework(\''+escHtml(f.id)+'\')">';
+    html += '<div class="prio-fwk-name">'+escHtml(f.name);
+    html += '<span class="prio-fwk-pill '+(f.builtIn?'builtin':'custom')+'">'+(f.builtIn?'Built-in':'Custom')+'</span>';
+    if(isActive) html += '<span class="prio-fwk-pill activepill">Active</span>';
+    html += '</div>';
+    if(f.description) html += '<div class="prio-fwk-desc">'+escHtml(f.description)+'</div>';
+    html += '<div class="prio-fwk-criteria-tags">';
+    f.criteria.forEach(function(c){
+      html += '<span class="'+(c.type==='cost'?'cost':'value')+'">'+escHtml(c.name)+'</span>';
+    });
+    html += '</div>';
+    html += '<div style="display:flex;gap:8px;margin-top:14px" onclick="event.stopPropagation()">';
+    if(!isActive){
+      html += '<button class="prio-btn primary" onclick="setActivePrioFramework(\''+escHtml(f.id)+'\');renderPrioFrameworksTab()">Make active</button>';
+    }
+    html += '<button class="prio-btn" onclick="clonePrioFramework(\''+escHtml(f.id)+'\')">Clone</button>';
+    if(!f.builtIn){
+      html += '<button class="prio-btn" onclick="editPrioFramework(\''+escHtml(f.id)+'\')">Edit</button>';
+      html += '<button class="prio-btn danger" onclick="deletePrioFramework(\''+escHtml(f.id)+'\')">Delete</button>';
+    }
+    html += '</div>';
+    html += '</div>';
+  });
+
+  content.innerHTML = html;
+}
+
+function createCustomPrioFramework(){
+  var newId = 'custom_' + Date.now();
+  var f = {
+    id: newId,
+    name: 'New Custom Framework',
+    builtIn: false,
+    formula: 'weighted',
+    description: 'Define your own value and cost criteria.',
+    criteria: [
+      { id: 'c'+Date.now()+'_1', name: 'Value', type: 'value', weight: 1, scale: 'numeric', min: 1, max: 10, step: 1 },
+      { id: 'c'+Date.now()+'_2', name: 'Effort', type: 'cost', weight: 1, scale: 'numeric', min: 1, max: 10, step: 1 }
+    ]
+  };
+  if(!prioritizationData.frameworks) prioritizationData.frameworks = [];
+  prioritizationData.frameworks.push(f);
+  persistData();
+  editPrioFramework(newId);
+}
+
+function clonePrioFramework(id){
+  var src = getFrameworkById(id);
+  if(!src) return;
+  var newId = 'custom_' + Date.now();
+  var copy = JSON.parse(JSON.stringify(src));
+  copy.id = newId;
+  copy.builtIn = false;
+  copy.name = src.name + ' (copy)';
+  // Re-id criteria so future edits don't collide with the original
+  copy.criteria = copy.criteria.map(function(c, idx){
+    return Object.assign({}, c, { id: 'c'+Date.now()+'_'+idx });
+  });
+  if(!prioritizationData.frameworks) prioritizationData.frameworks = [];
+  prioritizationData.frameworks.push(copy);
+  persistData();
+  editPrioFramework(newId);
+}
+
+function deletePrioFramework(id){
+  var f = getFrameworkById(id);
+  if(!f || f.builtIn) return;
+  if(!confirm('Delete framework "'+f.name+'"? Scores recorded under it will also be lost.')) return;
+  prioritizationData.frameworks = (prioritizationData.frameworks || []).filter(function(x){ return x.id !== id; });
+  // If this was the active framework, fall back to RICE
+  if(prioritizationData.activeFrameworkId === id) prioritizationData.activeFrameworkId = 'rice';
+  persistData();
+  renderPrioFrameworksTab();
+}
+
+function editPrioFramework(id){
+  var f = getFrameworkById(id);
+  if(!f) return;
+  _prioEditingFrameworkId = id;
+  var content = document.getElementById('prioContent');
+  var canEdit = !f.builtIn;
+
+  var html = '<div style="margin-bottom:14px"><a onclick="renderPrioFrameworksTab()" style="font-size:12px;color:var(--accent);cursor:pointer">&larr; Back to all frameworks</a></div>';
+  html += '<div class="prio-fwk-card" style="cursor:default">';
+  html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px">';
+  html += '<div style="flex:1">';
+  if(canEdit){
+    html += '<input type="text" id="fwkNameInput" value="'+escHtml(f.name)+'" style="font-size:18px;font-weight:800;border:1px solid var(--border);border-radius:6px;padding:6px 10px;width:100%;font-family:inherit">';
+    html += '<textarea id="fwkDescInput" rows="2" style="font-size:12px;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:6px 10px;width:100%;margin-top:6px;font-family:inherit;resize:vertical">'+escHtml(f.description||'')+'</textarea>';
+  } else {
+    html += '<div style="font-size:18px;font-weight:800">'+escHtml(f.name)+' <span class="prio-fwk-pill builtin" style="margin-left:8px">Built-in</span></div>';
+    html += '<div style="font-size:12px;color:var(--muted);margin-top:4px">'+escHtml(f.description||'')+'</div>';
+  }
+  html += '</div></div>';
+
+  html += '<div style="margin-top:18px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:8px">Criteria ('+f.criteria.length+'/'+PRIORITIZATION_MAX_CRITERIA+')</div>';
+
+  if(!canEdit){
+    html += '<table class="prio-table"><thead><tr><th>Name</th><th>Type</th><th>Weight</th><th>Range</th></tr></thead><tbody>';
+    f.criteria.forEach(function(c){
+      html += '<tr><td><strong>'+escHtml(c.name)+'</strong>'+(c.hint?'<div style="font-size:10px;color:var(--muted)">'+escHtml(c.hint)+'</div>':'')+'</td><td><span class="prio-fwk-pill '+(c.type==='cost'?'cost':'value')+'" style="background:'+(c.type==='cost'?'rgba(220,38,38,.08);color:#dc2626':'rgba(22,163,74,.08);color:#16a34a')+'">'+escHtml(c.type)+'</span></td><td>'+(c.weight||1)+'</td><td>'+(c.scale==='enum'?'enum':((c.min||0)+'\u2013'+(c.max||10)))+'</td></tr>';
+    });
+    html += '</tbody></table>';
+    html += '<div style="margin-top:14px;font-size:12px;color:var(--muted);font-style:italic">This is a built-in framework. To customise it, click <strong>Clone</strong> on the previous screen.</div>';
+  } else {
+    html += '<table class="prio-table" id="fwkCriteriaTable"><thead><tr><th>Name</th><th>Type</th><th>Weight</th><th>Min</th><th>Max</th><th></th></tr></thead><tbody>';
+    f.criteria.forEach(function(c, idx){
+      html += _renderEditCriterionRow(c, idx);
+    });
+    html += '</tbody></table>';
+    html += '<div style="margin-top:10px;display:flex;gap:8px">';
+    html += '<button class="prio-btn primary" onclick="addCriterionToFramework(\''+escHtml(f.id)+'\')"'+(f.criteria.length>=PRIORITIZATION_MAX_CRITERIA?' disabled':'')+'>+ Add criterion</button>';
+    html += '<button class="prio-btn" onclick="savePrioFrameworkEdits(\''+escHtml(f.id)+'\')">Save changes</button>';
+    html += '</div>';
+    if(f.criteria.length >= PRIORITIZATION_MAX_CRITERIA){
+      html += '<div style="margin-top:8px;font-size:11px;color:#dc2626">Maximum '+PRIORITIZATION_MAX_CRITERIA+' criteria per framework.</div>';
+    }
+  }
+  html += '</div></div>';
+
+  content.innerHTML = html;
+}
+
+function _renderEditCriterionRow(c, idx){
+  return '<tr data-crit-idx="'+idx+'" data-crit-id="'+escHtml(c.id)+'">' +
+    '<td><input type="text" value="'+escHtml(c.name)+'" data-field="name" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:5px 8px;font-family:inherit;font-size:12px"></td>' +
+    '<td><select data-field="type" style="border:1px solid var(--border);border-radius:4px;padding:5px 8px;font-size:12px;font-family:inherit"><option value="value"'+(c.type==='value'?' selected':'')+'>value</option><option value="cost"'+(c.type==='cost'?' selected':'')+'>cost</option></select></td>' +
+    '<td><input type="number" value="'+(c.weight||1)+'" data-field="weight" min="0.1" max="10" step="0.1" style="width:60px;border:1px solid var(--border);border-radius:4px;padding:5px 8px;font-size:12px;font-family:inherit"></td>' +
+    '<td><input type="number" value="'+(c.min==null?0:c.min)+'" data-field="min" style="width:70px;border:1px solid var(--border);border-radius:4px;padding:5px 8px;font-size:12px;font-family:inherit"></td>' +
+    '<td><input type="number" value="'+(c.max==null?10:c.max)+'" data-field="max" style="width:70px;border:1px solid var(--border);border-radius:4px;padding:5px 8px;font-size:12px;font-family:inherit"></td>' +
+    '<td><button class="prio-btn danger" onclick="removeCriterionFromRow(this)">Remove</button></td>' +
+    '</tr>';
+}
+
+function addCriterionToFramework(fid){
+  var f = getFrameworkById(fid);
+  if(!f || f.builtIn || f.criteria.length >= PRIORITIZATION_MAX_CRITERIA) return;
+  // Save any in-flight edits first
+  savePrioFrameworkEdits(fid, true);
+  var fresh = getFrameworkById(fid);
+  fresh.criteria.push({ id: 'c'+Date.now(), name: 'New criterion', type: 'value', weight: 1, scale: 'numeric', min: 1, max: 10, step: 1 });
+  persistData();
+  editPrioFramework(fid);
+}
+
+function removeCriterionFromRow(btn){
+  var tr = btn.closest('tr');
+  if(tr) tr.remove();
+}
+
+function savePrioFrameworkEdits(fid, silent){
+  var f = getFrameworkById(fid);
+  if(!f || f.builtIn) return;
+  var nameEl = document.getElementById('fwkNameInput');
+  var descEl = document.getElementById('fwkDescInput');
+  if(nameEl) f.name = nameEl.value.trim() || 'Untitled Framework';
+  if(descEl) f.description = descEl.value.trim();
+  var rows = document.querySelectorAll('#fwkCriteriaTable tbody tr');
+  var newCriteria = [];
+  rows.forEach(function(tr){
+    var cid = tr.dataset.critId;
+    var get = function(field){
+      var el = tr.querySelector('[data-field="'+field+'"]');
+      return el ? el.value : '';
+    };
+    var name = (get('name')||'').trim();
+    if(!name) return;
+    newCriteria.push({
+      id: cid || ('c'+Date.now()+Math.random().toString(36).slice(2,6)),
+      name: name,
+      type: get('type') === 'cost' ? 'cost' : 'value',
+      weight: parseFloat(get('weight')) || 1,
+      scale: 'numeric',
+      min: parseFloat(get('min')) || 0,
+      max: parseFloat(get('max')) || 10,
+      step: 1
+    });
+  });
+  if(newCriteria.length){
+    f.criteria = newCriteria.slice(0, PRIORITIZATION_MAX_CRITERIA);
+  }
+  persistData();
+  if(!silent) editPrioFramework(fid);
+}
+
+// ── Matrix tab ──────────────────────────────────────────────────────────────
+function renderPrioMatrixTab(){
+  var content = document.getElementById('prioContent');
+  var actions = document.getElementById('prioTopActions');
+  var fwk = getActiveFramework();
+  var allFwks = getAllFrameworks();
+  actions.innerHTML = '<select class="prio-btn" style="padding:8px 30px 8px 14px" onchange="setActivePrioFramework(this.value)">' +
+    allFwks.map(function(f){ return '<option value="'+escHtml(f.id)+'"'+(f.id===fwk.id?' selected':'')+'>'+escHtml(f.name)+'</option>'; }).join('') + '</select>';
+
+  // Pick the first cost criterion as X (effort), and sum of value criteria as Y.
+  var costCrit = fwk.criteria.find(function(c){ return c.type === 'cost'; });
+  var valueCrits = fwk.criteria.filter(function(c){ return c.type === 'value'; });
+
+  if(!costCrit || !valueCrits.length){
+    content.innerHTML = '<div class="prio-empty"><h3>This framework can\'t be plotted</h3><p>Matrix view needs at least one <strong>value</strong> and one <strong>cost</strong> criterion. Switch to RICE, ICE, or Value vs Effort, or create a custom framework with both types.</p></div>';
+    return;
+  }
+
+  // Compute (x, y) for each row
+  var pts = [];
+  rows.forEach(function(r){
+    var s = (prioritizationData.scores || {})[r.id] || {};
+    var x = +s[costCrit.id];
+    if(!x || isNaN(x) || x <= 0) return;
+    var y = 0;
+    valueCrits.forEach(function(c){ y += (+s[c.id] || 0) * (c.weight || 1); });
+    if(y <= 0) return;
+    pts.push({ row: r, x: x, y: y });
+  });
+
+  if(!pts.length){
+    content.innerHTML = '<div class="prio-empty"><h3>Nothing to plot yet</h3><p>Score some initiatives on the <strong>Score</strong> tab and they\'ll show up here.</p></div>';
+    return;
+  }
+
+  // Determine plot bounds with a little padding
+  var maxX = Math.max.apply(null, pts.map(function(p){ return p.x; })) * 1.1;
+  var maxY = Math.max.apply(null, pts.map(function(p){ return p.y; })) * 1.1;
+  var W = 800, H = 540, PAD = 50;
+
+  // SVG
+  var svg = '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" font-family="Inter,sans-serif">';
+  // Quadrant backgrounds
+  svg += '<rect x="'+PAD+'" y="'+PAD+'" width="'+((W-PAD*2)/2)+'" height="'+((H-PAD*2)/2)+'" fill="rgba(16,185,129,.08)"/>';                       // top-left: Quick Wins (low effort, high value)
+  svg += '<rect x="'+(PAD+(W-PAD*2)/2)+'" y="'+PAD+'" width="'+((W-PAD*2)/2)+'" height="'+((H-PAD*2)/2)+'" fill="rgba(45,107,244,.08)"/>';        // top-right: Big Bets
+  svg += '<rect x="'+PAD+'" y="'+(PAD+(H-PAD*2)/2)+'" width="'+((W-PAD*2)/2)+'" height="'+((H-PAD*2)/2)+'" fill="rgba(148,163,184,.08)"/>';       // bottom-left: Fillers
+  svg += '<rect x="'+(PAD+(W-PAD*2)/2)+'" y="'+(PAD+(H-PAD*2)/2)+'" width="'+((W-PAD*2)/2)+'" height="'+((H-PAD*2)/2)+'" fill="rgba(220,38,38,.06)"/>'; // bottom-right: Money Pit
+  // Axes
+  svg += '<line x1="'+PAD+'" y1="'+(H-PAD)+'" x2="'+(W-PAD)+'" y2="'+(H-PAD)+'" stroke="#cbd5e1" stroke-width="1.5"/>';
+  svg += '<line x1="'+PAD+'" y1="'+PAD+'" x2="'+PAD+'" y2="'+(H-PAD)+'" stroke="#cbd5e1" stroke-width="1.5"/>';
+  // Mid lines
+  svg += '<line x1="'+(PAD+(W-PAD*2)/2)+'" y1="'+PAD+'" x2="'+(PAD+(W-PAD*2)/2)+'" y2="'+(H-PAD)+'" stroke="#e2e8f0" stroke-dasharray="4 4"/>';
+  svg += '<line x1="'+PAD+'" y1="'+(PAD+(H-PAD*2)/2)+'" x2="'+(W-PAD)+'" y2="'+(PAD+(H-PAD*2)/2)+'" stroke="#e2e8f0" stroke-dasharray="4 4"/>';
+  // Axis labels
+  svg += '<text x="'+(W/2)+'" y="'+(H-12)+'" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">'+escHtml(costCrit.name)+' \u2192 (cost)</text>';
+  svg += '<text x="14" y="'+(H/2)+'" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" transform="rotate(-90 14 '+(H/2)+')">Value (sum) \u2192</text>';
+  // Quadrant labels
+  svg += '<text x="'+(PAD+(W-PAD*2)/4)+'" y="'+(PAD+18)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#047857">QUICK WINS</text>';
+  svg += '<text x="'+(PAD+(W-PAD*2)*3/4)+'" y="'+(PAD+18)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#1d4ed8">BIG BETS</text>';
+  svg += '<text x="'+(PAD+(W-PAD*2)/4)+'" y="'+(H-PAD-8)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#64748b">FILLERS</text>';
+  svg += '<text x="'+(PAD+(W-PAD*2)*3/4)+'" y="'+(H-PAD-8)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#dc2626">MONEY PIT</text>';
+  // Bubbles
+  pts.forEach(function(p){
+    var px = PAD + (p.x / maxX) * (W - PAD*2);
+    var py = (H - PAD) - (p.y / maxY) * (H - PAD*2);
+    var sec = sections.find(function(s){ return s.id === p.row.sec; });
+    var color = sec ? sec.color : 'var(--accent)';
+    svg += '<circle cx="'+px+'" cy="'+py+'" r="9" fill="'+escHtml(color)+'" fill-opacity="0.85" stroke="#fff" stroke-width="2"/>';
+    svg += '<text x="'+(px+13)+'" y="'+(py+4)+'" font-size="10" font-weight="600" fill="#0f172a">'+escHtml((p.row.name||'').substring(0, 24))+'</text>';
+  });
+  svg += '</svg>';
+
+  content.innerHTML = '<div class="prio-matrix">' + svg + '</div>' +
+    '<div class="prio-matrix-legend">' +
+      '<div><strong style="color:#047857">Quick Wins</strong> \u2014 high value, low cost. Do these now.</div>' +
+      '<div><strong style="color:#1d4ed8">Big Bets</strong> \u2014 high value, high cost. Plan carefully.</div>' +
+      '<div><strong style="color:#64748b">Fillers</strong> \u2014 low value, low cost. Fill in the gaps.</div>' +
+      '<div><strong style="color:#dc2626">Money Pit</strong> \u2014 low value, high cost. Avoid or kill.</div>' +
+    '</div>';
+}
+
 var KPI_TEMPLATE = [
   {group:'Product Performance', color:'#1d4ed8', items:[
     {id:'kpi1', name:'Product Success Performance', description:'Closely monitor the performance of your product portfolio for product lifecycle tracking, performance tracking and stakeholder reporting. Report on wins, concerns, or identified performance challenges on a monthly basis.', tool:'BI Dashboards / Product Management', maxScore:4, evidenceType:'dashboard_link', cadence:'monthly'},
@@ -10854,7 +11675,7 @@ function toggleSidebar(){
 }
 
 function closeAllOverlays(){
-  ['g2mOverlay','todoOverlay','kpiOverlay','ucrOverlay','capOverlay','artOverlay','previewOverlay','reportsOverlay','insightsOverlay','adminOverlay'].forEach(function(id){
+  ['g2mOverlay','todoOverlay','kpiOverlay','ucrOverlay','capOverlay','artOverlay','previewOverlay','reportsOverlay','insightsOverlay','adminOverlay','prioritizationOverlay'].forEach(function(id){
     var el=document.getElementById(id);
     if(el) el.classList.remove('open');
   });
