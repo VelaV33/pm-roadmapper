@@ -390,6 +390,17 @@ verify_jwt = true
 verify_jwt = false
 [functions.reset-password]
 verify_jwt = false
+[functions.feedback-submit]
+verify_jwt = false
+[functions.feedback-vote]
+verify_jwt = false
+# feedback-list does its own JWT verification inside the function (via
+# verifyRequest in _shared/auth.ts). The gateway-level check is disabled
+# to avoid double-verification quirks that caused HTTP 401 "Invalid JWT"
+# at the gateway layer for this specific function. Function-level check
+# still catches anonymous calls.
+[functions.feedback-list]
+verify_jwt = false
 
 [analytics]
 enabled = true

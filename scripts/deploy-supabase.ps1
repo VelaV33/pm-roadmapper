@@ -15,9 +15,12 @@ $JwtFunctions = @(
     'competitive-analysis'
 )
 
-# These MUST be unauthenticated (signup / password recovery). They have
-# their own rate limiting and never reveal account existence.
-$NoJwtFunctions = @('create-user', 'reset-password')
+# Public OR self-verifying functions deployed without gateway JWT check.
+# - create-user / reset-password: public (no JWT possible)
+# - feedback-submit / feedback-vote: public (no JWT possible)
+# - feedback-list: gateway check disabled to avoid Invalid JWT quirk;
+#                  function still calls verifyRequest internally for security
+$NoJwtFunctions = @('create-user', 'reset-password', 'feedback-submit', 'feedback-vote', 'feedback-list')
 
 Write-Host '=============================================================='
 Write-Host ' 1/3  Pushing database migrations'
