@@ -19,7 +19,45 @@
   --r1:#ef4444;--r2:#f87171;
   --purple:#7c3aed;--light-blue-bg:#d6e3ff;
   --surface-low:#f3f3f4;--surface-high:#e8e8e9;--outline-var:#c1c6d6;
+  --toolbar-bg:rgba(249,249,250,.85);
+  --shadow-card:0 1px 3px rgba(0,0,0,.04);
 }
+/* Dark mode (v1.21.0) — global theme override applied to <body>. Most of the
+ * app uses var(--*) tokens, so flipping these makes the bulk of pages dark.
+ * Some pages still hard-code colours; we patch those with extra rules below. */
+body.dark-mode{
+  --navy:#e2e8f0;
+  --bg:#0f172a;
+  --white:#1e293b;
+  --border:#334155;
+  --text:#e2e8f0;
+  --muted:#94a3b8;
+  --surface-low:#1e293b;
+  --surface-high:#334155;
+  --outline-var:#475569;
+  --light-blue-bg:#1e3a8a;
+  --toolbar-bg:rgba(15,23,42,.92);
+  --shadow-card:0 1px 3px rgba(0,0,0,.4);
+  color-scheme:dark;
+}
+body.dark-mode .toolbar{background:var(--toolbar-bg)}
+body.dark-mode input,body.dark-mode select,body.dark-mode textarea{background:var(--white);color:var(--text);border-color:var(--border)}
+body.dark-mode input::placeholder,body.dark-mode textarea::placeholder{color:var(--muted)}
+body.dark-mode .modal,body.dark-mode .plan-modal{background:var(--white);color:var(--text)}
+body.dark-mode .modal-overlay,body.dark-mode .plan-modal-backdrop{background:rgba(0,0,0,.65)}
+body.dark-mode .plan-task-table th{background:#0f172a;color:var(--muted)}
+body.dark-mode .plan-task-table td{border-bottom-color:#1e293b}
+body.dark-mode .plan-task-table tr:hover td{background:#0f172a}
+body.dark-mode .plan-task-wrap{background:var(--white)}
+body.dark-mode .prio-btn{background:var(--white);color:var(--text);border-color:var(--border)}
+body.dark-mode .prio-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+body.dark-mode .plan-bulk-bar{background:#1e3a8a;border-color:#3b82f6;color:#dbeafe}
+body.dark-mode .plan-bulk-btn{background:#1e293b;color:#e2e8f0;border-color:#475569}
+body.dark-mode .pred-row:hover{background:#0f172a}
+body.dark-mode .plan-bulk-cb,body.dark-mode .plan-bulk-all{accent-color:#3b82f6}
+body.dark-mode hr{border-color:var(--border)}
+body.dark-mode .sidebar-item{color:var(--text)}
+body.dark-mode .sidebar-item:hover{background:#0f172a}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);min-height:100vh;color:var(--text);font-size:14px;line-height:1.6;letter-spacing:0}
 button,input,select,textarea{font-family:'Inter',system-ui,-apple-system,sans-serif;font-size:14px}
@@ -556,14 +594,114 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .plan-linked-chip button{background:none;border:none;color:#7c3aed;cursor:pointer;font-size:11px;padding:0;line-height:1}
 
 /* Task list spreadsheet */
-.plan-task-wrap{width:100%;overflow-x:auto;background:var(--white);border:1px solid var(--border);border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.plan-task-wrap{width:100%;overflow-x:auto;background:var(--white);border:1px solid var(--border);border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.04);overflow-anchor:none;scroll-behavior:auto}
+/* Hide native number-input spin buttons inside plan task cells so focusing the
+ * % cell doesn't shift the table layout (v1.21.0). The spin buttons added a few
+ * pixels on focus that bumped the parent wrap's content width. */
+.plan-task-table input[type=number].cell::-webkit-inner-spin-button,
+.plan-task-table input[type=number].cell::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.plan-task-table input[type=number].cell{-moz-appearance:textfield}
 .plan-task-table{border-collapse:separate;border-spacing:0;font-size:12px;table-layout:fixed}
 .plan-task-table th{background:#f8fafc;font-weight:700;color:var(--muted);padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;position:relative;overflow:hidden;text-overflow:ellipsis}
 .plan-task-table td{padding:6px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle;overflow:hidden}
 .plan-task-table tr:last-child td{border-bottom:none}
-.plan-task-table tr.milestone td{background:rgba(245,158,11,.05)}
+.plan-task-table tr.milestone td{background:rgba(245,158,11,.10);font-weight:600}
+.plan-task-table tr.milestone td:first-child{box-shadow:inset 4px 0 0 0 #f59e0b}
+.plan-task-table tr.milestone input.cell{font-weight:600;color:#92400e}
+body.dark-mode .plan-task-table tr.milestone td{background:rgba(245,158,11,.18)}
+body.dark-mode .plan-task-table tr.milestone input.cell{color:#fbbf24}
 .plan-task-table tr:hover td{background:#f8fafc}
 .plan-task-table tr.milestone:hover td{background:rgba(245,158,11,.1)}
+.plan-task-table tr.selected td{background:rgba(45,107,244,.08)}
+.plan-task-table tr.selected:hover td{background:rgba(45,107,244,.13)}
+/* Status-based row tints (v1.20.0). 'done' beats 'overdue' beats 'due-soon'. */
+.plan-task-table tr.task-done td{background:rgba(34,197,94,.10)}
+.plan-task-table tr.task-done:hover td{background:rgba(34,197,94,.16)}
+.plan-task-table tr.task-overdue td{background:rgba(239,68,68,.10)}
+.plan-task-table tr.task-overdue:hover td{background:rgba(239,68,68,.16)}
+.plan-task-table tr.task-due-soon td{background:rgba(249,115,22,.10)}
+.plan-task-table tr.task-due-soon:hover td{background:rgba(249,115,22,.16)}
+.plan-task-table tr.task-blocked td{background:rgba(148,163,184,.14)}
+.plan-task-table tr.task-blocked:hover td{background:rgba(148,163,184,.20)}
+/* Selected always wins so the user sees their selection */
+.plan-task-table tr.selected.task-done td,
+.plan-task-table tr.selected.task-overdue td,
+.plan-task-table tr.selected.task-due-soon td,
+.plan-task-table tr.selected.task-blocked td{background:rgba(45,107,244,.13)}
+.plan-task-table input.plan-bulk-cb,.plan-task-table input.plan-bulk-all{width:14px;height:14px;cursor:pointer;accent-color:var(--accent);margin:0}
+/* Bulk action bar — sticky pill above the task table when rows are selected */
+.plan-bulk-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#eef4ff;border:1px solid #c7dbff;border-radius:10px;margin-bottom:10px;font-size:12px;color:var(--navy);flex-wrap:wrap}
+.plan-bulk-count{font-weight:700;margin-right:6px}
+.plan-bulk-btn{padding:6px 14px;border-radius:9999px;border:1px solid var(--border);background:#fff;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:filter .12s}
+.plan-bulk-btn:hover{filter:brightness(.96)}
+.plan-bulk-btn.danger{background:#fff;border-color:#fecaca;color:#dc2626}
+.plan-bulk-btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+/* Predecessor picker rows (v1.20.0) — clean two-col layout */
+.pred-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer;font-size:13px;color:var(--text)}
+.pred-row:last-child{border-bottom:none}
+.pred-row:hover{background:#f8fafc}
+.pred-row input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:var(--accent);flex-shrink:0}
+.pred-row .pred-row-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pred-row .pred-row-dates{flex-shrink:0;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+/* Drag-and-drop reorder visuals (v1.21.0) */
+.plan-task-table tr.plan-task-row{cursor:grab}
+.plan-task-table tr.plan-task-row:active{cursor:grabbing}
+.plan-task-table tr.plan-task-row.dragging{opacity:.45}
+.plan-task-table tr.plan-task-row.drop-target-above td{box-shadow:inset 0 2px 0 0 var(--accent)}
+.plan-task-table tr.plan-task-row.drop-target-below td{box-shadow:inset 0 -2px 0 0 var(--accent)}
+/* WBS hierarchy (v1.22.0) */
+.plan-task-table tr.summary td{background:#f0f4ff;font-weight:700}
+.plan-task-table tr.summary:hover td{background:#e2e9fa}
+body.dark-mode .plan-task-table tr.summary td{background:#1e293b}
+body.dark-mode .plan-task-table tr.summary:hover td{background:#0f172a}
+.wbs-name-cell{display:flex;align-items:center;gap:6px;min-width:0}
+.wbs-name-cell input.summary-name{font-weight:700}
+.wbs-expand{background:transparent;border:none;cursor:pointer;color:var(--muted);font-size:10px;width:18px;flex-shrink:0;padding:0;line-height:1}
+.wbs-expand:hover{color:var(--accent)}
+.wbs-expand-spacer{display:inline-block;width:18px;flex-shrink:0}
+/* Kebab menu button (v1.23.0) */
+.task-kebab-btn{background:transparent;border:none;color:var(--muted);font-size:18px;line-height:1;cursor:pointer;width:26px;height:26px;border-radius:6px;font-family:inherit;padding:0}
+.task-kebab-btn:hover{background:#f1f5f9;color:var(--accent)}
+body.dark-mode .task-kebab-btn:hover{background:#0f172a}
+/* Kanban view (v1.23.0) */
+.plan-kanban{display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:14px;align-items:start}
+.kanban-col{background:#f8fafc;border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;flex-direction:column;min-height:260px;transition:background .15s,border-color .15s}
+.kanban-col.drop-target{background:#eef4ff;border-color:var(--accent)}
+body.dark-mode .kanban-col{background:#0f172a;border-color:#334155}
+body.dark-mode .kanban-col.drop-target{background:#1e3a8a;border-color:#3b82f6}
+.kanban-col-hdr{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text);padding:4px 6px 12px;display:flex;align-items:center}
+.kanban-col-count{margin-left:auto;font-size:10px;color:var(--muted);background:var(--white);padding:2px 9px;border-radius:9999px;border:1px solid var(--border)}
+.kanban-col-body{display:flex;flex-direction:column;gap:8px;flex:1}
+.kanban-empty{text-align:center;font-size:11px;color:var(--muted);font-style:italic;padding:18px 6px;border:1px dashed var(--border);border-radius:10px}
+.kanban-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:12px;cursor:grab;box-shadow:0 1px 3px rgba(0,0,0,.05);transition:box-shadow .15s,transform .1s}
+.kanban-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.08);transform:translateY(-1px)}
+.kanban-card:active{cursor:grabbing}
+.kanban-card.dragging{opacity:.45}
+.kanban-card.task-done{border-left:3px solid #16a34a}
+.kanban-card.task-overdue{border-left:3px solid #ef4444}
+.kanban-card.task-due-soon{border-left:3px solid #f97316}
+.kanban-card.task-blocked{border-left:3px solid #94a3b8}
+.kanban-card.milestone{border-left:3px solid #f59e0b;background:rgba(245,158,11,.05)}
+.kanban-card-title{font-size:13px;font-weight:600;color:var(--text);line-height:1.4;display:flex;align-items:center}
+.kanban-owner-chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);max-width:100%;overflow:hidden}
+.kanban-due{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)}
+.kanban-pct-bar{height:4px;background:#f1f5f9;border-radius:9999px;overflow:hidden;margin-top:8px}
+.kanban-pct-fill{height:100%;background:var(--accent);border-radius:9999px}
+body.dark-mode .kanban-card{background:#1e293b;border-color:#334155}
+body.dark-mode .kanban-pct-bar{background:#0f172a}
+body.dark-mode .kanban-col-count{background:#1e293b}
+/* Owner picker rows (v1.23.0) */
+.owner-pick-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer;font-size:13px;color:var(--text)}
+.owner-pick-row:last-child{border-bottom:none}
+.owner-pick-row:hover{background:#f8fafc}
+.owner-pick-row.selected{background:rgba(45,107,244,.06)}
+.owner-pick-avatar{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;flex-shrink:0}
+body.dark-mode .owner-pick-row:hover{background:#0f172a}
+/* Inline owner button used in the plan list view (v1.23.0) */
+.owner-pick-btn{display:inline-flex;align-items:center;gap:6px;width:100%;padding:5px 8px;background:transparent;border:1px dashed var(--border);color:var(--text);font-size:12px;font-family:inherit;border-radius:6px;cursor:pointer;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.owner-pick-btn:hover{border-color:var(--accent);background:rgba(45,107,244,.04)}
+.owner-pick-btn .owner-pick-pill{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font-size:9px;font-weight:700;flex-shrink:0}
+.owner-pick-btn.unassigned{color:var(--muted);font-style:italic}
 .plan-task-table input.cell, .plan-task-table select.cell{width:100%;min-width:0;border:1px solid transparent;background:transparent;padding:5px 7px;font-size:12px;font-family:inherit;border-radius:4px;color:var(--text);text-overflow:ellipsis}
 .plan-task-table input.cell:focus, .plan-task-table select.cell:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 2px rgba(45,107,244,.15)}
 /* Cells that contain a flex layout (e.g. source pill + task name) — let the flex child shrink */
@@ -589,8 +727,9 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .plan-task-table .pred-cell{font-size:10px;color:var(--muted);max-width:140px;overflow:hidden}
 .plan-task-table .delete-task-btn{background:none;border:none;color:#cbd5e1;cursor:pointer;font-size:14px;padding:4px}
 .plan-task-table .delete-task-btn:hover{color:#dc2626}
-.plan-task-table .ms-btn{background:none;border:none;cursor:pointer;font-size:14px;padding:4px;color:#cbd5e1}
-.plan-task-table .ms-btn.active{color:#f59e0b}
+.plan-task-table .ms-btn{background:none;border:none;cursor:pointer;font-size:14px;padding:4px;color:#cbd5e1;transition:color .15s,transform .1s}
+.plan-task-table .ms-btn:hover{color:#f59e0b;transform:scale(1.15)}
+.plan-task-table .ms-btn.active{color:#f59e0b;font-size:16px;text-shadow:0 0 6px rgba(245,158,11,.4)}
 
 /* Add task modal */
 .plan-modal-backdrop{position:fixed;inset:0;background:rgba(15,27,61,.55);z-index:9000;display:flex;align-items:center;justify-content:center}
@@ -1479,6 +1618,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
         <label style="font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.08em">Status & Tracking</label>
       </div>
       <div id="modalG2MLink"></div>
+      <div id="modalPlansLink"></div>
       <div id="modalTodoLink"></div>
       <div id="modalTodoOutstanding"></div>
     </div>
@@ -1802,8 +1942,11 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
           <div style="display:flex;background:#f1f5f9;border-radius:9999px;padding:3px">
             <button id="planViewListBtn" class="plan-view-toggle active" onclick="setPlanView('list')">List</button>
             <button id="planViewGanttBtn" class="plan-view-toggle" onclick="setPlanView('gantt')">Gantt</button>
+            <button id="planViewKanbanBtn" class="plan-view-toggle" onclick="setPlanView('kanban')">Kanban</button>
           </div>
+          <button id="planColorsToggleBtn" class="prio-btn" onclick="togglePlanStatusColors()" title="Toggle status row colours (done / due-soon / overdue)" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>Colours</button>
           <button class="prio-btn" onclick="openExcelImportPicker()" title="Import tasks from an Excel file (MS Project, MS Planner, Asana, Jira, ClickUp, etc.)" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M9 17v-2a4 4 0 014-4h4M9 17l3-3m-3 3l-3-3m12 6V7a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2h6"/></svg>Upload Excel</button>
+          <button class="prio-btn" onclick="saveCurrentPlanAsTemplate()" title="Save this plan's structure as a reusable template" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M5 5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V5z M14 3v5h5 M9 13h6 M9 17h4"/></svg>Save as template</button>
           <button class="prio-btn primary" onclick="openAddTaskModal()">+ Add task</button>
         </div>
       </div>
@@ -2858,7 +3001,7 @@ function openEditModal(rowId){
   renderDeliverablesForm(row.deliverables||[]);
   renderLinksForm(row.links||[]);
   renderAttachmentsForm(row.attachments||[]);
-  renderModalIntegration(row.name);
+  renderModalIntegration(row.name, row.id);
   document.getElementById('rowModal').classList.remove('hidden');
   addVoiceToRowModal();
 }
@@ -4586,10 +4729,15 @@ var _userRole = 'product_manager'; // default role: 'manager', 'product_manager'
 
 function canEdit(feature){
   // feature: 'roadmap','g2m','todo','kpi','timesheet','ucr','capacity','roles'
+  // v1.24.0: 5 roles. Super admin and manager unlock everything; viewer is
+  // strictly read-only across the whole app.
+  if(_userRole==='super_admin') return true;
   if(_userRole==='manager') return true;
   if(_userRole==='product_manager') return feature!=='roles';
   if(_userRole==='developer') return feature==='todo'||feature==='capacity';
-  return false; // read_only
+  if(_userRole==='viewer' || _userRole==='read_only') return false;
+  // Unknown role — be conservative and allow basic editing
+  return feature !== 'roles';
 }
 function canView(feature){
   // Everyone can view everything
@@ -4598,9 +4746,17 @@ function canView(feature){
 function isManager(){return _userRole==='manager';}
 
 function getRoleBadgeHtml(role){
-  var labels={manager:'Manager',product_manager:'Product Manager',developer:'Developer',read_only:'Read Only'};
-  return '<span class="role-badge '+(role||'read_only')+'">'+(labels[role]||'Unknown')+'</span>';
+  var labels={super_admin:'Super Admin',manager:'Manager',product_manager:'Product Manager',developer:'Developer',viewer:'Viewer',read_only:'Read Only'};
+  return '<span class="role-badge '+(role||'viewer')+'">'+(labels[role]||'Unknown')+'</span>';
 }
+// v1.24.0: human-readable role labels (used by the admin panel dropdown)
+var ROLE_OPTIONS = [
+  { value:'super_admin',     label:'Super Admin',     desc:'Full access + role + team management' },
+  { value:'manager',         label:'Manager',         desc:'Full edit access across the platform' },
+  { value:'product_manager', label:'Product Manager', desc:'Full edit access except role management' },
+  { value:'developer',       label:'Developer',       desc:'Edit ToDo and CapacityIQ; read-only elsewhere' },
+  { value:'viewer',          label:'Viewer (read only)', desc:'View everything, edit nothing' }
+];
 
 function applyRBAC(){
   // Apply read-only state to toolbar buttons and overlays based on role
@@ -5350,11 +5506,12 @@ function applyDataPayload(d){
     taskLibrary = d.taskLibrary;
     _taskLibrarySeeded = !!d.taskLibrarySeeded;
   }
+  if(Array.isArray(d.planTemplates)) planTemplates = d.planTemplates;
   var aTab=tabs_data.find(function(t){return t.id===activeTabId&&!t.stacked;});
   if(aTab&&aTab.sections){sections=aTab.sections;rows=aTab.rows;if(aTab.quarters)quarters=aTab.quarters;}
 }
 function buildDataPayload(){
-  return {sections:sections,rows:rows,quarters:quarters,tabs_data:tabs_data,activeTabId:activeTabId,g2mData:g2mAllData,todoData:todoAllData,kpiData:kpiAllData,timesheetData:timesheetData,ucrData:ucrAllData,artifactsData:artifactsData,brandGuideData:brandGuideData,artTemplates:artTemplates,capData:capData,prioritization:prioritizationData,roadmapSortBy:_roadmapSortBy,projectPlans:projectPlans,okrs:okrsData,roadmapView:_roadmapView,taskLibrary:taskLibrary,taskLibrarySeeded:_taskLibrarySeeded};
+  return {sections:sections,rows:rows,quarters:quarters,tabs_data:tabs_data,activeTabId:activeTabId,g2mData:g2mAllData,todoData:todoAllData,kpiData:kpiAllData,timesheetData:timesheetData,ucrData:ucrAllData,artifactsData:artifactsData,brandGuideData:brandGuideData,artTemplates:artTemplates,capData:capData,prioritization:prioritizationData,roadmapSortBy:_roadmapSortBy,projectPlans:projectPlans,planTemplates:planTemplates,okrs:okrsData,roadmapView:_roadmapView,taskLibrary:taskLibrary,taskLibrarySeeded:_taskLibrarySeeded};
 }
 
 // ── CLOUD SYNC ────────────────────────────────────────────────────────────────
@@ -5448,6 +5605,7 @@ async function pushCloudData(){
       prioritization: prioritizationData,
       roadmapSortBy: _roadmapSortBy,
       projectPlans: projectPlans,
+      planTemplates: planTemplates,
       okrs: okrsData,
       roadmapView: _roadmapView,
       taskLibrary: taskLibrary,
@@ -5615,6 +5773,11 @@ function loadProfileSettings(userId){
     if(r) _userRole = r;
   } catch(e){
     userProfile={name:'',title:'',org:'',email:'',avatarUrl:''};
+  }
+  // v1.24.0: server-assigned role in app_metadata.role wins over the local
+  // pmr_role cache. This is what super admins set centrally.
+  if(_currentUser && _currentUser.app_metadata && _currentUser.app_metadata.role){
+    _userRole = _currentUser.app_metadata.role;
   }
   applyProfileToUI();
   updateRoleBadge();
@@ -5888,6 +6051,35 @@ function openProfile(){
           alert('Password reset email sent to '+email);
         });
       } else { alert('Auth not configured — update password in Supabase dashboard.'); }
+    }
+  ));
+
+  // Notification preferences (per-type in-app + email toggles)
+  // Bell icon
+  actionSec.appendChild(actionRow(
+    'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9',
+    'Notification preferences','Choose which assignments and mentions notify you, and how',
+    'Configure','default',
+    function(){
+      ov.remove();
+      openNotificationPrefsModal();
+    }
+  ));
+
+  // Dark mode toggle (v1.21.0). Moon/sun icon — flips on click.
+  var _isDark = isDarkMode();
+  actionSec.appendChild(actionRow(
+    _isDark
+      ? 'M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z'
+      : 'M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z',
+    'Dark mode',
+    _isDark ? 'Currently on \u2014 click to switch to light theme' : 'Currently off \u2014 click to switch to dark theme',
+    _isDark ? 'Turn off' : 'Turn on',
+    'default',
+    function(){
+      toggleDarkMode();
+      ov.remove();
+      openProfile();  // re-open with the icon/copy/state refreshed
     }
   ));
 
@@ -9296,6 +9488,7 @@ function openG2M(){
   renderG2MTabs();
   loadG2MProductDesc();
   renderG2M();
+  updateNavActive('Checklist');
 }
 
 function renderG2MTabs(){
@@ -10930,10 +11123,38 @@ function g2mToTdl(product,idx){
 }
 
 // ── MODAL INTEGRATION (G2M + ToDo in Row Edit) ──
-function renderModalIntegration(rowName){
+function renderModalIntegration(rowName, rowId){
   var sec=document.getElementById('modalIntegrationSection');
   sec.style.display='block';
   var escapedName=rowName.replace(/'/g,"\\'");
+
+  // Linked project plans (v1.21.0)
+  var plansDiv=document.getElementById('modalPlansLink');
+  if(plansDiv){
+    var linked=(projectPlans||[]).filter(function(p){ return (p.linkedRowIds||[]).indexOf(rowId) !== -1; });
+    if(linked.length){
+      var html='';
+      linked.forEach(function(p){
+        var taskTotal=(p.tasks||[]).length;
+        var done=(p.tasks||[]).filter(function(t){ return t.status === 'done' || t.percentComplete === 100; }).length;
+        var pct=taskTotal ? Math.round(done/taskTotal*100) : 0;
+        var bc=pct>=80?'#16a34a':pct>=50?'#f59e0b':'#dc2626';
+        html += '<div class="modal-integration-card" onclick="closeModal();openPlanFromRow(\''+p.id.replace(/\'/g,"\\'")+'\')">'+
+          '<svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:var(--accent);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>'+
+          '<div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--navy)">'+escHtml(p.name||'Untitled plan')+'</div><div style="font-size:10px;color:var(--muted)">'+done+'/'+taskTotal+' tasks done \u00B7 click to open project plan</div></div>'+
+          '<span style="font-size:18px;font-weight:900;color:'+bc+'">'+pct+'%</span>'+
+        '</div>';
+      });
+      plansDiv.innerHTML = html;
+    } else {
+      // Empty state with a "create plan and link this row" CTA
+      plansDiv.innerHTML = '<div class="modal-integration-card" onclick="closeModal();_createPlanForRow(\''+(rowId||'').replace(/\'/g,"\\'")+'\',\''+escapedName+'\')">'+
+        '<svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:var(--accent);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>'+
+        '<div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--navy)">Project plan</div><div style="font-size:10px;color:var(--muted)">No plan linked yet \u2014 click to create one</div></div>'+
+        '<span style="font-size:11px;color:var(--accent);font-weight:700">Create &rarr;</span>'+
+      '</div>';
+    }
+  }
 
   // G2M readiness
   var g2mDiv=document.getElementById('modalG2MLink');
@@ -11208,8 +11429,47 @@ var _roadmapView = 'timeline'; // 'timeline' | 'kanban'
 //   ]
 
 var projectPlans = [];
+// Plan templates (v1.19.0) — reusable plan structures saved by the user.
+// Each template is { id, name, description, savedAt, tasks: [{name, owner, durationDays,
+//   isMilestone, status, percentComplete, source, predecessorRefs:[localTplIdx], offsetDays}] }
+// Tasks store offsetDays (days from the template's earliest task start) and a
+// localTplIdx-based predecessor list, so instantiation can rebase to any
+// chosen start date and remap predecessors to the freshly-minted task IDs.
+var planTemplates = [];
 var _activePlanId = null;
 var _planView = 'list';  // 'list' | 'gantt'
+// Bulk-select state for the plan list view (v1.18.0). Reset whenever the
+// active plan changes; stale ids are also dropped each render.
+var _planSelectedTaskIds = [];
+// Status row tints toggle (v1.21.0). Persisted in localStorage so the user's
+// choice survives reloads. Default ON.
+var _planStatusColorsEnabled = (function(){
+  try { return localStorage.getItem('pm_status_colors') !== '0'; } catch(e){ return true; }
+})();
+function togglePlanStatusColors(){
+  _planStatusColorsEnabled = !_planStatusColorsEnabled;
+  try { localStorage.setItem('pm_status_colors', _planStatusColorsEnabled ? '1' : '0'); } catch(e){}
+  renderPlanMain();
+}
+
+// Dark mode (v1.21.0). Persisted in localStorage. The class lives on <body>
+// so the CSS variable overrides cascade to everything. Apply on load BEFORE
+// the page renders to avoid a flash of light theme.
+function isDarkMode(){
+  try { return localStorage.getItem('pm_dark_mode') === '1'; } catch(e){ return false; }
+}
+function applyDarkMode(){
+  if(isDarkMode()) document.body.classList.add('dark-mode');
+  else document.body.classList.remove('dark-mode');
+}
+function toggleDarkMode(){
+  var next = !isDarkMode();
+  try { localStorage.setItem('pm_dark_mode', next ? '1' : '0'); } catch(e){}
+  applyDarkMode();
+}
+// Apply immediately on script load (body already exists at this point because
+// this script is at the end of <body>).
+try { applyDarkMode(); } catch(e){}
 var _addTaskModalOpen = false;
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -11621,6 +11881,133 @@ function getKnownOwners(){
 // Owner autocomplete — same pattern as the library autocomplete but pulls
 // from getKnownOwners(). Free-text entry still works (just type a new name
 // and click away).
+// ── Owner picker modal (v1.23.0) ────────────────────────────────────────────
+// Replaces the freeform owner input with a click-to-pick modal restricted to
+// known users (registered + contacts). Also has a "+ Add new contact" path so
+// the user can grow the contact list inline without leaving the plan view.
+//
+// Opts:
+//   currentOwner — the currently-assigned owner string (used to highlight)
+//   onPick(name) — called with the picked name, or '' to clear
+// Convenience: open the owner picker for a specific plan task and write the
+// chosen value back, triggering rollups + notification + persist.
+function openOwnerPickerForTask(taskId){
+  var p = getActivePlan(); if(!p) return;
+  var t = getTaskById(p, taskId); if(!t) return;
+  openOwnerPickerModal({
+    currentOwner: t.owner || '',
+    onPick: function(newOwner){
+      onTaskFieldChange(taskId, 'owner', newOwner);
+    }
+  });
+}
+
+function openOwnerPickerModal(opts){
+  opts = opts || {};
+  var ex = document.getElementById('ownerPickerModal'); if(ex) ex.remove();
+  // Refresh sources lazily
+  if(Date.now() - _systemUsersCacheAt > 5 * 60 * 1000){ refreshSystemUsersCache(); }
+
+  var owners = getKnownOwners();
+  var currentOwner = opts.currentOwner || '';
+
+  var ov = document.createElement('div');
+  ov.id = 'ownerPickerModal'; ov.className = 'modal-overlay';
+  ov.style.zIndex = '6000';
+
+  var modal = document.createElement('div'); modal.className = 'modal';
+  modal.style.cssText = 'width:480px;max-width:92vw;max-height:80vh;display:flex;flex-direction:column;overflow:hidden';
+
+  var hdr = document.createElement('div'); hdr.className = 'modal-hdr';
+  var h2 = document.createElement('h2'); h2.textContent = 'Assign owner'; hdr.appendChild(h2);
+  var cx = document.createElement('button'); cx.className = 'close'; cx.innerHTML = '\u2715';
+  cx.onclick = function(){ ov.remove(); };
+  hdr.appendChild(cx);
+  modal.appendChild(hdr);
+
+  var body = document.createElement('div'); body.className = 'modal-body';
+  body.style.cssText = 'padding:18px 22px;overflow-y:auto;flex:1';
+
+  var msg = document.createElement('div');
+  msg.style.cssText = 'font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:14px';
+  msg.textContent = 'Pick from registered users and contacts. To add a new person, click + Add new contact at the bottom.';
+  body.appendChild(msg);
+
+  var search = document.createElement('input');
+  search.type = 'text'; search.placeholder = 'Search by name or email\u2026';
+  search.style.cssText = 'width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:9999px;font-size:13px;font-family:inherit;outline:none;margin-bottom:12px;box-sizing:border-box';
+  body.appendChild(search);
+
+  var list = document.createElement('div');
+  list.style.cssText = 'border:1px solid var(--border);border-radius:10px;background:var(--white);max-height:340px;overflow-y:auto';
+  body.appendChild(list);
+
+  function renderList(query){
+    list.innerHTML = '';
+    var q = (query || '').toLowerCase().trim();
+    var filtered = q ? owners.filter(function(o){ return o.toLowerCase().indexOf(q) !== -1; }) : owners;
+
+    // Always offer "Clear owner" at the top
+    var clearItem = document.createElement('div');
+    clearItem.className = 'owner-pick-row';
+    clearItem.innerHTML = '<span class="owner-pick-avatar" style="background:#f1f5f9;color:var(--muted)">\u2014</span><span style="flex:1;color:var(--muted);font-style:italic">Clear owner (unassigned)</span>';
+    clearItem.onclick = function(){ ov.remove(); if(opts.onPick) opts.onPick(''); };
+    list.appendChild(clearItem);
+
+    if(!filtered.length){
+      var empty = document.createElement('div');
+      empty.style.cssText = 'padding:24px 16px;text-align:center;font-size:12px;color:var(--muted)';
+      empty.textContent = q ? 'No matches. Click + Add new contact below to add this person.' : 'No registered users or contacts yet.';
+      list.appendChild(empty);
+    } else {
+      filtered.forEach(function(name){
+        var initial = (name[0] || '?').toUpperCase();
+        var row = document.createElement('div');
+        row.className = 'owner-pick-row' + (name === currentOwner ? ' selected' : '');
+        row.innerHTML = '<span class="owner-pick-avatar">' + escHtml(initial) + '</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(name) + '</span>' + (name === currentOwner ? '<span style="font-size:11px;color:var(--accent);font-weight:700">\u2713</span>' : '');
+        row.onclick = function(){ ov.remove(); if(opts.onPick) opts.onPick(name); };
+        list.appendChild(row);
+      });
+    }
+  }
+  renderList('');
+  search.addEventListener('input', function(){ renderList(search.value); });
+
+  // "+ Add new contact" CTA at the bottom — opens the existing contact modal,
+  // and when the user saves it we re-pull owners and pre-select the new one.
+  var addBtn = document.createElement('button');
+  addBtn.style.cssText = 'margin-top:14px;width:100%;padding:11px 16px;border-radius:9999px;border:1px dashed var(--accent);background:transparent;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit';
+  addBtn.textContent = '+ Add new contact';
+  addBtn.onclick = function(){
+    ov.remove();
+    // Open the contact modal with a callback that re-opens the owner picker
+    // and auto-selects the freshly-added contact.
+    _openAddContactWithCallback(function(newContact){
+      if(newContact && (newContact.name || newContact.email)){
+        var newName = newContact.name || newContact.email;
+        if(opts.onPick) opts.onPick(newName);
+      } else {
+        openOwnerPickerModal(opts);  // re-open if cancelled
+      }
+    });
+  };
+  body.appendChild(addBtn);
+
+  modal.appendChild(body);
+  ov.appendChild(modal);
+  document.body.appendChild(ov);
+  setTimeout(function(){ try { search.focus(); } catch(e){} }, 30);
+}
+
+// Wrapper that opens the existing add-contact modal with a callback that runs
+// when the contact is successfully saved. We pass the callback through a
+// global because the existing saveContact() function isn't callback-aware.
+var _afterContactSavedCallback = null;
+function _openAddContactWithCallback(cb){
+  _afterContactSavedCallback = cb;
+  openAddContactModal();
+}
+
 function attachOwnerAutocomplete(input){
   if(!input || input._ownerAutocomplete) return;
   input._ownerAutocomplete = true;
@@ -11788,6 +12175,7 @@ function getActivePlan(){
 
 function setActivePlan(id){
   _activePlanId = id;
+  _planSelectedTaskIds = [];  // bulk-select state is per-plan
   var p = getActivePlan();
   if(p && p.activeView) _planView = p.activeView;
   renderPlansOverlay();
@@ -11844,6 +12232,334 @@ function clonePlan(id){
   renderPlansOverlay();
 }
 
+// ── Modal prompt helper (v1.20.0) ───────────────────────────────────────────
+// Native window.prompt() returns null silently in Electron, so anywhere the
+// renderer needs a value from the user we have to build a real modal. This is
+// a tiny shared helper used by saveAsTemplate, bulk ops, etc.
+//
+// openInputModal({title, message, defaultValue, placeholder, multiline, type, onOk})
+//   - onOk receives the trimmed string the user entered, or never fires on cancel
+//   - type: 'text' | 'date' | 'select' (with `options` array of {value,label})
+//   - multiline: true → textarea instead of input
+//
+// openMultiInputModal({title, fields:[{key,label,placeholder,defaultValue,multiline,required}], onOk})
+//   - onOk receives a {key:value, ...} map
+function openInputModal(opts){
+  var ex = document.getElementById('genericInputModal'); if(ex) ex.remove();
+  var ov = document.createElement('div');
+  ov.id = 'genericInputModal'; ov.className = 'modal-overlay';
+  ov.style.zIndex = '6000';
+  var modal = document.createElement('div'); modal.className = 'modal';
+  modal.style.cssText = 'width:440px;max-width:92vw';
+
+  var hdr = document.createElement('div'); hdr.className = 'modal-hdr';
+  var h2 = document.createElement('h2'); h2.textContent = opts.title || 'Input'; hdr.appendChild(h2);
+  var cx = document.createElement('button'); cx.className = 'close'; cx.innerHTML = '\u2715';
+  cx.onclick = function(){ ov.remove(); }; hdr.appendChild(cx);
+  modal.appendChild(hdr);
+
+  var body = document.createElement('div'); body.className = 'modal-body';
+  body.style.cssText = 'padding:22px';
+
+  if(opts.message){
+    var msg = document.createElement('div');
+    msg.style.cssText = 'font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:14px;white-space:pre-wrap';
+    msg.textContent = opts.message; body.appendChild(msg);
+  }
+
+  var input;
+  if(opts.type === 'select'){
+    input = document.createElement('select');
+    (opts.options || []).forEach(function(o){
+      var opt = document.createElement('option');
+      opt.value = o.value; opt.textContent = o.label || o.value;
+      if(o.value === opts.defaultValue) opt.selected = true;
+      input.appendChild(opt);
+    });
+  } else if(opts.multiline){
+    input = document.createElement('textarea');
+    input.rows = 4;
+  } else {
+    input = document.createElement('input');
+    input.type = opts.type || 'text';
+  }
+  input.style.cssText = 'width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);outline:none;font-family:inherit;box-sizing:border-box;resize:vertical';
+  if(opts.placeholder) input.placeholder = opts.placeholder;
+  if(opts.defaultValue != null && opts.type !== 'select') input.value = opts.defaultValue;
+  body.appendChild(input);
+  modal.appendChild(body);
+
+  var ftr = document.createElement('div');
+  ftr.style.cssText = 'padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:#f8fafc';
+  var cancelBtn = document.createElement('button');
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.style.cssText = 'padding:8px 18px;border-radius:9999px;font-size:11px;font-weight:700;cursor:pointer;background:#fff;border:1px solid var(--border);color:var(--text)';
+  cancelBtn.onclick = function(){ ov.remove(); };
+  var okBtn = document.createElement('button');
+  okBtn.textContent = opts.okLabel || 'OK';
+  okBtn.style.cssText = 'padding:8px 18px;border-radius:9999px;font-size:11px;font-weight:700;cursor:pointer;background:var(--accent);border:1px solid var(--accent);color:#fff';
+  okBtn.onclick = function(){
+    var v = (input.value != null ? String(input.value).trim() : '');
+    ov.remove();
+    if(opts.onOk) opts.onOk(v);
+  };
+  // Enter submits (except in textareas where Enter inserts newlines)
+  if(!opts.multiline){
+    input.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){ e.preventDefault(); okBtn.click(); }
+      else if(e.key === 'Escape'){ e.preventDefault(); ov.remove(); }
+    });
+  }
+  ftr.appendChild(cancelBtn); ftr.appendChild(okBtn);
+  modal.appendChild(ftr);
+  ov.appendChild(modal); document.body.appendChild(ov);
+  setTimeout(function(){ try { input.focus(); if(input.select) input.select(); } catch(e){} }, 30);
+}
+
+function openMultiInputModal(opts){
+  var ex = document.getElementById('genericInputModal'); if(ex) ex.remove();
+  var ov = document.createElement('div');
+  ov.id = 'genericInputModal'; ov.className = 'modal-overlay';
+  ov.style.zIndex = '6000';
+  var modal = document.createElement('div'); modal.className = 'modal';
+  modal.style.cssText = 'width:480px;max-width:92vw;max-height:92vh;display:flex;flex-direction:column;overflow:hidden';
+
+  var hdr = document.createElement('div'); hdr.className = 'modal-hdr';
+  var h2 = document.createElement('h2'); h2.textContent = opts.title || 'Input'; hdr.appendChild(h2);
+  var cx = document.createElement('button'); cx.className = 'close'; cx.innerHTML = '\u2715';
+  cx.onclick = function(){ ov.remove(); }; hdr.appendChild(cx);
+  modal.appendChild(hdr);
+
+  var body = document.createElement('div'); body.className = 'modal-body';
+  body.style.cssText = 'padding:22px;overflow-y:auto;flex:1';
+
+  if(opts.message){
+    var msg = document.createElement('div');
+    msg.style.cssText = 'font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:14px';
+    msg.textContent = opts.message; body.appendChild(msg);
+  }
+
+  var inputs = {};
+  (opts.fields || []).forEach(function(f){
+    var row = document.createElement('div'); row.style.cssText = 'margin-bottom:14px';
+    var lbl = document.createElement('label');
+    lbl.style.cssText = 'display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px';
+    lbl.textContent = f.label + (f.required ? ' *' : '');
+    row.appendChild(lbl);
+    var inp;
+    if(f.type === 'select'){
+      inp = document.createElement('select');
+      (f.options || []).forEach(function(o){
+        var opt = document.createElement('option');
+        opt.value = o.value; opt.textContent = o.label || o.value;
+        if(o.value === f.defaultValue) opt.selected = true;
+        inp.appendChild(opt);
+      });
+    } else if(f.multiline){
+      inp = document.createElement('textarea'); inp.rows = 3;
+    } else {
+      inp = document.createElement('input'); inp.type = f.type || 'text';
+    }
+    inp.style.cssText = 'width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-size:13px;color:var(--text);outline:none;font-family:inherit;box-sizing:border-box;resize:vertical';
+    if(f.placeholder) inp.placeholder = f.placeholder;
+    if(f.defaultValue != null && f.type !== 'select') inp.value = f.defaultValue;
+    row.appendChild(inp);
+    body.appendChild(row);
+    inputs[f.key] = inp;
+  });
+  modal.appendChild(body);
+
+  var ftr = document.createElement('div');
+  ftr.style.cssText = 'padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:#f8fafc';
+  var cancelBtn = document.createElement('button'); cancelBtn.textContent = 'Cancel';
+  cancelBtn.style.cssText = 'padding:8px 18px;border-radius:9999px;font-size:11px;font-weight:700;cursor:pointer;background:#fff;border:1px solid var(--border);color:var(--text)';
+  cancelBtn.onclick = function(){ ov.remove(); };
+  var okBtn = document.createElement('button'); okBtn.textContent = opts.okLabel || 'Save';
+  okBtn.style.cssText = 'padding:8px 18px;border-radius:9999px;font-size:11px;font-weight:700;cursor:pointer;background:var(--accent);border:1px solid var(--accent);color:#fff';
+  okBtn.onclick = function(){
+    var values = {};
+    var missing = null;
+    (opts.fields || []).forEach(function(f){
+      var v = (inputs[f.key].value != null ? String(inputs[f.key].value).trim() : '');
+      values[f.key] = v;
+      if(f.required && !v && !missing) missing = f.label;
+    });
+    if(missing){ alert(missing + ' is required.'); return; }
+    ov.remove();
+    if(opts.onOk) opts.onOk(values);
+  };
+  ftr.appendChild(cancelBtn); ftr.appendChild(okBtn);
+  modal.appendChild(ftr);
+  ov.appendChild(modal); document.body.appendChild(ov);
+  setTimeout(function(){
+    var first = (opts.fields || [])[0];
+    if(first && inputs[first.key]) try { inputs[first.key].focus(); } catch(e){}
+  }, 30);
+}
+
+// ── Plan templates (v1.19.0) ────────────────────────────────────────────────
+// Snapshot the active plan into a reusable template. Strips dates / IDs /
+// owners that don't make sense across re-uses, but keeps the relative offset
+// of each task from the earliest start so we can rebase to any chosen date
+// at instantiation time. Predecessors are stored as integer indices into the
+// template's own tasks array (not opaque IDs).
+function saveCurrentPlanAsTemplate(){
+  var p = getActivePlan();
+  if(!p){ alert('No plan selected.'); return; }
+  if(!p.tasks || !p.tasks.length){ alert('This plan has no tasks yet — add some first.'); return; }
+  openMultiInputModal({
+    title: 'Save plan as template',
+    message: 'This plan\u2019s structure (tasks, durations, predecessors, milestones) will be saved as a reusable template. Owners and dates are reset on each use.',
+    fields: [
+      { key:'name', label:'Template name', defaultValue:(p.name || 'Untitled') + ' template', required:true, placeholder:'e.g. New product launch playbook' },
+      { key:'description', label:'Description', defaultValue:p.description || '', multiline:true, placeholder:'When should someone use this template?' }
+    ],
+    okLabel: 'Save template',
+    onOk: function(values){
+      _finalizeSaveAsTemplate(p, values.name, values.description || '');
+    }
+  });
+}
+
+function _finalizeSaveAsTemplate(p, name, description){
+  // Build a stable index map from task id -> position in original task array
+  var idxMap = {};
+  p.tasks.forEach(function(t, i){ idxMap[t.id] = i; });
+
+  // Compute earliest start for offset calculation
+  var earliestMs = null;
+  p.tasks.forEach(function(t){
+    if(!t.startDate) return;
+    var ms = new Date(t.startDate + 'T00:00:00').getTime();
+    if(earliestMs == null || ms < earliestMs) earliestMs = ms;
+  });
+
+  var tplTasks = p.tasks.map(function(t){
+    var offsetDays = 0;
+    if(t.startDate && earliestMs != null){
+      var ms = new Date(t.startDate + 'T00:00:00').getTime();
+      offsetDays = Math.round((ms - earliestMs) / 86400000);
+    }
+    return {
+      name:           t.name || '',
+      durationDays:   t.durationDays || 1,
+      isMilestone:    !!t.isMilestone,
+      offsetDays:     offsetDays,
+      // Status / percent reset on instantiation but useful as defaults
+      status:         t.status || 'not-started',
+      percentComplete: t.percentComplete || 0,
+      // Predecessor refs as indices into THIS template's task array
+      predecessorIdx: (t.predecessors || []).map(function(pid){
+        return idxMap[pid] != null ? idxMap[pid] : -1;
+      }).filter(function(i){ return i >= 0; })
+    };
+  });
+
+  var tpl = {
+    id: _newId('tpl_'),
+    name: name,
+    description: description,
+    savedAt: Date.now(),
+    sourcePlanName: p.name || '',
+    tasks: tplTasks
+  };
+  planTemplates.push(tpl);
+  persistData();
+  alert('Template "' + name + '" saved. You can now use it from any plan via + Add task → Import template → Plan templates.');
+}
+
+function deletePlanTemplate(tplId){
+  var tpl = planTemplates.find(function(t){ return t.id === tplId; });
+  if(!tpl) return;
+  if(!confirm('Delete template "' + tpl.name + '"? Plans created from it are not affected.')) return;
+  planTemplates = planTemplates.filter(function(t){ return t.id !== tplId; });
+  persistData();
+  // Re-render the add-task modal if it's open
+  var body = document.getElementById('addTaskBody');
+  if(body) renderAddTaskBody();
+}
+
+// Instantiate: append the template's tasks to the active plan, rebased from
+// the chosen start date. Predecessors are remapped from template indices to
+// the freshly-minted task IDs. Existing plan tasks are untouched.
+function instantiatePlanTemplate(tplId){
+  var p = getActivePlan();
+  if(!p){ alert('No plan selected.'); return; }
+  var tpl = planTemplates.find(function(t){ return t.id === tplId; });
+  if(!tpl) return;
+  openInputModal({
+    title: 'Use template: ' + tpl.name,
+    message: 'Pick the start date for the first task. Every other task is offset relative to this.',
+    type: 'date',
+    defaultValue: _todayIso(),
+    okLabel: 'Import tasks',
+    onOk: function(startStr){
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(startStr || '')){ alert('Pick a valid date.'); return; }
+      _finalizeInstantiateTemplate(p, tpl, startStr);
+    }
+  });
+}
+
+function _finalizeInstantiateTemplate(p, tpl, startStr){
+  // Create new tasks with fresh IDs; remember each template index → new id
+  var idForIdx = {};
+  var newTasks = tpl.tasks.map(function(tt, i){
+    var nid = _newId('task_');
+    idForIdx[i] = nid;
+    var startDate = _addDays(startStr, tt.offsetDays || 0);
+    var endDate   = tt.isMilestone ? startDate : _addDays(startDate, Math.max(0, (tt.durationDays || 1) - 1));
+    return {
+      id: nid,
+      name: tt.name || ('Task ' + (i + 1)),
+      owner: '',  // owner intentionally cleared — assign per use
+      startDate: startDate,
+      endDate: endDate,
+      durationDays: tt.isMilestone ? 0 : (tt.durationDays || 1),
+      isMilestone: !!tt.isMilestone,
+      status: 'not-started',
+      percentComplete: 0,
+      predecessors: [],  // filled in next pass
+      source: 'template',
+      sortIndex: (p.tasks.length + i) * 10
+    };
+  });
+  // Second pass: remap predecessors using idForIdx
+  newTasks.forEach(function(nt, i){
+    var refs = tpl.tasks[i].predecessorIdx || [];
+    nt.predecessors = refs.map(function(idx){ return idForIdx[idx]; }).filter(Boolean);
+  });
+
+  p.tasks = (p.tasks || []).concat(newTasks);
+  // Recompute schedules so any predecessor chains push downstream as needed
+  newTasks.forEach(function(nt){ rescheduleSuccessors(p, nt.id); });
+  p.updatedAt = Date.now();
+  persistData();
+  // If the add-task modal is open, close it before re-rendering the plan
+  closeAddTaskModal();
+  renderPlanMain();
+}
+
+// ── Task status classification (v1.20.0) ────────────────────────────────────
+// Returns a CSS class for the task list row tint:
+//   task-done       — status === 'done' or percent === 100
+//   task-blocked    — status === 'blocked'
+//   task-overdue    — endDate is in the past and not done
+//   task-due-soon   — endDate is today or within next 2 days and not done
+//   ''              — neutral (not started / in progress / no date)
+function getTaskStatusClass(t){
+  if(!t) return '';
+  if(!_planStatusColorsEnabled) return '';
+  if(t.status === 'done' || t.percentComplete === 100) return 'task-done';
+  if(t.status === 'blocked') return 'task-blocked';
+  if(!t.endDate) return '';
+  var today = new Date(); today.setHours(0,0,0,0);
+  var end = new Date(t.endDate + 'T00:00:00');
+  var diffDays = Math.round((end.getTime() - today.getTime()) / 86400000);
+  if(diffDays < 0) return 'task-overdue';
+  if(diffDays <= 2) return 'task-due-soon';
+  return '';
+}
+
 // ── Date helpers ────────────────────────────────────────────────────────────
 function _todayIso(){
   var d = new Date(); d.setHours(0,0,0,0);
@@ -11896,6 +12612,155 @@ function getTaskById(plan, taskId){
   return plan.tasks.find(function(t){ return t.id === taskId; }) || null;
 }
 
+// ── WBS hierarchy helpers (v1.22.0) ─────────────────────────────────────────
+// Tasks have an optional `parentId` pointing at another task in the same plan.
+// `expanded` defaults to true. We render in DFS order so children appear under
+// their parent. Helpers below answer "depth", "is summary", "children", etc.
+function getTaskDepth(plan, task){
+  var d = 0, cur = task, guard = 0;
+  while(cur && cur.parentId && guard++ < 50){
+    cur = getTaskById(plan, cur.parentId);
+    if(cur) d++;
+  }
+  return d;
+}
+function hasChildren(plan, taskId){
+  return (plan.tasks || []).some(function(t){ return (t.parentId || null) === taskId; });
+}
+function getChildren(plan, taskId){
+  return (plan.tasks || []).filter(function(t){ return (t.parentId || null) === taskId; });
+}
+function getDescendantIds(plan, taskId){
+  var out = [];
+  var stack = getChildren(plan, taskId).map(function(t){ return t.id; });
+  while(stack.length){
+    var id = stack.pop();
+    out.push(id);
+    getChildren(plan, id).forEach(function(c){ stack.push(c.id); });
+  }
+  return out;
+}
+// Sort tasks into hierarchical / DFS order while preserving sortIndex within
+// each sibling group. Returns a flat array — each entry is the original task.
+function sortTasksHierarchical(plan){
+  if(!plan || !plan.tasks) return [];
+  var byParent = {};
+  plan.tasks.forEach(function(t){
+    var pid = t.parentId || '__root__';
+    if(!byParent[pid]) byParent[pid] = [];
+    byParent[pid].push(t);
+  });
+  Object.keys(byParent).forEach(function(k){
+    byParent[k].sort(function(a,b){ return (a.sortIndex||0) - (b.sortIndex||0); });
+  });
+  var out = [];
+  function walk(parentKey){
+    (byParent[parentKey] || []).forEach(function(t){
+      out.push(t);
+      // If task is collapsed, skip its descendants in the rendered list
+      if(t.expanded === false) return;
+      walk(t.id);
+    });
+  }
+  walk('__root__');
+  return out;
+}
+// Indent: make this task a child of its previous sibling at the same depth.
+// Outdent: make this task a sibling of its current parent (one level up).
+// Normalize parentId — undefined / '' / null all mean "root"
+function _samePid(a, b){ return (a || null) === (b || null); }
+function indentTask(taskId){
+  var p = getActivePlan(); if(!p) return;
+  var t = getTaskById(p, taskId); if(!t) return;
+  // Find previous sibling at same level (same parentId, lower sortIndex)
+  var siblings = (p.tasks || []).filter(function(x){ return _samePid(x.parentId, t.parentId); })
+    .sort(function(a,b){ return (a.sortIndex||0) - (b.sortIndex||0); });
+  var idx = siblings.findIndex(function(x){ return x.id === t.id; });
+  if(idx <= 0) { alert('Cannot indent — this task has no task above it at the same level to become its parent.'); return; }
+  var newParent = siblings[idx - 1];
+  // Don't allow making a task its own descendant's parent (impossible here
+  // because new parent is a sibling, but be defensive)
+  if(getDescendantIds(p, t.id).indexOf(newParent.id) !== -1) return;
+  t.parentId = newParent.id;
+  // Place at end of new parent's children
+  var newSiblings = getChildren(p, newParent.id);
+  var maxIdx = 0;
+  newSiblings.forEach(function(s){ if((s.sortIndex||0) > maxIdx) maxIdx = (s.sortIndex||0); });
+  t.sortIndex = maxIdx + 10;
+  // Make sure the new parent is expanded so the change is visible
+  newParent.expanded = true;
+  rollupSummaryTasks(p);
+  p.updatedAt = Date.now();
+  persistData();
+  renderPlanMain();
+}
+function outdentTask(taskId){
+  var p = getActivePlan(); if(!p) return;
+  var t = getTaskById(p, taskId); if(!t) return;
+  if(!t.parentId) { alert('Cannot promote \u2014 this task is already at the top level.'); return; }
+  var oldParent = getTaskById(p, t.parentId);
+  t.parentId = oldParent ? (oldParent.parentId || null) : null;
+  // Place after the old parent in the new sibling list
+  if(oldParent){
+    var newSiblings = (p.tasks || []).filter(function(x){ return _samePid(x.parentId, t.parentId) && x.id !== t.id; })
+      .sort(function(a,b){ return (a.sortIndex||0) - (b.sortIndex||0); });
+    var oldParentIdx = newSiblings.findIndex(function(x){ return x.id === oldParent.id; });
+    if(oldParentIdx !== -1){
+      // Place this task immediately after oldParent — give it sortIndex between
+      // oldParent and the next sibling.
+      var afterParent = newSiblings[oldParentIdx + 1];
+      var lo = oldParent.sortIndex || 0;
+      var hi = afterParent ? (afterParent.sortIndex || (lo + 20)) : (lo + 20);
+      t.sortIndex = (lo + hi) / 2;
+    }
+  }
+  rollupSummaryTasks(p);
+  p.updatedAt = Date.now();
+  persistData();
+  renderPlanMain();
+}
+function toggleTaskExpand(taskId){
+  var p = getActivePlan(); if(!p) return;
+  var t = getTaskById(p, taskId); if(!t) return;
+  t.expanded = (t.expanded === false);  // toggle (default true)
+  p.updatedAt = Date.now();
+  persistData();
+  renderPlanMain();
+}
+// Recompute summary task dates / percent complete / status from descendants.
+// Done bottom-up so deeply-nested rollups settle on a single pass.
+function rollupSummaryTasks(plan){
+  if(!plan || !plan.tasks) return;
+  // Sort tasks by depth descending so we process leaves first, then parents
+  var withDepth = plan.tasks.map(function(t){ return { t:t, d:getTaskDepth(plan, t) }; });
+  withDepth.sort(function(a,b){ return b.d - a.d; });
+  withDepth.forEach(function(entry){
+    var task = entry.t;
+    var kids = getChildren(plan, task.id);
+    if(!kids.length) return;  // leaf — keep its own data
+    // Date range = min(child starts) → max(child ends)
+    var minStart = null, maxEnd = null;
+    var totalDur = 0, weightedPct = 0;
+    var allDone = true, anyBlocked = false, anyInProgress = false;
+    kids.forEach(function(k){
+      if(k.startDate && (!minStart || _isoToDate(k.startDate) < _isoToDate(minStart))) minStart = k.startDate;
+      if(k.endDate   && (!maxEnd   || _isoToDate(k.endDate)   > _isoToDate(maxEnd)))   maxEnd   = k.endDate;
+      var dur = k.durationDays || 1;
+      totalDur += dur;
+      weightedPct += dur * (k.percentComplete || 0);
+      if(k.status !== 'done') allDone = false;
+      if(k.status === 'blocked') anyBlocked = true;
+      if(k.status === 'in-progress' || (k.percentComplete && k.percentComplete > 0)) anyInProgress = true;
+    });
+    if(minStart) task.startDate = minStart;
+    if(maxEnd)   task.endDate   = maxEnd;
+    task.durationDays = (task.startDate && task.endDate) ? _daysBetween(task.startDate, task.endDate) : 0;
+    task.percentComplete = totalDur > 0 ? Math.round(weightedPct / totalDur) : 0;
+    task.status = allDone ? 'done' : (anyBlocked ? 'blocked' : (anyInProgress ? 'in-progress' : 'not-started'));
+    task.isMilestone = false;  // summary tasks can't be milestones
+  });
+}
+
 // Recompute durationDays from start/end (or vice versa for milestones).
 function normalizeTaskDates(task){
   if(task.isMilestone){
@@ -11909,6 +12774,278 @@ function normalizeTaskDates(task){
     task.endDate = task.startDate;
   }
   task.durationDays = _daysBetween(task.startDate, task.endDate);
+}
+
+// ── Kebab menu + Edit Task modal (v1.23.0) ──────────────────────────────────
+// Each plan task row has a kebab (⋮) button. Clicking it opens a small popup
+// with: Edit task… / Indent / Outdent / Toggle milestone / Delete. The Edit
+// Task modal is the full per-task editor with every field on one screen.
+function openTaskKebabMenu(evt, taskId){
+  if(evt && evt.stopPropagation) evt.stopPropagation();
+  // Close any existing menu
+  var ex = document.getElementById('taskKebabPop'); if(ex) ex.remove();
+  var p = getActivePlan(); if(!p) return;
+  var t = getTaskById(p, taskId); if(!t) return;
+  var isSummary = hasChildren(p, taskId);
+
+  var rect = (evt && evt.target && evt.target.getBoundingClientRect) ? evt.target.getBoundingClientRect() : { bottom: 100, right: 100 };
+  var pop = document.createElement('div');
+  pop.id = 'taskKebabPop';
+  pop.style.cssText = 'position:fixed;top:'+(rect.bottom+4)+'px;left:'+Math.max(8, rect.right - 200)+'px;width:200px;background:var(--white);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(15,27,61,.18);z-index:9700;padding:6px 0;font-size:12px';
+
+  function row(label, icon, fn, danger){
+    var r = document.createElement('button');
+    r.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;padding:9px 14px;background:transparent;border:none;color:'+(danger?'#dc2626':'var(--text)')+';cursor:pointer;text-align:left;font-size:12px;font-family:inherit';
+    r.onmouseover = function(){ r.style.background = '#f8fafc'; };
+    r.onmouseout = function(){ r.style.background = 'transparent'; };
+    r.innerHTML = '<span style="width:14px;text-align:center;flex-shrink:0">'+icon+'</span><span>'+label+'</span>';
+    r.onclick = function(){ pop.remove(); fn(); };
+    return r;
+  }
+
+  pop.appendChild(row('Edit task\u2026', '\u270E', function(){ openEditTaskModal(taskId); }));
+  pop.appendChild(row('Make sub-task', '\u2192', function(){ indentTask(taskId); }));
+  pop.appendChild(row('Promote to parent', '\u2190', function(){ outdentTask(taskId); }));
+  if(!isSummary){
+    pop.appendChild(row(t.isMilestone ? 'Convert to task' : 'Make milestone', '\u25C6', function(){ toggleTaskMilestone(taskId); }));
+  }
+  // Divider
+  var div = document.createElement('div'); div.style.cssText = 'border-top:1px solid var(--border);margin:4px 0';
+  pop.appendChild(div);
+  pop.appendChild(row('Delete', '\u00D7', function(){ deletePlanTask(taskId); }, true));
+
+  document.body.appendChild(pop);
+  // Click-outside to dismiss
+  setTimeout(function(){
+    function dismiss(e){
+      if(!pop.contains(e.target)){ pop.remove(); document.removeEventListener('mousedown', dismiss); }
+    }
+    document.addEventListener('mousedown', dismiss);
+  }, 0);
+}
+
+// Full per-task editor — every editable field on one screen, accessed via
+// the kebab menu. This is the user-friendly alternative to inline editing.
+function openEditTaskModal(taskId){
+  var p = getActivePlan(); if(!p) return;
+  var t = getTaskById(p, taskId); if(!t) return;
+  var isSummary = hasChildren(p, taskId);
+
+  var ex = document.getElementById('editTaskModal'); if(ex) ex.remove();
+  var ov = document.createElement('div');
+  ov.id = 'editTaskModal'; ov.className = 'modal-overlay';
+  ov.style.zIndex = '5800';
+  var modal = document.createElement('div'); modal.className = 'modal';
+  modal.style.cssText = 'width:580px;max-width:96vw;max-height:92vh;display:flex;flex-direction:column;overflow:hidden';
+
+  var hdr = document.createElement('div'); hdr.className = 'modal-hdr';
+  var titleBits = [];
+  if(t.isMilestone) titleBits.push('<span style="color:#f59e0b">\u25C6</span>');
+  if(isSummary) titleBits.push('<span style="font-size:10px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:rgba(45,107,244,.08);padding:3px 8px;border-radius:9999px">Summary</span>');
+  var h2 = document.createElement('h2');
+  h2.innerHTML = titleBits.join(' ') + ' Edit task';
+  h2.style.cssText = 'display:flex;align-items:center;gap:8px';
+  hdr.appendChild(h2);
+  var cx = document.createElement('button'); cx.className = 'close'; cx.innerHTML = '\u2715';
+  cx.onclick = function(){ ov.remove(); }; hdr.appendChild(cx);
+  modal.appendChild(hdr);
+
+  var body = document.createElement('div'); body.className = 'modal-body';
+  body.style.cssText = 'padding:22px;overflow-y:auto;flex:1';
+
+  function field(label, hint){
+    var w = document.createElement('div'); w.style.cssText = 'margin-bottom:14px';
+    var l = document.createElement('label');
+    l.style.cssText = 'display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px';
+    l.textContent = label;
+    w.appendChild(l);
+    if(hint){
+      var h = document.createElement('div');
+      h.style.cssText = 'font-size:10px;color:var(--muted);margin-bottom:6px';
+      h.textContent = hint;
+      w.appendChild(h);
+    }
+    return w;
+  }
+  function inputCss(){ return 'width:100%;padding:9px 14px;border:1px solid var(--border);border-radius:9999px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;background:var(--white);color:var(--text)'; }
+
+  // Name
+  var nameRow = field('Task name');
+  var nameInp = document.createElement('input'); nameInp.type = 'text'; nameInp.value = t.name || ''; nameInp.style.cssText = inputCss();
+  nameRow.appendChild(nameInp); body.appendChild(nameRow);
+
+  // Owner — click to pick
+  if(!isSummary){
+    var ownerRow = field('Owner');
+    var ownerBtn = document.createElement('button');
+    ownerBtn.className = t.owner ? 'owner-pick-btn' : 'owner-pick-btn unassigned';
+    ownerBtn.style.padding = '10px 14px';
+    ownerBtn.innerHTML = t.owner
+      ? '<span class="owner-pick-pill">'+escHtml((t.owner[0]||'?').toUpperCase())+'</span><span>'+escHtml(t.owner)+'</span>'
+      : '+ Click to assign';
+    ownerBtn.onclick = function(){
+      openOwnerPickerModal({
+        currentOwner: t.owner || '',
+        onPick: function(newOwner){
+          t.owner = newOwner;
+          ownerBtn.className = newOwner ? 'owner-pick-btn' : 'owner-pick-btn unassigned';
+          ownerBtn.innerHTML = newOwner
+            ? '<span class="owner-pick-pill">'+escHtml((newOwner[0]||'?').toUpperCase())+'</span><span>'+escHtml(newOwner)+'</span>'
+            : '+ Click to assign';
+        }
+      });
+    };
+    ownerRow.appendChild(ownerBtn); body.appendChild(ownerRow);
+  }
+
+  // Dates row (start / end / duration)
+  if(!isSummary){
+    var dateGrid = document.createElement('div');
+    dateGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 100px;gap:12px;margin-bottom:14px';
+    var startW = field('Start');
+    var startInp = document.createElement('input'); startInp.type = 'date'; startInp.value = t.startDate || ''; startInp.style.cssText = inputCss();
+    startW.appendChild(startInp); startW.style.marginBottom = '0'; dateGrid.appendChild(startW);
+    var endW = field('End');
+    var endInp = document.createElement('input'); endInp.type = 'date'; endInp.value = t.endDate || ''; endInp.style.cssText = inputCss();
+    if(t.isMilestone) endInp.disabled = true;
+    endW.appendChild(endInp); endW.style.marginBottom = '0'; dateGrid.appendChild(endW);
+    var durW = field('Days');
+    var durInp = document.createElement('input'); durInp.type = 'number'; durInp.min = '1'; durInp.step = '1'; durInp.value = t.durationDays || 0; durInp.style.cssText = inputCss() + ';text-align:right';
+    if(t.isMilestone) durInp.disabled = true;
+    durW.appendChild(durInp); durW.style.marginBottom = '0'; dateGrid.appendChild(durW);
+    body.appendChild(dateGrid);
+
+    // Auto-link end ↔ duration: editing one updates the other
+    durInp.addEventListener('change', function(){
+      var d = Math.max(1, parseInt(durInp.value, 10) || 1);
+      durInp.value = d;
+      if(startInp.value){ endInp.value = _addDays(startInp.value, d - 1); }
+    });
+    startInp.addEventListener('change', function(){
+      if(startInp.value && durInp.value){ endInp.value = _addDays(startInp.value, Math.max(0, parseInt(durInp.value,10) - 1)); }
+    });
+    endInp.addEventListener('change', function(){
+      if(startInp.value && endInp.value) durInp.value = _daysBetween(startInp.value, endInp.value);
+    });
+  }
+
+  // Status + percent row
+  if(!isSummary){
+    var sg = document.createElement('div'); sg.style.cssText = 'display:grid;grid-template-columns:1fr 120px;gap:12px;margin-bottom:14px';
+    var statW = field('Status');
+    var statSel = document.createElement('select');
+    statSel.style.cssText = inputCss();
+    ['not-started','in-progress','done','blocked'].forEach(function(s){
+      var o = document.createElement('option'); o.value = s; o.textContent = s.replace('-',' ');
+      if(t.status === s) o.selected = true;
+      statSel.appendChild(o);
+    });
+    statW.appendChild(statSel); statW.style.marginBottom = '0'; sg.appendChild(statW);
+    var pctW = field('% complete');
+    var pctInp = document.createElement('input'); pctInp.type = 'number'; pctInp.min = '0'; pctInp.max = '100'; pctInp.step = '5'; pctInp.value = t.percentComplete || 0;
+    pctInp.style.cssText = inputCss() + ';text-align:right';
+    pctW.appendChild(pctInp); pctW.style.marginBottom = '0'; sg.appendChild(pctW);
+    body.appendChild(sg);
+  }
+
+  // Predecessors
+  if(!isSummary){
+    var predRow = field('Predecessors', 'This task starts the day after the latest selected predecessor finishes.');
+    var predBtn = document.createElement('button');
+    var predNames = (t.predecessors || []).map(function(pid){ var pt = getTaskById(p, pid); return pt ? pt.name : '?'; });
+    predBtn.className = 'owner-pick-btn';
+    predBtn.style.padding = '10px 14px';
+    predBtn.textContent = predNames.length ? predNames.join(', ') : '+ None — click to add';
+    if(!predNames.length) predBtn.classList.add('unassigned');
+    predBtn.onclick = function(){
+      ov.remove();  // hide our modal so the predecessor picker is on top
+      openPredecessorPicker(taskId);
+      // After saving the predecessor picker the row re-renders; the user can re-open if needed
+    };
+    predRow.appendChild(predBtn); body.appendChild(predRow);
+  }
+
+  // Milestone toggle (only for non-summary tasks)
+  if(!isSummary){
+    var msRow = field('Milestone');
+    var msLbl = document.createElement('label');
+    msLbl.style.cssText = 'display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--text)';
+    var msCb = document.createElement('input'); msCb.type = 'checkbox'; msCb.checked = !!t.isMilestone;
+    msCb.style.cssText = 'width:16px;height:16px;cursor:pointer;accent-color:var(--accent)';
+    msLbl.appendChild(msCb);
+    var msTxt = document.createElement('span');
+    msTxt.innerHTML = '<span style="color:#f59e0b">\u25C6</span> Mark this task as a milestone (zero duration, key date marker)';
+    msLbl.appendChild(msTxt);
+    msRow.appendChild(msLbl); body.appendChild(msRow);
+  }
+
+  // Notes
+  var notesRow = field('Notes');
+  var notesInp = document.createElement('textarea'); notesInp.rows = 3;
+  notesInp.value = t.notes || '';
+  notesInp.style.cssText = 'width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:14px;font-size:13px;font-family:inherit;outline:none;resize:vertical;box-sizing:border-box;background:var(--white);color:var(--text)';
+  notesRow.appendChild(notesInp); body.appendChild(notesRow);
+
+  modal.appendChild(body);
+
+  var ftr = document.createElement('div');
+  ftr.style.cssText = 'padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:8px;background:#f8fafc';
+  // Left side: indent / outdent / delete
+  var leftBtns = document.createElement('div');
+  leftBtns.style.cssText = 'display:flex;gap:6px';
+  function tinyBtn(label, fn, danger){
+    var b = document.createElement('button');
+    b.textContent = label;
+    b.style.cssText = 'padding:8px 14px;border-radius:9999px;font-size:11px;font-weight:700;cursor:pointer;background:'+(danger?'#fff':'var(--white)')+';border:1px solid '+(danger?'#fecaca':'var(--border)')+';color:'+(danger?'#dc2626':'var(--text)');
+    b.onclick = fn;
+    return b;
+  }
+  leftBtns.appendChild(tinyBtn('\u2190 Promote', function(){ outdentTask(taskId); ov.remove(); }));
+  leftBtns.appendChild(tinyBtn('\u2192 Make sub-task', function(){ indentTask(taskId); ov.remove(); }));
+  leftBtns.appendChild(tinyBtn('Delete', function(){ ov.remove(); deletePlanTask(taskId); }, true));
+  ftr.appendChild(leftBtns);
+
+  var rightBtns = document.createElement('div');
+  rightBtns.style.cssText = 'display:flex;gap:8px';
+  var cancelBtn = document.createElement('button');
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.style.cssText = 'padding:8px 18px;border-radius:9999px;font-size:11px;font-weight:700;cursor:pointer;background:var(--white);border:1px solid var(--border);color:var(--text)';
+  cancelBtn.onclick = function(){ ov.remove(); };
+  var saveBtn = document.createElement('button');
+  saveBtn.textContent = 'Save';
+  saveBtn.style.cssText = 'padding:8px 18px;border-radius:9999px;font-size:11px;font-weight:700;cursor:pointer;background:var(--accent);border:1px solid var(--accent);color:#fff';
+  saveBtn.onclick = function(){
+    t.name = nameInp.value.trim() || t.name;
+    if(!isSummary){
+      t.startDate = startInp.value;
+      t.endDate = endInp.value;
+      var newDur = parseInt(durInp.value, 10);
+      if(newDur && newDur > 0) t.durationDays = newDur;
+      var prevStatus = t.status;
+      t.status = statSel.value;
+      var newPct = Math.max(0, Math.min(100, parseInt(pctInp.value, 10) || 0));
+      t.percentComplete = newPct;
+      if(t.percentComplete >= 100) t.status = 'done';
+      var wantMs = !!msCb.checked;
+      if(wantMs !== !!t.isMilestone){
+        t.isMilestone = wantMs;
+        if(wantMs){ t.endDate = t.startDate; t.durationDays = 0; }
+      }
+      normalizeTaskDates(t);
+      if(t.source === 'g2m' && (prevStatus !== t.status || newPct === 100)) _syncPlanTaskToG2M(t);
+      rescheduleSuccessors(p, t.id);
+    }
+    t.notes = notesInp.value;
+    p.updatedAt = Date.now();
+    persistData();
+    ov.remove();
+    renderPlanMain();
+  };
+  rightBtns.appendChild(cancelBtn); rightBtns.appendChild(saveBtn);
+  ftr.appendChild(rightBtns);
+  modal.appendChild(ftr);
+  ov.appendChild(modal); document.body.appendChild(ov);
+  setTimeout(function(){ try { nameInp.focus(); nameInp.select(); } catch(e){} }, 30);
 }
 
 // ── Auto-reschedule engine ──────────────────────────────────────────────────
@@ -12026,13 +13163,69 @@ function closePlans(){
   if(ov) ov.classList.remove('open');
 }
 function planCreateAndFocus(){
+  // v1.21.0: if the user has any saved plan templates, give them a chooser
+  // (blank vs from-template) before creating. With zero templates we just
+  // create a blank plan as before.
+  if(planTemplates && planTemplates.length){
+    openNewPlanChooser();
+  } else {
+    _planCreateBlank();
+  }
+}
+
+function _planCreateBlank(){
   createNewPlan();
   renderPlansOverlay();
-  // Focus the name field so user can rename immediately
   setTimeout(function(){
     var inp = document.getElementById('planNameInput');
     if(inp) { inp.focus(); inp.select(); }
   }, 50);
+}
+
+// Picker shown when creating a new plan and at least one plan template exists.
+// Lets the user start blank or pick a saved template (which then prompts for
+// a start date and instantiates).
+function openNewPlanChooser(){
+  var ex = document.getElementById('newPlanChooserWrap'); if(ex) ex.remove();
+  var html = '<div class="plan-modal-backdrop" onclick="if(event.target===this) closeNewPlanChooser()">'+
+    '<div class="plan-modal" style="width:560px;max-width:95vw;max-height:88vh;display:flex;flex-direction:column;overflow:hidden">'+
+      '<div class="plan-modal-header"><h3>Start a new plan</h3><button class="plan-modal-close" onclick="closeNewPlanChooser()">\u00D7</button></div>'+
+      '<div class="plan-modal-body" style="padding:22px;overflow-y:auto;flex:1">'+
+        '<div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">Start blank, or kick off from one of your saved plan templates. Either way, you can edit everything afterwards.</div>'+
+        '<button class="prio-btn" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px 18px;margin-bottom:14px" onclick="closeNewPlanChooser();_planCreateBlank()">'+
+          '<svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:var(--accent);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><path d="M12 4v16m8-8H4"/></svg>'+
+          '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13px;color:var(--text)">Blank plan</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Start with no tasks and build it up</div></div>'+
+        '</button>'+
+        '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)">Or use a template</div>'+
+        planTemplates.slice().sort(function(a,b){ return (b.savedAt||0) - (a.savedAt||0); }).map(function(tpl){
+          var taskCount = (tpl.tasks || []).length;
+          var meta = taskCount + ' task' + (taskCount !== 1 ? 's' : '');
+          if(tpl.sourcePlanName) meta += ' \u00B7 from "' + escHtml(tpl.sourcePlanName) + '"';
+          return '<button class="prio-btn" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px 18px;margin-bottom:8px" onclick="closeNewPlanChooser();_createPlanFromTemplate(\''+escHtml(tpl.id)+'\')">'+
+            '<svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:var(--accent);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><path d="M5 5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V5z M14 3v5h5 M9 13h6 M9 17h4"/></svg>'+
+            '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13px;color:var(--text)">'+escHtml(tpl.name)+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+meta+'</div>'+(tpl.description?'<div style="font-size:10px;color:var(--muted);margin-top:2px;font-style:italic">'+escHtml(tpl.description)+'</div>':'')+'</div>'+
+          '</button>';
+        }).join('')+
+      '</div>'+
+    '</div>'+
+  '</div>';
+  var wrap = document.createElement('div');
+  wrap.id = 'newPlanChooserWrap';
+  wrap.innerHTML = html;
+  document.body.appendChild(wrap);
+}
+function closeNewPlanChooser(){
+  var w = document.getElementById('newPlanChooserWrap'); if(w) w.remove();
+}
+// Create a fresh plan AND immediately instantiate the chosen template into it
+function _createPlanFromTemplate(tplId){
+  var tpl = planTemplates.find(function(t){ return t.id === tplId; });
+  if(!tpl) return;
+  // Create a blank plan first, name it after the template, make it active
+  var p = createNewPlan(tpl.name + ' \u2014 ' + new Date().toLocaleDateString());
+  renderPlansOverlay();
+  // Then prompt for start date and instantiate the template into the new plan
+  setTimeout(function(){ instantiatePlanTemplate(tplId); }, 50);
 }
 
 // Called from the roadmap row badge — opens Plans overlay focused on the linked plan.
@@ -12040,6 +13233,19 @@ function openPlanFromRow(planId){
   closeAllOverlays();
   _activePlanId = planId;
   openPlans();
+}
+
+// Create a fresh plan and immediately link it to the given roadmap row, then
+// open the Plans overlay focused on the new plan. Wired from the row modal's
+// empty-state Plans card (v1.21.0).
+function _createPlanForRow(rowId, rowName){
+  var p = createNewPlan(rowName ? (rowName + ' \u2014 plan') : 'New Project Plan');
+  if(!p.linkedRowIds) p.linkedRowIds = [];
+  if(p.linkedRowIds.indexOf(rowId) === -1) p.linkedRowIds.push(rowId);
+  persistData();
+  closeAllOverlays();
+  openPlans();
+  if(typeof render === 'function') render();
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -12368,8 +13574,18 @@ function renderPlanMain(){
   // Sync view toggle UI
   document.getElementById('planViewListBtn').classList.toggle('active', _planView === 'list');
   document.getElementById('planViewGanttBtn').classList.toggle('active', _planView === 'gantt');
+  var kanBtn = document.getElementById('planViewKanbanBtn');
+  if(kanBtn) kanBtn.classList.toggle('active', _planView === 'kanban');
+  // Sync colour toggle pill state
+  var colorBtn = document.getElementById('planColorsToggleBtn');
+  if(colorBtn){
+    colorBtn.style.background = _planStatusColorsEnabled ? '#eef4ff' : '';
+    colorBtn.style.borderColor = _planStatusColorsEnabled ? '#c7dbff' : '';
+    colorBtn.style.color = _planStatusColorsEnabled ? 'var(--navy)' : '';
+  }
 
   if(_planView === 'list') renderPlanListView(p);
+  else if(_planView === 'kanban') renderPlanKanbanView(p);
   else renderPlanGanttView(p);
 }
 
@@ -12470,6 +13686,7 @@ function confirmLinkRows(){
 // Column definitions — each has a key, label, and default width.
 // Widths are user-resizable and persist per-plan in plan.colWidths.
 var PLAN_COL_DEFS = [
+  { key: 'select',       label: '',              dflt: 32  },
   { key: 'milestone',    label: '',              dflt: 28  },
   { key: 'name',         label: 'Task',          dflt: 280 },
   { key: 'owner',        label: 'Owner',         dflt: 130 },
@@ -12479,7 +13696,7 @@ var PLAN_COL_DEFS = [
   { key: 'predecessors', label: 'Predecessors',  dflt: 160 },
   { key: 'status',       label: 'Status',        dflt: 130 },
   { key: 'percent',      label: '% done',        dflt: 80  },
-  { key: 'delete',       label: '',              dflt: 30  }
+  { key: 'actions',      label: '',              dflt: 36  }
 ];
 
 function getPlanColWidths(plan){
@@ -12497,67 +13714,144 @@ function renderPlanListView(plan){
     return;
   }
 
-  // Sort by sortIndex (with stable fallback)
-  var sortedTasks = plan.tasks.slice().sort(function(a,b){
-    return (a.sortIndex||0) - (b.sortIndex||0);
-  });
+  // v1.22.0: WBS hierarchical sort. Tasks are walked DFS by sortIndex within
+  // each parent. Collapsed parents hide their descendants from the rendered list.
+  rollupSummaryTasks(plan);
+  var sortedTasks = sortTasksHierarchical(plan);
 
   var widths = getPlanColWidths(plan);
   var totalW = widths.reduce(function(a,b){ return a + b; }, 0);
 
-  var html = '<div class="plan-task-wrap">';
+  // Drop any stale selections that no longer match this plan's tasks
+  var validIds = new Set(sortedTasks.map(function(t){ return t.id; }));
+  _planSelectedTaskIds = (_planSelectedTaskIds || []).filter(function(id){ return validIds.has(id); });
+
+  // Bulk action bar — only shown when at least one task is selected
+  var bulkBar = '';
+  if(_planSelectedTaskIds.length){
+    bulkBar = '<div class="plan-bulk-bar">'+
+      '<span class="plan-bulk-count">'+_planSelectedTaskIds.length+' selected</span>'+
+      '<button class="plan-bulk-btn" onclick="bulkAssignOwner()" title="Assign these tasks to one owner">Assign owner</button>'+
+      '<button class="plan-bulk-btn" onclick="bulkShiftDates()" title="Shift start &amp; end dates by N days">Shift dates</button>'+
+      '<button class="plan-bulk-btn" onclick="bulkSetStatus()" title="Set status for all selected">Set status</button>'+
+      '<button class="plan-bulk-btn danger" onclick="bulkDeleteTasks()">Delete</button>'+
+      '<button class="plan-bulk-btn ghost" onclick="bulkClearSelection()">Clear</button>'+
+    '</div>';
+  }
+
+  var html = bulkBar + '<div class="plan-task-wrap">';
   html += '<table class="plan-task-table" style="width:'+totalW+'px;min-width:100%">';
   // colgroup so the widths actually stick
   html += '<colgroup>';
   widths.forEach(function(w){ html += '<col style="width:'+w+'px">'; });
   html += '</colgroup>';
   html += '<thead><tr>';
+  var allSelected = sortedTasks.length > 0 && _planSelectedTaskIds.length === sortedTasks.length;
   PLAN_COL_DEFS.forEach(function(c, i){
-    var resizable = (c.key !== 'milestone' && c.key !== 'delete');  // skip the tiny edge columns
-    html += '<th data-col-idx="'+i+'">'+escHtml(c.label);
+    var resizable = (c.key !== 'milestone' && c.key !== 'actions' && c.key !== 'select');
+    var inner = escHtml(c.label);
+    if(c.key === 'select'){
+      inner = '<input type="checkbox" class="plan-bulk-all" '+(allSelected?'checked ':'')+'title="Select all">';
+    }
+    html += '<th data-col-idx="'+i+'">'+inner;
     if(resizable) html += '<div class="plan-col-resize" data-col-idx="'+i+'" title="Drag to resize"></div>';
     html += '</th>';
   });
   html += '</tr></thead><tbody>';
 
+  var selectedSet = new Set(_planSelectedTaskIds);
   sortedTasks.forEach(function(t){
-    var rowCls = t.isMilestone ? ' class="milestone"' : '';
-    html += '<tr'+rowCls+' data-task-id="'+escHtml(t.id)+'">';
-    // Milestone toggle
-    html += '<td><button class="ms-btn'+(t.isMilestone?' active':'')+'" title="Toggle milestone" onclick="toggleTaskMilestone(\''+escHtml(t.id)+'\')">\u25C6</button></td>';
-    // Task name + source pill (+ G2M sync indicator if linked)
+    var depth = getTaskDepth(plan, t);
+    var isSummary = hasChildren(plan, t.id);
+    var classes = ['plan-task-row'];
+    if(t.isMilestone) classes.push('milestone');
+    if(isSummary) classes.push('summary');
+    if(selectedSet.has(t.id)) classes.push('selected');
+    var statusCls = getTaskStatusClass(t);
+    if(statusCls) classes.push(statusCls);
+    var rowCls = ' class="'+classes.join(' ')+'"';
+    html += '<tr'+rowCls+' draggable="true" data-task-id="'+escHtml(t.id)+'" data-depth="'+depth+'">';
+    // Bulk-select checkbox
+    html += '<td style="text-align:center"><input type="checkbox" class="plan-bulk-cb" data-task-id="'+escHtml(t.id)+'"'+(selectedSet.has(t.id)?' checked':'')+'></td>';
+    // Milestone toggle (disabled for summary tasks)
+    if(isSummary){
+      html += '<td><span class="ms-btn" style="opacity:.25;cursor:not-allowed" title="Summary tasks can\'t be milestones">\u25C6</span></td>';
+    } else {
+      html += '<td><button class="ms-btn'+(t.isMilestone?' active':'')+'" title="Toggle milestone" onclick="toggleTaskMilestone(\''+escHtml(t.id)+'\')">\u25C6</button></td>';
+    }
+    // Task name cell — indented by depth, with expand/collapse arrow if it has
+    // children, and indent/outdent buttons revealed on hover.
     var syncBadge = '';
     if(t.source === 'g2m' && t.sourceRefId && t.sourceRefId.indexOf('g2m:') === 0){
       syncBadge = '<span title="Synced with G2M checklist — marking this done updates the source item, and vice versa" style="display:inline-flex;align-items:center;color:#16a34a;flex-shrink:0;cursor:help"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></span>';
     }
-    html += '<td><div style="display:flex;align-items:center;gap:6px"><span class="plan-source-icon '+escHtml(t.source||'custom')+'">'+escHtml(t.source||'custom')+'</span>'+syncBadge+'<input type="text" class="cell plan-task-name-input" value="'+escHtml(t.name||'')+'" data-field="name" data-task-id="'+escHtml(t.id)+'"></div></td>';
-    // Owner
-    html += '<td><input type="text" class="cell" value="'+escHtml(t.owner||'')+'" data-field="owner" data-task-id="'+escHtml(t.id)+'" placeholder="\u2014"></td>';
-    // Start
-    html += '<td><input type="date" class="cell" value="'+escHtml(t.startDate||'')+'" data-field="startDate" data-task-id="'+escHtml(t.id)+'"></td>';
-    // End
-    html += '<td><input type="date" class="cell" value="'+escHtml(t.endDate||'')+'" data-field="endDate" data-task-id="'+escHtml(t.id)+'"'+(t.isMilestone?' disabled':'')+'></td>';
-    // Duration — editable. Typing a new value recomputes the end date.
-    if(t.isMilestone){
-      html += '<td style="text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)">\u2014</td>';
+    var indentPx = depth * 18;
+    var expandTri = '';
+    if(isSummary){
+      expandTri = '<button class="wbs-expand" title="Expand / collapse" onclick="toggleTaskExpand(\''+escHtml(t.id)+'\')">'+(t.expanded === false ? '\u25B6' : '\u25BC')+'</button>';
     } else {
-      html += '<td><input type="number" class="cell" value="'+(t.durationDays||0)+'" min="1" step="1" data-field="durationDays" data-task-id="'+escHtml(t.id)+'" style="text-align:right"></td>';
+      expandTri = '<span class="wbs-expand-spacer"></span>';
     }
-    // Predecessors
-    var predNames = (t.predecessors||[]).map(function(pid){
-      var pt = getTaskById(plan, pid);
-      return pt ? pt.name : '?';
-    });
-    html += '<td><button class="cell pred-cell" style="text-align:left;cursor:pointer;background:transparent;border:1px dashed var(--border);padding:5px 8px" onclick="openPredecessorPicker(\''+escHtml(t.id)+'\')">'+(predNames.length?escHtml(predNames.join(', ')):'<span style="color:#cbd5e1">Add\u2026</span>')+'</button></td>';
-    // Status
-    html += '<td><select class="cell" data-field="status" data-task-id="'+escHtml(t.id)+'">'+
-      ['not-started','in-progress','done','blocked'].map(function(s){
-        return '<option value="'+s+'"'+(t.status===s?' selected':'')+'>'+s.replace('-',' ')+'</option>';
-      }).join('')+'</select></td>';
-    // % complete
-    html += '<td><input type="number" class="cell" value="'+(t.percentComplete||0)+'" min="0" max="100" step="5" data-field="percentComplete" data-task-id="'+escHtml(t.id)+'"></td>';
-    // Delete
-    html += '<td><button class="delete-task-btn" title="Delete" onclick="deletePlanTask(\''+escHtml(t.id)+'\')">\u00D7</button></td>';
+    var nameInputCls = 'cell plan-task-name-input' + (isSummary ? ' summary-name' : '');
+    // No prefix diamond — the milestone column already shows one. Just one
+    // gold diamond per row when this task is a milestone. (v1.23.1)
+    html += '<td><div class="wbs-name-cell" style="padding-left:'+indentPx+'px">'+
+      expandTri+
+      '<span class="plan-source-icon '+escHtml(t.source||'custom')+'" title="Source: '+escHtml(t.source||'custom')+' \u2014 where this task came from">'+escHtml(t.source||'custom')+'</span>'+
+      syncBadge+
+      '<input type="text" class="'+nameInputCls+'" value="'+escHtml(t.name||'')+'" data-field="name" data-task-id="'+escHtml(t.id)+'"'+(isSummary?' title="Summary task \u2014 name editable, dates roll up from children"':' title="Click to edit task name. Tab indents it under the previous task. Shift+Tab promotes it back."')+'>'+
+    '</div></td>';
+    // Owner — click-to-pick button (v1.23.0) restricted to known users
+    if(isSummary){
+      html += '<td style="color:var(--muted);font-size:11px">\u2014</td>';
+    } else {
+      var ownerInitial = t.owner ? (t.owner[0] || '?').toUpperCase() : '';
+      var ownerBtn = t.owner
+        ? '<button class="owner-pick-btn" onclick="openOwnerPickerForTask(\''+escHtml(t.id)+'\')" title="Click to change owner"><span class="owner-pick-pill">'+escHtml(ownerInitial)+'</span><span style="overflow:hidden;text-overflow:ellipsis">'+escHtml(t.owner)+'</span></button>'
+        : '<button class="owner-pick-btn unassigned" onclick="openOwnerPickerForTask(\''+escHtml(t.id)+'\')" title="Click to assign an owner">+ Assign</button>';
+      html += '<td>'+ownerBtn+'</td>';
+    }
+    // Dates — read-only displays for summary tasks (rolled up from children)
+    if(isSummary){
+      html += '<td style="font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums">'+escHtml(t.startDate||'\u2014')+'</td>';
+      html += '<td style="font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums">'+escHtml(t.endDate||'\u2014')+'</td>';
+      html += '<td style="text-align:right;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums">'+(t.durationDays||0)+'</td>';
+    } else {
+      html += '<td><input type="date" class="cell" value="'+escHtml(t.startDate||'')+'" data-field="startDate" data-task-id="'+escHtml(t.id)+'"></td>';
+      html += '<td><input type="date" class="cell" value="'+escHtml(t.endDate||'')+'" data-field="endDate" data-task-id="'+escHtml(t.id)+'"'+(t.isMilestone?' disabled':'')+'></td>';
+      if(t.isMilestone){
+        html += '<td style="text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)">\u2014</td>';
+      } else {
+        html += '<td><input type="number" class="cell" value="'+(t.durationDays||0)+'" min="1" step="1" data-field="durationDays" data-task-id="'+escHtml(t.id)+'" style="text-align:right"></td>';
+      }
+    }
+    // Predecessors — only meaningful on leaves
+    if(isSummary){
+      html += '<td style="color:var(--muted);font-size:11px">\u2014</td>';
+    } else {
+      var predNames = (t.predecessors||[]).map(function(pid){
+        var pt = getTaskById(plan, pid);
+        return pt ? pt.name : '?';
+      });
+      html += '<td><button class="cell pred-cell" style="text-align:left;cursor:pointer;background:transparent;border:1px dashed var(--border);padding:5px 8px" onclick="openPredecessorPicker(\''+escHtml(t.id)+'\')">'+(predNames.length?escHtml(predNames.join(', ')):'<span style="color:#cbd5e1">Add\u2026</span>')+'</button></td>';
+    }
+    // Status — read-only on summary tasks
+    if(isSummary){
+      html += '<td style="font-size:11px;color:var(--muted);text-transform:capitalize">'+escHtml((t.status||'').replace('-',' '))+'</td>';
+    } else {
+      html += '<td><select class="cell" data-field="status" data-task-id="'+escHtml(t.id)+'">'+
+        ['not-started','in-progress','done','blocked'].map(function(s){
+          return '<option value="'+s+'"'+(t.status===s?' selected':'')+'>'+s.replace('-',' ')+'</option>';
+        }).join('')+'</select></td>';
+    }
+    // % complete — read-only on summary tasks
+    if(isSummary){
+      html += '<td style="text-align:right;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;font-weight:700">'+(t.percentComplete||0)+'%</td>';
+    } else {
+      html += '<td><input type="number" class="cell" value="'+(t.percentComplete||0)+'" min="0" max="100" step="5" data-field="percentComplete" data-task-id="'+escHtml(t.id)+'"></td>';
+    }
+    // Kebab menu — opens the Edit Task modal with all fields (v1.23.0)
+    html += '<td style="text-align:center"><button class="task-kebab-btn" title="Edit task / actions" onclick="openTaskKebabMenu(event,\''+escHtml(t.id)+'\')">\u22EE</button></td>';
     html += '</tr>';
   });
 
@@ -12578,6 +13872,14 @@ function renderPlanListView(plan){
   // Picking a library entry pre-fills owner / hours-derived duration too.
   content.querySelectorAll('input.plan-task-name-input').forEach(function(el){
     var taskId = el.dataset.taskId;
+    // v1.22.0: Tab indents, Shift+Tab outdents (only when no autocomplete is open)
+    el.addEventListener('keydown', function(e){
+      if(e.key === 'Tab'){
+        e.preventDefault();
+        if(e.shiftKey) outdentTask(taskId);
+        else indentTask(taskId);
+      }
+    });
     attachLibraryAutocomplete(el, function(entry){
       var t = getTaskById(plan, taskId);
       if(!t) return;
@@ -12596,12 +13898,101 @@ function renderPlanListView(plan){
       renderPlanMain();
     });
   });
-  // Wire owner combobox: each owner cell gets autocomplete from known users
-  content.querySelectorAll('input.cell[data-field="owner"]').forEach(function(el){
-    attachOwnerAutocomplete(el);
+  // (v1.23.0: owner is now a click-to-pick button, no autocomplete wiring needed)
+  // Wire bulk-select checkboxes
+  content.querySelectorAll('input.plan-bulk-cb').forEach(function(cb){
+    cb.addEventListener('change', function(){
+      var id = cb.dataset.taskId;
+      var set = new Set(_planSelectedTaskIds);
+      if(cb.checked) set.add(id); else set.delete(id);
+      _planSelectedTaskIds = Array.from(set);
+      renderPlanMain();
+    });
   });
+  var allCb = content.querySelector('input.plan-bulk-all');
+  if(allCb){
+    allCb.addEventListener('change', function(){
+      if(allCb.checked){
+        _planSelectedTaskIds = sortedTasks.map(function(t){ return t.id; });
+      } else {
+        _planSelectedTaskIds = [];
+      }
+      renderPlanMain();
+    });
+  }
   // Wire column resize handles
   _wirePlanColumnResizers(plan);
+  // v1.21.0: prevent the table wrap from auto-scrolling horizontally when an
+  // input is focused. Browsers scroll-to-fit on focus, which made clicking the
+  // % cell visibly shift the whole table to the right. We snapshot scrollLeft
+  // before any focus and restore it on the next frame.
+  var wrapEl = content.querySelector('.plan-task-wrap');
+  if(wrapEl){
+    content.addEventListener('focusin', function(e){
+      if(e.target.matches('input.cell, select.cell, .ms-btn, button')){
+        var sl = wrapEl.scrollLeft;
+        requestAnimationFrame(function(){ wrapEl.scrollLeft = sl; });
+      }
+    });
+  }
+  // v1.21.0: drag-and-drop reorder of plan tasks. Drag any row onto another to
+  // place it before the drop target. We rewrite sortIndex on drop and persist.
+  _wirePlanRowDragDrop(content, plan, sortedTasks);
+}
+
+function _wirePlanRowDragDrop(content, plan, sortedTasks){
+  var dragId = null;
+  content.querySelectorAll('tr.plan-task-row').forEach(function(row){
+    row.addEventListener('dragstart', function(e){
+      dragId = row.dataset.taskId;
+      row.classList.add('dragging');
+      try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragId); } catch(err){}
+    });
+    row.addEventListener('dragend', function(){
+      row.classList.remove('dragging');
+      content.querySelectorAll('tr.plan-task-row').forEach(function(r){ r.classList.remove('drop-target-above','drop-target-below'); });
+      dragId = null;
+    });
+    row.addEventListener('dragover', function(e){
+      if(!dragId || row.dataset.taskId === dragId) return;
+      e.preventDefault();
+      try { e.dataTransfer.dropEffect = 'move'; } catch(err){}
+      var rect = row.getBoundingClientRect();
+      var above = (e.clientY - rect.top) < (rect.height / 2);
+      row.classList.toggle('drop-target-above', above);
+      row.classList.toggle('drop-target-below', !above);
+    });
+    row.addEventListener('dragleave', function(){
+      row.classList.remove('drop-target-above','drop-target-below');
+    });
+    row.addEventListener('drop', function(e){
+      e.preventDefault();
+      if(!dragId || row.dataset.taskId === dragId) return;
+      var targetId = row.dataset.taskId;
+      var rect = row.getBoundingClientRect();
+      var above = (e.clientY - rect.top) < (rect.height / 2);
+      _reorderPlanTask(plan, dragId, targetId, above ? 'before' : 'after');
+    });
+  });
+}
+
+function _reorderPlanTask(plan, dragId, targetId, position){
+  // Build the desired order from current sortedTasks, then reassign sortIndex
+  var ids = plan.tasks.slice().sort(function(a,b){ return (a.sortIndex||0) - (b.sortIndex||0); }).map(function(t){ return t.id; });
+  var fromIdx = ids.indexOf(dragId);
+  if(fromIdx === -1) return;
+  ids.splice(fromIdx, 1);
+  var toIdx = ids.indexOf(targetId);
+  if(toIdx === -1) return;
+  if(position === 'after') toIdx += 1;
+  ids.splice(toIdx, 0, dragId);
+  // Reindex with gaps of 10 so future inserts have room
+  var idxMap = {};
+  ids.forEach(function(id, i){ idxMap[id] = i * 10; });
+  plan.tasks.forEach(function(t){ if(idxMap[t.id] != null) t.sortIndex = idxMap[t.id]; });
+  plan.updatedAt = Date.now();
+  persistData();
+  renderPlanMain();
 }
 
 // Drag-to-resize handler for the task list columns. Mousedown captures the
@@ -12711,12 +14102,130 @@ function deletePlanTask(taskId){
   if(!p) return;
   var t = getTaskById(p, taskId);
   if(!t) return;
-  if(!confirm('Delete task "'+t.name+'"?')) return;
-  p.tasks = p.tasks.filter(function(x){ return x.id !== taskId; });
-  cleanupPredecessorReferences(p, taskId);
+  // v1.22.0: deleting a parent also deletes all descendants. Confirm with the count.
+  var descendants = getDescendantIds(p, taskId);
+  var msg = descendants.length
+    ? 'Delete "' + t.name + '" and its ' + descendants.length + ' sub-task' + (descendants.length!==1?'s':'') + '? This cannot be undone.'
+    : 'Delete task "' + t.name + '"?';
+  if(!confirm(msg)) return;
+  var doomed = new Set([taskId].concat(descendants));
+  p.tasks = p.tasks.filter(function(x){ return !doomed.has(x.id); });
+  doomed.forEach(function(id){ cleanupPredecessorReferences(p, id); });
   p.updatedAt = Date.now();
   persistData();
   renderPlanMain();
+}
+
+// ── Bulk operations on selected plan tasks (v1.18.0) ───────────────────────
+function bulkClearSelection(){
+  _planSelectedTaskIds = [];
+  renderPlanMain();
+}
+
+function bulkDeleteTasks(){
+  var p = getActivePlan();
+  if(!p || !_planSelectedTaskIds.length) return;
+  var n = _planSelectedTaskIds.length;
+  if(!confirm('Delete '+n+' task'+(n!==1?'s':'')+'? This cannot be undone.')) return;
+  var doomed = new Set(_planSelectedTaskIds);
+  p.tasks = p.tasks.filter(function(t){ return !doomed.has(t.id); });
+  // Clean up predecessor references for every deleted id
+  doomed.forEach(function(id){ cleanupPredecessorReferences(p, id); });
+  _planSelectedTaskIds = [];
+  p.updatedAt = Date.now();
+  persistData();
+  renderPlanMain();
+}
+
+function bulkAssignOwner(){
+  var p = getActivePlan();
+  if(!p || !_planSelectedTaskIds.length) return;
+  openInputModal({
+    title: 'Assign owner',
+    message: 'Assign all ' + _planSelectedTaskIds.length + ' selected task' + (_planSelectedTaskIds.length!==1?'s':'') + ' to a single owner. Leave blank to clear the owner.',
+    placeholder: 'email@example.com or full name',
+    okLabel: 'Assign',
+    onOk: function(owner){
+      var notifyTargets = [];
+      var doomed = new Set(_planSelectedTaskIds);
+      p.tasks.forEach(function(t){
+        if(!doomed.has(t.id)) return;
+        var prev = t.owner;
+        t.owner = owner;
+        if(owner && owner !== prev) notifyTargets.push(t);
+      });
+      p.updatedAt = Date.now();
+      persistData();
+      renderPlanMain();
+      notifyTargets.forEach(function(t){
+        sendNotification(
+          owner,
+          'plan_task_assigned',
+          "You've been assigned a task",
+          '"' + t.name + '" in plan "' + (p.name || 'Untitled') + '"',
+          'plan:' + p.id
+        );
+      });
+    }
+  });
+}
+
+function bulkShiftDates(){
+  var p = getActivePlan();
+  if(!p || !_planSelectedTaskIds.length) return;
+  openInputModal({
+    title: 'Shift dates',
+    message: 'Shift start & end dates of the ' + _planSelectedTaskIds.length + ' selected task' + (_planSelectedTaskIds.length!==1?'s':'') + ' by N days. Use a positive number to push later, negative to pull earlier.',
+    type: 'number',
+    defaultValue: '7',
+    okLabel: 'Shift',
+    onOk: function(raw){
+      var days = parseInt(raw, 10);
+      if(!days || isNaN(days)){ alert('Enter a non-zero whole number.'); return; }
+      var doomed = new Set(_planSelectedTaskIds);
+      p.tasks.forEach(function(t){
+        if(!doomed.has(t.id)) return;
+        if(t.startDate) t.startDate = _addDays(t.startDate, days);
+        if(t.endDate)   t.endDate   = _addDays(t.endDate,   days);
+        normalizeTaskDates(t);
+      });
+      doomed.forEach(function(id){ rescheduleSuccessors(p, id); });
+      p.updatedAt = Date.now();
+      persistData();
+      renderPlanMain();
+    }
+  });
+}
+
+function bulkSetStatus(){
+  var p = getActivePlan();
+  if(!p || !_planSelectedTaskIds.length) return;
+  openInputModal({
+    title: 'Set status',
+    message: 'Set the status for ' + _planSelectedTaskIds.length + ' selected task' + (_planSelectedTaskIds.length!==1?'s':'') + '. "Done" sets percent to 100; "Not started" sets it to 0.',
+    type: 'select',
+    defaultValue: 'in-progress',
+    options: [
+      { value:'not-started', label:'Not started' },
+      { value:'in-progress', label:'In progress' },
+      { value:'done',        label:'Done' },
+      { value:'blocked',     label:'Blocked' }
+    ],
+    okLabel: 'Apply',
+    onOk: function(choice){
+      var doomed = new Set(_planSelectedTaskIds);
+      p.tasks.forEach(function(t){
+        if(!doomed.has(t.id)) return;
+        t.status = choice;
+        if(choice === 'done') t.percentComplete = 100;
+        else if(choice === 'not-started') t.percentComplete = 0;
+        if(t.source === 'g2m') _syncPlanTaskToG2M(t);
+      });
+      p.updatedAt = Date.now();
+      persistData();
+      renderPlanMain();
+    }
+  });
 }
 
 // ── Predecessor picker ──────────────────────────────────────────────────────
@@ -12730,18 +14239,46 @@ function openPredecessorPicker(taskId){
     return x.id !== taskId && !wouldCreateCycle(p, taskId, x.id);
   });
 
+  // Re-laid out (v1.20.0): wider modal, search box, two-column rows
+  // (name + meta), milestone diamond shown inline so milestones are
+  // obviously selectable. The current task can be toggled as a milestone
+  // right from the header.
+  var headerLine = '';
+  if(t.isMilestone){
+    headerLine = '<span style="color:#f59e0b;font-size:14px">\u25C6</span> ' + escHtml(t.name) + ' <span style="font-size:11px;color:#f59e0b;font-weight:600">(milestone)</span>';
+  } else {
+    headerLine = escHtml(t.name);
+  }
+  var msToggleBtn = '<button class="prio-btn" style="font-size:10px;padding:5px 12px" onclick="toggleTaskMilestone(\''+escHtml(taskId)+'\');closePredecessorPicker();openPredecessorPicker(\''+escHtml(taskId)+'\')">'+(t.isMilestone?'Convert to task':'Make this a milestone')+'</button>';
+
   var html = '<div class="plan-modal-backdrop" onclick="if(event.target===this) closePredecessorPicker()">'+
-    '<div class="plan-modal" style="width:480px">'+
-      '<div class="plan-modal-header"><h3>Predecessors for: '+escHtml(t.name)+'</h3><button class="plan-modal-close" onclick="closePredecessorPicker()">\u00D7</button></div>'+
-      '<div class="plan-modal-body">'+
-        '<div style="font-size:12px;color:var(--muted);margin-bottom:10px">This task will start the day after the latest selected predecessor finishes. Self-references and cycles are blocked.</div>'+
+    '<div class="plan-modal" style="width:620px;max-width:95vw">'+
+      '<div class="plan-modal-header"><h3 style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">Predecessors for <span style="color:var(--muted);font-weight:500">\u2014</span> '+headerLine+'</h3><button class="plan-modal-close" onclick="closePredecessorPicker()">\u00D7</button></div>'+
+      '<div class="plan-modal-body" style="padding:18px 22px">'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">'+
+          '<div style="font-size:12px;color:var(--muted);line-height:1.5;flex:1">This task will start the day after the latest selected predecessor finishes. Cycles are blocked.</div>'+
+          msToggleBtn+
+        '</div>'+
+        '<input id="predPickerSearch" type="text" placeholder="Search tasks\u2026" style="width:100%;padding:9px 14px;border:1px solid var(--border);border-radius:9999px;font-size:12px;font-family:inherit;outline:none;margin-bottom:12px;box-sizing:border-box" oninput="_filterPredPicker(this.value)">'+
         (candidates.length
-          ? '<div class="plan-source-list"><div class="plan-source-group">' +
+          ? '<div id="predPickerList" style="max-height:46vh;overflow-y:auto;border:1px solid var(--border);border-radius:10px;background:#fff">' +
             candidates.map(function(c){
-              return '<label class="plan-source-item"><input type="checkbox" class="pred-cb" value="'+escHtml(c.id)+'"'+(current.has(c.id)?' checked':'')+'>'+escHtml(c.name)+' <span style="color:var(--muted);font-size:11px">('+escHtml(c.startDate||'?')+' \u2192 '+escHtml(c.endDate||'?')+')</span></label>';
+              var ms = c.isMilestone ? '<span style="color:#f59e0b;flex-shrink:0" title="Milestone">\u25C6</span>' : '';
+              var srcPill = '<span class="plan-source-icon '+escHtml(c.source||'custom')+'" style="font-size:9px;padding:2px 7px;flex-shrink:0">'+escHtml(c.source||'custom')+'</span>';
+              var statusCls = getTaskStatusClass(c);
+              var statusDot = '';
+              if(statusCls === 'task-done') statusDot = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0" title="Done"></span>';
+              else if(statusCls === 'task-overdue') statusDot = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;flex-shrink:0" title="Overdue"></span>';
+              else if(statusCls === 'task-due-soon') statusDot = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f97316;flex-shrink:0" title="Due soon"></span>';
+              return '<label class="pred-row" data-pred-name="'+escHtml((c.name||'').toLowerCase())+'">'+
+                '<input type="checkbox" class="pred-cb" value="'+escHtml(c.id)+'"'+(current.has(c.id)?' checked':'')+'>'+
+                ms+srcPill+statusDot+
+                '<span class="pred-row-name">'+escHtml(c.name||'(unnamed)')+'</span>'+
+                '<span class="pred-row-dates">'+escHtml(c.startDate||'\u2014')+' \u2192 '+escHtml(c.endDate||'\u2014')+'</span>'+
+              '</label>';
             }).join('') +
-            '</div></div>'
-          : '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px">No eligible predecessors. Add more tasks first.</div>')+
+            '</div>'
+          : '<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;background:#f8fafc;border-radius:10px">No eligible predecessors. Add more tasks first.</div>')+
       '</div>'+
       '<div class="plan-modal-footer">'+
         '<button class="prio-btn" onclick="closePredecessorPicker()">Cancel</button>'+
@@ -12753,6 +14290,18 @@ function openPredecessorPicker(taskId){
   wrap.id = 'predPickerWrap';
   wrap.innerHTML = html;
   document.body.appendChild(wrap);
+  setTimeout(function(){
+    var s = document.getElementById('predPickerSearch'); if(s) s.focus();
+  }, 30);
+}
+
+function _filterPredPicker(q){
+  q = (q || '').toLowerCase().trim();
+  var rows = document.querySelectorAll('#predPickerList .pred-row');
+  rows.forEach(function(r){
+    var name = r.dataset.predName || '';
+    r.style.display = (!q || name.indexOf(q) !== -1) ? '' : 'none';
+  });
 }
 function closePredecessorPicker(){
   var w = document.getElementById('predPickerWrap');
@@ -12929,7 +14478,28 @@ function renderAddTaskBody(){
     return;
   }
   if(_addTaskTab === 'templates'){
-    var html = '<div style="font-size:12px;color:var(--muted);margin-bottom:14px">Pull an entire G2M checklist or CapacityIQ template into this plan in one click. Tasks are added with sequential default dates and the source\u2019s metadata where available. You can edit dates, owners, and dependencies after.</div>';
+    var html = '<div style="font-size:12px;color:var(--muted);margin-bottom:14px">Pull an entire G2M checklist, CapacityIQ template, or one of your own saved plan templates into this plan in one click. Tasks are added with sequential default dates and the source\u2019s metadata where available. You can edit dates, owners, and dependencies after.</div>';
+
+    // ── Plan templates (saved by the user) ──
+    html += '<div class="plan-source-group" style="margin-bottom:14px">';
+    html += '<div class="plan-source-group-title" style="display:flex;align-items:center;justify-content:space-between"><span>Plan templates</span><span style="font-weight:500;text-transform:none;letter-spacing:0">'+planTemplates.length+' available</span></div>';
+    if(!planTemplates.length){
+      html += '<div style="font-size:12px;color:var(--muted);padding:8px 0">No plan templates yet. Open any plan and click <strong>Save as template</strong> in the toolbar to create one.</div>';
+    } else {
+      // Show newest first
+      planTemplates.slice().sort(function(a,b){ return (b.savedAt||0) - (a.savedAt||0); }).forEach(function(tpl){
+        var taskCount = (tpl.tasks || []).length;
+        var meta = taskCount + ' task' + (taskCount !== 1 ? 's' : '');
+        if(tpl.sourcePlanName) meta += ' \u00B7 from "' + tpl.sourcePlanName + '"';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 8px;border-bottom:1px solid #f1f5f9">'+
+          '<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px;color:var(--text)">'+escHtml(tpl.name)+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+escHtml(meta)+'</div>'+(tpl.description?'<div style="font-size:10px;color:var(--muted);margin-top:2px;font-style:italic">'+escHtml(tpl.description)+'</div>':'')+'</div>'+
+          '<div style="display:flex;gap:6px;flex-shrink:0">'+
+            '<button class="prio-btn" onclick="deletePlanTemplate(\''+escHtml(tpl.id)+'\')" title="Delete this template">\u2715</button>'+
+            '<button class="prio-btn primary" onclick="instantiatePlanTemplate(\''+escHtml(tpl.id)+'\')">+ Use template</button>'+
+          '</div></div>';
+      });
+    }
+    html += '</div>';
 
     // ── G2M checklists ──
     var g2mProducts = Object.keys(g2mAllData || {}).filter(function(k){
@@ -13774,6 +15344,111 @@ function confirmAddTask(){
 }
 
 // ── Gantt view ──────────────────────────────────────────────────────────────
+// ── Kanban view (v1.23.0) ───────────────────────────────────────────────────
+// Tasks grouped by status into 4 columns (Not started / In progress / Blocked
+// / Done). Drag a card between columns to change its status. Click a card to
+// open the Edit Task modal.
+function renderPlanKanbanView(plan){
+  var content = document.getElementById('plansContent');
+  rollupSummaryTasks(plan);
+  // Only show leaf tasks on the Kanban — summary tasks are roll-ups, not work items
+  var leaves = (plan.tasks || []).filter(function(t){ return !hasChildren(plan, t.id); });
+  if(!leaves.length){
+    content.innerHTML = '<div class="plan-empty"><h3>No tasks yet</h3><p>Click <strong>+ Add task</strong> to add your first task.</p></div>';
+    return;
+  }
+  var COLS = [
+    { key:'not-started', label:'Not started', tint:'#94a3b8' },
+    { key:'in-progress', label:'In progress', tint:'#0ea5e9' },
+    { key:'blocked',     label:'Blocked',     tint:'#94a3b8' },
+    { key:'done',        label:'Done',        tint:'#16a34a' }
+  ];
+
+  var html = '<div class="plan-kanban">';
+  COLS.forEach(function(col){
+    var items = leaves.filter(function(t){ return (t.status || 'not-started') === col.key; });
+    html += '<div class="kanban-col" data-kanban-status="'+col.key+'">'+
+      '<div class="kanban-col-hdr"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+col.tint+';margin-right:8px"></span>'+escHtml(col.label)+' <span class="kanban-col-count">'+items.length+'</span></div>'+
+      '<div class="kanban-col-body">';
+    if(!items.length){
+      html += '<div class="kanban-empty">No tasks here yet</div>';
+    } else {
+      items.forEach(function(t){
+        var statusCls = getTaskStatusClass(t);
+        var ownerInitial = t.owner ? (t.owner[0]||'?').toUpperCase() : '';
+        var ownerChip = t.owner
+          ? '<span class="kanban-owner-chip" title="'+escHtml(t.owner)+'"><span class="owner-pick-pill">'+escHtml(ownerInitial)+'</span><span style="overflow:hidden;text-overflow:ellipsis">'+escHtml(t.owner)+'</span></span>'
+          : '';
+        var msPrefix = t.isMilestone ? '<span style="color:#f59e0b;font-size:14px;margin-right:4px">\u25C6</span>' : '';
+        var dueLine = '';
+        if(t.endDate){
+          dueLine = '<div class="kanban-due"><svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> '+escHtml(t.endDate)+'</div>';
+        }
+        var pctBar = (t.percentComplete > 0)
+          ? '<div class="kanban-pct-bar"><div class="kanban-pct-fill" style="width:'+t.percentComplete+'%"></div></div>'
+          : '';
+        var cardCls = 'kanban-card' + (statusCls ? ' '+statusCls : '') + (t.isMilestone ? ' milestone' : '');
+        html += '<div class="'+cardCls+'" draggable="true" data-task-id="'+escHtml(t.id)+'" onclick="openEditTaskModal(\''+escHtml(t.id)+'\')">'+
+          '<div class="kanban-card-title">'+msPrefix+escHtml(t.name||'(unnamed)')+'</div>'+
+          (ownerChip ? '<div style="margin-top:8px">'+ownerChip+'</div>' : '')+
+          (dueLine || pctBar ? '<div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:10px">'+(dueLine || '<span></span>')+'<span style="font-size:10px;color:var(--muted);font-weight:700">'+(t.percentComplete||0)+'%</span></div>' : '')+
+          (pctBar)+
+        '</div>';
+      });
+    }
+    html += '</div></div>';
+  });
+  html += '</div>';
+  html += '<div style="margin-top:12px;font-size:11px;color:var(--muted)">'+leaves.length+' tasks \u00B7 drag a card between columns to change its status \u00B7 click a card to edit</div>';
+  content.innerHTML = html;
+
+  // Wire drag-and-drop between columns
+  _wireKanbanDragDrop(content, plan);
+}
+
+function _wireKanbanDragDrop(content, plan){
+  var dragId = null;
+  content.querySelectorAll('.kanban-card').forEach(function(card){
+    card.addEventListener('dragstart', function(e){
+      dragId = card.dataset.taskId;
+      card.classList.add('dragging');
+      try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragId); } catch(err){}
+    });
+    card.addEventListener('dragend', function(){
+      card.classList.remove('dragging');
+      content.querySelectorAll('.kanban-col').forEach(function(c){ c.classList.remove('drop-target'); });
+      dragId = null;
+    });
+  });
+  content.querySelectorAll('.kanban-col').forEach(function(col){
+    col.addEventListener('dragover', function(e){
+      if(!dragId) return;
+      e.preventDefault();
+      try { e.dataTransfer.dropEffect = 'move'; } catch(err){}
+      col.classList.add('drop-target');
+    });
+    col.addEventListener('dragleave', function(){
+      col.classList.remove('drop-target');
+    });
+    col.addEventListener('drop', function(e){
+      e.preventDefault();
+      if(!dragId) return;
+      var newStatus = col.dataset.kanbanStatus;
+      var t = getTaskById(plan, dragId);
+      if(!t) return;
+      var prev = t.status;
+      t.status = newStatus;
+      if(newStatus === 'done') t.percentComplete = 100;
+      else if(newStatus === 'not-started') t.percentComplete = 0;
+      else if(newStatus === 'in-progress' && t.percentComplete === 0) t.percentComplete = 25;
+      if(t.source === 'g2m' && prev !== newStatus) _syncPlanTaskToG2M(t);
+      plan.updatedAt = Date.now();
+      persistData();
+      renderPlanMain();
+    });
+  });
+}
+
 function renderPlanGanttView(plan){
   var content = document.getElementById('plansContent');
   if(!plan.tasks.length){
@@ -16054,6 +17729,10 @@ function closeAllOverlays(){
   _showingDashboard=false;
   var dp=document.getElementById('dashboardPage'); if(dp) dp.style.display='none';
   var rp=document.getElementById('roadmapPage'); if(rp) rp.style.display='block';
+  // v1.20.0: default the top nav back to Roadmap. Any open* function that
+  // wants to override (Checklist / Strategy / Insights) must call
+  // updateNavActive() AFTER closeAllOverlays() returns.
+  updateNavActive('Roadmap');
 }
 
 function updateNavActive(tabName){
@@ -16209,7 +17888,7 @@ function closeAdmin(){
   document.getElementById('adminOverlay').classList.remove('open');
 }
 
-var _adminTab = 'registered'; // 'registered' | 'contacts'
+var _adminTab = 'registered'; // 'registered' | 'contacts' | 'teams'
 
 async function renderAdminPage(){
   var body=document.getElementById('adminBody');
@@ -16219,14 +17898,20 @@ async function renderAdminPage(){
   var hdr=document.createElement('div');
   hdr.style.cssText='margin-bottom:20px';
   hdr.innerHTML='<h2 style="font-size:24px;font-weight:800;letter-spacing:-0.03em;margin-bottom:4px">User Management</h2>'+
-    '<p style="font-size:13px;color:var(--muted)">Manage registered users and add contacts who can later be invited to join.</p>';
+    '<p style="font-size:13px;color:var(--muted)">Manage registered users, contacts, teams and roles.</p>';
   body.appendChild(hdr);
 
   var tabBar=document.createElement('div');
   tabBar.style.cssText='display:flex;background:#f1f5f9;border-radius:9999px;padding:4px;margin-bottom:18px;width:fit-content';
-  ['registered','contacts'].forEach(function(t){
+  var tabDefs = [
+    { key:'registered', label:'Registered Users' },
+    { key:'contacts',   label:'Contacts' },
+    { key:'teams',      label:'Teams' }
+  ];
+  tabDefs.forEach(function(td){
+    var t = td.key;
     var btn=document.createElement('button');
-    btn.textContent = t==='registered' ? 'Registered Users' : 'Contacts';
+    btn.textContent = td.label;
     btn.style.cssText='background:'+(t===_adminTab?'var(--white)':'transparent')+';color:'+(t===_adminTab?'var(--text)':'var(--muted)')+';border:none;font-size:12px;font-weight:700;padding:7px 18px;border-radius:9999px;cursor:pointer;'+(t===_adminTab?'box-shadow:0 1px 3px rgba(0,0,0,.06);':'');
     btn.onclick=function(){ _adminTab = t; renderAdminPage(); };
     tabBar.appendChild(btn);
@@ -16239,6 +17924,8 @@ async function renderAdminPage(){
 
   if(_adminTab === 'registered'){
     await renderAdminRegisteredUsers(tabContent);
+  } else if(_adminTab === 'teams'){
+    await renderAdminTeams(tabContent);
   } else {
     await renderAdminContacts(tabContent);
   }
@@ -16284,12 +17971,13 @@ async function renderAdminRegisteredUsers(body){
 
       var info=document.createElement('div');
       info.style.cssText='flex:1;min-width:0';
-      var roleBadge=u.is_super_admin?'<span style="font-size:9px;font-weight:600;padding:2px 8px;border-radius:9999px;background:rgba(124,58,237,.08);color:#7c3aed;border:1px solid rgba(124,58,237,.2);margin-left:6px">SUPER ADMIN</span>':'';
+      var currentRole = u.is_super_admin ? 'super_admin' : (u.role || 'product_manager');
+      var roleBadge='<span style="font-size:9px;font-weight:600;padding:2px 8px;border-radius:9999px;background:rgba(124,58,237,.08);color:#7c3aed;border:1px solid rgba(124,58,237,.2);margin-left:6px">'+escHtml((ROLE_OPTIONS.find(function(o){return o.value===currentRole;})||{label:currentRole}).label.toUpperCase())+'</span>';
       info.innerHTML='<div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(u.email)+roleBadge+'</div>'+
         '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+u.rows_count+' initiatives · '+u.sections_count+' sections · Joined '+new Date(u.created_at).toLocaleDateString()+'</div>';
 
       var actions=document.createElement('div');
-      actions.style.cssText='display:flex;gap:8px;flex-shrink:0';
+      actions.style.cssText='display:flex;gap:8px;flex-shrink:0;align-items:center';
 
       // View roadmap button
       var viewBtn=document.createElement('button');
@@ -16301,27 +17989,35 @@ async function renderAdminRegisteredUsers(body){
         viewBtn.onclick=function(){ viewUserRoadmap(userId,userEmail); };
       })(u.id,u.email);
 
-      // Role toggle
-      var roleBtn=document.createElement('button');
-      roleBtn.textContent=u.is_super_admin?'Remove Admin':'Make Admin';
-      roleBtn.style.cssText='padding:6px 14px;border-radius:9999px;background:var(--white);border:1px solid var(--border);color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .12s';
-      if(u.email===_currentUser.email) roleBtn.style.display='none'; // Can't change own role
-      (function(userId,email,isAdmin){
-        roleBtn.onclick=async function(){
-          var newRole=isAdmin?'product_manager':'super_admin';
-          if(!confirm((isAdmin?'Remove':'Grant')+' Super Admin for '+email+'?')) return;
-          var res=await window.electronAPI.supaRequest({
-            path:'/functions/v1/admin-api',method:'POST',
-            body:{action:'set-role',caller_id:_currentUser.id,target_user_id:userId,role:newRole},
+      // Role dropdown (v1.24.0) — replaces the old Make/Remove Admin button
+      var roleSel = document.createElement('select');
+      roleSel.style.cssText = 'padding:6px 12px;border-radius:9999px;background:var(--white);border:1px solid var(--border);color:var(--text);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;outline:none';
+      ROLE_OPTIONS.forEach(function(opt){
+        var o = document.createElement('option');
+        o.value = opt.value; o.textContent = opt.label;
+        if(opt.value === currentRole) o.selected = true;
+        roleSel.appendChild(o);
+      });
+      // Cannot change your own role from here
+      if(u.email === _currentUser.email) roleSel.disabled = true;
+      (function(userId, userEmail){
+        roleSel.addEventListener('change', async function(){
+          var newRole = roleSel.value;
+          if(!confirm('Change role for ' + userEmail + ' to ' + newRole.replace(/_/g,' ') + '?')) {
+            renderAdminPage(); return;
+          }
+          var res = await window.electronAPI.supaRequest({
+            path:'/functions/v1/admin-api', method:'POST',
+            body:{action:'set-role', caller_id:_currentUser.id, target_user_id:userId, role:newRole},
             token:_accessToken||null
           });
-          if(res.ok&&res.data&&res.data.ok){ renderAdminPage(); }
-          else { alert('Failed: '+((res.data&&res.data.error)||'Unknown error')); }
-        };
-      })(u.id,u.email,u.is_super_admin);
+          if(res.ok && res.data && res.data.ok){ renderAdminPage(); }
+          else { alert('Failed: '+((res.data&&res.data.error)||'Unknown error')); renderAdminPage(); }
+        });
+      })(u.id, u.email);
 
       actions.appendChild(viewBtn);
-      actions.appendChild(roleBtn);
+      actions.appendChild(roleSel);
       card.appendChild(avatar);
       card.appendChild(info);
       card.appendChild(actions);
@@ -16331,6 +18027,372 @@ async function renderAdminRegisteredUsers(body){
   } catch(e){
     body.innerHTML='<div style="color:var(--r1);padding:20px">Error: '+escHtml(e.message)+'</div>';
   }
+}
+
+// ── Teams management (v1.24.0) ─────────────────────────────────────────────
+// CapacityIQ is the source of truth for team definitions (name, colour). The
+// team_members DB table holds the registered-user assignments per team, keyed
+// by team NAME (we ensure a parallel teams DB row exists per CapacityIQ team
+// so the foreign key holds). This way "team" lives in one place (CapacityIQ)
+// and the admin panel only manages who from auth.users belongs to it.
+async function renderAdminTeams(body){
+  body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">Loading teams...</div>';
+
+  var capTeams = (capData && Array.isArray(capData.teams)) ? capData.teams : [];
+
+  // Load DB-side team rows + memberships so we can join by name
+  var dbTeamsByName = {};
+  var dbMembersByTeamName = {};
+  try {
+    var r = await window.electronAPI.supaRequest({
+      path:'/functions/v1/admin-api', method:'POST',
+      body:{ action:'list-teams' },
+      token:_accessToken||null
+    });
+    if(r.ok && r.data && r.data.ok){
+      (r.data.teams || []).forEach(function(t){
+        var key = (t.name || '').toLowerCase().trim();
+        dbTeamsByName[key] = t;
+        dbMembersByTeamName[key] = t.members || [];
+      });
+    }
+  } catch(e){ console.warn('Teams DB load failed:', e.message); }
+
+  body.innerHTML = '';
+  var topRow = document.createElement('div');
+  topRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:12px;flex-wrap:wrap';
+  topRow.innerHTML = '<div style="font-size:13px;color:var(--muted)">'+capTeams.length+' team'+(capTeams.length!==1?'s':'')+' from CapacityIQ \u00B7 click Edit to manage which registered users belong to a team</div>';
+  body.appendChild(topRow);
+
+  if(!capTeams.length){
+    var empty = document.createElement('div');
+    empty.className = 'prio-empty';
+    empty.innerHTML = '<h3>No teams in CapacityIQ yet</h3><p>Open <strong>CapacityIQ \u2192 Teams</strong> from the sidebar to create your team list. Once teams exist there they\'ll show up here automatically.</p>';
+    body.appendChild(empty);
+    return;
+  }
+
+  var list = document.createElement('div');
+  list.style.cssText = 'display:flex;flex-direction:column;gap:10px';
+
+  capTeams.forEach(function(capTeam){
+    var key = (capTeam.name || '').toLowerCase().trim();
+    var members = dbMembersByTeamName[key] || [];
+    // CapacityIQ has its own non-auth members — show them too as context
+    var capMembers = (capData.members || []).filter(function(m){ return m.teamId === capTeam.id; });
+
+    var card = document.createElement('div');
+    card.style.cssText = 'background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)';
+    var dot = '<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:'+escHtml(capTeam.color||'#0ea5e9')+';flex-shrink:0"></span>';
+    var memberPreview = members.slice(0, 3).map(function(m){ return escHtml(m.name || m.email); }).join(', ');
+    if(members.length > 3) memberPreview += ' +' + (members.length - 3) + ' more';
+    var capLine = capMembers.length
+      ? '<div style="font-size:10px;color:var(--muted);margin-top:2px">CapacityIQ: '+capMembers.length+' resource' + (capMembers.length !== 1 ? 's' : '') + '</div>'
+      : '';
+    var infoHtml = '<div style="flex:1;min-width:0">'+
+      '<div style="font-weight:700;font-size:14px;color:var(--text)">'+escHtml(capTeam.name)+'</div>'+
+      capLine+
+      '<div style="font-size:11px;color:var(--muted);margin-top:4px">Registered users: '+members.length+(memberPreview ? ' \u00B7 '+memberPreview : ' \u2014 none assigned')+'</div>'+
+    '</div>';
+    card.innerHTML = dot + infoHtml;
+
+    var actions = document.createElement('div');
+    actions.style.cssText = 'display:flex;gap:6px;flex-shrink:0';
+    var editBtn = document.createElement('button');
+    editBtn.className = 'prio-btn'; editBtn.style.cssText += ';padding:6px 14px;font-size:11px';
+    editBtn.textContent = 'Manage members';
+    editBtn.onclick = (function(ct){
+      return function(){ openTeamMembersModal(ct, dbTeamsByName[(ct.name||'').toLowerCase().trim()] || null); };
+    })(capTeam);
+    actions.appendChild(editBtn);
+    card.appendChild(actions);
+    list.appendChild(card);
+  });
+  body.appendChild(list);
+}
+
+// Modal for assigning registered users to a CapacityIQ team. We ensure a
+// matching DB row exists (creating it on first save), then call set-team-members.
+async function openTeamMembersModal(capTeam, existingDbTeam){
+  // Pull current registered-user list
+  var users = [];
+  try {
+    var r = await window.electronAPI.supaRequest({
+      path:'/functions/v1/admin-api', method:'POST',
+      body:{ action:'list-users' },
+      token:_accessToken||null
+    });
+    if(r.ok && r.data && r.data.ok) users = r.data.users || [];
+  } catch(e){}
+
+  var existingMembers = new Set(((existingDbTeam && existingDbTeam.members) || []).map(function(m){ return m.user_id; }));
+
+  var ex = document.getElementById('teamEditorModal'); if(ex) ex.remove();
+  var ov = document.createElement('div');
+  ov.id = 'teamEditorModal'; ov.className = 'modal-overlay';
+  ov.style.zIndex = '6000';
+  var modal = document.createElement('div'); modal.className = 'modal';
+  modal.style.cssText = 'width:540px;max-width:95vw;max-height:88vh;display:flex;flex-direction:column;overflow:hidden';
+
+  var hdr = document.createElement('div'); hdr.className = 'modal-hdr';
+  var h2 = document.createElement('h2');
+  h2.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:'+escHtml(capTeam.color||'#0ea5e9')+';margin-right:8px;vertical-align:middle"></span>'+escHtml(capTeam.name);
+  hdr.appendChild(h2);
+  var cx = document.createElement('button'); cx.className = 'close'; cx.innerHTML = '\u2715';
+  cx.onclick = function(){ ov.remove(); };
+  hdr.appendChild(cx);
+  modal.appendChild(hdr);
+
+  var body = document.createElement('div'); body.className = 'modal-body';
+  body.style.cssText = 'padding:22px;overflow-y:auto;flex:1';
+
+  var hint = document.createElement('div');
+  hint.style.cssText = 'font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5';
+  hint.innerHTML = 'Tick the registered users who belong to this CapacityIQ team. The team itself (name, colour) is managed in <strong>CapacityIQ \u2192 Teams</strong>.';
+  body.appendChild(hint);
+
+  var memList = document.createElement('div');
+  memList.style.cssText = 'border:1px solid var(--border);border-radius:10px;background:var(--white);max-height:340px;overflow-y:auto';
+  if(!users.length){
+    var noUsers = document.createElement('div');
+    noUsers.style.cssText = 'padding:18px;text-align:center;font-size:12px;color:var(--muted)';
+    noUsers.textContent = 'No registered users found.';
+    memList.appendChild(noUsers);
+  } else {
+    users.forEach(function(u){
+      var row = document.createElement('label');
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer;font-size:13px;color:var(--text)';
+      var cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = u.id;
+      cb.checked = existingMembers.has(u.id);
+      cb.style.cssText = 'width:15px;height:15px;cursor:pointer;accent-color:var(--accent)';
+      row.appendChild(cb);
+      var initial = (u.email || '?')[0].toUpperCase();
+      var av = document.createElement('span');
+      av.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;font-weight:700;flex-shrink:0';
+      av.textContent = initial;
+      row.appendChild(av);
+      var nm = document.createElement('span');
+      nm.style.cssText = 'flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+      nm.textContent = u.email;
+      row.appendChild(nm);
+      memList.appendChild(row);
+    });
+  }
+  body.appendChild(memList);
+  modal.appendChild(body);
+
+  var ftr = document.createElement('div');
+  ftr.style.cssText = 'padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:#f8fafc';
+  var cancelBtn = document.createElement('button');
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.style.cssText = 'padding:8px 18px;border-radius:9999px;font-size:11px;font-weight:700;cursor:pointer;background:var(--white);border:1px solid var(--border);color:var(--text)';
+  cancelBtn.onclick = function(){ ov.remove(); };
+  var saveBtn = document.createElement('button');
+  saveBtn.textContent = 'Save members';
+  saveBtn.style.cssText = 'padding:8px 18px;border-radius:9999px;font-size:11px;font-weight:700;cursor:pointer;background:var(--accent);border:1px solid var(--accent);color:#fff';
+  saveBtn.onclick = async function(){
+    saveBtn.disabled = true; saveBtn.textContent = 'Saving\u2026';
+    try {
+      var teamId = existingDbTeam ? existingDbTeam.id : null;
+      // Ensure a DB team row exists with this name + colour
+      if(!teamId){
+        var c = await window.electronAPI.supaRequest({
+          path:'/functions/v1/admin-api', method:'POST',
+          body:{ action:'create-team', name:capTeam.name, color:capTeam.color || '#0ea5e9' },
+          token:_accessToken||null
+        });
+        if(!c.ok || !c.data || !c.data.ok){
+          alert('Failed to create team row: '+((c.data&&c.data.error)||'unknown'));
+          saveBtn.disabled = false; saveBtn.textContent = 'Save members';
+          return;
+        }
+        teamId = c.data.id;
+      }
+      var memberIds = [];
+      memList.querySelectorAll('input[type=checkbox]:checked').forEach(function(cb){ memberIds.push(cb.value); });
+      var m = await window.electronAPI.supaRequest({
+        path:'/functions/v1/admin-api', method:'POST',
+        body:{ action:'set-team-members', id:teamId, member_user_ids:memberIds },
+        token:_accessToken||null
+      });
+      if(!m.ok || !m.data || !m.data.ok){
+        alert('Failed to save members: '+((m.data&&m.data.error)||'unknown'));
+        saveBtn.disabled = false; saveBtn.textContent = 'Save members';
+        return;
+      }
+      ov.remove();
+      renderAdminPage();
+    } catch(e){
+      alert('Network error: '+e.message);
+      saveBtn.disabled = false; saveBtn.textContent = 'Save members';
+    }
+  };
+  ftr.appendChild(cancelBtn); ftr.appendChild(saveBtn);
+  modal.appendChild(ftr);
+  ov.appendChild(modal); document.body.appendChild(ov);
+}
+
+async function _deleteTeam(id, name){
+  if(!confirm('Delete team "'+name+'"? This removes the team and all its memberships. Cannot be undone.')) return;
+  try {
+    var r = await window.electronAPI.supaRequest({
+      path:'/functions/v1/admin-api', method:'POST',
+      body:{ action:'delete-team', id:id },
+      token:_accessToken||null
+    });
+    if(r.ok && r.data && r.data.ok){
+      renderAdminPage();
+    } else {
+      alert('Failed: '+((r.data&&r.data.error)||'Unknown error'));
+    }
+  } catch(e){ alert('Network error: '+e.message); }
+}
+
+// Team editor modal — create or edit a team and pick member users from the
+// registered-user list. Also lets you set name / description / colour.
+async function openTeamEditorModal(team){
+  // Pull the current registered-user list so we can show member checkboxes
+  var users = [];
+  try {
+    var r = await window.electronAPI.supaRequest({
+      path:'/functions/v1/admin-api', method:'POST',
+      body:{ action:'list-users' },
+      token:_accessToken||null
+    });
+    if(r.ok && r.data && r.data.ok) users = r.data.users || [];
+  } catch(e){}
+
+  var ex = document.getElementById('teamEditorModal'); if(ex) ex.remove();
+  var existingMembers = new Set((team && team.members ? team.members : []).map(function(m){ return m.user_id; }));
+
+  var ov = document.createElement('div');
+  ov.id = 'teamEditorModal'; ov.className = 'modal-overlay';
+  ov.style.zIndex = '6000';
+  var modal = document.createElement('div'); modal.className = 'modal';
+  modal.style.cssText = 'width:560px;max-width:95vw;max-height:88vh;display:flex;flex-direction:column;overflow:hidden';
+
+  var hdr = document.createElement('div'); hdr.className = 'modal-hdr';
+  var h2 = document.createElement('h2'); h2.textContent = team ? ('Edit team: ' + team.name) : 'Add team';
+  hdr.appendChild(h2);
+  var cx = document.createElement('button'); cx.className = 'close'; cx.innerHTML = '\u2715';
+  cx.onclick = function(){ ov.remove(); };
+  hdr.appendChild(cx);
+  modal.appendChild(hdr);
+
+  var body = document.createElement('div'); body.className = 'modal-body';
+  body.style.cssText = 'padding:22px;overflow-y:auto;flex:1';
+
+  function field(label){
+    var w = document.createElement('div'); w.style.cssText = 'margin-bottom:14px';
+    var l = document.createElement('label');
+    l.style.cssText = 'display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px';
+    l.textContent = label; w.appendChild(l); return w;
+  }
+  var inputCss = 'width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:9999px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;background:var(--white);color:var(--text)';
+
+  var nameRow = field('Team name *');
+  var nameInp = document.createElement('input'); nameInp.type = 'text'; nameInp.value = team ? team.name : '';
+  nameInp.placeholder = 'e.g. Hardware, Firmware, Marketing';
+  nameInp.style.cssText = inputCss; nameRow.appendChild(nameInp); body.appendChild(nameRow);
+
+  var descRow = field('Description');
+  var descInp = document.createElement('textarea'); descInp.rows = 2; descInp.value = team ? (team.description || '') : '';
+  descInp.style.cssText = 'width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:14px;font-size:13px;font-family:inherit;outline:none;resize:vertical;box-sizing:border-box;background:var(--white);color:var(--text)';
+  descRow.appendChild(descInp); body.appendChild(descRow);
+
+  var colorRow = field('Colour');
+  var colorInp = document.createElement('input'); colorInp.type = 'color'; colorInp.value = team ? (team.color || '#0ea5e9') : '#0ea5e9';
+  colorInp.style.cssText = 'width:54px;height:42px;padding:2px;border:1px solid var(--border);border-radius:9px;cursor:pointer';
+  colorRow.appendChild(colorInp); body.appendChild(colorRow);
+
+  var memRow = field('Members');
+  var memHint = document.createElement('div');
+  memHint.style.cssText = 'font-size:11px;color:var(--muted);margin-bottom:8px';
+  memHint.textContent = 'Tick the registered users who belong to this team. Add new people via the Registered Users tab first.';
+  memRow.appendChild(memHint);
+  var memList = document.createElement('div');
+  memList.style.cssText = 'border:1px solid var(--border);border-radius:10px;background:var(--white);max-height:260px;overflow-y:auto';
+  if(!users.length){
+    var noUsers = document.createElement('div');
+    noUsers.style.cssText = 'padding:18px;text-align:center;font-size:12px;color:var(--muted)';
+    noUsers.textContent = 'No registered users found.';
+    memList.appendChild(noUsers);
+  } else {
+    users.forEach(function(u){
+      var row = document.createElement('label');
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer;font-size:13px';
+      var cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = u.id;
+      cb.checked = existingMembers.has(u.id);
+      cb.style.cssText = 'width:15px;height:15px;cursor:pointer;accent-color:var(--accent)';
+      row.appendChild(cb);
+      var initial = (u.email || '?')[0].toUpperCase();
+      var av = document.createElement('span');
+      av.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;font-weight:700;flex-shrink:0';
+      av.textContent = initial;
+      row.appendChild(av);
+      var nm = document.createElement('span');
+      nm.style.cssText = 'flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+      nm.textContent = u.email;
+      row.appendChild(nm);
+      memList.appendChild(row);
+    });
+  }
+  memRow.appendChild(memList);
+  body.appendChild(memRow);
+
+  modal.appendChild(body);
+
+  var ftr = document.createElement('div');
+  ftr.style.cssText = 'padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:#f8fafc';
+  var cancelBtn = document.createElement('button');
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.style.cssText = 'padding:8px 18px;border-radius:9999px;font-size:11px;font-weight:700;cursor:pointer;background:var(--white);border:1px solid var(--border);color:var(--text)';
+  cancelBtn.onclick = function(){ ov.remove(); };
+  var saveBtn = document.createElement('button');
+  saveBtn.textContent = team ? 'Save changes' : 'Create team';
+  saveBtn.style.cssText = 'padding:8px 18px;border-radius:9999px;font-size:11px;font-weight:700;cursor:pointer;background:var(--accent);border:1px solid var(--accent);color:#fff';
+  saveBtn.onclick = async function(){
+    var name = nameInp.value.trim();
+    if(!name){ alert('Team name is required.'); return; }
+    saveBtn.disabled = true; saveBtn.textContent = 'Saving\u2026';
+    try {
+      var teamId = team ? team.id : null;
+      if(team){
+        var u = await window.electronAPI.supaRequest({
+          path:'/functions/v1/admin-api', method:'POST',
+          body:{ action:'update-team', id:team.id, name:name, description:descInp.value, color:colorInp.value },
+          token:_accessToken||null
+        });
+        if(!u.ok || !u.data || !u.data.ok){ alert('Failed: '+((u.data&&u.data.error)||'unknown')); saveBtn.disabled = false; saveBtn.textContent='Save changes'; return; }
+      } else {
+        var c = await window.electronAPI.supaRequest({
+          path:'/functions/v1/admin-api', method:'POST',
+          body:{ action:'create-team', name:name, description:descInp.value, color:colorInp.value },
+          token:_accessToken||null
+        });
+        if(!c.ok || !c.data || !c.data.ok){ alert('Failed: '+((c.data&&c.data.error)||'unknown')); saveBtn.disabled = false; saveBtn.textContent='Create team'; return; }
+        teamId = c.data.id;
+      }
+      // Set members
+      var memberIds = [];
+      memList.querySelectorAll('input[type=checkbox]:checked').forEach(function(cb){ memberIds.push(cb.value); });
+      var m = await window.electronAPI.supaRequest({
+        path:'/functions/v1/admin-api', method:'POST',
+        body:{ action:'set-team-members', id:teamId, member_user_ids:memberIds },
+        token:_accessToken||null
+      });
+      if(!m.ok || !m.data || !m.data.ok){ alert('Team saved but member update failed: '+((m.data&&m.data.error)||'unknown')); }
+      ov.remove();
+      renderAdminPage();
+    } catch(e){
+      alert('Network error: '+e.message);
+      saveBtn.disabled = false; saveBtn.textContent = team ? 'Save changes' : 'Create team';
+    }
+  };
+  ftr.appendChild(cancelBtn); ftr.appendChild(saveBtn);
+  modal.appendChild(ftr);
+  ov.appendChild(modal); document.body.appendChild(ov);
+  setTimeout(function(){ try { nameInp.focus(); nameInp.select(); } catch(e){} }, 30);
 }
 
 // ── Contacts management ────────────────────────────────────────────────────
@@ -16396,12 +18458,27 @@ async function renderAdminContacts(body){
 
     var initial = ((c.name || c.email || '?')[0] || '?').toUpperCase();
     var displayName = c.name || c.email.split('@')[0];
+    var meta = c.metadata || {};
+    // Build the second line with the most important meta fields
+    var subParts = [c.email];
+    if(meta.title) subParts.push(escHtml(meta.title));
+    if(meta.team) subParts.push('<span style="color:var(--accent);font-weight:600">'+escHtml(meta.team)+'</span>');
+    if(meta.company) subParts.push(escHtml(meta.company));
+    var subLine = subParts.join(' &middot; ');
+    var thirdLine = '';
+    if(meta.phone || c.notes){
+      var parts = [];
+      if(meta.phone) parts.push('\u260E ' + escHtml(meta.phone));
+      if(c.notes) parts.push(escHtml(c.notes));
+      thirdLine = '<div style="font-size:11px;color:var(--muted);margin-top:2px;font-style:italic">'+parts.join(' &middot; ')+'</div>';
+    }
 
     card.innerHTML =
       '<div style="width:42px;height:42px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0">'+escHtml(initial)+'</div>'+
       '<div style="flex:1;min-width:0">'+
         '<div style="font-weight:700;font-size:14px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(displayName)+'</div>'+
-        '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+escHtml(c.email)+(c.notes ? ' &middot; ' + escHtml(c.notes) : '')+'</div>'+
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+subLine+'</div>'+
+        thirdLine+
       '</div>'+
       '<span style="font-size:9px;font-weight:800;padding:4px 12px;border-radius:9999px;background:'+statusColor+';color:#fff;text-transform:uppercase;letter-spacing:.04em">'+statusLabel+'</span>'+
       '<div class="contact-actions" style="display:flex;gap:6px;flex-shrink:0"></div>';
@@ -16446,18 +18523,79 @@ async function renderAdminContacts(body){
 
 function openAddContactModal(contactId){
   var existing = contactId ? _contactsCache.find(function(c){ return c.id === contactId; }) : null;
+  var meta = (existing && existing.metadata) || {};
   var title = existing ? 'Edit contact' : 'Add contact';
+  // Try to split existing.name back into first / last; metadata wins if present
+  var existingFirst = meta.firstName || (existing ? (existing.name || '').split(' ')[0] : '');
+  var existingLast  = meta.lastName  || (existing ? ((existing.name || '').split(' ').slice(1).join(' ')) : '');
+
+  // Pull team list from CapacityIQ. Falls back to free-text if empty.
+  var capTeams = (capData && Array.isArray(capData.teams)) ? capData.teams : [];
+  var teamOptions = '<option value="">\u2014 None \u2014</option>';
+  capTeams.forEach(function(t){
+    var nm = (t && (t.name || t.id)) || '';
+    if(!nm) return;
+    var sel = (meta.team === nm) ? ' selected' : '';
+    teamOptions += '<option value="'+escHtml(nm)+'"'+sel+'>'+escHtml(nm)+'</option>';
+  });
+  // If the contact already has a team that's not in capTeams (e.g. team was
+  // deleted), include it as a one-off so we don't lose the value.
+  if(meta.team && !capTeams.find(function(t){ return (t.name || t.id) === meta.team; })){
+    teamOptions += '<option value="'+escHtml(meta.team)+'" selected>'+escHtml(meta.team)+' (custom)</option>';
+  }
+
+  var inp = function(id, label, val, ph, type){
+    return '<div style="margin-bottom:12px">'+
+      '<label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">'+label+'</label>'+
+      '<input type="'+(type||'text')+'" id="'+id+'" value="'+escHtml(val||'')+'" placeholder="'+escHtml(ph||'')+'" style="width:100%;padding:9px 14px;border:1px solid var(--border);border-radius:9999px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">'+
+    '</div>';
+  };
+
   var html = '<div class="plan-modal-backdrop" onclick="if(event.target===this) closeAddContactModal()">'+
-    '<div class="plan-modal" style="width:480px">'+
+    '<div class="plan-modal" style="width:520px;max-width:95vw;max-height:92vh;display:flex;flex-direction:column;overflow:hidden">'+
       '<div class="plan-modal-header"><h3>'+title+'</h3><button class="plan-modal-close" onclick="closeAddContactModal()">\u00D7</button></div>'+
-      '<div class="plan-modal-body">'+
+      '<div class="plan-modal-body" style="overflow-y:auto;flex:1">'+
         '<div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5">Add someone who isn\'t (yet) registered on the platform. They\'ll be available as a task owner immediately. When you\'re ready, click <strong>Send invite</strong> on their card and they\'ll get an email to join.</div>'+
-        '<label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Email <span style="color:#dc2626">*</span></label>'+
-        '<input type="email" id="contactEmailInp" value="'+escHtml(existing ? existing.email : '')+'"'+(existing?' disabled':'')+' placeholder="[email protected]" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:9999px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box'+(existing?';background:#f8fafc;color:var(--muted)':'')+'">'+
-        '<label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 6px">Full name</label>'+
-        '<input type="text" id="contactNameInp" value="'+escHtml(existing ? (existing.name || '') : '')+'" placeholder="Jane Doe" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:9999px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">'+
-        '<label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 6px">Notes (optional)</label>'+
-        '<textarea id="contactNotesInp" rows="2" placeholder="Role, team, or any context\u2026" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:14px;font-size:13px;font-family:inherit;outline:none;resize:vertical;box-sizing:border-box">'+escHtml(existing ? (existing.notes || '') : '')+'</textarea>'+
+
+        '<div style="margin-bottom:12px">'+
+          '<label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Email <span style="color:#dc2626">*</span></label>'+
+          '<input type="email" id="contactEmailInp" value="'+escHtml(existing ? existing.email : '')+'"'+(existing?' disabled':'')+' placeholder="[email protected]" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:9999px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box'+(existing?';background:#f8fafc;color:var(--muted)':'')+'">'+
+          '<div style="font-size:10px;color:var(--muted);margin-top:4px">Must not already exist as a registered user or another contact</div>'+
+        '</div>'+
+
+        // Two-column row: First name + Last name (both required)
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
+          '<div style="margin-bottom:12px">'+
+            '<label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">First name <span style="color:#dc2626">*</span></label>'+
+            '<input type="text" id="contactFirstNameInp" value="'+escHtml(existingFirst||'')+'" placeholder="Jane" style="width:100%;padding:9px 14px;border:1px solid var(--border);border-radius:9999px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">'+
+          '</div>'+
+          '<div style="margin-bottom:12px">'+
+            '<label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Last name <span style="color:#dc2626">*</span></label>'+
+            '<input type="text" id="contactLastNameInp" value="'+escHtml(existingLast||'')+'" placeholder="Doe" style="width:100%;padding:9px 14px;border:1px solid var(--border);border-radius:9999px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">'+
+          '</div>'+
+        '</div>'+
+
+        // Job title (full width — optional)
+        inp('contactTitleInp', 'Job title (optional)', meta.title, 'Product Manager') +
+
+        // Two-column row: Team (select) + Phone
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
+          '<div style="margin-bottom:12px">'+
+            '<label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Team</label>'+
+            '<select id="contactTeamInp" style="width:100%;padding:9px 14px;border:1px solid var(--border);border-radius:9999px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;background:#fff">'+teamOptions+'</select>'+
+            '<div style="font-size:10px;color:var(--muted);margin-top:4px">Pulled from CapacityIQ</div>'+
+          '</div>'+
+          inp('contactPhoneInp', 'Phone', meta.phone, '+27 82 123 4567', 'tel') +
+        '</div>'+
+
+        // Company (full width)
+        inp('contactCompanyInp', 'Company / Organisation', meta.company, 'Acme Corp') +
+
+        '<div style="margin-bottom:12px">'+
+          '<label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Notes (optional)</label>'+
+          '<textarea id="contactNotesInp" rows="3" placeholder="Anything else worth remembering\u2026" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:14px;font-size:13px;font-family:inherit;outline:none;resize:vertical;box-sizing:border-box">'+escHtml(existing ? (existing.notes || '') : '')+'</textarea>'+
+        '</div>'+
+
       '</div>'+
       '<div class="plan-modal-footer">'+
         '<button class="prio-btn" onclick="closeAddContactModal()">Cancel</button>'+
@@ -16470,8 +18608,8 @@ function openAddContactModal(contactId){
   wrap.innerHTML = html;
   document.body.appendChild(wrap);
   setTimeout(function(){
-    var inp = document.getElementById(existing ? 'contactNameInp' : 'contactEmailInp');
-    if(inp) inp.focus();
+    var fi = document.getElementById(existing ? 'contactFirstNameInp' : 'contactEmailInp');
+    if(fi) fi.focus();
   }, 50);
 }
 
@@ -16482,10 +18620,28 @@ function closeAddContactModal(){
 
 async function saveContact(contactId){
   var email = (document.getElementById('contactEmailInp').value || '').trim();
-  var name = (document.getElementById('contactNameInp').value || '').trim();
+  // v1.23.1: split name into first/last so we can require both
+  var firstName = (document.getElementById('contactFirstNameInp')?.value || '').trim();
+  var lastName  = (document.getElementById('contactLastNameInp')?.value  || '').trim();
+  var name = (firstName + ' ' + lastName).trim();
   var notes = (document.getElementById('contactNotesInp').value || '').trim();
-  if(!contactId && !email){ alert('Email is required.'); return; }
-  if(!contactId && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ alert('Invalid email format.'); return; }
+  var metadata = {
+    firstName: firstName || undefined,
+    lastName:  lastName  || undefined,
+    title:   (document.getElementById('contactTitleInp')?.value   || '').trim(),
+    team:    (document.getElementById('contactTeamInp')?.value    || '').trim(),
+    phone:   (document.getElementById('contactPhoneInp')?.value   || '').trim(),
+    company: (document.getElementById('contactCompanyInp')?.value || '').trim()
+  };
+  // Drop empty keys to keep the jsonb tidy
+  Object.keys(metadata).forEach(function(k){ if(!metadata[k]) delete metadata[k]; });
+
+  if(!contactId){
+    if(!email){ alert('Email is required.'); return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ alert('Invalid email format.'); return; }
+    if(!firstName){ alert('First name is required.'); return; }
+    if(!lastName){ alert('Last name is required.'); return; }
+  }
 
   try {
     var res;
@@ -16493,22 +18649,30 @@ async function saveContact(contactId){
       res = await window.electronAPI.supaRequest({
         path: '/functions/v1/contacts-api',
         method: 'POST',
-        body: { action: 'update', id: contactId, name: name, notes: notes },
+        body: { action: 'update', id: contactId, name: name, notes: notes, metadata: metadata },
         token: _accessToken
       });
     } else {
       res = await window.electronAPI.supaRequest({
         path: '/functions/v1/contacts-api',
         method: 'POST',
-        body: { action: 'add', email: email, name: name, notes: notes },
+        body: { action: 'add', email: email, name: name, notes: notes, metadata: metadata },
         token: _accessToken
       });
     }
     if(res && res.ok && res.data && res.data.ok){
       closeAddContactModal();
       _contactsCacheAt = 0;  // force refresh
+      // Refresh contacts cache so getKnownOwners picks up the new contact immediately
+      try { await refreshContactsCache(); } catch(e){}
       var tabContent = document.getElementById('adminTabContent');
       if(tabContent) renderAdminContacts(tabContent);
+      // v1.23.0: if the owner picker triggered this contact add, fire its callback
+      if(typeof _afterContactSavedCallback === 'function'){
+        var cb = _afterContactSavedCallback;
+        _afterContactSavedCallback = null;
+        cb({ name: name, email: email });
+      }
     } else {
       var err = (res && res.data && (res.data.error || res.data.message)) || 'Unknown error';
       alert('Failed: ' + err);
@@ -16590,6 +18754,7 @@ async function viewUserRoadmap(userId,userEmail){
 function openInsights(){
   document.getElementById('insightsOverlay').classList.add('open');
   renderInsights();
+  updateNavActive('Insights');
 }
 function closeInsights(){
   document.getElementById('insightsOverlay').classList.remove('open');
@@ -16820,6 +18985,7 @@ function openReports(){
   document.getElementById('reportsOverlay').classList.add('open');
   renderReportsSidebar();
   renderReport(_rptCurrentReport);
+  updateNavActive('Strategy');
 }
 function closeReports(){
   document.getElementById('reportsOverlay').classList.remove('open');
@@ -19196,6 +21362,128 @@ function exportArtifactWord(id) {
 // ── SETTINGS MODULE ──────────────────────────────────────────────────────────
 // Focused AI configuration modal — extracted from the old Settings module.
 // Lives inside Account → AI configuration so users have one less top-nav item.
+// ─── Notification preferences modal (v1.17.0) ───────────────────────────────
+// Stored in auth.users.user_metadata.notification_prefs as a flat map:
+//   { master: true, in_app_plan_task_assigned: true, email_plan_task_assigned: true, ... }
+// Default for any missing key is "on" — so existing users see no behavior change
+// until they explicitly opt out. The notifications-api edge function reads
+// this map for the recipient before deciding what to write/send.
+var NOTIF_PREF_TYPES = [
+  { key: 'plan_task_assigned', label: 'Plan task assigned to me',     desc: 'When someone assigns you a task on a project plan' },
+  { key: 'g2m_assigned',       label: 'G2M item assigned to me',      desc: 'When someone assigns you an item on a Go-to-Market checklist' },
+  { key: 'mention',            label: 'Mentions and comments',        desc: 'When someone @mentions you or comments on something you own' },
+  { key: 'share_received',     label: 'Roadmap shared with me',       desc: 'When a teammate shares a roadmap with your account' }
+];
+
+function _getCurrentNotifPrefs(){
+  var meta = (_currentUser && _currentUser.user_metadata) || {};
+  return meta.notification_prefs || {};
+}
+
+function openNotificationPrefsModal(){
+  var ex=document.getElementById('notifPrefsModal'); if(ex) ex.remove();
+  var prefs = _getCurrentNotifPrefs();
+  var get = function(k){ return prefs[k] !== false; }; // default on
+
+  var ov=document.createElement('div');
+  ov.id='notifPrefsModal'; ov.className='modal-overlay';
+  var modal=document.createElement('div'); modal.className='modal';
+  modal.style.cssText='width:580px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column';
+
+  var hdr=document.createElement('div'); hdr.className='modal-hdr';
+  var h2=document.createElement('h2'); h2.textContent='Notification preferences'; hdr.appendChild(h2);
+  var cx=document.createElement('button'); cx.className='close'; cx.innerHTML='✕';
+  cx.onclick=function(){ ov.remove(); openProfile(); }; hdr.appendChild(cx);
+  modal.appendChild(hdr);
+
+  var body=document.createElement('div'); body.className='modal-body';
+  body.style.cssText='padding:22px;overflow-y:auto;flex:1';
+
+  var intro=document.createElement('div');
+  intro.style.cssText='font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:18px';
+  intro.textContent='Choose which events notify you, and whether each one shows up in the app, by email, or both. Defaults to all on.';
+  body.appendChild(intro);
+
+  // Master toggle
+  var masterRow=document.createElement('div');
+  masterRow.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#f4f7fc;border-radius:10px;margin-bottom:18px;border:1px solid var(--border)';
+  masterRow.innerHTML='<div><div style="font-size:13px;font-weight:700;color:var(--navy)">All notifications</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Master switch — turn this off to silence everything</div></div>';
+  var masterToggle=document.createElement('input'); masterToggle.type='checkbox'; masterToggle.checked=get('master');
+  masterToggle.style.cssText='width:18px;height:18px;cursor:pointer;accent-color:var(--accent)';
+  masterRow.appendChild(masterToggle);
+  body.appendChild(masterRow);
+
+  // Per-type grid
+  var hdrGrid=document.createElement('div');
+  hdrGrid.style.cssText='display:grid;grid-template-columns:1fr 70px 70px;gap:8px;padding:0 8px 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--border);margin-bottom:8px';
+  hdrGrid.innerHTML='<div>Event</div><div style="text-align:center">In&nbsp;app</div><div style="text-align:center">Email</div>';
+  body.appendChild(hdrGrid);
+
+  var checkboxes = {};
+  NOTIF_PREF_TYPES.forEach(function(t){
+    var row=document.createElement('div');
+    row.style.cssText='display:grid;grid-template-columns:1fr 70px 70px;gap:8px;align-items:center;padding:12px 8px;border-bottom:1px solid #f0f0f0';
+    var label=document.createElement('div');
+    label.innerHTML='<div style="font-size:13px;font-weight:600;color:var(--navy)">'+t.label+'</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4">'+t.desc+'</div>';
+    row.appendChild(label);
+    var inAppKey='in_app_'+t.key;
+    var emailKey='email_'+t.key;
+    ['inApp','email'].forEach(function(channel){
+      var cell=document.createElement('div'); cell.style.cssText='text-align:center';
+      var cb=document.createElement('input'); cb.type='checkbox';
+      cb.checked = get(channel==='inApp'?inAppKey:emailKey);
+      cb.style.cssText='width:16px;height:16px;cursor:pointer;accent-color:var(--accent)';
+      cell.appendChild(cb); row.appendChild(cell);
+      checkboxes[channel==='inApp'?inAppKey:emailKey] = cb;
+    });
+    body.appendChild(row);
+  });
+
+  // Footer
+  var ftr=document.createElement('div');
+  ftr.style.cssText='padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:var(--surface-low,#f8fafc)';
+  var cancelBtn=document.createElement('button');
+  cancelBtn.textContent='Cancel';
+  cancelBtn.style.cssText='padding:8px 18px;border-radius:9999px;font-size:11px;font-weight:700;cursor:pointer;background:var(--white);border:1px solid var(--border);color:var(--text)';
+  cancelBtn.onclick=function(){ ov.remove(); openProfile(); };
+  var saveBtn=document.createElement('button');
+  saveBtn.textContent='Save preferences';
+  saveBtn.style.cssText='padding:8px 18px;border-radius:9999px;font-size:11px;font-weight:700;cursor:pointer;background:var(--accent);border:1px solid var(--accent);color:#fff';
+  saveBtn.onclick=async function(){
+    var newPrefs = { master: !!masterToggle.checked };
+    Object.keys(checkboxes).forEach(function(k){ newPrefs[k] = !!checkboxes[k].checked; });
+    saveBtn.disabled=true; saveBtn.textContent='Saving…';
+    try {
+      var res = await window.electronAPI.supaRequest({
+        path:'/auth/v1/user',
+        method:'PUT',
+        body:{ data: { notification_prefs: newPrefs } },
+        token:_accessToken||null
+      });
+      if(res && res.ok){
+        // Refresh local user object so subsequent modal opens reflect the change
+        if(res.data) _currentUser = res.data;
+        ov.remove();
+        if(typeof showToast==='function') showToast('Notification preferences saved','success');
+        else alert('Notification preferences saved');
+      } else {
+        saveBtn.disabled=false; saveBtn.textContent='Save preferences';
+        alert('Failed to save preferences. Please try again.');
+      }
+    } catch(e){
+      saveBtn.disabled=false; saveBtn.textContent='Save preferences';
+      alert('Failed to save preferences: '+(e&&e.message||e));
+    }
+  };
+  ftr.appendChild(cancelBtn); ftr.appendChild(saveBtn);
+
+  modal.appendChild(body);
+  modal.appendChild(ftr);
+  ov.appendChild(modal);
+  document.body.appendChild(ov);
+}
+
 function openAIConfigModal(){
   var existing = document.getElementById('aiConfigModalWrap');
   if(existing) existing.remove();

@@ -97,25 +97,60 @@ serve(handle(async (req) => {
 
   // ── ADD ────────────────────────────────────────────────────────────────
   if (action === "add") {
-    const { email, name, notes } = body;
+    const { email, name, notes, metadata } = body;
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return errorResponse("Valid email required", 400);
     }
+    if (!name || !String(name).trim()) {
+      return errorResponse("Name is required", 400);
+    }
     const cleanEmail = email.toLowerCase().trim();
+
+    // v1.23.1: pre-flight check — block if email already belongs to a
+    // registered user, OR is already in this owner's contacts. The unique
+    // constraint covers the second case but we want a clearer error message
+    // and we want to block registered users too.
+    try {
+      const { data: allUsers } = await supabase.auth.admin.listUsers();
+      const existingUser = (allUsers?.users || []).find(
+        (u) => (u.email || "").toLowerCase() === cleanEmail,
+      );
+      if (existingUser) {
+        return errorResponse(
+          `${cleanEmail} is already a registered user on the platform — no need to add as a contact.`,
+          409,
+        );
+      }
+    } catch (e) {
+      // If admin.listUsers fails, fall through and let the DB constraint handle dup detection
+      console.error("[contacts-api add] listUsers failed:", (e as Error).message);
+    }
+
+    const { data: existingContact } = await supabase
+      .from("contacts")
+      .select("id")
+      .eq("owner_user_id", user.id)
+      .eq("email", cleanEmail)
+      .maybeSingle();
+    if (existingContact) {
+      return errorResponse(`${cleanEmail} is already in your contacts.`, 409);
+    }
+
     const { data, error } = await supabase
       .from("contacts")
       .insert({
         owner_user_id: user.id,
         email: cleanEmail,
-        name: name ? String(name).trim() : null,
+        name: String(name).trim(),
         notes: notes ? String(notes).trim() : null,
+        metadata: (metadata && typeof metadata === "object") ? metadata : {},
         status: "inactive",
       })
       .select("id")
       .single();
     if (error) {
       if ((error as { code?: string }).code === "23505") {
-        return errorResponse("Already in your contacts", 409);
+        return errorResponse(`${cleanEmail} is already in your contacts.`, 409);
       }
       console.error("[contacts-api add] error:", error.message);
       return errorResponse("Failed to add contact", 500);
@@ -125,11 +160,12 @@ serve(handle(async (req) => {
 
   // ── UPDATE ─────────────────────────────────────────────────────────────
   if (action === "update") {
-    const { id, name, notes } = body;
+    const { id, name, notes, metadata } = body;
     if (!id) return errorResponse("Missing id", 400);
     const updates: Record<string, unknown> = {};
     if (name != null) updates.name = String(name).trim();
     if (notes != null) updates.notes = String(notes).trim();
+    if (metadata != null && typeof metadata === "object") updates.metadata = metadata;
     if (Object.keys(updates).length === 0) return jsonResponse({ ok: true });
     const { error } = await supabase
       .from("contacts")
