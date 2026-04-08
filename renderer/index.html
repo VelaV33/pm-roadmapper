@@ -97,15 +97,15 @@ th.mh{background:var(--surface-low);color:var(--muted);font-size:8px;font-weight
 th.mh.qb{border-right:2px solid var(--border)}
 
 /* section header */
-tr.sec-hdr td{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);padding:8px 16px;border-bottom:1px solid var(--border);background:var(--surface-low)}
+tr.sec-hdr td{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:#fff;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface-low);text-shadow:0 1px 2px rgba(0,0,0,.25)}
 tr.sec-hdr td .sec-actions{float:right;display:flex;gap:4px}
 tr.sec-hdr td .sec-actions button{padding:3px 10px;border-radius:9999px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);font-size:10px;cursor:pointer;transition:all .15s}
 tr.sec-hdr td .sec-actions button:hover{background:rgba(255,255,255,.2)}
 
 /* data row */
 tr.data-row td{border-bottom:1px solid #f0f3f8;border-right:1px solid #f0f3f8;padding:0;vertical-align:top;position:relative}
-tr.data-row td.td-lbl{padding:0;border-right:1px solid var(--border);background:var(--white);width:280px;vertical-align:middle}
-tr.data-row td.td-lbl .lbl-inner{display:flex;align-items:center;padding:8px 16px;gap:8px;min-height:56px}
+tr.data-row td.td-lbl{padding:0;border-right:1px solid var(--border);background:var(--white);width:300px;min-width:300px;vertical-align:middle}
+tr.data-row td.td-lbl .lbl-inner{display:flex;align-items:center;padding:6px 12px;gap:7px;min-height:48px}
 tr.data-row td.td-lbl .drag-handle{cursor:grab;color:var(--muted);font-size:14px;flex-shrink:0;user-select:none;opacity:.3}
 tr.data-row td.td-lbl .drag-handle:hover{opacity:.7}
 tr.data-row td.td-lbl .row-rank{font-size:9px;font-weight:600;color:var(--muted);background:#eef1f6;border-radius:6px;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -114,13 +114,20 @@ tr.data-row td.td-lbl .prio-badge.p1{background:var(--r1)}
 tr.data-row td.td-lbl .prio-badge.p2{background:var(--o1)}
 tr.data-row td.td-lbl .prio-badge.p3{background:var(--g1)}
 tr.data-row td.td-lbl .lbl-text{flex:1;min-width:0}
-tr.data-row td.td-lbl .lbl-text .name{font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;color:var(--text)}
+tr.data-row td.td-lbl .lbl-text .name{font-size:13px;font-weight:700;cursor:pointer;color:var(--text);line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 tr.data-row td.td-lbl .lbl-text .name:hover{color:var(--accent)}
-tr.data-row td.td-lbl .lbl-text .sub{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:400;margin-top:2px;line-height:1.4}
-tr.data-row td.td-lbl .row-btns{display:flex;gap:3px;flex-shrink:0;opacity:0;transition:opacity .15s}
+tr.data-row td.td-lbl .lbl-text .sub{font-size:11px;color:var(--muted);font-weight:400;margin-top:1px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+tr.data-row td.td-lbl .row-btns{display:flex;gap:3px;flex-shrink:0;opacity:0;transition:opacity .15s;position:relative}
 tr.data-row:hover td.td-lbl .row-btns{opacity:1}
-tr.data-row td.td-lbl .row-btns button{padding:2px 8px;border-radius:9999px;border:1px solid var(--border);background:var(--white);font-size:9px;cursor:pointer;color:var(--muted);transition:all .15s}
-tr.data-row td.td-lbl .row-btns button:hover{background:#fef2f2;color:var(--r1);border-color:#fca5a5}
+tr.data-row td.td-lbl .row-btns .row-kebab{padding:3px 6px;border-radius:9999px;border:1px solid var(--border);background:var(--white);font-size:13px;line-height:1;cursor:pointer;color:var(--muted);transition:all .15s;letter-spacing:1px}
+tr.data-row td.td-lbl .row-btns .row-kebab:hover{background:var(--surface-low);color:var(--text);border-color:var(--accent)}
+.row-kebab-menu{position:absolute;top:24px;right:0;background:var(--white);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(15,27,61,.15);min-width:160px;padding:6px 0;z-index:5500}
+.row-kebab-menu button{display:flex;align-items:center;gap:9px;width:100%;border:none;background:transparent;padding:8px 14px;font-size:12px;font-weight:500;color:var(--text);cursor:pointer;text-align:left;font-family:inherit}
+.row-kebab-menu button:hover{background:var(--surface-low)}
+.row-kebab-menu button.danger{color:#dc2626}
+.row-kebab-menu button.danger:hover{background:#fef2f2}
+.row-kebab-menu svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.row-kebab-menu .badge{margin-left:auto;font-size:9px;font-weight:700;padding:1px 6px;border-radius:9999px;background:#dc2626;color:#fff}
 tr.data-row td.td-mo{width:42px}
 tr.data-row td.td-mo.qb{border-right:2px solid #eef1f6 !important}
 tr.data-row.dragging{opacity:.3}
@@ -602,6 +609,26 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 /* Roadmap row plan badge */
 .row-plan-badge{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:1px 6px;border-radius:9999px;background:rgba(167,139,250,.15);color:#7c3aed;cursor:pointer;margin-left:6px}
 .row-plan-badge:hover{background:rgba(167,139,250,.25)}
+
+/* Roadmap view toggle (Timeline / Kanban) */
+.rmap-view-toggle{background:transparent;border:none;font-size:11px;font-weight:700;padding:4px 12px;border-radius:9999px;cursor:pointer;color:var(--muted);transition:all .15s}
+.rmap-view-toggle.active{background:var(--white);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+
+/* Kanban board */
+.kanban-board{display:flex;gap:14px;padding:14px 4px;overflow-x:auto;align-items:flex-start}
+.kanban-col{flex:0 0 280px;background:var(--white);border:1px solid var(--border);border-radius:14px;display:flex;flex-direction:column;max-height:calc(100vh - 280px);box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.kanban-col-hdr{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0}
+.kanban-col-title{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text)}
+.kanban-col-title .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.kanban-col-count{font-size:11px;font-weight:700;color:var(--muted);background:#f1f5f9;padding:2px 9px;border-radius:9999px}
+.kanban-col-body{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px;min-height:60px}
+.kanban-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;transition:all .15s;border-left:4px solid var(--accent)}
+.kanban-card:hover{box-shadow:0 4px 12px rgba(15,27,61,.08);transform:translateY(-1px)}
+.kanban-card.dragging{opacity:.4}
+.kanban-card-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;line-height:1.3}
+.kanban-card-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:10px;color:var(--muted)}
+.kanban-card-section{display:inline-flex;align-items:center;gap:4px;font-weight:600}
+.kanban-col.drag-over{background:rgba(45,107,244,.04);border-color:var(--accent)}
 .cap-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .cap-topbar{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .cap-topbar h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
@@ -1228,6 +1255,13 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
   <span class="leg"><span class="swatch" style="background:linear-gradient(90deg,#dc2626,#ef4444)"></span>At Risk</span>
   <span style="margin-left:auto;color:var(--muted);font-size:10px">MAR 2025 → FEB 2027 (FY26–FY27)</span>
   <span style="display:flex;align-items:center;gap:6px;margin-left:14px">
+    <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)">View</label>
+    <div style="display:flex;background:#f1f5f9;border-radius:9999px;padding:3px">
+      <button id="viewTimelineBtn" class="rmap-view-toggle active" onclick="setRoadmapView('timeline')">Timeline</button>
+      <button id="viewKanbanBtn" class="rmap-view-toggle" onclick="setRoadmapView('kanban')">Kanban</button>
+    </div>
+  </span>
+  <span style="display:flex;align-items:center;gap:6px;margin-left:10px">
     <label for="roadmapSortSelect" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)">Sort</label>
     <select id="roadmapSortSelect" onchange="setRoadmapSort(this.value)" style="font-size:11px;font-weight:600;border:1px solid var(--border);border-radius:9999px;padding:4px 26px 4px 10px;background:var(--white);color:var(--text);cursor:pointer">
       <option value="default">Default order</option>
@@ -1357,6 +1391,13 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
       </select>
     </div>
 
+    <div class="form-row">
+      <label>Parent row <span style="font-weight:400;color:#b0bbd0">(optional &mdash; for hierarchy / epics)</span></label>
+      <select id="fParentRow" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--text)">
+        <option value="">— No parent (top level) —</option>
+      </select>
+    </div>
+
     <hr style="border:none;border-top:1px solid #e8edf7;margin:16px 0">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Product Initiatives (Timeline Bars)</label>
@@ -1406,7 +1447,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 <!-- ── G2M OVERLAY ── -->
 <div id="g2mOverlay">
   <div class="g2m-header">
-    <h2>🚀 GO-TO-MARKET — Business Readiness</h2>
+    <h2 style="display:flex;align-items:center;gap:10px"><svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>GO-TO-MARKET &mdash; Business Readiness</h2>
     <div class="g2m-score">
       <div>
         <div class="score-pct" id="g2mPct">0%</div>
@@ -1421,16 +1462,16 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
       </div>
     </div>
     <div style="display:flex;gap:8px">
-      <button class="btn green" onclick="exportG2MWord()">📄 Export Word</button>
-      <button class="btn" onclick="closeG2M()" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)">← Back to Roadmap</button>
+      <button onclick="exportG2MWord()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:9999px;background:#16a34a;color:#fff;border:1px solid #16a34a;font-size:12px;font-weight:700;cursor:pointer;transition:filter .12s" onmouseover="this.style.filter='brightness(.92)'" onmouseout="this.style.filter='none'"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>Export Word</button>
+      <button onclick="closeG2M()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:9999px;background:var(--white);border:1px solid var(--outline-var);color:var(--text);font-size:12px;font-weight:700;cursor:pointer;transition:background .12s" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'">&larr; Back to Roadmap</button>
     </div>
   </div>
   <div class="g2m-toolbar">
     <label style="color:var(--accent);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">New:</label>
-    <select id="g2mProductSelect" onchange="onG2MProductChange()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--text);font-size:13px;font-weight:500;min-width:260px;font-family:inherit"></select>
+    <select id="g2mProductSelect" onchange="onG2MProductChange()" style="padding:9px 16px;border-radius:9999px;border:1px solid var(--border);background:var(--white);color:var(--text);font-size:13px;font-weight:500;min-width:260px;font-family:inherit"></select>
     <div style="margin-left:auto;display:flex;gap:6px">
-      <button onclick="openG2MTemplateBuilder()" style="padding:7px 16px;border-radius:8px;background:var(--white);color:var(--accent);border:1px solid var(--accent);font-size:12px;font-weight:600;cursor:pointer;transition:all .12s" onmouseover="this.style.background='var(--light-blue-bg)'" onmouseout="this.style.background='var(--white)'">📄 Templates</button>
-      <button onclick="showG2MAddRowForm()" style="padding:7px 16px;border-radius:8px;background:var(--accent);color:#fff;border:none;font-size:12px;font-weight:600;cursor:pointer">+ Add Custom Row</button>
+      <button onclick="openG2MTemplateBuilder()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:9999px;background:var(--white);color:var(--accent);border:1px solid var(--accent);font-size:12px;font-weight:700;cursor:pointer;transition:background .12s" onmouseover="this.style.background='var(--light-blue-bg)'" onmouseout="this.style.background='var(--white)'"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Templates</button>
+      <button onclick="showG2MAddRowForm()" style="padding:9px 18px;border-radius:9999px;background:var(--accent);color:#fff;border:1px solid var(--accent);font-size:12px;font-weight:700;cursor:pointer;transition:filter .12s" onmouseover="this.style.filter='brightness(.92)'" onmouseout="this.style.filter='none'">+ Add Custom Row</button>
     </div>
   </div>
   <div id="g2mTabsBar" style="padding:8px 24px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;flex-wrap:wrap;overflow-x:auto"></div>
@@ -1718,6 +1759,10 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
       <div class="prio-sidebar-item" data-prio-nav="matrix" onclick="prioNav('matrix')">
         <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z M4 12h16 M12 4v16"/></svg>
         Matrix
+      </div>
+      <div class="prio-sidebar-item" data-prio-nav="okrs" onclick="prioNav('okrs')">
+        <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/><circle cx="12" cy="12" r="9"/></svg>
+        OKRs
       </div>
       <div style="margin-top:auto;padding:12px 16px;border-top:1px solid #334155">
         <button class="cap-btn" onclick="closePrioritization()" style="width:100%">&larr; Back to Roadmap</button>
@@ -2261,14 +2306,239 @@ var editingRowId=null;
 var dragSrcRow=null;
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
+// ── Row kebab menu (Edit / Comments / Delete) ───────────────────────────────
+// Replaces the old 3-button row-btns cluster with a single ⋯ button that
+// opens a small popover. Frees up label-column space so initiative names
+// fit on one line.
+function openRowKebab(event, rowId){
+  event.stopPropagation();
+  // Close any other open kebab menu
+  closeRowKebab();
+  var btn = event.currentTarget;
+  var rect = btn.getBoundingClientRect();
+  var badgeEl = document.getElementById('cbadge_' + rowId);
+  var badgeText = (badgeEl && badgeEl.style.display !== 'none') ? badgeEl.textContent : '';
+
+  var menu = document.createElement('div');
+  menu.className = 'row-kebab-menu';
+  menu.id = 'rowKebabMenu';
+  menu.style.position = 'fixed';
+  menu.style.top = (rect.bottom + 4) + 'px';
+  // Right-align with the button (clamp to viewport)
+  var menuW = 180;
+  var leftPx = Math.max(10, rect.right - menuW);
+  menu.style.left = leftPx + 'px';
+  menu.innerHTML =
+    '<button onclick="closeRowKebab();openEditModal(\''+escHtml(rowId)+'\')">'+
+      '<svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>'+
+      'Edit row'+
+    '</button>'+
+    '<button onclick="closeRowKebab();openComments({stopPropagation:function(){}},\''+escHtml(rowId)+'\')">'+
+      '<svg viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>'+
+      'Comments'+
+      (badgeText ? '<span class="badge">'+escHtml(badgeText)+'</span>' : '')+
+    '</button>'+
+    '<button class="danger" onclick="closeRowKebab();deleteRow(\''+escHtml(rowId)+'\')">'+
+      '<svg viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>'+
+      'Delete row'+
+    '</button>';
+  document.body.appendChild(menu);
+  // Close on outside click
+  setTimeout(function(){
+    document.addEventListener('click', _onRowKebabOutside, { once: true });
+  }, 0);
+}
+function _onRowKebabOutside(e){
+  var menu = document.getElementById('rowKebabMenu');
+  if(menu && !menu.contains(e.target)) closeRowKebab();
+}
+function closeRowKebab(){
+  var menu = document.getElementById('rowKebabMenu');
+  if(menu) menu.remove();
+}
+
 // ── Roadmap sorting helpers ─────────────────────────────────────────────────
 function setRoadmapSort(mode){
   _roadmapSortBy = mode || 'default';
   persistData();
   render();
 }
+
+// View toggle: Timeline or Kanban
+function setRoadmapView(view){
+  _roadmapView = view || 'timeline';
+  persistData();
+  // Sync toggle UI
+  var tb = document.getElementById('viewTimelineBtn');
+  var kb = document.getElementById('viewKanbanBtn');
+  if(tb) tb.classList.toggle('active', _roadmapView === 'timeline');
+  if(kb) kb.classList.toggle('active', _roadmapView === 'kanban');
+  // Show/hide the timeline table vs the kanban container
+  var tbl = document.getElementById('roadmap');
+  var kanbanWrap = document.getElementById('kanbanWrap');
+  if(_roadmapView === 'kanban'){
+    if(tbl) tbl.style.display = 'none';
+    if(!kanbanWrap){
+      kanbanWrap = document.createElement('div');
+      kanbanWrap.id = 'kanbanWrap';
+      var tableWrap = tbl ? tbl.parentNode : null;
+      if(tableWrap) tableWrap.appendChild(kanbanWrap);
+    }
+    kanbanWrap.style.display = 'block';
+    renderKanbanBoard();
+  } else {
+    if(tbl) tbl.style.display = '';
+    if(kanbanWrap) kanbanWrap.style.display = 'none';
+    render();
+  }
+}
+
+// Determine the dominant status of a row based on its bars.
+// "Dominant" = the status of the longest-running bar, falling back to the first bar.
+function _dominantStatus(row){
+  if(!row.bars || !row.bars.length) return 'b'; // default in-progress
+  var sorted = row.bars.slice().sort(function(a,b){
+    return ((b.e||0) - (b.s||0)) - ((a.e||0) - (a.s||0));
+  });
+  return sorted[0].c || 'b';
+}
+
+var STATUS_META = {
+  g: { label: 'Released',    color: '#10b981', bg: 'rgba(16,185,129,.10)',  border: '#10b981' },
+  b: { label: 'In Progress', color: '#3b82f6', bg: 'rgba(59,130,246,.10)',  border: '#3b82f6' },
+  o: { label: 'Delayed',     color: '#f59e0b', bg: 'rgba(245,158,11,.10)',  border: '#f59e0b' },
+  s: { label: 'Strategy',    color: '#7c3aed', bg: 'rgba(124,58,237,.10)',  border: '#7c3aed' },
+  r: { label: 'At Risk',     color: '#dc2626', bg: 'rgba(220,38,38,.10)',   border: '#dc2626' }
+};
+var STATUS_ORDER = ['s','b','o','r','g'];
+
+function renderKanbanBoard(){
+  var wrap = document.getElementById('kanbanWrap');
+  if(!wrap) return;
+
+  // Group rows by dominant status
+  var byStatus = { s:[], b:[], o:[], r:[], g:[] };
+  rows.forEach(function(row){
+    var st = _dominantStatus(row);
+    if(!byStatus[st]) byStatus[st] = [];
+    byStatus[st].push(row);
+  });
+
+  var html = '<div class="kanban-board">';
+  STATUS_ORDER.forEach(function(st){
+    var meta = STATUS_META[st];
+    var col = byStatus[st] || [];
+    html += '<div class="kanban-col" data-status="'+st+'" ondragover="onKanbanDragOver(event)" ondragleave="onKanbanDragLeave(event)" ondrop="onKanbanDrop(event,\''+st+'\')">';
+    html += '<div class="kanban-col-hdr">';
+    html += '<div class="kanban-col-title"><span class="dot" style="background:'+meta.color+'"></span>'+meta.label+'</div>';
+    html += '<span class="kanban-col-count">'+col.length+'</span>';
+    html += '</div>';
+    html += '<div class="kanban-col-body">';
+    col.forEach(function(row){
+      var sec = sections.find(function(s){ return s.id === row.sec; });
+      var secColor = sec ? sec.color : '#64748b';
+      var secName = sec ? sec.name : '\u2014';
+      html += '<div class="kanban-card" draggable="true" data-row-id="'+escHtml(row.id)+'" ondragstart="onKanbanDragStart(event,\''+escHtml(row.id)+'\')" ondragend="onKanbanDragEnd(event)" onclick="openEditModal(\''+escHtml(row.id)+'\')" style="border-left-color:'+escHtml(secColor)+'">';
+      html += '<div class="kanban-card-name">'+escHtml(row.name||'Untitled')+'</div>';
+      html += '<div class="kanban-card-meta">';
+      html += '<span class="kanban-card-section"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+escHtml(secColor)+'"></span>'+escHtml(secName)+'</span>';
+      if(row.priority){
+        var prioColor = row.priority === 'P1' ? '#dc2626' : row.priority === 'P2' ? '#f59e0b' : '#16a34a';
+        html += '<span style="display:inline-block;font-size:9px;font-weight:700;padding:1px 7px;border-radius:9999px;color:#fff;background:'+prioColor+'">'+escHtml(row.priority)+'</span>';
+      }
+      if(row.bars && row.bars.length){
+        html += '<span style="font-size:10px;color:var(--muted)">'+row.bars.length+' bar'+(row.bars.length!==1?'s':'')+'</span>';
+      }
+      html += '</div>';
+      html += '</div>';
+    });
+    if(!col.length){
+      html += '<div style="padding:20px 12px;text-align:center;color:#cbd5e1;font-size:11px;font-style:italic">No initiatives</div>';
+    }
+    html += '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+
+// Kanban drag-and-drop (between status columns)
+var _kanbanDragRowId = null;
+function onKanbanDragStart(e, rowId){
+  _kanbanDragRowId = rowId;
+  e.currentTarget.classList.add('dragging');
+  if(e.dataTransfer){ e.dataTransfer.effectAllowed = 'move'; }
+}
+function onKanbanDragEnd(e){
+  e.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('.kanban-col.drag-over').forEach(function(c){ c.classList.remove('drag-over'); });
+  _kanbanDragRowId = null;
+}
+function onKanbanDragOver(e){
+  e.preventDefault();
+  if(e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+function onKanbanDragLeave(e){
+  // Only remove the highlight if leaving the column itself, not a child card
+  if(e.currentTarget.contains(e.relatedTarget)) return;
+  e.currentTarget.classList.remove('drag-over');
+}
+function onKanbanDrop(e, newStatus){
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if(!_kanbanDragRowId) return;
+  var row = rows.find(function(r){ return r.id === _kanbanDragRowId; });
+  if(!row || !row.bars || !row.bars.length){ _kanbanDragRowId = null; return; }
+  // Find the dominant bar (the one used to compute current status) and change its colour.
+  var sorted = row.bars.slice().sort(function(a,b){
+    return ((b.e||0) - (b.s||0)) - ((a.e||0) - (a.s||0));
+  });
+  var domBar = sorted[0];
+  if(domBar.c === newStatus){ _kanbanDragRowId = null; return; }
+  domBar.c = newStatus;
+  persistData();
+  renderKanbanBoard();
+  _kanbanDragRowId = null;
+}
+// Walk the parent/child tree (within each section) and produce a flat list of
+// rows in tree order with a `_depth` annotation. Used by render() so children
+// appear directly below their parents and can be visually indented.
+function _treeOrderRows(rowList){
+  var byParent = {};
+  rowList.forEach(function(r){
+    var p = r.parentRowId || '__root__';
+    if(!byParent[p]) byParent[p] = [];
+    byParent[p].push(r);
+  });
+  var rowIdSet = new Set(rowList.map(function(r){ return r.id; }));
+  // Treat orphan parents (parent not in this list) as root.
+  var topLevel = [];
+  rowList.forEach(function(r){
+    if(!r.parentRowId || !rowIdSet.has(r.parentRowId)) topLevel.push(r);
+  });
+  var out = [];
+  function walk(r, depth){
+    r._depth = depth;
+    out.push(r);
+    var kids = byParent[r.id] || [];
+    kids.forEach(function(k){ walk(k, depth + 1); });
+  }
+  topLevel.forEach(function(r){ walk(r, 0); });
+  // Defensive: ensure every row appears at least once even if there's an
+  // unreachable cycle in user data.
+  rowList.forEach(function(r){
+    if(out.indexOf(r) === -1){ r._depth = 0; out.push(r); }
+  });
+  return out;
+}
+
 function getOrderedRowsForRender(){
-  if(!_roadmapSortBy || _roadmapSortBy === 'default') return rows.slice();
+  if(!_roadmapSortBy || _roadmapSortBy === 'default'){
+    // Default order = original sequence with children nested under parents
+    // (preserving section grouping in the parent walker).
+    return _treeOrderRows(rows.slice());
+  }
   var copy = rows.slice();
   if(_roadmapSortBy === 'name'){
     copy.sort(function(a,b){ return (a.name||'').localeCompare(b.name||''); });
@@ -2299,11 +2569,21 @@ function getOrderedRowsForRender(){
 }
 
 function render(){
+  // If the user was on Kanban view, render that instead of the timeline.
+  if(_roadmapView === 'kanban'){
+    setRoadmapView('kanban');
+    return;
+  }
   var tbody=document.getElementById('tbody');
   tbody.innerHTML='';
   // Sync the sort dropdown UI with current state
   var sortSel=document.getElementById('roadmapSortSelect');
   if(sortSel && sortSel.value !== _roadmapSortBy) sortSel.value = _roadmapSortBy;
+  // Sync view toggle UI
+  var tb = document.getElementById('viewTimelineBtn');
+  var kb = document.getElementById('viewKanbanBtn');
+  if(tb) tb.classList.toggle('active', _roadmapView === 'timeline');
+  if(kb) kb.classList.toggle('active', _roadmapView === 'kanban');
 
   var orderedRows = getOrderedRowsForRender();
   var groupBySection = (_roadmapSortBy === 'default');
@@ -2352,6 +2632,16 @@ function render(){
     var lbl=document.createElement('td');
     lbl.className='td td-lbl';
     var nc=sec?sec.color:'#0F1B3D';
+    // Hierarchy: indent children based on depth (set in _treeOrderRows).
+    var _depth = (typeof row._depth === 'number') ? row._depth : 0;
+    if(_depth > 0){
+      lbl.style.paddingLeft = (_depth * 18) + 'px';
+    }
+    // Show a small "child of" arrow on indented rows
+    var hierarchyMarker = '';
+    if(_depth > 0){
+      hierarchyMarker = '<span style="color:var(--muted);font-size:10px;flex-shrink:0;margin-right:2px" title="Child row">\u21B3</span>';
+    }
     // Auto-sub from bar names + optional row description
     var barNames=row.bars.map(function(b){return b.t;}).join(' · ');
     var subLine=barNames+(row.sub?' — '+row.sub:'');
@@ -2389,6 +2679,7 @@ function render(){
       todoBadgeHtml='<span class="g2m-row-badge" onclick="event.stopPropagation();openTodoForInitiative(\''+row.name.replace(/'/g,"\\'")+'\')" title="'+todoRI.outstanding+' outstanding tasks" style="color:'+(todoRI.outstanding>0?'#d97706':'#16a34a')+'">📋 '+todoRI.outstanding+'</span>';
     }
     lbl.innerHTML='<div class="lbl-inner">'+
+      hierarchyMarker+
       '<span class="row-rank">'+ri+'</span>'+
       '<span class="drag-handle" title="Drag up or down to reorder this row within the roadmap">⠿</span>'+
       prioBadge+
@@ -2397,9 +2688,7 @@ function render(){
         '<div class="sub" title="'+subLine+'">'+subLine+' '+g2mBadgeHtml+todoBadgeHtml+'</div>'+
       '</div>'+
       '<div class="row-btns">'+
-        '<button class="comment-btn" id="cbtn_'+row.id+'" onclick="openComments(event,\''+row.id+'\')" title="Comments">💬<span class="comment-badge" id="cbadge_'+row.id+'" style="display:none"></span></button>'+
-        '<button onclick="openEditModal(\''+row.id+'\')" title="Edit this row">✎</button>'+
-        '<button onclick="deleteRow(\''+row.id+'\')" title="Delete row" style="color:#dc2626">✕</button>'+
+        '<button class="row-kebab" id="cbtn_'+row.id+'" onclick="event.stopPropagation();openRowKebab(event,\''+row.id+'\')" title="Row actions">\u22EF<span class="comment-badge" id="cbadge_'+row.id+'" style="display:none"></span></button>'+
       '</div>'+
     '</div>';
     tr.appendChild(lbl);
@@ -2489,6 +2778,7 @@ function openEditModal(rowId){
   document.getElementById('fSub').value=row.sub;
   document.getElementById('fPriority').value=row.priority||'';
   populateSectionSelect(row.sec);
+  populateParentRowSelect(rowId, row.parentRowId || '');
   renderBarsForm(row.bars);
   renderDeliverablesForm(row.deliverables||[]);
   renderLinksForm(row.links||[]);
@@ -2507,6 +2797,7 @@ function openAddRowModal(secId){
   document.getElementById('fSub').value='';
   document.getElementById('fPriority').value='';
   populateSectionSelect(secId||sections[0].id);
+  populateParentRowSelect(null, '');
   renderBarsForm([{s:0,e:3,c:'b',t:'New Initiative',desc:''}]);
   renderDeliverablesForm([]);
   renderLinksForm([]);
@@ -2519,6 +2810,39 @@ function closeModal(){ document.getElementById('rowModal').classList.add('hidden
 
 // Track the last valid section id so we can revert if user cancels
 var _lastValidSecId = null;
+
+// Populate the parent-row dropdown for the Edit/Add Row modal.
+// excludeId = the row being edited (so a row can't be its own parent or its own descendant's parent).
+function populateParentRowSelect(excludeId, currentParentId){
+  var sel = document.getElementById('fParentRow');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">— No parent (top level) —</option>';
+  // Build a set of descendant ids of excludeId so we can't pick them as parent
+  var descendants = new Set();
+  if(excludeId){
+    descendants.add(excludeId);
+    var added = true;
+    while(added){
+      added = false;
+      rows.forEach(function(r){
+        if(r.parentRowId && descendants.has(r.parentRowId) && !descendants.has(r.id)){
+          descendants.add(r.id);
+          added = true;
+        }
+      });
+    }
+  }
+  rows.forEach(function(r){
+    if(descendants.has(r.id)) return;  // skip self + descendants
+    var opt = document.createElement('option');
+    opt.value = r.id;
+    var sec = sections.find(function(s){ return s.id === r.sec; });
+    var prefix = sec ? '['+sec.name+'] ' : '';
+    opt.textContent = prefix + (r.name || 'Untitled');
+    if(r.id === currentParentId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
 
 function populateSectionSelect(selId){
   _lastValidSecId = selId || (sections[0] && sections[0].id);
@@ -2862,13 +3186,17 @@ function saveRow(){
     if(n && s) attachments.push({name:n,storedName:s});
   });
 
+  var parentRowEl = document.getElementById('fParentRow');
+  var parentRowId = parentRowEl ? (parentRowEl.value || null) : null;
+
   if(editingRowId){
     var row=rows.find(function(r){return r.id===editingRowId});
     row.name=name; row.sub=sub; row.sec=secId; row.priority=priority;
     row.bars=bars; row.priorities=priorities; row.deliverables=deliverables;
     row.links=links; row.attachments=attachments;
+    row.parentRowId = parentRowId;
   } else {
-    var newRow={id:'r'+Date.now(),sec:secId,name:name,sub:sub,priority:priority,bars:bars,priorities:priorities,deliverables:deliverables,links:links,attachments:attachments};
+    var newRow={id:'r'+Date.now(),sec:secId,name:name,sub:sub,priority:priority,bars:bars,priorities:priorities,deliverables:deliverables,links:links,attachments:attachments,parentRowId:parentRowId};
     // Insert after the last row in this section (not at array end)
     var lastIdxInSec=-1;
     rows.forEach(function(r,i){ if(r.sec===secId) lastIdxInSec=i; });
@@ -4924,7 +5252,11 @@ function applyDataPayload(d){
       scores: (d.prioritization.scores && typeof d.prioritization.scores==='object') ? d.prioritization.scores : {}
     };
   }
+  if(d.okrs && typeof d.okrs === 'object'){
+    okrsData = { objectives: Array.isArray(d.okrs.objectives) ? d.okrs.objectives : [] };
+  }
   if(typeof d.roadmapSortBy === 'string') _roadmapSortBy = d.roadmapSortBy;
+  if(typeof d.roadmapView === 'string') _roadmapView = d.roadmapView;
   if(Array.isArray(d.projectPlans)){
     projectPlans = d.projectPlans;
     if(!_activePlanId && projectPlans.length) _activePlanId = projectPlans[0].id;
@@ -4933,7 +5265,7 @@ function applyDataPayload(d){
   if(aTab&&aTab.sections){sections=aTab.sections;rows=aTab.rows;if(aTab.quarters)quarters=aTab.quarters;}
 }
 function buildDataPayload(){
-  return {sections:sections,rows:rows,quarters:quarters,tabs_data:tabs_data,activeTabId:activeTabId,g2mData:g2mAllData,todoData:todoAllData,kpiData:kpiAllData,timesheetData:timesheetData,ucrData:ucrAllData,artifactsData:artifactsData,brandGuideData:brandGuideData,artTemplates:artTemplates,capData:capData,prioritization:prioritizationData,roadmapSortBy:_roadmapSortBy,projectPlans:projectPlans};
+  return {sections:sections,rows:rows,quarters:quarters,tabs_data:tabs_data,activeTabId:activeTabId,g2mData:g2mAllData,todoData:todoAllData,kpiData:kpiAllData,timesheetData:timesheetData,ucrData:ucrAllData,artifactsData:artifactsData,brandGuideData:brandGuideData,artTemplates:artTemplates,capData:capData,prioritization:prioritizationData,roadmapSortBy:_roadmapSortBy,projectPlans:projectPlans,okrs:okrsData,roadmapView:_roadmapView};
 }
 
 // ── CLOUD SYNC ────────────────────────────────────────────────────────────────
@@ -5026,7 +5358,9 @@ async function pushCloudData(){
       capData: capData,
       prioritization: prioritizationData,
       roadmapSortBy: _roadmapSortBy,
-      projectPlans: projectPlans
+      projectPlans: projectPlans,
+      okrs: okrsData,
+      roadmapView: _roadmapView
     };
 
     var uid=_currentUser.id;
@@ -8755,10 +9089,10 @@ function renderG2M(){
     var catScoreColor=catPct>=80?'#22c55e':catPct>=50?'#f59e0b':'#dc2626';
     var escapedCatName=cat.name.replace(/'/g,"\\'");
     hdr.innerHTML=cat.name+
-      '<span style="display:flex;align-items:center;gap:8px">'+
-        '<span style="background:'+catScoreColor+';padding:2px 8px;border-radius:4px;font-size:11px;font-weight:900">'+catPct+'%</span>'+
-        '<span style="font-size:10px;font-weight:600;opacity:.8">'+catYes+'/'+catApplicable+'</span>'+
-        '<button class="g2m-cat-export" onclick="event.stopPropagation();exportG2MCategoryWord(\''+escapedCatName+'\')" title="Export this department to Word">📄 Export</button>'+
+      '<span style="display:flex;align-items:center;gap:10px">'+
+        '<span style="background:'+catScoreColor+';padding:3px 12px;border-radius:9999px;font-size:11px;font-weight:900;color:#fff">'+catPct+'%</span>'+
+        '<span style="font-size:11px;font-weight:600;opacity:.85;color:#fff">'+catYes+'/'+catApplicable+'</span>'+
+        '<button class="g2m-cat-export" onclick="event.stopPropagation();exportG2MCategoryWord(\''+escapedCatName+'\')" title="Export this department to Word" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:9999px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:11px;font-weight:700;cursor:pointer"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>Export</button>'+
       '</span>';
     div.appendChild(hdr);
 
@@ -10116,11 +10450,36 @@ var prioritizationData = {
   frameworks: [],   // populated lazily — built-ins are merged in at read time
   scores: {}        // { rowId: { criterionId: number } }
 };
+
+// ── OKRs ────────────────────────────────────────────────────────────────────
+// Objectives + Key Results, lightweight. Stored in the same JSON blob.
+//
+// Shape:
+//   okrs = {
+//     objectives: [
+//       {
+//         id, title, description, period,    // 'Q1 2026' free-text
+//         createdAt, updatedAt,
+//         keyResults: [
+//           { id, title, target, current, unit, linkedRowIds: [], updatedAt }
+//         ]
+//       }
+//     ]
+//   }
+//
+// Progress is computed: KR.progress = clamp(current/target, 0, 1).
+// Objective progress = average of its KR progresses.
+// "Linked initiatives" gives the bridge between strategy (OKR) and execution (roadmap row).
+
+var okrsData = { objectives: [] };
+var _activeOkrId = null;
 var _prioPage = 'score'; // 'score' | 'frameworks' | 'matrix'
 var _prioEditingFrameworkId = null;
 
 // Roadmap sort state (Phase 1 of Phase 4 — sort dropdown on the roadmap view)
 var _roadmapSortBy = 'default'; // 'default' | 'priority' | 'name' | 'startMonth' | 'endMonth'
+// Roadmap view mode — Timeline (default) or Kanban
+var _roadmapView = 'timeline'; // 'timeline' | 'kanban'
 
 // ══════════════════════════════════════════════════════════════════════════════
 // PROJECT PLANS — task list, dependencies, Gantt, roadmap linking
@@ -11360,12 +11719,234 @@ function prioNav(page){
   document.querySelectorAll('.prio-sidebar-item').forEach(function(el){
     el.classList.toggle('active', el.dataset.prioNav === page);
   });
-  var titles = { score: 'Score Initiatives', frameworks: 'Frameworks', matrix: 'Value vs Effort Matrix' };
+  var titles = { score: 'Score Initiatives', frameworks: 'Frameworks', matrix: 'Value vs Effort Matrix', okrs: 'Objectives & Key Results' };
   document.getElementById('prioPageTitle').textContent = titles[page] || page;
   document.getElementById('prioTopActions').innerHTML = '';
   if(page === 'score') renderPrioScoreTab();
   else if(page === 'frameworks') renderPrioFrameworksTab();
   else if(page === 'matrix') renderPrioMatrixTab();
+  else if(page === 'okrs') renderOkrsTab();
+}
+
+// ── OKRs ────────────────────────────────────────────────────────────────────
+function _objProgress(obj){
+  if(!obj || !obj.keyResults || !obj.keyResults.length) return 0;
+  var sum = 0;
+  obj.keyResults.forEach(function(kr){
+    var t = parseFloat(kr.target) || 0;
+    var c = parseFloat(kr.current) || 0;
+    if(t <= 0) return;
+    sum += Math.max(0, Math.min(1, c / t));
+  });
+  return Math.round((sum / obj.keyResults.length) * 100);
+}
+
+function renderOkrsTab(){
+  var content = document.getElementById('prioContent');
+  var actions = document.getElementById('prioTopActions');
+  actions.innerHTML = '<button class="prio-btn primary" onclick="createNewObjective()">+ New Objective</button>';
+
+  var objectives = okrsData.objectives || [];
+  if(!objectives.length){
+    content.innerHTML = '<div class="prio-empty"><h3>No objectives yet</h3><p>Click <strong>+ New Objective</strong> to define your first OKR. Each objective can have multiple Key Results, and each KR can link to roadmap initiatives so you can see strategy execution end-to-end.</p></div>';
+    return;
+  }
+
+  var html = '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">'+objectives.length+' objective'+(objectives.length!==1?'s':'')+' &middot; auto-syncs to cloud</div>';
+  objectives.forEach(function(obj){
+    var pct = _objProgress(obj);
+    var pctColor = pct >= 70 ? '#16a34a' : pct >= 40 ? '#f59e0b' : '#dc2626';
+    html += '<div class="okr-card" style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)">';
+    // Header
+    html += '<div style="display:flex;align-items:flex-start;gap:14px">';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<input type="text" value="'+escHtml(obj.title||'')+'" placeholder="Objective title" data-okr-id="'+escHtml(obj.id)+'" data-okr-field="title" class="okr-input" style="font-size:16px;font-weight:800;color:var(--text);border:1px solid transparent;background:transparent;padding:4px 6px;border-radius:6px;width:100%;font-family:inherit;outline:none">';
+    html += '<input type="text" value="'+escHtml(obj.period||'')+'" placeholder="Period (e.g. Q3 2026)" data-okr-id="'+escHtml(obj.id)+'" data-okr-field="period" class="okr-input" style="font-size:11px;font-weight:600;color:var(--muted);border:1px solid transparent;background:transparent;padding:2px 6px;border-radius:6px;font-family:inherit;outline:none;text-transform:uppercase;letter-spacing:.08em;margin-top:2px">';
+    if(obj.description || true){
+      html += '<textarea data-okr-id="'+escHtml(obj.id)+'" data-okr-field="description" class="okr-input" placeholder="What does success look like?" style="font-size:12px;color:var(--muted);border:1px solid transparent;background:transparent;padding:4px 6px;border-radius:6px;width:100%;font-family:inherit;outline:none;resize:vertical;min-height:32px;margin-top:4px">'+escHtml(obj.description||'')+'</textarea>';
+    }
+    html += '</div>';
+    // Progress ring (simple text + bar)
+    html += '<div style="text-align:center;flex-shrink:0;min-width:90px">';
+    html += '<div style="font-size:28px;font-weight:800;color:'+pctColor+';line-height:1">'+pct+'<span style="font-size:14px;font-weight:700">%</span></div>';
+    html += '<div style="width:80px;height:6px;background:#f1f5f9;border-radius:9999px;overflow:hidden;margin-top:6px"><div style="width:'+pct+'%;height:100%;background:'+pctColor+';transition:width .3s"></div></div>';
+    html += '<button class="prio-btn danger" style="margin-top:8px;padding:4px 10px;font-size:10px" onclick="deleteObjective(\''+escHtml(obj.id)+'\')">Delete</button>';
+    html += '</div>';
+    html += '</div>';
+
+    // Key Results table
+    html += '<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">';
+    html += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px">Key Results</div>';
+    if((obj.keyResults || []).length === 0){
+      html += '<div style="font-size:12px;color:var(--muted);font-style:italic;padding:6px 0">No KRs yet. Add one below.</div>';
+    } else {
+      obj.keyResults.forEach(function(kr){
+        var t = parseFloat(kr.target) || 0;
+        var c = parseFloat(kr.current) || 0;
+        var krPct = t > 0 ? Math.round(Math.max(0, Math.min(1, c / t)) * 100) : 0;
+        var krColor = krPct >= 70 ? '#16a34a' : krPct >= 40 ? '#f59e0b' : '#94a3b8';
+        var linkedCount = (kr.linkedRowIds || []).length;
+        html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f8fafc">';
+        html += '<div style="flex:1;min-width:0">';
+        html += '<input type="text" value="'+escHtml(kr.title||'')+'" placeholder="Key Result title" data-obj-id="'+escHtml(obj.id)+'" data-kr-id="'+escHtml(kr.id)+'" data-kr-field="title" class="kr-input" style="font-size:13px;font-weight:600;color:var(--text);border:1px solid transparent;background:transparent;padding:4px 6px;border-radius:6px;width:100%;font-family:inherit;outline:none">';
+        html += '<div style="display:flex;align-items:center;gap:6px;margin-top:4px">';
+        html += '<input type="number" value="'+(kr.current||0)+'" data-obj-id="'+escHtml(obj.id)+'" data-kr-id="'+escHtml(kr.id)+'" data-kr-field="current" class="kr-input" style="width:70px;font-size:11px;border:1px solid var(--border);background:#fff;padding:3px 6px;border-radius:6px;font-family:inherit;text-align:right">';
+        html += '<span style="font-size:11px;color:var(--muted)">/</span>';
+        html += '<input type="number" value="'+(kr.target||0)+'" data-obj-id="'+escHtml(obj.id)+'" data-kr-id="'+escHtml(kr.id)+'" data-kr-field="target" class="kr-input" style="width:70px;font-size:11px;border:1px solid var(--border);background:#fff;padding:3px 6px;border-radius:6px;font-family:inherit;text-align:right">';
+        html += '<input type="text" value="'+escHtml(kr.unit||'')+'" placeholder="unit" data-obj-id="'+escHtml(obj.id)+'" data-kr-id="'+escHtml(kr.id)+'" data-kr-field="unit" class="kr-input" style="width:70px;font-size:11px;border:1px solid var(--border);background:#fff;padding:3px 6px;border-radius:6px;font-family:inherit">';
+        html += '<button class="prio-btn" style="padding:3px 10px;font-size:10px" onclick="openKrLinkPicker(\''+escHtml(obj.id)+'\',\''+escHtml(kr.id)+'\')">'+(linkedCount?linkedCount+' linked':'Link initiatives')+'</button>';
+        html += '<button class="prio-btn danger" style="padding:3px 8px;font-size:10px" onclick="deleteKr(\''+escHtml(obj.id)+'\',\''+escHtml(kr.id)+'\')">\u00D7</button>';
+        html += '</div>';
+        // Linked initiatives chips
+        if(linkedCount){
+          html += '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">';
+          (kr.linkedRowIds || []).forEach(function(rid){
+            var r = rows.find(function(x){ return x.id === rid; });
+            if(!r) return;
+            html += '<span style="font-size:10px;background:rgba(45,107,244,.08);color:var(--accent);padding:2px 8px;border-radius:9999px;font-weight:600">'+escHtml(r.name||'')+'</span>';
+          });
+          html += '</div>';
+        }
+        html += '</div>';
+        html += '<div style="text-align:right;flex-shrink:0;min-width:50px">';
+        html += '<div style="font-size:14px;font-weight:700;color:'+krColor+'">'+krPct+'%</div>';
+        html += '</div>';
+        html += '</div>';
+      });
+    }
+    html += '<button class="prio-btn" style="margin-top:8px;font-size:11px" onclick="addKrToObjective(\''+escHtml(obj.id)+'\')">+ Add Key Result</button>';
+    html += '</div></div>';
+  });
+
+  content.innerHTML = html;
+
+  // Wire field changes
+  content.querySelectorAll('.okr-input').forEach(function(el){
+    el.addEventListener('change', function(){
+      var oid = el.dataset.okrId;
+      var field = el.dataset.okrField;
+      var obj = okrsData.objectives.find(function(o){ return o.id === oid; });
+      if(!obj) return;
+      obj[field] = el.value;
+      obj.updatedAt = Date.now();
+      persistData();
+      renderOkrsTab();
+    });
+  });
+  content.querySelectorAll('.kr-input').forEach(function(el){
+    el.addEventListener('change', function(){
+      var oid = el.dataset.objId;
+      var krid = el.dataset.krId;
+      var field = el.dataset.krField;
+      var obj = okrsData.objectives.find(function(o){ return o.id === oid; });
+      if(!obj) return;
+      var kr = (obj.keyResults || []).find(function(k){ return k.id === krid; });
+      if(!kr) return;
+      kr[field] = el.value;
+      kr.updatedAt = Date.now();
+      persistData();
+      renderOkrsTab();
+    });
+  });
+}
+
+function createNewObjective(){
+  var obj = {
+    id: 'okr_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    title: 'New Objective',
+    description: '',
+    period: '',
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    keyResults: []
+  };
+  if(!okrsData.objectives) okrsData.objectives = [];
+  okrsData.objectives.push(obj);
+  persistData();
+  renderOkrsTab();
+}
+
+function deleteObjective(id){
+  var obj = okrsData.objectives.find(function(o){ return o.id === id; });
+  if(!obj) return;
+  if(!confirm('Delete objective "'+(obj.title||'Untitled')+'" and all its Key Results?')) return;
+  okrsData.objectives = okrsData.objectives.filter(function(o){ return o.id !== id; });
+  persistData();
+  renderOkrsTab();
+}
+
+function addKrToObjective(objId){
+  var obj = okrsData.objectives.find(function(o){ return o.id === objId; });
+  if(!obj) return;
+  if(!obj.keyResults) obj.keyResults = [];
+  obj.keyResults.push({
+    id: 'kr_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    title: 'New Key Result',
+    target: 100,
+    current: 0,
+    unit: '%',
+    linkedRowIds: [],
+    updatedAt: Date.now()
+  });
+  obj.updatedAt = Date.now();
+  persistData();
+  renderOkrsTab();
+}
+
+function deleteKr(objId, krId){
+  var obj = okrsData.objectives.find(function(o){ return o.id === objId; });
+  if(!obj) return;
+  obj.keyResults = (obj.keyResults || []).filter(function(k){ return k.id !== krId; });
+  obj.updatedAt = Date.now();
+  persistData();
+  renderOkrsTab();
+}
+
+function openKrLinkPicker(objId, krId){
+  var obj = okrsData.objectives.find(function(o){ return o.id === objId; });
+  if(!obj) return;
+  var kr = (obj.keyResults || []).find(function(k){ return k.id === krId; });
+  if(!kr) return;
+  if(!rows.length){ alert('No roadmap initiatives yet. Add some rows first.'); return; }
+  var current = new Set(kr.linkedRowIds || []);
+
+  var html = '<div class="plan-modal-backdrop" onclick="if(event.target===this) closeKrLinkPicker()">'+
+    '<div class="plan-modal" style="width:480px">'+
+      '<div class="plan-modal-header"><h3>Link initiatives to: '+escHtml(kr.title)+'</h3><button class="plan-modal-close" onclick="closeKrLinkPicker()">\u00D7</button></div>'+
+      '<div class="plan-modal-body">'+
+        '<div style="font-size:12px;color:var(--muted);margin-bottom:10px">Tick the roadmap initiatives that contribute to this Key Result.</div>'+
+        '<div class="plan-source-list"><div class="plan-source-group">'+
+        rows.map(function(r){
+          var sec = sections.find(function(s){ return s.id === r.sec; });
+          var dot = sec ? '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+escHtml(sec.color)+'"></span>' : '';
+          return '<label class="plan-source-item"><input type="checkbox" class="kr-link-cb" value="'+escHtml(r.id)+'"'+(current.has(r.id)?' checked':'')+'>'+dot+'<span>'+escHtml(r.name||'Untitled')+'</span></label>';
+        }).join('')+
+        '</div></div>'+
+      '</div>'+
+      '<div class="plan-modal-footer">'+
+        '<button class="prio-btn" onclick="closeKrLinkPicker()">Cancel</button>'+
+        '<button class="prio-btn primary" onclick="saveKrLinks(\''+escHtml(objId)+'\',\''+escHtml(krId)+'\')">Save</button>'+
+      '</div>'+
+    '</div>'+
+  '</div>';
+  var wrap = document.createElement('div');
+  wrap.id = 'krLinkPickerWrap';
+  wrap.innerHTML = html;
+  document.body.appendChild(wrap);
+}
+function closeKrLinkPicker(){ var w = document.getElementById('krLinkPickerWrap'); if(w) w.remove(); }
+function saveKrLinks(objId, krId){
+  var obj = okrsData.objectives.find(function(o){ return o.id === objId; });
+  if(!obj) return;
+  var kr = (obj.keyResults || []).find(function(k){ return k.id === krId; });
+  if(!kr) return;
+  var checked = document.querySelectorAll('.kr-link-cb:checked');
+  kr.linkedRowIds = Array.from(checked).map(function(cb){ return cb.value; });
+  kr.updatedAt = Date.now();
+  obj.updatedAt = Date.now();
+  persistData();
+  closeKrLinkPicker();
+  renderOkrsTab();
 }
 
 // ── Score tab ───────────────────────────────────────────────────────────────
