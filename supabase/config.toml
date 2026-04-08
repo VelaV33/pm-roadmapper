@@ -382,8 +382,11 @@ verify_jwt = true
 verify_jwt = true
 [functions.send-invite]
 verify_jwt = true
+# admin-api does its own JWT verification inside the function via verifyRequest.
+# Gateway-level verification disabled because it intermittently rejects valid
+# JWTs as "Invalid JWT" — same workaround as feedback-list.
 [functions.admin-api]
-verify_jwt = true
+verify_jwt = false
 [functions.competitive-analysis]
 verify_jwt = true
 [functions.create-user]
