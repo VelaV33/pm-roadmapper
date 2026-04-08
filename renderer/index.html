@@ -4681,7 +4681,10 @@ function renderStackedTabs(){
   if(typeof renderSharedStacked==='function') renderSharedStacked();
 }
 
-function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// v1.25.0: escapes 5 chars (&, <, >, ", ') so it's safe in BOTH text content and
+// any HTML attribute value. Closing the attribute-context XSS class identified in
+// the security audit was a one-line fix here.
+function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 function removeStackedTab(tabId){
   if(!confirm('Remove this stacked view?')) return;
@@ -5285,9 +5288,9 @@ async function onAuthSuccess(user){
         applyDataPayload(cd);
         cloudLoaded=true;
         if(cr.data.updated_at) _lastCloudTs=new Date(cr.data.updated_at).getTime();
-        console.log('Cloud data loaded for user',user.email,':',sections.length,'sections,',rows.length,'rows');
+        console.log('Cloud data loaded:',sections.length,'sections,',rows.length,'rows');
       } else {
-        console.log('Cloud data empty for user',user.email);
+        console.log('Cloud data empty');
       }
     }
   } catch(e){
@@ -5343,7 +5346,7 @@ async function onAuthSuccess(user){
 
   setTimeout(function(){ loadAllCommentBadges(); loadSharedToMe(); loadUserTier(); }, 800);
   setTimeout(checkShowTour, 2500);
-  console.log('Signed in as:', user.email, '(uid:', user.id, ')');
+  console.log('Signed in successfully');  // v1.25.0: PII removed from log
   // Show dashboard as default view on login
   setTimeout(showDashboard, 500);
   // Check if user is super admin (shows admin sidebar item if true)
@@ -7910,7 +7913,7 @@ var RESEARCH_AREAS=FLEET_RESEARCH_AREAS;
 var _compCompetitors=[];
 
 function openCompetitiveAnalysis(){
-  console.log('[CompAnalysis] Opening modal, isPremium:',isPremium(),'tier:',_userTier,'user:',_currentUser&&_currentUser.email);
+  console.log('[CompAnalysis] Opening modal');  // v1.25.0: PII removed
   var ex=document.getElementById('compModal');if(ex)ex.remove();
   if(_compTimer){clearInterval(_compTimer);_compTimer=null;}
   _compCompetitors=[];
@@ -8495,7 +8498,13 @@ function renderCompetitorChips(){
   }
   _compCompetitors.forEach(function(name){
     var chip=document.createElement('span');chip.className='comp-chip';
-    chip.innerHTML=name+' <button onclick="removeCompetitor(\''+name.replace(/'/g,"\\'")+'\')">✕</button>';
+    // Use textContent for the display + a separate button to avoid embedding
+    // an unescaped name in onclick (XSS via competitor name).
+    chip.appendChild(document.createTextNode(name + ' '));
+    var btn = document.createElement('button');
+    btn.textContent = '✕';
+    btn.onclick = function(){ removeCompetitor(name); };
+    chip.appendChild(btn);
     wrap.appendChild(chip);
   });
 }
@@ -8837,15 +8846,38 @@ function renderAnalysisResults(container,results){
             var ul=document.createElement('ul');
             area.details.forEach(function(d){
               var li=document.createElement('li');
-              // Make inline URLs clickable — show domain name, filter Google cache URLs
-              var txt=d.replace(/(https?:\/\/[^\s,)"]+)/g,function(url){
-                if(url.indexOf('vertexaisearch.cloud.google.com')>=0||url.indexOf('webcache.googleusercontent.com')>=0) return '';
-                try{var host=new URL(url).hostname.replace('www.','');return ' <a href="#" onclick="if(window.electronAPI&&window.electronAPI.openExternal)window.electronAPI.openExternal(\''+url.replace(/'/g,'')+'\');return false;" style="color:var(--accent);font-size:10px;background:#e8f4fd;padding:1px 4px;border-radius:3px;text-decoration:none">'+host+'</a>';}
-                catch(e){return url;}
+              // v1.25.0: build the line as escaped segments + sanitized <a>
+              // tags so model output can't smuggle script in. We split on URL
+              // matches; non-URL segments are HTML-escaped, URL segments are
+              // turned into a single anchor whose href + text are also escaped.
+              var src=String(d||'');
+              var re=/(https?:\/\/[^\s,)"]+)/g;
+              var out='';
+              var lastIdx=0;
+              var m;
+              while((m=re.exec(src))!==null){
+                out += escHtml(src.substring(lastIdx, m.index));
+                var url=m[1];
+                if(url.indexOf('vertexaisearch.cloud.google.com')<0 && url.indexOf('webcache.googleusercontent.com')<0){
+                  try {
+                    var host=new URL(url).hostname.replace('www.','');
+                    out += ' <a href="#" data-ext-url="'+escHtml(url)+'" class="ai-ext-link" style="color:var(--accent);font-size:10px;background:#e8f4fd;padding:1px 4px;border-radius:3px;text-decoration:none">'+escHtml(host)+'</a>';
+                  } catch(e){ out += escHtml(url); }
+                }
+                lastIdx = m.index + url.length;
+              }
+              out += escHtml(src.substring(lastIdx));
+              // Clean up "— source:" trailing text after URL substitution
+              out = out.replace(/\s*—?\s*source:\s*$/i,'').replace(/\s*—?\s*$/,'');
+              if(out.trim()) { li.innerHTML=out; ul.appendChild(li); }
+            });
+            // Wire the data-ext-url anchors so we never embed user data in onclick
+            ul.querySelectorAll('a.ai-ext-link').forEach(function(a){
+              a.addEventListener('click', function(ev){
+                ev.preventDefault();
+                var u = a.getAttribute('data-ext-url') || '';
+                if(window.electronAPI && window.electronAPI.openExternal) window.electronAPI.openExternal(u);
               });
-              // Clean up "— source:" prefix if URL was removed
-              txt=txt.replace(/\s*—?\s*source:\s*$/i,'').replace(/\s*—?\s*$/,'');
-              if(txt.trim()) { li.innerHTML=txt; ul.appendChild(li); }
             });
             sec.appendChild(ul);
           }
@@ -9383,6 +9415,53 @@ document.addEventListener('click', function(e){
 document.addEventListener('keydown', function(e){
   if(e.key==='Escape') closeDds();
 });
+
+// v1.25.0: Global Escape-to-close for modals. Closes the topmost open modal
+// in priority order. Doesn't intercept Esc inside inputs that the browser
+// already handles, only when no modal-aware element captured it first.
+document.addEventListener('keydown', function(e){
+  if(e.key !== 'Escape') return;
+  // Skip if user is in a date picker / select / contenteditable that might
+  // already be handling Escape
+  var t = e.target;
+  if(t && (t.tagName === 'SELECT')) return;
+
+  // 1) Dynamic .modal-overlay elements (most modals built at runtime).
+  //    Pop the topmost (highest z-index) one.
+  var dynamicModals = Array.prototype.slice.call(document.querySelectorAll('.modal-overlay'))
+    .filter(function(m){ return !m.classList.contains('hidden') && m.offsetParent !== null; });
+  if(dynamicModals.length){
+    dynamicModals.sort(function(a,b){
+      var za = parseInt(window.getComputedStyle(a).zIndex, 10) || 0;
+      var zb = parseInt(window.getComputedStyle(b).zIndex, 10) || 0;
+      return zb - za;
+    });
+    var top = dynamicModals[0];
+    // Static modals (rowModal, barModal, quartersModal) hide via .hidden
+    if(['rowModal','barModal','quartersModal'].indexOf(top.id) !== -1){
+      top.classList.add('hidden');
+    } else {
+      top.remove();
+    }
+    return;
+  }
+  // 2) plan-modal-backdrop wrappers (used by predecessor picker, add-task, etc.)
+  var planBackdrops = Array.prototype.slice.call(document.querySelectorAll('.plan-modal-backdrop'))
+    .filter(function(m){ return m.offsetParent !== null; });
+  if(planBackdrops.length){
+    var topPlan = planBackdrops[planBackdrops.length - 1];
+    var wrap = topPlan.parentElement;
+    if(wrap && wrap.id) wrap.remove();
+    else topPlan.remove();
+    return;
+  }
+  // 3) Burger sidebar (slide-in)
+  var sb = document.getElementById('appSidebar');
+  if(sb && !sb.classList.contains('collapsed')){
+    sb.classList.add('collapsed');
+    return;
+  }
+});
 // ── PERSIST ─────────────────────────────────────────────────────────────────
 var _saveTimer = null;
 // ══════════════════════════════════════════════════════════════════════════════
@@ -9643,7 +9722,7 @@ function renderG2M(){
     hdr.style.background=cat.color;
     var catScoreColor=catPct>=80?'#22c55e':catPct>=50?'#f59e0b':'#dc2626';
     var escapedCatName=cat.name.replace(/'/g,"\\'");
-    hdr.innerHTML=cat.name+
+    hdr.innerHTML=escHtml(cat.name)+
       '<span style="display:flex;align-items:center;gap:10px">'+
         '<span style="background:'+catScoreColor+';padding:3px 12px;border-radius:9999px;font-size:11px;font-weight:900;color:#fff">'+catPct+'%</span>'+
         '<span style="font-size:11px;font-weight:600;opacity:.85;color:#fff">'+catYes+'/'+catApplicable+'</span>'+
@@ -10577,6 +10656,7 @@ function openTodo(){
   populateTodoFilterSelect();
   updateTodoBackBtn();
   renderTodo();
+  updateNavActive('');  // v1.25.0: ToDo isn't a top-nav tab — clear active
 }
 function closeTodo(){
   document.getElementById('todoOverlay').classList.remove('open');
@@ -10730,9 +10810,9 @@ function buildTodoItem(entry){
       '<option value="done"'+(status==='done'?' selected':'')+' style="background:#fff;color:#16a34a">Done</option>'+
     '</select>'+
     '<div style="flex:1;min-width:0">'+
-      '<div class="todo-text" id="todoText_'+escapedId+'" ondblclick="editTodoText(\''+escapedInit+'\',\''+escapedId+'\')">'+t.text+'</div>'+
-      (t.comments?'<div style="font-size:10px;color:var(--muted);margin-top:2px">💬 '+t.comments.replace(/</g,'&lt;').substring(0,80)+(t.comments.length>80?'...':'')+'</div>':'')+
-      (kpiName?'<div style="font-size:9px;color:#7c3aed;margin-top:1px">📊 '+kpiName+'</div>':'')+
+      '<div class="todo-text" id="todoText_'+escapedId+'" ondblclick="editTodoText(\''+escapedInit+'\',\''+escapedId+'\')">'+escHtml(t.text)+'</div>'+
+      (t.comments?'<div style="font-size:10px;color:var(--muted);margin-top:2px">💬 '+escHtml(String(t.comments).substring(0,80))+(t.comments.length>80?'...':'')+'</div>':'')+
+      (kpiName?'<div style="font-size:9px;color:#7c3aed;margin-top:1px">📊 '+escHtml(kpiName)+'</div>':'')+
       // Links/attachments row
       (todoLinksHtml?'<div style="margin-top:2px;display:flex;gap:2px;flex-wrap:wrap">'+todoLinksHtml+'</div>':'')+
     '</div>'+
@@ -10743,7 +10823,7 @@ function buildTodoItem(entry){
     '</div>'+
     _formatDue(t.due)+
     kpiSelHtml+
-    '<span class="todo-tag" onclick="document.getElementById(\'todoFilterSelect\').value=\''+escapedInit+'\';renderTodo()">'+entry.initiative+'</span>'+
+    '<span class="todo-tag" onclick="document.getElementById(\'todoFilterSelect\').value=\''+escapedInit+'\';renderTodo()">'+escHtml(entry.initiative)+'</span>'+
     '<button class="todo-comment-btn" onclick="addTodoLink(\''+escapedInit+'\',\''+escapedId+'\')" title="Add link">🔗</button>'+
     '<button class="todo-comment-btn" onclick="editTodoComment(\''+escapedInit+'\',\''+escapedId+'\')" title="Add/Edit comment">💬</button>'+
     '<button class="todo-comment-btn" onclick="editTodoDue(\''+escapedInit+'\',\''+escapedId+'\')" title="Set due date">📅</button>'+
@@ -10810,10 +10890,10 @@ function renderKanban(allTodos){
       var nextStatus=cd.key==='open'?'progress':cd.key==='progress'?'done':'open';
       var nextLabel=cd.key==='open'?'→ Progress':cd.key==='progress'?'→ Done':'↩ Reopen';
       card.innerHTML=
-        '<div class="kc-tag">'+entry.initiative+'</div>'+
-        '<div class="kc-title">'+t.text+'</div>'+
+        '<div class="kc-tag">'+escHtml(entry.initiative)+'</div>'+
+        '<div class="kc-title">'+escHtml(t.text)+'</div>'+
         (t.due?'<div class="kc-due">📅 '+new Date(t.due).toLocaleDateString('en-ZA',{day:'numeric',month:'short',year:'numeric'})+'</div>':'')+
-        (t.comments?'<div class="kc-due">💬 '+t.comments.replace(/</g,'&lt;').substring(0,50)+'</div>':'')+
+        (t.comments?'<div class="kc-due">💬 '+escHtml(String(t.comments).substring(0,50))+'</div>':'')+
         '<div class="kc-actions">'+
           '<button onclick="setTodoStatus(\''+escapedInit+'\',\''+t.id+'\',\''+nextStatus+'\')">'+nextLabel+'</button>'+
           '<button onclick="editTodoComment(\''+escapedInit+'\',\''+t.id+'\')">💬</button>'+
@@ -13157,6 +13237,7 @@ function openPlans(){
     persistData();
   }
   renderPlansOverlay();
+  updateNavActive('');  // v1.25.0
 }
 function closePlans(){
   var ov = document.getElementById('plansOverlay');
@@ -13259,6 +13340,7 @@ function openFeedback(){
   if(!ov) return;
   ov.classList.add('open');
   loadFeedbackInbox();
+  updateNavActive('');  // v1.25.0
 }
 function closeFeedback(){
   var ov = document.getElementById('feedbackOverlay');
@@ -15723,6 +15805,7 @@ function openPrioritization(){
   if(!ov) return;
   ov.classList.add('open');
   prioNav(_prioPage || 'score');
+  updateNavActive('');  // v1.25.0
 }
 function closePrioritization(){
   var ov = document.getElementById('prioritizationOverlay');
@@ -16430,6 +16513,7 @@ function openKPI(){
     document.getElementById('tsWeekLabel').textContent=_weekLabel(_tsCurrentWeek);
     renderTimesheet();
   }
+  updateNavActive('');  // v1.25.0
 }
 function closeKPI(){
   document.getElementById('kpiOverlay').classList.remove('open');
@@ -16964,6 +17048,7 @@ function makeNewUCR() {
 function openUCR() {
   document.getElementById('ucrOverlay').classList.add('open');
   renderUCR();
+  updateNavActive('');  // v1.25.0
 }
 function closeUCR() {
   document.getElementById('ucrOverlay').classList.remove('open');
@@ -17049,11 +17134,11 @@ function renderUCRCardHeader(ucr) {
   var hdr = document.getElementById('ucrhdr_' + ucr.id);
   if (!hdr) return;
   var pc = UCR_PRIORITY_COLORS[ucr.priority] || '#64748b';
-  hdr.innerHTML = '<span class="ucr-priority" style="background:'+pc+'">'+ucr.priority+'</span>' +
-    '<span style="flex:1;font-weight:700;font-size:13px;color:var(--navy)">' + (ucr.title||'Untitled') + '</span>' +
-    '<span class="ucr-priority" style="background:' + ({Draft:'#64748b',Submitted:'#2563eb',Approved:'#16a34a',Rejected:'#dc2626',Implemented:'#7c3aed'}[ucr.status]||'#64748b') + '">' + ucr.status + '</span>' +
-    '<span style="font-size:10px;color:var(--muted)">' + ucr.createdAt + '</span>' +
-    '<button onclick="event.stopPropagation();deleteUCR(\''+ucr.id+'\')" style="background:none;border:none;cursor:pointer;font-size:14px;color:#dc2626;padding:2px 4px" title="Delete UCR">✕</button>';
+  hdr.innerHTML = '<span class="ucr-priority" style="background:'+pc+'">'+escHtml(ucr.priority)+'</span>' +
+    '<span style="flex:1;font-weight:700;font-size:13px;color:var(--navy)">' + escHtml(ucr.title||'Untitled') + '</span>' +
+    '<span class="ucr-priority" style="background:' + ({Draft:'#64748b',Submitted:'#2563eb',Approved:'#16a34a',Rejected:'#dc2626',Implemented:'#7c3aed'}[ucr.status]||'#64748b') + '">' + escHtml(ucr.status) + '</span>' +
+    '<span style="font-size:10px;color:var(--muted)">' + escHtml(ucr.createdAt) + '</span>' +
+    '<button onclick="event.stopPropagation();deleteUCR(\''+escHtml(ucr.id)+'\')" style="background:none;border:none;cursor:pointer;font-size:14px;color:#dc2626;padding:2px 4px" title="Delete UCR">✕</button>';
 }
 
 function renderUCRCard(ucr) {
@@ -17883,6 +17968,7 @@ function openAdmin(){
   if(!_isSuperAdmin){ alert('Access denied. Super Admin role required.'); return; }
   document.getElementById('adminOverlay').classList.add('open');
   renderAdminPage();
+  updateNavActive('');  // v1.25.0
 }
 function closeAdmin(){
   document.getElementById('adminOverlay').classList.remove('open');
@@ -19769,6 +19855,7 @@ function openCapacity(){
   document.getElementById('capOverlay').classList.add('open');
   if(capData.teams.length===0) seedCapData();
   capNav(_capPage);
+  updateNavActive('');  // v1.25.0
 }
 function closeCapacity(){document.getElementById('capOverlay').classList.remove('open');}
 function capNav(page){
@@ -20720,6 +20807,7 @@ function openArtifacts() {
   ov.classList.add('open');
   populateArtFilters();
   renderArtifacts();
+  updateNavActive('');  // v1.25.0
 }
 
 function closeArtifacts() {
@@ -21874,7 +21962,7 @@ async function callAI(prompt, systemPrompt){
   // Reload key from localStorage in case it was just saved
   loadAIKey();
   if(!userAIKey.key){alert('Please set your AI API key in Settings (⚙️ button).');return null;}
-  console.log('[AI] Calling provider:',userAIKey.provider,'model:',userAIKey.model,'key length:',userAIKey.key.length);
+  console.log('[AI] Calling provider:',userAIKey.provider,'model:',userAIKey.model);  // v1.25.0: dropped key length
   try{
     // Route through main process IPC to bypass CORS
     if(window.electronAPI&&window.electronAPI.aiRequest){

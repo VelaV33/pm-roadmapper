@@ -145,10 +145,30 @@ serve(handle(async (req) => {
     return jsonResponse({ ok: true, teams: enriched });
   }
 
+  // v1.25.0: shared input validators for team writes
+  const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
+  const validateTeamFields = (
+    name: unknown, description: unknown, color: unknown,
+  ): string | null => {
+    if (name != null) {
+      const n = String(name).trim();
+      if (n.length === 0 || n.length > 100) return "Team name must be 1\u2013100 characters";
+    }
+    if (description != null && String(description).length > 1000) {
+      return "Description must be \u2264 1000 characters";
+    }
+    if (color != null && !HEX_COLOR.test(String(color))) {
+      return "Color must be a #RRGGBB hex value";
+    }
+    return null;
+  };
+
   // ACTION: create-team
   if (action === "create-team") {
     const { name, description, color } = body;
     if (!name || !String(name).trim()) return errorResponse("Team name required", 400);
+    const verr = validateTeamFields(name, description, color);
+    if (verr) return errorResponse(verr, 400);
     const { data, error } = await supabase
       .from("teams")
       .insert({
@@ -163,7 +183,7 @@ serve(handle(async (req) => {
       if ((error as { code?: string }).code === "23505") {
         return errorResponse("A team with that name already exists", 409);
       }
-      console.error("[admin-api create-team] error:", error.message);
+      console.error("[admin-api create-team] error:", (error as { code?: string }).code || error.message);
       return errorResponse("Failed to create team", 500);
     }
     return jsonResponse({ ok: true, id: data.id });
@@ -173,6 +193,8 @@ serve(handle(async (req) => {
   if (action === "update-team") {
     const { id, name, description, color } = body;
     if (!id) return errorResponse("id required", 400);
+    const verr = validateTeamFields(name, description, color);
+    if (verr) return errorResponse(verr, 400);
     const updates: Record<string, unknown> = {};
     if (name != null) updates.name = String(name).trim();
     if (description != null) updates.description = String(description).trim();
@@ -183,7 +205,7 @@ serve(handle(async (req) => {
       .update(updates)
       .eq("id", id);
     if (error) {
-      console.error("[admin-api update-team] error:", error.message);
+      console.error("[admin-api update-team] error:", (error as { code?: string }).code || error.message);
       return errorResponse("Failed to update team", 500);
     }
     return jsonResponse({ ok: true });

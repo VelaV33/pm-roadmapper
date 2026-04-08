@@ -60,6 +60,33 @@ async function sendInviteEmail(to: string, inviterName: string): Promise<boolean
   }
 }
 
+// v1.25.0: input validation helpers — applied to add + update.
+// Length caps prevent abuse of `notes` and `metadata` for storage exhaustion
+// or staging XSS payloads that get rendered elsewhere.
+const META_KEYS = ["firstName", "lastName", "title", "team", "phone", "company"] as const;
+function sanitizeMetadata(raw: unknown): Record<string, string> {
+  if (!raw || typeof raw !== "object") return {};
+  const out: Record<string, string> = {};
+  for (const k of META_KEYS) {
+    const v = (raw as Record<string, unknown>)[k];
+    if (typeof v === "string" && v.trim()) {
+      out[k] = v.trim().substring(0, 200);
+    }
+  }
+  return out;
+}
+function validateContactInputs(name: unknown, notes: unknown): string | null {
+  if (name != null) {
+    const n = String(name).trim();
+    if (n.length === 0) return "Name is required";
+    if (n.length > 200) return "Name must be \u2264 200 characters";
+  }
+  if (notes != null && String(notes).length > 2000) {
+    return "Notes must be \u2264 2000 characters";
+  }
+  return null;
+}
+
 serve(handle(async (req) => {
   const { user, supabase } = await verifyRequest(req);
   const body = await req.json().catch(() => ({}));
@@ -98,12 +125,12 @@ serve(handle(async (req) => {
   // ── ADD ────────────────────────────────────────────────────────────────
   if (action === "add") {
     const { email, name, notes, metadata } = body;
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || String(email).length > 254) {
       return errorResponse("Valid email required", 400);
     }
-    if (!name || !String(name).trim()) {
-      return errorResponse("Name is required", 400);
-    }
+    const validateErr = validateContactInputs(name, notes);
+    if (validateErr) return errorResponse(validateErr, 400);
+    const cleanMetadata = sanitizeMetadata(metadata);
     const cleanEmail = email.toLowerCase().trim();
 
     // v1.23.1: pre-flight check — block if email already belongs to a
@@ -116,8 +143,11 @@ serve(handle(async (req) => {
         (u) => (u.email || "").toLowerCase() === cleanEmail,
       );
       if (existingUser) {
+        // v1.25.0: generic message — do not echo the email back. The previous
+        // version leaked an existence oracle: any signed-in user could probe
+        // arbitrary emails to find registered accounts.
         return errorResponse(
-          `${cleanEmail} is already a registered user on the platform — no need to add as a contact.`,
+          "This email cannot be added as a contact.",
           409,
         );
       }
@@ -133,7 +163,7 @@ serve(handle(async (req) => {
       .eq("email", cleanEmail)
       .maybeSingle();
     if (existingContact) {
-      return errorResponse(`${cleanEmail} is already in your contacts.`, 409);
+      return errorResponse("This contact already exists.", 409);
     }
 
     const { data, error } = await supabase
@@ -141,18 +171,18 @@ serve(handle(async (req) => {
       .insert({
         owner_user_id: user.id,
         email: cleanEmail,
-        name: String(name).trim(),
-        notes: notes ? String(notes).trim() : null,
-        metadata: (metadata && typeof metadata === "object") ? metadata : {},
+        name: String(name).trim().substring(0, 200),
+        notes: notes ? String(notes).trim().substring(0, 2000) : null,
+        metadata: cleanMetadata,
         status: "inactive",
       })
       .select("id")
       .single();
     if (error) {
       if ((error as { code?: string }).code === "23505") {
-        return errorResponse(`${cleanEmail} is already in your contacts.`, 409);
+        return errorResponse("This contact already exists.", 409);
       }
-      console.error("[contacts-api add] error:", error.message);
+      console.error("[contacts-api add] error:", error.code || error.message);
       return errorResponse("Failed to add contact", 500);
     }
     return jsonResponse({ ok: true, id: data.id });
@@ -162,10 +192,12 @@ serve(handle(async (req) => {
   if (action === "update") {
     const { id, name, notes, metadata } = body;
     if (!id) return errorResponse("Missing id", 400);
+    const validateErr = validateContactInputs(name, notes);
+    if (validateErr) return errorResponse(validateErr, 400);
     const updates: Record<string, unknown> = {};
-    if (name != null) updates.name = String(name).trim();
-    if (notes != null) updates.notes = String(notes).trim();
-    if (metadata != null && typeof metadata === "object") updates.metadata = metadata;
+    if (name != null) updates.name = String(name).trim().substring(0, 200);
+    if (notes != null) updates.notes = String(notes).trim().substring(0, 2000);
+    if (metadata != null && typeof metadata === "object") updates.metadata = sanitizeMetadata(metadata);
     if (Object.keys(updates).length === 0) return jsonResponse({ ok: true });
     const { error } = await supabase
       .from("contacts")
