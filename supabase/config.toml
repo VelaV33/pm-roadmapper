@@ -387,6 +387,8 @@ verify_jwt = true
 # JWTs as "Invalid JWT" — same workaround as feedback-list.
 [functions.admin-api]
 verify_jwt = false
+[functions.contacts-api]
+verify_jwt = false
 [functions.competitive-analysis]
 verify_jwt = true
 [functions.create-user]
