@@ -1,74 +1,62 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { handle, verifyRequest, jsonResponse, errorResponse, isSuperAdmin } from "../_shared/auth.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+serve(handle(async (req) => {
+  const { user, supabase } = await verifyRequest(req);
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const { owner_id } = await req.json().catch(() => ({}));
+  if (!owner_id) return errorResponse("Missing owner_id", 400);
 
-  try {
-    const { owner_id, share_id } = await req.json();
-    if (!owner_id) {
-      return new Response(JSON.stringify({ error: "Missing owner_id" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
+  // Authorization: caller must be EITHER
+  //   (a) the owner themselves, OR
+  //   (b) a recipient with a non-revoked share record matching this owner, OR
+  //   (c) a super admin (read-only audit access).
+  const callerIsOwner = user.id === owner_id;
+  const callerIsAdmin = isSuperAdmin(user);
+
+  let allowed = callerIsOwner || callerIsAdmin;
+
+  if (!allowed) {
+    // Check shared_roadmaps for an active share to this caller's email.
+    const callerEmail = (user.email || "").toLowerCase();
+    if (!callerEmail) return errorResponse("Forbidden", 403);
+
+    const { data: shareRow, error: shareErr } = await supabase
+      .from("shared_roadmaps")
+      .select("id")
+      .eq("owner_id", owner_id)
+      .eq("recipient_email", callerEmail)
+      .limit(1)
+      .maybeSingle();
+
+    if (shareErr) {
+      console.error("[get-shared-roadmap] share lookup error:", shareErr.message);
+      return errorResponse("Forbidden", 403);
     }
-
-    // Use service role key — bypasses RLS so we can read any user's roadmap data
-    const SUPA_URL = Deno.env.get("SUPABASE_URL");
-    const SUPA_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const supabase = createClient(SUPA_URL!, SUPA_KEY!);
-
-    // Verify the share record exists (caller must have a valid share)
-    if (share_id) {
-      const { data: shareRecord, error: shareErr } = await supabase
-        .from("shared_roadmaps")
-        .select("id")
-        .eq("id", share_id)
-        .single();
-      if (shareErr || !shareRecord) {
-        return new Response(JSON.stringify({ error: "Share not found or revoked" }), {
-          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }
-        });
-      }
-    }
-
-    // Fetch the owner's roadmap data
-    const { data: roadmapRows, error: roadmapErr } = await supabase
-      .from("roadmap_data")
-      .select("data, updated_at")
-      .eq("user_id", owner_id)
-      .order("updated_at", { ascending: false })
-      .limit(1);
-
-    if (roadmapErr) {
-      console.error("Roadmap fetch error:", roadmapErr.message);
-      return new Response(JSON.stringify({ error: "Failed to fetch roadmap: " + roadmapErr.message }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-
-    if (!roadmapRows || roadmapRows.length === 0 || !roadmapRows[0].data) {
-      return new Response(JSON.stringify({ error: "Owner has no roadmap data in the cloud" }), {
-        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-
-    return new Response(JSON.stringify({
-      ok: true,
-      data: roadmapRows[0].data,
-      updated_at: roadmapRows[0].updated_at
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" }
-    });
-
-  } catch (e) {
-    console.error("get-shared-roadmap error:", e.message);
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
-    });
+    if (!shareRow) return errorResponse("Forbidden", 403);
+    allowed = true;
   }
-});
+
+  // Fetch the owner's roadmap data (service role bypasses RLS by design).
+  const { data: roadmapRows, error: roadmapErr } = await supabase
+    .from("roadmap_data")
+    .select("data, updated_at")
+    .eq("user_id", owner_id)
+    .order("updated_at", { ascending: false })
+    .limit(1);
+
+  if (roadmapErr) {
+    console.error("[get-shared-roadmap] roadmap fetch error:", roadmapErr.message);
+    return errorResponse("Failed to fetch roadmap", 500);
+  }
+
+  if (!roadmapRows || roadmapRows.length === 0 || !roadmapRows[0].data) {
+    return errorResponse("Owner has no roadmap data", 404);
+  }
+
+  return jsonResponse({
+    ok: true,
+    data: roadmapRows[0].data,
+    updated_at: roadmapRows[0].updated_at,
+  });
+}));

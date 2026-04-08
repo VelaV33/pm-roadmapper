@@ -1,87 +1,63 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { handle, verifyRequest, jsonResponse, errorResponse } from "../_shared/auth.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+serve(handle(async (req) => {
+  const { user, supabase } = await verifyRequest(req);
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const body = await req.json().catch(() => ({}));
+  const { data } = body || {};
 
-  try {
-    const { user_id, data } = await req.json();
+  // IMPORTANT: identity comes from the verified JWT, not the request body.
+  // A user can only sync their OWN roadmap.
+  const user_id = user.id;
 
-    if (!user_id || !data) {
-      return new Response(JSON.stringify({ error: "Missing user_id or data" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
+  if (!data) return errorResponse("Missing data", 400);
 
-    const SUPA_URL = Deno.env.get("SUPABASE_URL");
-    const SUPA_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const supabase = createClient(SUPA_URL!, SUPA_KEY!);
-
-    // Check if row exists
-    const { data: existing } = await supabase
-      .from("roadmap_data")
-      .select("user_id")
-      .eq("user_id", user_id)
-      .limit(1);
-
-    let result;
-    if (existing && existing.length > 0) {
-      // Update
-      result = await supabase
-        .from("roadmap_data")
-        .update({ data, updated_at: new Date().toISOString() })
-        .eq("user_id", user_id);
-    } else {
-      // Insert
-      result = await supabase
-        .from("roadmap_data")
-        .insert({ user_id, data, updated_at: new Date().toISOString() });
-    }
-
-    if (result.error) {
-      console.error("Sync error:", result.error.message, result.error.details);
-      return new Response(JSON.stringify({
-        error: result.error.message,
-        details: result.error.details,
-        hint: result.error.hint
-      }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-
-    // Verify the data was saved by reading it back (check actual data content)
-    const { data: verify, error: verifyErr } = await supabase
-      .from("roadmap_data")
-      .select("data, updated_at")
-      .eq("user_id", user_id)
-      .limit(1);
-
-    const dataVerified = verify && verify.length > 0 && verify[0].data !== null;
-    const savedRows = dataVerified ? (verify[0].data.rows || []).length : 0;
-
-    if (!dataVerified) {
-      console.error("VERIFICATION FAILED: row exists but data is null/missing", verifyErr);
-    }
-
-    return new Response(JSON.stringify({
-      ok: dataVerified,
-      action: existing && existing.length > 0 ? "updated" : "inserted",
-      verified: dataVerified,
-      saved_rows: savedRows,
-      rows_in_data: (data.rows || []).length
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" }
-    });
-
-  } catch (e) {
-    console.error("sync-roadmap error:", e.message, e.stack);
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
-    });
+  // Sanity-check shape so we don't store random garbage.
+  if (typeof data !== "object" || Array.isArray(data)) {
+    return errorResponse("Invalid data shape", 400);
   }
-});
+
+  // Check if row exists
+  const { data: existing } = await supabase
+    .from("roadmap_data")
+    .select("user_id")
+    .eq("user_id", user_id)
+    .limit(1);
+
+  let result;
+  if (existing && existing.length > 0) {
+    result = await supabase
+      .from("roadmap_data")
+      .update({ data, updated_at: new Date().toISOString() })
+      .eq("user_id", user_id);
+  } else {
+    result = await supabase
+      .from("roadmap_data")
+      .insert({ user_id, data, updated_at: new Date().toISOString() });
+  }
+
+  if (result.error) {
+    // Log details server-side, return generic message to caller.
+    console.error("[sync-roadmap] db error:", result.error.message, result.error.details);
+    return errorResponse("Failed to save roadmap", 500);
+  }
+
+  // Verify the data was saved
+  const { data: verify } = await supabase
+    .from("roadmap_data")
+    .select("data, updated_at")
+    .eq("user_id", user_id)
+    .limit(1);
+
+  const dataVerified = !!(verify && verify.length > 0 && verify[0].data !== null);
+  const savedRows = dataVerified ? ((verify![0].data as { rows?: unknown[] }).rows || []).length : 0;
+
+  return jsonResponse({
+    ok: dataVerified,
+    action: existing && existing.length > 0 ? "updated" : "inserted",
+    verified: dataVerified,
+    saved_rows: savedRows,
+    rows_in_data: ((data as { rows?: unknown[] }).rows || []).length,
+  });
+}));

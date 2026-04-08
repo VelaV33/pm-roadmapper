@@ -1,138 +1,110 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { handle, verifyRequest, jsonResponse, errorResponse, isSuperAdmin, SUPER_ADMINS } from "../_shared/auth.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+serve(handle(async (req) => {
+  // verifyRequest enforces a valid JWT — caller identity comes from there.
+  const { user, supabase } = await verifyRequest(req);
 
-// Super admin emails — can be expanded via the admin UI
-const SUPER_ADMINS = ["velasabelo.com@gmail.com"];
+  const body = await req.json().catch(() => ({}));
+  const { action, target_user_id, role } = body || {};
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  // ACTION: check-role — anyone authenticated can ask about themselves.
+  if (action === "check-role") {
+    return jsonResponse({
+      ok: true,
+      is_super_admin: isSuperAdmin(user),
+      email: user.email,
+    });
+  }
 
-  try {
-    const { action, caller_email, caller_id, target_user_id, role } = await req.json();
+  // All other actions require super admin (derived from verified JWT).
+  if (!isSuperAdmin(user)) {
+    return errorResponse("Access denied. Super Admin role required.", 403);
+  }
 
-    const SUPA_URL = Deno.env.get("SUPABASE_URL");
-    const SUPA_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const supabase = createClient(SUPA_URL!, SUPA_KEY!);
-
-    // Check if caller is super admin
-    const { data: allUsers } = await supabase.auth.admin.listUsers();
-    const callerUser = allUsers?.users?.find(u => u.id === caller_id);
-
-    // Check super admin status from user metadata or hardcoded list
-    const isSuperAdmin = callerUser && (
-      SUPER_ADMINS.includes(callerUser.email?.toLowerCase() || '') ||
-      callerUser.user_metadata?.role === 'super_admin'
-    );
-
-    // ACTION: check-role — anyone can check their own role
-    if (action === 'check-role') {
-      return new Response(JSON.stringify({
-        ok: true,
-        is_super_admin: isSuperAdmin,
-        email: callerUser?.email
-      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  // ACTION: list-users
+  if (action === "list-users") {
+    const { data: allUsers, error: listErr } = await supabase.auth.admin.listUsers();
+    if (listErr) {
+      console.error("[admin-api] list error:", listErr.message);
+      return errorResponse("Failed to list users", 500);
     }
-
-    // All other actions require super admin
-    if (!isSuperAdmin) {
-      return new Response(JSON.stringify({ error: "Access denied. Super Admin role required." }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-
-    // ACTION: list-users — get all users with their data summary
-    if (action === 'list-users') {
-      const users = allUsers?.users?.map(u => ({
+    const users = (allUsers?.users || []).map((u) => {
+      const appRole = (u.app_metadata as { role?: string } | undefined)?.role;
+      return {
         id: u.id,
         email: u.email,
         created_at: u.created_at,
         last_sign_in: u.last_sign_in_at,
-        is_super_admin: SUPER_ADMINS.includes(u.email?.toLowerCase() || '') || u.user_metadata?.role === 'super_admin',
-        role: u.user_metadata?.role || 'product_manager'
-      })) || [];
+        is_super_admin:
+          SUPER_ADMINS.includes((u.email || "").toLowerCase()) || appRole === "super_admin",
+        role: appRole || "product_manager",
+        rows_count: 0,
+        sections_count: 0,
+      };
+    });
 
-      // Get roadmap data counts for each user
-      for (const user of users) {
-        const { data: rd } = await supabase
-          .from("roadmap_data")
-          .select("data")
-          .eq("user_id", user.id)
-          .limit(1);
-
-        if (rd && rd[0] && rd[0].data) {
-          user.rows_count = (rd[0].data.rows || []).length;
-          user.sections_count = (rd[0].data.sections || []).length;
-        } else {
-          user.rows_count = 0;
-          user.sections_count = 0;
-        }
-      }
-
-      return new Response(JSON.stringify({ ok: true, users }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-
-    // ACTION: get-user-data — fetch a specific user's full roadmap data
-    if (action === 'get-user-data') {
-      if (!target_user_id) {
-        return new Response(JSON.stringify({ error: "target_user_id required" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
-        });
-      }
-
+    // Get roadmap data counts
+    for (const u of users) {
       const { data: rd } = await supabase
         .from("roadmap_data")
-        .select("data, updated_at")
-        .eq("user_id", target_user_id)
+        .select("data")
+        .eq("user_id", u.id)
         .limit(1);
-
-      const targetUser = allUsers?.users?.find(u => u.id === target_user_id);
-
-      return new Response(JSON.stringify({
-        ok: true,
-        user: { id: target_user_id, email: targetUser?.email },
-        data: rd && rd[0] ? rd[0].data : null,
-        updated_at: rd && rd[0] ? rd[0].updated_at : null
-      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (rd && rd[0] && rd[0].data) {
+        const d = rd[0].data as { rows?: unknown[]; sections?: unknown[] };
+        u.rows_count = (d.rows || []).length;
+        u.sections_count = (d.sections || []).length;
+      }
     }
 
-    // ACTION: set-role — assign super_admin or remove it
-    if (action === 'set-role') {
-      if (!target_user_id || !role) {
-        return new Response(JSON.stringify({ error: "target_user_id and role required" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
-        });
-      }
+    return jsonResponse({ ok: true, users });
+  }
 
-      const { error } = await supabase.auth.admin.updateUserById(target_user_id, {
-        user_metadata: { role: role }
-      });
+  // ACTION: get-user-data
+  if (action === "get-user-data") {
+    if (!target_user_id) return errorResponse("target_user_id required", 400);
 
-      if (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
-          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
-        });
-      }
+    const { data: rd } = await supabase
+      .from("roadmap_data")
+      .select("data, updated_at")
+      .eq("user_id", target_user_id)
+      .limit(1);
 
-      return new Response(JSON.stringify({ ok: true, message: "Role updated to " + role }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
+    const { data: targetLookup } = await supabase.auth.admin.getUserById(target_user_id);
+    const targetUser = targetLookup?.user;
 
-    return new Response(JSON.stringify({ error: "Unknown action: " + action }), {
-      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
-    });
-
-  } catch (e) {
-    console.error("admin-api error:", e.message);
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+    return jsonResponse({
+      ok: true,
+      user: { id: target_user_id, email: targetUser?.email },
+      data: rd && rd[0] ? rd[0].data : null,
+      updated_at: rd && rd[0] ? rd[0].updated_at : null,
     });
   }
-});
+
+  // ACTION: set-role — store role in app_metadata (server-only writable)
+  if (action === "set-role") {
+    if (!target_user_id || !role) {
+      return errorResponse("target_user_id and role required", 400);
+    }
+    const ALLOWED_ROLES = ["super_admin", "product_manager", "viewer"];
+    if (!ALLOWED_ROLES.includes(role)) {
+      return errorResponse("Invalid role", 400);
+    }
+
+    // Prevent removing the last hardcoded super admin's privileges from being meaningless —
+    // hardcoded admins always remain super admin regardless.
+    const { error } = await supabase.auth.admin.updateUserById(target_user_id, {
+      app_metadata: { role },
+    });
+
+    if (error) {
+      console.error("[admin-api] set-role error:", error.message);
+      return errorResponse("Failed to update role", 500);
+    }
+
+    return jsonResponse({ ok: true, message: "Role updated to " + role });
+  }
+
+  return errorResponse("Unknown action", 400);
+}));

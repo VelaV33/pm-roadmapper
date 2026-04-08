@@ -172,7 +172,7 @@ enable_anonymous_sign_ins = false
 # Allow/disallow testing manual linking of accounts
 enable_manual_linking = false
 # Passwords shorter than this value will be rejected as weak. Minimum 6, recommended 8 or more.
-minimum_password_length = 6
+minimum_password_length = 8
 # Passwords that do not meet the following requirements will be rejected as weak. Supported values
 # are: `letters_digits`, `lower_upper_letters_digits`, `lower_upper_letters_digits_symbols`
 password_requirements = ""
@@ -367,6 +367,29 @@ deno_version = 2
 
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
+
+# ── Per-function JWT verification ────────────────────────────────────────────
+# verify_jwt = true: the Supabase gateway rejects unauthenticated calls before
+#   they ever reach our code (defence-in-depth — our code also checks).
+# verify_jwt = false: required for signup / password recovery, where the
+#   caller has no token. These functions implement their own rate limiting +
+#   never reveal whether an account exists.
+[functions.sync-roadmap]
+verify_jwt = true
+[functions.get-shared-roadmap]
+verify_jwt = true
+[functions.get-my-shares]
+verify_jwt = true
+[functions.send-invite]
+verify_jwt = true
+[functions.admin-api]
+verify_jwt = true
+[functions.competitive-analysis]
+verify_jwt = true
+[functions.create-user]
+verify_jwt = false
+[functions.reset-password]
+verify_jwt = false
 
 [analytics]
 enabled = true
