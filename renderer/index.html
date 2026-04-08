@@ -556,15 +556,23 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .plan-linked-chip button{background:none;border:none;color:#7c3aed;cursor:pointer;font-size:11px;padding:0;line-height:1}
 
 /* Task list spreadsheet */
-.plan-task-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);font-size:12px}
-.plan-task-table th{background:#f8fafc;font-weight:700;color:var(--muted);padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
-.plan-task-table td{padding:6px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.plan-task-wrap{width:100%;overflow-x:auto;background:var(--white);border:1px solid var(--border);border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.plan-task-table{border-collapse:separate;border-spacing:0;font-size:12px;table-layout:fixed}
+.plan-task-table th{background:#f8fafc;font-weight:700;color:var(--muted);padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;position:relative;overflow:hidden;text-overflow:ellipsis}
+.plan-task-table td{padding:6px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle;overflow:hidden}
 .plan-task-table tr:last-child td{border-bottom:none}
 .plan-task-table tr.milestone td{background:rgba(245,158,11,.05)}
 .plan-task-table tr:hover td{background:#f8fafc}
 .plan-task-table tr.milestone:hover td{background:rgba(245,158,11,.1)}
-.plan-task-table input.cell, .plan-task-table select.cell{width:100%;border:1px solid transparent;background:transparent;padding:5px 7px;font-size:12px;font-family:inherit;border-radius:4px;color:var(--text)}
+.plan-task-table input.cell, .plan-task-table select.cell{width:100%;min-width:0;border:1px solid transparent;background:transparent;padding:5px 7px;font-size:12px;font-family:inherit;border-radius:4px;color:var(--text);text-overflow:ellipsis}
 .plan-task-table input.cell:focus, .plan-task-table select.cell:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 2px rgba(45,107,244,.15)}
+/* Cells that contain a flex layout (e.g. source pill + task name) — let the flex child shrink */
+.plan-task-table td > div{min-width:0}
+.plan-task-table td > div > input.cell{min-width:0;flex:1}
+/* Resize handle on the right edge of every header cell */
+.plan-col-resize{position:absolute;top:0;right:0;width:6px;height:100%;cursor:col-resize;user-select:none;z-index:2;background:transparent;transition:background .15s}
+.plan-col-resize:hover{background:rgba(45,107,244,.3)}
+.plan-col-resize.resizing{background:var(--accent)}
 .plan-task-table input[type="date"].cell{font-variant-numeric:tabular-nums}
 .plan-task-table input[type="number"].cell{text-align:right;font-variant-numeric:tabular-nums}
 .plan-task-name-input{font-weight:600;color:var(--text)}
@@ -609,6 +617,18 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 /* Roadmap row plan badge */
 .row-plan-badge{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:1px 6px;border-radius:9999px;background:rgba(167,139,250,.15);color:#7c3aed;cursor:pointer;margin-left:6px}
 .row-plan-badge:hover{background:rgba(167,139,250,.25)}
+
+/* Excel import — vertical column-mapping list */
+.excel-col-row{display:flex;align-items:center;gap:14px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;background:var(--white);transition:all .15s}
+.excel-col-row.mapped{border-color:rgba(45,107,244,.4);background:rgba(45,107,244,.03)}
+.excel-col-row:hover{border-color:var(--accent)}
+.excel-col-name{flex:1;min-width:0}
+.excel-col-label{font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.excel-col-samples{font-size:10px;color:var(--muted);margin-top:2px;font-family:Courier New,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.excel-col-arrow{color:#cbd5e1;font-size:14px;flex-shrink:0}
+.excel-col-row select.excel-mapping{flex:0 0 220px;font-size:12px;font-weight:600;border:1px solid var(--border);border-radius:9999px;padding:8px 14px;background:var(--white);color:var(--text);cursor:pointer;font-family:inherit;outline:none;transition:border-color .15s}
+.excel-col-row select.excel-mapping:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(45,107,244,.15)}
+.excel-col-row.mapped select.excel-mapping{border-color:var(--accent);color:var(--accent)}
 
 /* Feedback Inbox overlay */
 #feedbackOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
@@ -1778,6 +1798,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
             <button id="planViewListBtn" class="plan-view-toggle active" onclick="setPlanView('list')">List</button>
             <button id="planViewGanttBtn" class="plan-view-toggle" onclick="setPlanView('gantt')">Gantt</button>
           </div>
+          <button class="prio-btn" onclick="openExcelImportPicker()" title="Import tasks from an Excel file (MS Project, MS Planner, Asana, Jira, ClickUp, etc.)" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M9 17v-2a4 4 0 014-4h4M9 17l3-3m-3 3l-3-3m12 6V7a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2h6"/></svg>Upload Excel</button>
           <button class="prio-btn primary" onclick="openAddTaskModal()">+ Add task</button>
         </div>
       </div>
@@ -11248,10 +11269,33 @@ function confirmLinkRows(){
 }
 
 // ── Task list view ──────────────────────────────────────────────────────────
+// Column definitions — each has a key, label, and default width.
+// Widths are user-resizable and persist per-plan in plan.colWidths.
+var PLAN_COL_DEFS = [
+  { key: 'milestone',    label: '',              dflt: 28  },
+  { key: 'name',         label: 'Task',          dflt: 280 },
+  { key: 'owner',        label: 'Owner',         dflt: 130 },
+  { key: 'start',        label: 'Start',         dflt: 120 },
+  { key: 'end',          label: 'End',           dflt: 120 },
+  { key: 'days',         label: 'Days',          dflt: 60  },
+  { key: 'predecessors', label: 'Predecessors',  dflt: 160 },
+  { key: 'status',       label: 'Status',        dflt: 130 },
+  { key: 'percent',      label: '% done',        dflt: 80  },
+  { key: 'delete',       label: '',              dflt: 30  }
+];
+
+function getPlanColWidths(plan){
+  if(!plan) return PLAN_COL_DEFS.map(function(c){ return c.dflt; });
+  if(!plan.colWidths || plan.colWidths.length !== PLAN_COL_DEFS.length){
+    plan.colWidths = PLAN_COL_DEFS.map(function(c){ return c.dflt; });
+  }
+  return plan.colWidths;
+}
+
 function renderPlanListView(plan){
   var content = document.getElementById('plansContent');
   if(!plan.tasks.length){
-    content.innerHTML = '<div class="plan-empty"><h3>No tasks yet</h3><p>Click <strong>+ Add task</strong> to add your first task. You can create custom tasks or pull from your ToDo lists, G2M checklists, or CapacityIQ task reference.</p></div>';
+    content.innerHTML = '<div class="plan-empty"><h3>No tasks yet</h3><p>Click <strong>+ Add task</strong> to add your first task. You can create custom tasks or pull from your ToDo lists, G2M checklists, or CapacityIQ task reference, or upload an Excel file.</p></div>';
     return;
   }
 
@@ -11260,17 +11304,22 @@ function renderPlanListView(plan){
     return (a.sortIndex||0) - (b.sortIndex||0);
   });
 
-  var html = '<table class="plan-task-table"><thead><tr>';
-  html += '<th style="width:24px"></th>';
-  html += '<th style="min-width:240px">Task</th>';
-  html += '<th>Owner</th>';
-  html += '<th>Start</th>';
-  html += '<th>End</th>';
-  html += '<th style="width:60px">Days</th>';
-  html += '<th>Predecessors</th>';
-  html += '<th>Status</th>';
-  html += '<th style="width:70px">% done</th>';
-  html += '<th style="width:24px"></th>';
+  var widths = getPlanColWidths(plan);
+  var totalW = widths.reduce(function(a,b){ return a + b; }, 0);
+
+  var html = '<div class="plan-task-wrap">';
+  html += '<table class="plan-task-table" style="width:'+totalW+'px;min-width:100%">';
+  // colgroup so the widths actually stick
+  html += '<colgroup>';
+  widths.forEach(function(w){ html += '<col style="width:'+w+'px">'; });
+  html += '</colgroup>';
+  html += '<thead><tr>';
+  PLAN_COL_DEFS.forEach(function(c, i){
+    var resizable = (c.key !== 'milestone' && c.key !== 'delete');  // skip the tiny edge columns
+    html += '<th data-col-idx="'+i+'">'+escHtml(c.label);
+    if(resizable) html += '<div class="plan-col-resize" data-col-idx="'+i+'" title="Drag to resize"></div>';
+    html += '</th>';
+  });
   html += '</tr></thead><tbody>';
 
   sortedTasks.forEach(function(t){
@@ -11306,8 +11355,8 @@ function renderPlanListView(plan){
     html += '</tr>';
   });
 
-  html += '</tbody></table>';
-  html += '<div style="margin-top:10px;font-size:11px;color:var(--muted)">'+plan.tasks.length+' task'+(plan.tasks.length!==1?'s':'')+' &middot; <strong>'+planProgress(plan)+'%</strong> complete &middot; auto-saves and syncs to cloud</div>';
+  html += '</tbody></table></div>';
+  html += '<div style="margin-top:10px;font-size:11px;color:var(--muted)">'+plan.tasks.length+' task'+(plan.tasks.length!==1?'s':'')+' &middot; <strong>'+planProgress(plan)+'%</strong> complete &middot; drag column edges to resize &middot; auto-saves and syncs to cloud</div>';
 
   content.innerHTML = html;
 
@@ -11317,6 +11366,50 @@ function renderPlanListView(plan){
       var taskId = el.dataset.taskId;
       var field = el.dataset.field;
       onTaskFieldChange(taskId, field, el.value);
+    });
+  });
+  // Wire column resize handles
+  _wirePlanColumnResizers(plan);
+}
+
+// Drag-to-resize handler for the task list columns. Mousedown captures the
+// starting state, mousemove updates plan.colWidths and the corresponding
+// <col> element width live, mouseup persists.
+function _wirePlanColumnResizers(plan){
+  var widths = getPlanColWidths(plan);
+  var content = document.getElementById('plansContent');
+  if(!content) return;
+  var table = content.querySelector('.plan-task-table');
+  if(!table) return;
+  var cols = table.querySelectorAll('colgroup col');
+  content.querySelectorAll('.plan-col-resize').forEach(function(handle){
+    var idx = parseInt(handle.dataset.colIdx, 10);
+    handle.addEventListener('mousedown', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      handle.classList.add('resizing');
+      var startX = e.clientX;
+      var startW = widths[idx];
+      var minW = 40;
+      function onMove(ev){
+        var delta = ev.clientX - startX;
+        var newW = Math.max(minW, startW + delta);
+        widths[idx] = newW;
+        if(cols[idx]) cols[idx].style.width = newW + 'px';
+        // Update the table's total width so horizontal scroll works
+        var totalW = widths.reduce(function(a,b){ return a + b; }, 0);
+        table.style.width = totalW + 'px';
+      }
+      function onUp(){
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        handle.classList.remove('resizing');
+        plan.colWidths = widths.slice();
+        plan.updatedAt = Date.now();
+        persistData();
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
     });
   });
 }
@@ -11421,6 +11514,7 @@ function openAddTaskModal(){
       '<div class="plan-modal-header"><h3>Add tasks to plan</h3><button class="plan-modal-close" onclick="closeAddTaskModal()">\u00D7</button></div>'+
       '<div class="plan-modal-tabs">'+
         '<button class="plan-modal-tab active" data-add-tab="custom" onclick="setAddTaskTab(\'custom\')">Custom</button>'+
+        '<button class="plan-modal-tab" data-add-tab="excel" onclick="setAddTaskTab(\'excel\')">From Excel</button>'+
         '<button class="plan-modal-tab" data-add-tab="templates" onclick="setAddTaskTab(\'templates\')">Import template</button>'+
         '<button class="plan-modal-tab" data-add-tab="todo" onclick="setAddTaskTab(\'todo\')">From ToDo</button>'+
         '<button class="plan-modal-tab" data-add-tab="g2m" onclick="setAddTaskTab(\'g2m\')">From G2M</button>'+
@@ -11452,9 +11546,22 @@ function setAddTaskTab(tab){
 function renderAddTaskBody(){
   var body = document.getElementById('addTaskBody');
   if(!body) return;
-  // Hide the bottom Add button on the Templates tab — each template has its own Import button
+  // Hide the bottom Add button on tabs that have their own action button
   var addBtn = document.getElementById('addTaskConfirmBtn');
-  if(addBtn) addBtn.style.display = (_addTaskTab === 'templates') ? 'none' : '';
+  if(addBtn) addBtn.style.display = (_addTaskTab === 'templates' || _addTaskTab === 'excel') ? 'none' : '';
+
+  if(_addTaskTab === 'excel'){
+    body.innerHTML = '<div style="text-align:center;padding:30px 20px">'+
+      '<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:#16a34a;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;margin-bottom:16px"><path d="M9 17v-2a4 4 0 014-4h4M9 17l3-3m-3 3l-3-3m12 6V7a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2h6"/></svg>'+
+      '<h3 style="font-size:16px;font-weight:800;margin-bottom:6px;color:var(--text)">Import tasks from Excel</h3>'+
+      '<p style="font-size:13px;color:var(--muted);max-width:480px;margin:0 auto 18px;line-height:1.5">Pick an .xlsx, .xls or .csv file exported from <strong>MS Project</strong>, <strong>MS Planner</strong>, <strong>Asana</strong>, <strong>Jira</strong>, <strong>ClickUp</strong>, or any spreadsheet with task columns. We auto-detect which columns map to PM Roadmapper fields and let you adjust before committing.</p>'+
+      '<button class="prio-btn primary" onclick="openExcelImportPicker()" style="font-size:13px;padding:11px 28px">Choose Excel file\u2026</button>'+
+      '<div style="margin-top:24px;padding:14px 18px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;font-size:11px;color:#0369a1;text-align:left;max-width:520px;margin-left:auto;margin-right:auto">'+
+        '<strong>What gets imported:</strong> task name (required), owner, start/end dates, duration, % complete, status, predecessors, notes. Hierarchy / outline levels are flattened in v1.'+
+      '</div>'+
+      '</div>';
+    return;
+  }
 
   if(_addTaskTab === 'custom'){
     body.innerHTML = '<div style="font-size:12px;color:var(--muted);margin-bottom:10px">Type one or more task names. Each line becomes a separate task.</div>'+
@@ -11700,6 +11807,491 @@ function importCapTemplate(templateId){
   persistData();
   closeAddTaskModal();
   renderPlanMain();
+}
+
+// ── Excel import for Plans ──────────────────────────────────────────────────
+// Parses Excel files exported from MS Project, MS Planner, Asana, Jira,
+// ClickUp, or any spreadsheet with the right columns. Pure SheetJS, no AI,
+// no network calls. Header auto-detection + user override before commit.
+
+// Map of canonical field -> array of common header patterns (case-insensitive).
+// Covers MS Project, MS Planner, Asana, Jira, ClickUp, Smartsheet, Monday, Wrike,
+// and any spreadsheet built by hand with sensible column names.
+var EXCEL_HEADER_PATTERNS = {
+  name:           [/^task\s*name$/i, /^name$/i, /^task$/i, /^activity$/i, /^title$/i, /^subject$/i, /^summary$/i, /^item$/i, /^to[\-\s]?do$/i, /^description$/i, /^work\s*item$/i],
+  owner:          [/^assigned\s*to$/i, /^assignee[s]?$/i, /^owner$/i, /^resource\s*names?$/i, /^resource[s]?$/i, /^responsible$/i, /^who$/i, /^lead$/i, /^reporter$/i],
+  startDate:      [/^start$/i, /^start\s*date$/i, /^begin$/i, /^begin\s*date$/i, /^from$/i, /^planned\s*start$/i, /^baseline\s*start$/i, /^actual\s*start$/i, /^scheduled\s*start$/i],
+  endDate:        [/^finish$/i, /^finish\s*date$/i, /^end$/i, /^end\s*date$/i, /^due\s*date$/i, /^due$/i, /^deadline$/i, /^complete\s*by$/i, /^planned\s*finish$/i, /^baseline\s*finish$/i, /^actual\s*finish$/i, /^scheduled\s*finish$/i, /^target\s*date$/i],
+  percentComplete:[/^%\s*complete$/i, /^percent\s*complete$/i, /^progress$/i, /^%\s*done$/i, /^percent\s*done$/i, /^completion$/i, /^complete$/i],
+  status:         [/^status$/i, /^state$/i, /^phase$/i, /^stage$/i, /^bucket$/i, /^bucket\s*name$/i, /^column$/i, /^lane$/i, /^workflow$/i],
+  predecessors:   [/^predecessors?$/i, /^depends\s*on$/i, /^prereq.*$/i, /^blocked\s*by$/i, /^dependencies$/i, /^parent[s]?$/i, /^before$/i],
+  notes:          [/^notes?$/i, /^comments?$/i, /^details?$/i, /^description$/i, /^body$/i, /^content$/i]
+};
+
+// Headers we recognize but explicitly want to ignore by default (so they
+// score positively as "this is a header row" but we still set mapping=null).
+var EXCEL_IGNORE_HEADERS = [
+  /^task\s*number$/i,        // MS Planner row id
+  /^id$/i, /^#$/i,           // generic ids
+  /^outline\s*number$/i,     // MS Project hierarchy
+  /^outline\s*level$/i,
+  /^milestone$/i,            // we don't have a milestone flag here (yet)
+  /^priority$/i,             // PM Roadmapper has row-level priority not task-level
+  /^labels?$/i, /^tags?$/i,
+  /^effort\s*completed$/i, /^effort\s*remaining$/i, /^total\s*effort$/i,
+  /^dependents?\s*\(.*\)$/i, /^successors?$/i,
+  /^created$/i, /^modified$/i, /^updated$/i,
+  /^url$/i, /^link$/i,
+  /^project$/i, /^project\s*name$/i,
+  /^plan\s*name$/i
+];
+
+function _isKnownHeader(value){
+  if(!value) return false;
+  var s = String(value).trim();
+  if(!s) return false;
+  for(var field in EXCEL_HEADER_PATTERNS){
+    var pats = EXCEL_HEADER_PATTERNS[field];
+    for(var i = 0; i < pats.length; i++){
+      if(pats[i].test(s)) return true;
+    }
+  }
+  for(var j = 0; j < EXCEL_IGNORE_HEADERS.length; j++){
+    if(EXCEL_IGNORE_HEADERS[j].test(s)) return true;
+  }
+  return false;
+}
+
+// Status string normalisation - map common status strings to our enum.
+var STATUS_NORMALIZE = {
+  'not started':'not-started','notstarted':'not-started','to do':'not-started','todo':'not-started','new':'not-started','open':'not-started','planned':'not-started','backlog':'not-started','pending':'not-started',
+  'in progress':'in-progress','inprogress':'in-progress','active':'in-progress','doing':'in-progress','wip':'in-progress','started':'in-progress','ongoing':'in-progress',
+  'complete':'done','completed':'done','done':'done','finished':'done','closed':'done','resolved':'done','shipped':'done','released':'done',
+  'blocked':'blocked','on hold':'blocked','onhold':'blocked','at risk':'blocked','waiting':'blocked','stuck':'blocked'
+};
+
+function _matchHeader(header){
+  if(!header) return null;
+  var clean = String(header).trim();
+  for(var field in EXCEL_HEADER_PATTERNS){
+    var patterns = EXCEL_HEADER_PATTERNS[field];
+    for(var i = 0; i < patterns.length; i++){
+      if(patterns[i].test(clean)) return field;
+    }
+  }
+  return null;
+}
+
+// Excel stores dates as serial numbers (days since 1900-01-01, with quirks).
+// SheetJS gives us dates as JS Date objects when cellDates:true is set.
+// This helper handles both Date objects, serial numbers, and date strings.
+function _excelToIso(value){
+  if(value == null || value === '') return '';
+  if(value instanceof Date && !isNaN(value)){
+    return _dateToIso(value);
+  }
+  if(typeof value === 'number'){
+    // Excel serial: days since 1899-12-30 (Lotus 1-2-3 quirk)
+    if(value > 25569 && value < 60000){  // ~1970..2064
+      var ms = (value - 25569) * 86400000;
+      var d = new Date(ms);
+      return _dateToIso(d);
+    }
+    return '';
+  }
+  if(typeof value === 'string'){
+    var s = value.trim();
+    if(!s) return '';
+    // Try ISO first
+    if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.substring(0, 10);
+    // Try common formats: MM/DD/YYYY, DD/MM/YYYY, MM-DD-YYYY
+    var d = new Date(s);
+    if(!isNaN(d)) return _dateToIso(d);
+  }
+  return '';
+}
+
+function _normalizePercent(value){
+  if(value == null || value === '') return 0;
+  if(typeof value === 'number'){
+    // 0..1 means decimal, otherwise treat as 0..100
+    return value <= 1 ? Math.round(value * 100) : Math.round(value);
+  }
+  if(typeof value === 'string'){
+    var n = parseFloat(value.replace('%','').trim());
+    if(isNaN(n)) return 0;
+    return n <= 1 ? Math.round(n * 100) : Math.round(n);
+  }
+  return 0;
+}
+
+function _normalizeStatus(value){
+  if(!value) return 'not-started';
+  var key = String(value).toLowerCase().trim();
+  return STATUS_NORMALIZE[key] || 'not-started';
+}
+
+// Parse the predecessors column. MS Project uses "3FS+2d" / "3,4" / "3FS,4SS"
+// Just extract the row numbers; we map FS only and ignore lag for v1.
+function _parsePredecessorRefs(value){
+  if(!value) return [];
+  var s = String(value);
+  var matches = s.match(/\d+/g);
+  if(!matches) return [];
+  return matches.map(function(n){ return parseInt(n, 10); }).filter(function(n){ return !isNaN(n) && n > 0; });
+}
+
+// State for the import flow
+var _excelImportData = null;  // { headers, rows, mapping }
+
+function openExcelImportPicker(){
+  if(!getActivePlan()){ alert('Pick or create a plan first.'); return; }
+  // Use Electron's read-file IPC which already handles xlsx
+  if(!window.electronAPI || !window.electronAPI.readFile){
+    alert('Electron file picker not available.');
+    return;
+  }
+  window.electronAPI.readFile({
+    title: 'Import tasks from Excel',
+    filters: [
+      { name: 'Excel files', extensions: ['xlsx', 'xls', 'csv'] },
+      { name: 'All files', extensions: ['*'] }
+    ]
+  }).then(function(res){
+    if(!res || !res.ok) return;
+    if(!res.base64 && !res.text){
+      alert('Could not read the file.');
+      return;
+    }
+    try {
+      var wb;
+      if(res.base64){
+        wb = XLSX.read(res.base64, { type: 'base64', cellDates: true });
+      } else {
+        wb = XLSX.read(res.text, { type: 'string', cellDates: true });
+      }
+      var sheetName = wb.SheetNames[0];
+      var sheet = wb.Sheets[sheetName];
+      // Convert to array of arrays so we can grab the header row separately
+      var aoa = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, dateNF: 'yyyy-mm-dd', defval: '' });
+      if(!aoa || aoa.length < 2){
+        alert('The file is empty or has no data rows.');
+        return;
+      }
+      // SMART HEADER ROW DETECTION
+      // Many tools (MS Project, MS Planner, Smartsheet) export a metadata
+      // block at the top of the sheet ("Project name", "Plan owner",
+      // "Start date", etc.) followed by a blank row and then the real
+      // headers ("Task name", "Assigned to", "Start", "Finish", ...).
+      //
+      // Score every candidate row by how many cells match a known header
+      // pattern. The row with the highest score wins. Tie-break: prefer
+      // the row with more total non-empty cells. Search the first 30 rows.
+      var bestRowIdx = 0;
+      var bestScore = -1;
+      var bestNonEmpty = -1;
+      var SEARCH_DEPTH = Math.min(30, aoa.length);
+      for(var i = 0; i < SEARCH_DEPTH; i++){
+        var row = aoa[i] || [];
+        var score = 0;
+        var nonEmpty = 0;
+        row.forEach(function(cell){
+          if(cell == null || cell === '') return;
+          nonEmpty++;
+          if(_isKnownHeader(cell)) score++;
+        });
+        // Need at least 2 known-header cells AND 3 non-empty cells to consider
+        // this a header row. Otherwise it's almost certainly metadata.
+        if(score >= 2 && nonEmpty >= 3){
+          if(score > bestScore || (score === bestScore && nonEmpty > bestNonEmpty)){
+            bestScore = score;
+            bestNonEmpty = nonEmpty;
+            bestRowIdx = i;
+          }
+        }
+      }
+      // Fallback: if no row scored 2+, pick the first row with 3+ non-empty cells.
+      if(bestScore < 2){
+        for(var k = 0; k < SEARCH_DEPTH; k++){
+          var nE = (aoa[k] || []).filter(function(c){ return c != null && c !== ''; }).length;
+          if(nE >= 3){ bestRowIdx = k; break; }
+        }
+      }
+
+      var headers = (aoa[bestRowIdx] || []).map(function(h){ return String(h || '').trim(); });
+      var dataRows = aoa.slice(bestRowIdx + 1).filter(function(r){
+        return (r || []).some(function(c){ return c != null && c !== ''; });
+      });
+      // Auto-detect mapping for each column
+      var mapping = headers.map(function(h){ return _matchHeader(h); });
+      _excelImportData = {
+        fileName: res.name || 'import.xlsx',
+        headers: headers,
+        rows: dataRows,
+        mapping: mapping,
+        headerRowIdx: bestRowIdx,
+        rawAoa: aoa,    // keep for "header row is wrong, pick another"
+        headerScore: bestScore
+      };
+      openExcelImportPreview();
+    } catch(e){
+      console.error('Excel parse error:', e);
+      alert('Failed to parse the Excel file: ' + (e.message || 'unknown error'));
+    }
+  }).catch(function(e){
+    console.error('readFile error:', e);
+    alert('Could not open the file picker.');
+  });
+}
+
+function openExcelImportPreview(){
+  if(!_excelImportData) return;
+  var d = _excelImportData;
+  var fieldOptions = [
+    { value: '', label: '— Ignore —' },
+    { value: 'name', label: 'Task name (required)' },
+    { value: 'owner', label: 'Owner' },
+    { value: 'startDate', label: 'Start date' },
+    { value: 'endDate', label: 'End date' },
+    { value: 'percentComplete', label: '% complete' },
+    { value: 'status', label: 'Status' },
+    { value: 'predecessors', label: 'Predecessors' },
+    { value: 'notes', label: 'Notes' }
+  ];
+
+  var detectedCount = d.mapping.filter(function(m){ return m; }).length;
+  var totalCols = d.headers.length;
+
+  var html = '<div class="plan-modal-backdrop" onclick="if(event.target===this) closeExcelImportPreview()">'+
+    '<div class="plan-modal" style="width:720px;max-width:96vw;max-height:90vh">'+
+      '<div class="plan-modal-header">'+
+        '<h3 style="font-size:16px">Import from Excel: '+escHtml(d.fileName)+'</h3>'+
+        '<button class="plan-modal-close" onclick="closeExcelImportPreview()">\u00D7</button>'+
+      '</div>'+
+      '<div class="plan-modal-body">'+
+        // Status banner
+        '<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#0369a1;line-height:1.5">'+
+          '<strong>'+d.rows.length+'</strong> data rows &middot; '+
+          '<strong>'+detectedCount+' of '+totalCols+'</strong> columns auto-detected &middot; '+
+          'Header row found at line <strong>'+(d.headerRowIdx + 1)+'</strong>. '+
+          '<a onclick="pickDifferentHeaderRow()" style="color:#0369a1;text-decoration:underline;cursor:pointer">Wrong header row?</a>'+
+        '</div>'+
+        '<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-bottom:8px">Column mapping</div>';
+
+  // Vertical list — one row per column. Much more usable than the 16-col table.
+  d.headers.forEach(function(header, i){
+    var current = d.mapping[i] || '';
+    // Sample values from the first 3 data rows
+    var samples = [];
+    for(var s = 0; s < Math.min(3, d.rows.length); s++){
+      var v = d.rows[s][i];
+      if(v instanceof Date) v = _dateToIso(v);
+      if(v != null && v !== ''){
+        var str = String(v);
+        if(str.length > 30) str = str.substring(0, 28) + '\u2026';
+        samples.push(str);
+      }
+    }
+    var sampleStr = samples.length ? samples.join(' &middot; ') : '<em style="color:#cbd5e1">empty</em>';
+    var mappedClass = current ? 'mapped' : '';
+
+    html += '<div class="excel-col-row '+mappedClass+'">'+
+      '<div class="excel-col-name">'+
+        '<div class="excel-col-label">'+escHtml(header || '<unnamed column>')+'</div>'+
+        '<div class="excel-col-samples">'+sampleStr+'</div>'+
+      '</div>'+
+      '<div class="excel-col-arrow">\u2192</div>'+
+      '<select data-col-idx="'+i+'" class="excel-mapping">';
+    fieldOptions.forEach(function(opt){
+      html += '<option value="'+escHtml(opt.value)+'"'+(opt.value === current ? ' selected' : '')+'>'+escHtml(opt.label)+'</option>';
+    });
+    html += '</select>'+
+    '</div>';
+  });
+
+  html += '</div>'+
+      '<div class="plan-modal-footer">'+
+        '<button class="prio-btn" onclick="closeExcelImportPreview()">Cancel</button>'+
+        '<button class="prio-btn primary" onclick="confirmExcelImport()">Import '+d.rows.length+' tasks</button>'+
+      '</div>'+
+    '</div>'+
+  '</div>';
+
+  var wrap = document.createElement('div');
+  wrap.id = 'excelImportWrap';
+  wrap.innerHTML = html;
+  document.body.appendChild(wrap);
+
+  // Wire mapping dropdowns
+  document.querySelectorAll('.excel-mapping').forEach(function(sel){
+    sel.addEventListener('change', function(){
+      var idx = parseInt(sel.dataset.colIdx, 10);
+      _excelImportData.mapping[idx] = sel.value || null;
+      // Update visual state of the row
+      var row = sel.closest('.excel-col-row');
+      if(row) row.classList.toggle('mapped', !!sel.value);
+    });
+  });
+}
+
+// Manual fallback if our smart detection picked the wrong header row.
+// Shows every row in the first 30 with its line number — the user picks
+// which one is the real header row.
+function pickDifferentHeaderRow(){
+  var d = _excelImportData;
+  if(!d || !d.rawAoa) return;
+  var max = Math.min(30, d.rawAoa.length);
+
+  var html = '<div class="plan-modal-backdrop" style="z-index:9100" onclick="if(event.target===this) closeHeaderRowPicker()">'+
+    '<div class="plan-modal" style="width:720px;max-width:96vw">'+
+      '<div class="plan-modal-header">'+
+        '<h3 style="font-size:16px">Pick the correct header row</h3>'+
+        '<button class="plan-modal-close" onclick="closeHeaderRowPicker()">\u00D7</button>'+
+      '</div>'+
+      '<div class="plan-modal-body">'+
+        '<div style="font-size:12px;color:var(--muted);margin-bottom:12px">Click the row that contains the column headers (Task Name, Owner, Start Date, etc.).</div>'+
+        '<div style="font-family:Courier New,monospace;font-size:11px">';
+  for(var i = 0; i < max; i++){
+    var row = d.rawAoa[i] || [];
+    var preview = row.slice(0, 8).map(function(c){
+      var s = c == null ? '' : String(c);
+      if(s.length > 22) s = s.substring(0, 20) + '\u2026';
+      return s;
+    }).join(' \u2502 ');
+    var isCurrent = (i === d.headerRowIdx);
+    html += '<div onclick="selectHeaderRow('+i+')" style="padding:8px 10px;border:1px solid '+(isCurrent ? 'var(--accent)' : 'var(--border)')+';border-radius:8px;margin-bottom:6px;cursor:pointer;background:'+(isCurrent ? 'rgba(45,107,244,.06)' : 'var(--white)')+'" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\''+(isCurrent ? 'rgba(45,107,244,.06)' : 'var(--white)')+'\'">'+
+      '<div style="font-size:10px;color:var(--muted);margin-bottom:3px">Line '+(i+1)+(isCurrent ? ' (current)' : '')+'</div>'+
+      '<div style="color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(preview)+'</div>'+
+    '</div>';
+  }
+  html += '</div></div>'+
+      '<div class="plan-modal-footer">'+
+        '<button class="prio-btn" onclick="closeHeaderRowPicker()">Cancel</button>'+
+      '</div>'+
+    '</div>'+
+  '</div>';
+  var wrap = document.createElement('div');
+  wrap.id = 'headerRowPickerWrap';
+  wrap.innerHTML = html;
+  document.body.appendChild(wrap);
+}
+function closeHeaderRowPicker(){
+  var w = document.getElementById('headerRowPickerWrap');
+  if(w) w.remove();
+}
+function selectHeaderRow(idx){
+  var d = _excelImportData;
+  if(!d || !d.rawAoa) return;
+  d.headerRowIdx = idx;
+  d.headers = (d.rawAoa[idx] || []).map(function(h){ return String(h || '').trim(); });
+  d.rows = d.rawAoa.slice(idx + 1).filter(function(r){
+    return (r || []).some(function(c){ return c != null && c !== ''; });
+  });
+  d.mapping = d.headers.map(function(h){ return _matchHeader(h); });
+  closeHeaderRowPicker();
+  // Re-open the preview with the new headers
+  closeExcelImportPreview();
+  openExcelImportPreview();
+}
+
+function closeExcelImportPreview(){
+  var w = document.getElementById('excelImportWrap');
+  if(w) w.remove();
+}
+
+function confirmExcelImport(){
+  var d = _excelImportData;
+  if(!d) return;
+  var p = getActivePlan();
+  if(!p){ alert('No active plan.'); return; }
+
+  // Determine column index for each mapped field
+  var colOf = {};
+  d.mapping.forEach(function(field, idx){
+    if(field && colOf[field] == null) colOf[field] = idx;
+  });
+
+  if(colOf.name == null){
+    alert('Pick a column for "Task name" - it\'s required.');
+    return;
+  }
+
+  // Sequential date cursor for tasks without explicit dates
+  var cursor = _todayIso();
+  if(p.tasks.length){
+    var latest = cursor;
+    p.tasks.forEach(function(t){
+      if(t.endDate && _isoToDate(t.endDate) > _isoToDate(latest)) latest = t.endDate;
+    });
+    cursor = _addDays(latest, 1);
+  }
+
+  // First pass: build all tasks. Predecessor row numbers will be resolved
+  // in a second pass once every task has an id.
+  var added = [];
+  var pendingPred = [];  // [{ taskIdx, refs:[rowNum,...] }]
+  d.rows.forEach(function(row, rowIdx){
+    var name = colOf.name != null ? row[colOf.name] : '';
+    if(!name || !String(name).trim()) return;
+
+    var startIso = colOf.startDate != null ? _excelToIso(row[colOf.startDate]) : '';
+    var endIso = colOf.endDate != null ? _excelToIso(row[colOf.endDate]) : '';
+    if(!startIso) startIso = cursor;
+    if(!endIso) endIso = startIso;
+    if(_isoToDate(endIso) < _isoToDate(startIso)) endIso = startIso;
+    var dur = _daysBetween(startIso, endIso);
+
+    var task = _newTask({
+      name: String(name).trim(),
+      source: 'custom',
+      sourceRefId: 'excel:row' + (rowIdx + 1),
+      owner: colOf.owner != null ? String(row[colOf.owner] || '').trim() : '',
+      startDate: startIso,
+      endDate: endIso,
+      durationDays: dur,
+      percentComplete: colOf.percentComplete != null ? _normalizePercent(row[colOf.percentComplete]) : 0,
+      status: colOf.status != null ? _normalizeStatus(row[colOf.status]) : 'not-started',
+      notes: colOf.notes != null ? String(row[colOf.notes] || '').trim() : '',
+      sortIndex: p.tasks.length + added.length
+    });
+    p.tasks.push(task);
+    added.push({ task: task, sourceRowNum: rowIdx + 1 });
+
+    // Advance the sequential cursor for any tasks that lacked dates.
+    if(_isoToDate(endIso) >= _isoToDate(cursor)) cursor = _addDays(endIso, 1);
+
+    if(colOf.predecessors != null){
+      var refs = _parsePredecessorRefs(row[colOf.predecessors]);
+      if(refs.length){
+        pendingPred.push({ task: task, refs: refs });
+      }
+    }
+  });
+
+  // Second pass: resolve predecessor row numbers to task ids.
+  if(pendingPred.length){
+    pendingPred.forEach(function(item){
+      item.task.predecessors = item.refs.map(function(rowNum){
+        // Excel row number => index in our `added` array (1-based)
+        var entry = added[rowNum - 1];
+        return entry ? entry.task.id : null;
+      }).filter(Boolean);
+    });
+    // Run reschedule once to honour the new dependencies.
+    added.forEach(function(item){
+      if(item.task.predecessors && item.task.predecessors.length){
+        rescheduleSuccessors(p, item.task.id);
+      }
+    });
+  }
+
+  p.updatedAt = Date.now();
+  persistData();
+  closeExcelImportPreview();
+  closeAddTaskModal();
+  renderPlanMain();
+  alert('Imported ' + added.length + ' task' + (added.length !== 1 ? 's' : '') + ' from ' + d.fileName + '.');
+  _excelImportData = null;
 }
 
 function confirmAddTask(){
