@@ -5319,6 +5319,9 @@ function applyDataPayload(d){
   if(d.tabs_data&&d.tabs_data.length) tabs_data=d.tabs_data;
   if(d.activeTabId) activeTabId=d.activeTabId;
   if(d.g2mData) g2mAllData=d.g2mData;
+  // Backfill stable ids on existing G2M items so the Plan↔G2M bidirectional
+  // sync (v1.16.0) has a permanent identifier to match against. Idempotent.
+  if(typeof _ensureG2MItemIds === 'function') _ensureG2MItemIds();
   if(d.todoData) todoAllData=d.todoData;
   if(d.kpiData) kpiAllData=d.kpiData;
   if(d.timesheetData) timesheetData=d.timesheetData;
@@ -9389,17 +9392,40 @@ function onG2MProductChange(){
   renderG2MTabs();
 }
 
+function _newG2MItemId(){
+  return 'gi_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+// One-time migration: ensure every G2M item across every product has a
+// stable id. Idempotent — only fills in missing ids. Required for the
+// Plan ↔ G2M bidirectional sync (v1.16.0) which needs a permanent way to
+// match a Plan task back to its source G2M item.
+function _ensureG2MItemIds(){
+  if(!g2mAllData) return;
+  Object.keys(g2mAllData).forEach(function(product){
+    var bucket = g2mAllData[product];
+    if(!bucket || !Array.isArray(bucket.items)) return;
+    bucket.items.forEach(function(it){
+      if(!it.id) it.id = _newG2MItemId();
+    });
+  });
+}
+
 function getG2MItems(product){
   if(!g2mAllData[product]){
     // Initialize with default checklist
     var items=[];
     G2M_CATEGORIES.forEach(function(cat){
       cat.items.forEach(function(txt){
-        items.push({cat:cat.name,text:txt,value:'',comment:'',custom:false});
+        items.push({id:_newG2MItemId(),cat:cat.name,text:txt,value:'',comment:'',custom:false});
       });
     });
     g2mAllData[product]={items:items};
   }
+  // Backfill ids on existing items if any are missing (idempotent)
+  (g2mAllData[product].items || []).forEach(function(it){
+    if(!it.id) it.id = _newG2MItemId();
+  });
   return g2mAllData[product].items;
 }
 
@@ -9899,6 +9925,11 @@ function setG2MItemField(product,idx,field,value){
       'g2m:' + product
     );
   }
+  // Plan ↔ G2M sync: if the value changed (Yes/No/N/A), propagate to any
+  // Plan tasks linked to this item.
+  if(field === 'value' && value !== prev){
+    _syncG2MToPlanTasks(product, items[idx]);
+  }
 }
 
 function deleteG2MInitiative(name){
@@ -9974,6 +10005,97 @@ function showG2MAddRowForm(){
     }
   });
 }
+// ── Plan ↔ G2M bidirectional sync ─────────────────────────────────────────
+// When a Plan task with source 'g2m' is marked done, propagate to its source
+// G2M item (set value='yes'). When a G2M item is marked Yes/N/A, propagate
+// to any Plan tasks linked to it.
+//
+// A re-entrancy flag prevents infinite loops: while one direction is
+// running, the other direction's hook does nothing.
+var _g2mPlanSyncInProgress = false;
+
+// Parse a plan task's sourceRefId of the form "g2m:productName|itemId" into
+// its parts. Returns null if the ref doesn't match the expected format.
+function _parseG2MSourceRef(sourceRefId){
+  if(!sourceRefId || typeof sourceRefId !== 'string') return null;
+  if(sourceRefId.indexOf('g2m:') !== 0) return null;
+  var rest = sourceRefId.substring(4);
+  var pipeIdx = rest.lastIndexOf('|');
+  if(pipeIdx < 0) return null;
+  return {
+    product: rest.substring(0, pipeIdx),
+    itemId: rest.substring(pipeIdx + 1)
+  };
+}
+
+// Plan task → G2M sync. Called from onTaskFieldChange when a task's status
+// or percentComplete becomes "done"/100.
+function _syncPlanTaskToG2M(task){
+  if(_g2mPlanSyncInProgress) return;
+  if(!task || task.source !== 'g2m') return;
+  var ref = _parseG2MSourceRef(task.sourceRefId);
+  if(!ref || !ref.product || !ref.itemId) return;
+  var bucket = g2mAllData && g2mAllData[ref.product];
+  if(!bucket || !Array.isArray(bucket.items)) return;
+  var item = bucket.items.find(function(it){ return it.id === ref.itemId; });
+  if(!item) return;
+
+  var isDone = (task.status === 'done') || (parseInt(task.percentComplete, 10) >= 100);
+  var newValue = isDone ? 'yes' : '';
+  if(item.value === newValue) return;  // already in sync, nothing to do
+
+  _g2mPlanSyncInProgress = true;
+  item.value = newValue;
+  // Persist + re-render G2M if it's the currently visible product
+  if(typeof persistG2M === 'function') persistG2M();
+  if(g2mCurrentProduct === ref.product){
+    if(typeof renderG2M === 'function') renderG2M();
+    if(typeof updateG2MScore === 'function') updateG2MScore();
+  }
+  _g2mPlanSyncInProgress = false;
+}
+
+// G2M item → Plan task sync. Called from setG2MItemField when an item's
+// value changes (Yes/No/N/A).
+function _syncG2MToPlanTasks(product, item){
+  if(_g2mPlanSyncInProgress) return;
+  if(!item || !item.id) return;
+  var refKey = 'g2m:' + product + '|' + item.id;
+  var isDone = (item.value === 'yes') || (item.value === 'na');
+
+  var anyChanged = false;
+  (projectPlans || []).forEach(function(plan){
+    (plan.tasks || []).forEach(function(t){
+      if(t.sourceRefId !== refKey) return;
+      if(isDone){
+        if(t.percentComplete !== 100 || t.status !== 'done'){
+          t.percentComplete = 100;
+          t.status = 'done';
+          anyChanged = true;
+        }
+      } else {
+        // Going un-done: reset percentComplete to 0 and status to not-started
+        // ONLY if we previously synced it as done.
+        if(t.percentComplete === 100 && t.status === 'done'){
+          t.percentComplete = 0;
+          t.status = 'not-started';
+          anyChanged = true;
+        }
+      }
+    });
+  });
+
+  if(anyChanged){
+    _g2mPlanSyncInProgress = true;
+    persistData();
+    // Re-render the active plan if it's visible so the user sees the update
+    var activePlanOpen = document.getElementById('plansOverlay') &&
+                         document.getElementById('plansOverlay').classList.contains('open');
+    if(activePlanOpen && typeof renderPlanMain === 'function') renderPlanMain();
+    _g2mPlanSyncInProgress = false;
+  }
+}
+
 // One-click conversion: take the active G2M checklist and turn it into a
 // brand-new Project Plan. Each checklist item becomes a task with:
 //   • name from the item text
@@ -9987,6 +10109,9 @@ function convertG2MtoPlan(){
   var items = getG2MItems(g2mCurrentProduct);
   if(!items || !items.length){ alert('This checklist has no items to convert.'); return; }
   if(!confirm('Create a new project plan from "'+g2mCurrentProduct+'" with '+items.length+' tasks?')) return;
+
+  // Make sure every source item has a stable id before we link them
+  _ensureG2MItemIds();
 
   // Create the new plan
   var plan = createNewPlan('G2M: ' + g2mCurrentProduct);
@@ -10029,7 +10154,10 @@ function convertG2MtoPlan(){
     plan.tasks.push(_newTask({
       name: name,
       source: 'g2m',
-      sourceRefId: g2mCurrentProduct + '|' + (item.cat || ''),
+      // Permanent link back to the source G2M item via its stable id.
+      // Format: "g2m:<productName>|<itemId>" — used by the bidirectional
+      // sync helpers to match a Plan task to its origin item.
+      sourceRefId: 'g2m:' + g2mCurrentProduct + '|' + (item.id || ''),
       owner: owner,
       startDate: startIso,
       endDate: endIso,
@@ -10047,7 +10175,7 @@ function convertG2MtoPlan(){
       hours: hours,
       defaultOwner: owner,
       source: 'g2m',
-      sourceRefId: g2mCurrentProduct + '|' + (item.cat || '')
+      sourceRefId: 'g2m:' + g2mCurrentProduct + '|' + (item.id || '')
     });
 
     // Advance cursor for the next sequential task
@@ -10089,7 +10217,7 @@ function confirmG2MAddRow(){
   if(!text){document.getElementById('g2mNewRowText').focus();return;}
   var catName=document.getElementById('g2mNewRowCat').value;
   var items=getG2MItems(g2mCurrentProduct);
-  items.push({cat:catName,text:text,value:'',comment:'',links:[],custom:true});
+  items.push({id:_newG2MItemId(),cat:catName,text:text,value:'',comment:'',links:[],custom:true});
   // Auto-save into the central task library so it can be reused later
   upsertTaskInLibrary({
     name: text,
@@ -12397,8 +12525,12 @@ function renderPlanListView(plan){
     html += '<tr'+rowCls+' data-task-id="'+escHtml(t.id)+'">';
     // Milestone toggle
     html += '<td><button class="ms-btn'+(t.isMilestone?' active':'')+'" title="Toggle milestone" onclick="toggleTaskMilestone(\''+escHtml(t.id)+'\')">\u25C6</button></td>';
-    // Task name + source pill
-    html += '<td><div style="display:flex;align-items:center;gap:6px"><span class="plan-source-icon '+escHtml(t.source||'custom')+'">'+escHtml(t.source||'custom')+'</span><input type="text" class="cell plan-task-name-input" value="'+escHtml(t.name||'')+'" data-field="name" data-task-id="'+escHtml(t.id)+'"></div></td>';
+    // Task name + source pill (+ G2M sync indicator if linked)
+    var syncBadge = '';
+    if(t.source === 'g2m' && t.sourceRefId && t.sourceRefId.indexOf('g2m:') === 0){
+      syncBadge = '<span title="Synced with G2M checklist — marking this done updates the source item, and vice versa" style="display:inline-flex;align-items:center;color:#16a34a;flex-shrink:0;cursor:help"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></span>';
+    }
+    html += '<td><div style="display:flex;align-items:center;gap:6px"><span class="plan-source-icon '+escHtml(t.source||'custom')+'">'+escHtml(t.source||'custom')+'</span>'+syncBadge+'<input type="text" class="cell plan-task-name-input" value="'+escHtml(t.name||'')+'" data-field="name" data-task-id="'+escHtml(t.id)+'"></div></td>';
     // Owner
     html += '<td><input type="text" class="cell" value="'+escHtml(t.owner||'')+'" data-field="owner" data-task-id="'+escHtml(t.id)+'" placeholder="\u2014"></td>';
     // Start
@@ -12550,6 +12682,11 @@ function onTaskFieldChange(taskId, field, value){
       '"' + t.name + '" in plan "' + (p.name || 'Untitled') + '"',
       'plan:' + p.id
     );
+  }
+  // Plan ↔ G2M sync: if status or percent changed AND this task came from
+  // a G2M checklist, propagate the done state back to the source item.
+  if((field === 'status' || field === 'percentComplete') && t.source === 'g2m'){
+    _syncPlanTaskToG2M(t);
   }
   p.updatedAt = Date.now();
   persistData();
