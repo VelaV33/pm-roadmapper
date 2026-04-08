@@ -1516,6 +1516,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
     <label style="color:var(--accent);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">New:</label>
     <select id="g2mProductSelect" onchange="onG2MProductChange()" style="padding:9px 16px;border-radius:9999px;border:1px solid var(--border);background:var(--white);color:var(--text);font-size:13px;font-weight:500;min-width:260px;font-family:inherit"></select>
     <div style="margin-left:auto;display:flex;gap:6px">
+      <button onclick="convertG2MtoPlan()" title="Create a new project plan with all checklist items as tasks" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:9999px;background:#16a34a;color:#fff;border:1px solid #16a34a;font-size:12px;font-weight:700;cursor:pointer;transition:filter .12s" onmouseover="this.style.filter='brightness(.92)'" onmouseout="this.style.filter='none'"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>Convert to Plan</button>
       <button onclick="openG2MTemplateBuilder()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:9999px;background:var(--white);color:var(--accent);border:1px solid var(--accent);font-size:12px;font-weight:700;cursor:pointer;transition:background .12s" onmouseover="this.style.background='var(--light-blue-bg)'" onmouseout="this.style.background='var(--white)'"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Templates</button>
       <button onclick="showG2MAddRowForm()" style="padding:9px 18px;border-radius:9999px;background:var(--accent);color:#fff;border:1px solid var(--accent);font-size:12px;font-weight:700;cursor:pointer;transition:filter .12s" onmouseover="this.style.filter='brightness(.92)'" onmouseout="this.style.filter='none'">+ Add Custom Row</button>
     </div>
@@ -5194,6 +5195,8 @@ async function onAuthSuccess(user){
   // Pre-load the system user list for the owner combobox (super-admins only;
   // non-admins get a 403 and the cache stays empty — that's fine).
   setTimeout(refreshSystemUsersCache, 1500);
+  // Pre-load this user's contacts so they appear in owner pickers immediately.
+  setTimeout(refreshContactsCache, 1700);
 }
 
 function _resetLocalData(){
@@ -9215,7 +9218,7 @@ function renderG2M(){
         '<td class="g2m-yn"><input type="radio" name="'+uid+'" class="g2m-radio" id="'+uid+'_y" value="yes" '+(item.value==='yes'?'checked':'')+' onchange="setG2MVal(\''+g2mCurrentProduct+'\','+idx+',\'yes\')"><label for="'+uid+'_y" class="g2m-radio-label g2m-yes">✓</label></td>'+
         '<td class="g2m-yn"><input type="radio" name="'+uid+'" class="g2m-radio" id="'+uid+'_n" value="no" '+(item.value==='no'?'checked':'')+' onchange="setG2MVal(\''+g2mCurrentProduct+'\','+idx+',\'no\')"><label for="'+uid+'_n" class="g2m-radio-label g2m-no-btn">✕</label></td>'+
         '<td class="g2m-yn"><input type="radio" name="'+uid+'" class="g2m-radio" id="'+uid+'_na" value="na" '+(item.value==='na'?'checked':'')+' onchange="setG2MVal(\''+g2mCurrentProduct+'\','+idx+',\'na\')"><label for="'+uid+'_na" class="g2m-radio-label g2m-na">—</label></td>'+
-        '<td><input type="text" value="'+escHtml(item.assignee||'')+'" placeholder="Name..." onchange="setG2MItemField(\''+escapedProduct+'\','+idx+',\'assignee\',this.value)" style="width:100%;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:10px;color:var(--text);font-family:inherit"></td>'+
+        '<td><input type="text" class="g2m-assignee-input" value="'+escHtml(item.assignee||'')+'" placeholder="Name..." onchange="setG2MItemField(\''+escapedProduct+'\','+idx+',\'assignee\',this.value)" style="width:100%;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:10px;color:var(--text);font-family:inherit"></td>'+
         '<td><input type="date" value="'+startDate+'" onchange="setG2MItemField(\''+escapedProduct+'\','+idx+',\'startDate\',this.value)" style="width:100%;padding:3px 4px;border:1px solid var(--border);border-radius:6px;font-size:10px;color:var(--text);font-family:inherit"></td>'+
         '<td><input type="date" value="'+endDate+'" onchange="setG2MItemField(\''+escapedProduct+'\','+idx+',\'endDate\',this.value)" style="width:100%;padding:3px 4px;border:1px solid var(--border);border-radius:6px;font-size:10px;color:var(--text);font-family:inherit"></td>'+
         '<td><input type="number" value="'+estHours+'" placeholder="—" min="0" step="0.5" onchange="setG2MItemField(\''+escapedProduct+'\','+idx+',\'estHours\',this.value)" style="width:100%;padding:3px 4px;border:1px solid var(--border);border-radius:6px;font-size:10px;color:var(--text);text-align:center;font-family:inherit"></td>'+
@@ -9230,6 +9233,11 @@ function renderG2M(){
     body.appendChild(div);
   });
   updateG2MScore();
+  // Wire owner autocomplete on every G2M assignee input so PMs can pick from
+  // the same unified user list as the Plans owner column.
+  body.querySelectorAll('input.g2m-assignee-input').forEach(function(el){
+    if(typeof attachOwnerAutocomplete === 'function') attachOwnerAutocomplete(el);
+  });
 }
 
 // ── G2M TEMPLATES ──
@@ -9285,7 +9293,22 @@ function openG2MTemplateBuilder(){
       useBtn.onclick=function(){
         if(!g2mCurrentProduct){ alert('Please select a product initiative first.'); return; }
         if(!confirm('Apply template "'+tpl.name+'" to '+g2mCurrentProduct+'?\n\nThis will replace the current checklist.')) return;
-        var items=tpl.items.map(function(it){ return {cat:it.cat,text:it.text,value:'',comment:'',custom:!!it.custom,milestone:false,estHours:it.hours||0}; });
+        // Pre-fill the new G2M items with the template's owner / start / end / hours.
+        var items=tpl.items.map(function(it){
+          return {
+            cat: it.cat,
+            text: it.text,
+            value: '',
+            comment: '',
+            custom: !!it.custom,
+            milestone: false,
+            estHours: it.hours || 0,
+            hrs: it.hours || 0,
+            assignee: it.owner || '',
+            start: it.start || '',
+            end: it.end || ''
+          };
+        });
         g2mAllData[g2mCurrentProduct]={items:items,description:(g2mAllData[g2mCurrentProduct]||{}).description||''};
         persistG2M(); renderG2M(); updateG2MScore(); renderG2MTabs();
         ov.remove();
@@ -9374,7 +9397,7 @@ function openG2MTemplateEditor(tplIdx){
   // Info
   var info=document.createElement('p');
   info.style.cssText='font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5';
-  info.textContent='Toggle items on/off to include them in this template. You can also add custom items at the bottom.';
+  info.textContent='Edit any task name, set hours/owner/dates, toggle items on/off, or drag to reorder. Save as a custom template — applying it will pre-fill these fields on the new checklist.';
   body.appendChild(info);
 
   // Items by category
@@ -9419,7 +9442,7 @@ function openG2MTemplateEditor(tplIdx){
       catItems.forEach(function(it,ii){
         var row=document.createElement('div');
         row.draggable=true;
-        row.style.cssText='display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;transition:all .1s;cursor:grab;border:1px solid transparent;'+(it.included?'':'opacity:.4');
+        row.style.cssText='display:flex;align-items:center;gap:6px;padding:7px 8px;border-radius:6px;transition:all .1s;cursor:grab;border:1px solid transparent;flex-wrap:wrap;'+(it.included?'':'opacity:.4');
         row.ondragstart=function(e){ _tplDragItem=it; _tplDragFromCat=catName; row.style.opacity='.3'; e.dataTransfer.effectAllowed='move'; };
         row.ondragend=function(){ row.style.opacity=it.included?'1':'.4'; _tplDragItem=null; _tplDragFromCat=null; };
         row.ondragover=function(e){
@@ -9452,16 +9475,41 @@ function openG2MTemplateEditor(tplIdx){
         chk.style.cssText='width:15px;height:15px;cursor:pointer;flex-shrink:0';
         chk.onchange=function(e){ e.stopPropagation(); it.included=chk.checked; renderEditorItems(); };
 
-        // Text
-        var txt=document.createElement('span');
-        txt.style.cssText='font-size:12px;flex:1;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
-        txt.textContent=it.text;
+        // Text — now an editable input so users can rename template tasks
+        var txt=document.createElement('input'); txt.type='text';
+        txt.value=it.text;
+        txt.placeholder='Task name';
+        txt.style.cssText='font-size:12px;flex:1;min-width:160px;color:var(--text);padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;background:var(--white)';
+        txt.onclick=function(e){e.stopPropagation();};
+        txt.onchange=function(e){ e.stopPropagation(); it.text=txt.value.trim(); };
+
+        // Owner / assignee input
+        var ownInp=document.createElement('input'); ownInp.type='text';
+        ownInp.value=it.owner||''; ownInp.placeholder='Owner';
+        ownInp.style.cssText='width:110px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text);font-family:inherit;flex-shrink:0';
+        ownInp.onclick=function(e){e.stopPropagation();};
+        ownInp.onchange=function(e){ e.stopPropagation(); it.owner=ownInp.value.trim(); };
+        if(typeof attachOwnerAutocomplete === 'function') attachOwnerAutocomplete(ownInp);
+
+        // Start date input
+        var startInp=document.createElement('input'); startInp.type='date';
+        startInp.value=it.start||'';
+        startInp.style.cssText='width:130px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:10px;color:var(--text);font-family:inherit;flex-shrink:0';
+        startInp.onclick=function(e){e.stopPropagation();};
+        startInp.onchange=function(e){ e.stopPropagation(); it.start=startInp.value; };
+
+        // End date input
+        var endInp=document.createElement('input'); endInp.type='date';
+        endInp.value=it.end||'';
+        endInp.style.cssText='width:130px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:10px;color:var(--text);font-family:inherit;flex-shrink:0';
+        endInp.onclick=function(e){e.stopPropagation();};
+        endInp.onchange=function(e){ e.stopPropagation(); it.end=endInp.value; };
 
         // Hours input
         var hrsInp=document.createElement('input'); hrsInp.type='number';
         hrsInp.value=it.hours||''; hrsInp.placeholder='hrs';
         hrsInp.min='0'; hrsInp.step='0.5';
-        hrsInp.style.cssText='width:50px;padding:3px 4px;border:1px solid var(--border);border-radius:6px;font-size:10px;text-align:center;color:var(--text);font-family:inherit;flex-shrink:0';
+        hrsInp.style.cssText='width:54px;padding:3px 4px;border:1px solid var(--border);border-radius:6px;font-size:10px;text-align:center;color:var(--text);font-family:inherit;flex-shrink:0';
         hrsInp.onclick=function(e){e.stopPropagation();};
         hrsInp.onchange=function(e){ e.stopPropagation(); it.hours=parseFloat(hrsInp.value)||0; };
 
@@ -9489,6 +9537,9 @@ function openG2MTemplateEditor(tplIdx){
         row.appendChild(handle);
         row.appendChild(chk);
         row.appendChild(txt);
+        row.appendChild(ownInp);
+        row.appendChild(startInp);
+        row.appendChild(endInp);
         row.appendChild(hrsInp);
         row.appendChild(catSel);
         if(it.custom){
@@ -9548,10 +9599,36 @@ function openG2MTemplateEditor(tplIdx){
     if(!name){ nameInp.style.borderColor='var(--r1)'; nameInp.focus(); return; }
     var included=editItems.filter(function(it){return it.included;});
     if(!included.length){ alert('Please include at least one checklist item.'); return; }
-    var tplData={name:name,items:included.map(function(it){return {cat:it.cat,text:it.text,custom:!!it.custom,hours:it.hours||0};})};
+    // Save the full enriched item (text, hours, owner, start, end, cat, custom)
+    var tplData={name:name,items:included.map(function(it){
+      return {
+        cat: it.cat,
+        text: (it.text || '').trim(),
+        custom: !!it.custom,
+        hours: it.hours || 0,
+        owner: it.owner || '',
+        start: it.start || '',
+        end: it.end || ''
+      };
+    })};
     if(isNew){ g2mTemplates.push(tplData); }
     else { g2mTemplates[tplIdx]=tplData; }
     _saveG2MTemplates();
+    // Auto-save every task in the template into the central library so they
+    // can be reused elsewhere. Dedup happens via upsertTaskInLibrary.
+    if(typeof upsertTaskInLibrary === 'function'){
+      tplData.items.forEach(function(it){
+        if(!it.text) return;
+        upsertTaskInLibrary({
+          name: it.text,
+          category: it.cat || 'G2M',
+          hours: it.hours || 0,
+          defaultOwner: it.owner || '',
+          source: 'g2m',
+          sourceRefId: 'tpl:' + name + '|' + (it.cat || '')
+        });
+      });
+    }
     ov.remove();
     openG2MTemplateBuilder();
   };
@@ -9647,6 +9724,115 @@ function showG2MAddRowForm(){
     }
   });
 }
+// One-click conversion: take the active G2M checklist and turn it into a
+// brand-new Project Plan. Each checklist item becomes a task with:
+//   • name from the item text
+//   • category as a notes prefix
+//   • owner from item.assignee (if set)
+//   • start/end dates from item.start/item.end (if set), otherwise sequential
+//   • hours from item.hrs (if set), used to derive duration
+// Opens the Plans overlay focused on the new plan in Gantt view.
+function convertG2MtoPlan(){
+  if(!g2mCurrentProduct){ alert('Select a product first.'); return; }
+  var items = getG2MItems(g2mCurrentProduct);
+  if(!items || !items.length){ alert('This checklist has no items to convert.'); return; }
+  if(!confirm('Create a new project plan from "'+g2mCurrentProduct+'" with '+items.length+' tasks?')) return;
+
+  // Create the new plan
+  var plan = createNewPlan('G2M: ' + g2mCurrentProduct);
+  plan.description = 'Auto-generated from the Go-To-Market checklist for ' + g2mCurrentProduct + '.';
+  plan.activeView = 'gantt';
+
+  // Sequential cursor for tasks without explicit dates
+  var cursor = _todayIso();
+  var added = 0;
+
+  items.forEach(function(item, idx){
+    var name = item.text || ('G2M item ' + (idx+1));
+    var owner = item.assignee || '';
+    var hours = parseFloat(item.hrs) || 0;
+    var defaultDur = hours > 0 ? Math.max(1, Math.ceil(hours / 8)) : 1;
+
+    // If the G2M item has explicit start/end dates, use them; otherwise sequential
+    var startIso, endIso, dur;
+    if(item.start && /^\d{4}-\d{2}-\d{2}/.test(item.start)){
+      startIso = item.start.substring(0, 10);
+    } else {
+      startIso = cursor;
+    }
+    if(item.end && /^\d{4}-\d{2}-\d{2}/.test(item.end)){
+      endIso = item.end.substring(0, 10);
+      dur = _daysBetween(startIso, endIso);
+      if(dur < 1) dur = 1;
+    } else {
+      dur = defaultDur;
+      endIso = dur > 1 ? _addDays(startIso, dur - 1) : startIso;
+    }
+
+    // Map G2M Y/N/N/A status to plan task status
+    var status = 'not-started';
+    var pct = 0;
+    if(item.value === 'yes'){ status = 'done'; pct = 100; }
+    else if(item.value === 'na'){ status = 'done'; pct = 100; }
+    else if(item.value === 'no'){ status = 'not-started'; pct = 0; }
+
+    plan.tasks.push(_newTask({
+      name: name,
+      source: 'g2m',
+      sourceRefId: g2mCurrentProduct + '|' + (item.cat || ''),
+      owner: owner,
+      startDate: startIso,
+      endDate: endIso,
+      durationDays: dur,
+      percentComplete: pct,
+      status: status,
+      notes: item.cat ? ('[' + item.cat + ']' + (item.comment ? ' ' + item.comment : '')) : (item.comment || ''),
+      sortIndex: added
+    }));
+
+    // Auto-save into the central library
+    upsertTaskInLibrary({
+      name: name,
+      category: item.cat || 'G2M',
+      hours: hours,
+      defaultOwner: owner,
+      source: 'g2m',
+      sourceRefId: g2mCurrentProduct + '|' + (item.cat || '')
+    });
+
+    // Advance cursor for the next sequential task
+    cursor = _addDays(endIso, 1);
+    added++;
+  });
+
+  // Auto-link the new plan to any roadmap row whose name matches the product
+  var matchingRow = rows.find(function(r){
+    return (r.name || '').toLowerCase() === (g2mCurrentProduct || '').toLowerCase();
+  });
+  if(matchingRow){
+    plan.linkedRowIds = [matchingRow.id];
+  }
+
+  plan.updatedAt = Date.now();
+  persistData();
+
+  // Jump to the Plans overlay in Gantt view
+  closeG2M();
+  closeAllOverlays();
+  _activePlanId = plan.id;
+  _planView = 'gantt';
+  openPlans();
+  // After the overlay opens, force the Gantt view (in case persisted state had list)
+  setTimeout(function(){
+    setPlanView('gantt');
+  }, 100);
+
+  // Toast-style confirmation
+  setTimeout(function(){
+    alert('Created plan "' + plan.name + '" with ' + added + ' tasks. Showing Gantt view.');
+  }, 200);
+}
+
 function confirmG2MAddRow(){
   if(!canEdit('g2m')) return;
   var text=document.getElementById('g2mNewRowText').value.trim();
@@ -11017,6 +11203,11 @@ function getKnownOwners(){
   _systemUsersCache.forEach(function(u){
     bump(u.name);
     bump(u.email);
+  });
+  // 1b. Contacts (people the user added but who aren't necessarily registered yet)
+  _contactsCache.forEach(function(c){
+    bump(c.name);
+    bump(c.email);
   });
   // 2. Current user
   if(_currentUser){
@@ -15619,8 +15810,42 @@ function closeAdmin(){
   document.getElementById('adminOverlay').classList.remove('open');
 }
 
+var _adminTab = 'registered'; // 'registered' | 'contacts'
+
 async function renderAdminPage(){
   var body=document.getElementById('adminBody');
+  body.innerHTML='';
+
+  // Page header + tab bar
+  var hdr=document.createElement('div');
+  hdr.style.cssText='margin-bottom:20px';
+  hdr.innerHTML='<h2 style="font-size:24px;font-weight:800;letter-spacing:-0.03em;margin-bottom:4px">User Management</h2>'+
+    '<p style="font-size:13px;color:var(--muted)">Manage registered users and add contacts who can later be invited to join.</p>';
+  body.appendChild(hdr);
+
+  var tabBar=document.createElement('div');
+  tabBar.style.cssText='display:flex;background:#f1f5f9;border-radius:9999px;padding:4px;margin-bottom:18px;width:fit-content';
+  ['registered','contacts'].forEach(function(t){
+    var btn=document.createElement('button');
+    btn.textContent = t==='registered' ? 'Registered Users' : 'Contacts';
+    btn.style.cssText='background:'+(t===_adminTab?'var(--white)':'transparent')+';color:'+(t===_adminTab?'var(--text)':'var(--muted)')+';border:none;font-size:12px;font-weight:700;padding:7px 18px;border-radius:9999px;cursor:pointer;'+(t===_adminTab?'box-shadow:0 1px 3px rgba(0,0,0,.06);':'');
+    btn.onclick=function(){ _adminTab = t; renderAdminPage(); };
+    tabBar.appendChild(btn);
+  });
+  body.appendChild(tabBar);
+
+  var tabContent=document.createElement('div');
+  tabContent.id='adminTabContent';
+  body.appendChild(tabContent);
+
+  if(_adminTab === 'registered'){
+    await renderAdminRegisteredUsers(tabContent);
+  } else {
+    await renderAdminContacts(tabContent);
+  }
+}
+
+async function renderAdminRegisteredUsers(body){
   body.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)">Loading users...</div>';
 
   try {
@@ -15644,13 +15869,10 @@ async function renderAdminPage(){
 
     var users=r.data.users;
     body.innerHTML='';
-
-    // Header
-    var hdr=document.createElement('div');
-    hdr.style.cssText='margin-bottom:24px';
-    hdr.innerHTML='<h2 style="font-size:24px;font-weight:800;letter-spacing:-0.03em;margin-bottom:4px">User Management</h2>'+
-      '<p style="font-size:13px;color:var(--muted)">'+users.length+' registered users. View roadmaps, manage roles.</p>';
-    body.appendChild(hdr);
+    var subhdr=document.createElement('div');
+    subhdr.style.cssText='font-size:13px;color:var(--muted);margin-bottom:14px';
+    subhdr.textContent=users.length+' registered users · view roadmaps, manage roles';
+    body.appendChild(subhdr);
 
     // User cards
     users.forEach(function(u){
@@ -15710,6 +15932,234 @@ async function renderAdminPage(){
   } catch(e){
     body.innerHTML='<div style="color:var(--r1);padding:20px">Error: '+escHtml(e.message)+'</div>';
   }
+}
+
+// ── Contacts management ────────────────────────────────────────────────────
+// In-memory cache of the current user's contacts (refreshed when they open
+// the User Management page or use any contact-related autocomplete).
+var _contactsCache = [];
+var _contactsCacheAt = 0;
+
+async function refreshContactsCache(){
+  if(!_currentUser || !_accessToken) return;
+  try {
+    var r = await window.electronAPI.supaRequest({
+      path: '/functions/v1/contacts-api',
+      method: 'POST',
+      body: { action: 'list' },
+      token: _accessToken
+    });
+    if(r && r.ok && r.data && r.data.ok && Array.isArray(r.data.contacts)){
+      _contactsCache = r.data.contacts;
+      _contactsCacheAt = Date.now();
+    }
+  } catch(e){ console.warn('Contacts refresh failed:', e.message); }
+}
+
+async function renderAdminContacts(body){
+  body.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)">Loading contacts...</div>';
+  await refreshContactsCache();
+  var contacts = _contactsCache || [];
+
+  var active = contacts.filter(function(c){ return c.is_active; });
+  var inactive = contacts.filter(function(c){ return !c.is_active; });
+
+  body.innerHTML = '';
+
+  // Subheader + Add contact button
+  var topRow = document.createElement('div');
+  topRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:12px;flex-wrap:wrap';
+  topRow.innerHTML =
+    '<div style="font-size:13px;color:var(--muted)">'+contacts.length+' contacts &middot; <strong style="color:#16a34a">'+active.length+' active</strong> &middot; '+inactive.length+' inactive</div>'+
+    '<button class="prio-btn primary" onclick="openAddContactModal()">+ Add contact</button>';
+  body.appendChild(topRow);
+
+  if(!contacts.length){
+    var empty = document.createElement('div');
+    empty.className = 'prio-empty';
+    empty.innerHTML = '<h3>No contacts yet</h3><p>Add a contact with their email and name. They\'ll appear in owner pickers across the app immediately. Send them an invite link when you\'re ready and they can join the platform.</p>';
+    body.appendChild(empty);
+    return;
+  }
+
+  // Card list
+  var list = document.createElement('div');
+  list.style.cssText = 'display:flex;flex-direction:column;gap:10px';
+
+  contacts.forEach(function(c){
+    var card = document.createElement('div');
+    card.style.cssText = 'background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)';
+
+    var statusColor, statusLabel;
+    if(c.is_active){ statusColor = '#16a34a'; statusLabel = 'Active'; }
+    else if(c.status === 'invited'){ statusColor = '#f59e0b'; statusLabel = 'Invited'; }
+    else { statusColor = '#94a3b8'; statusLabel = 'Inactive'; }
+
+    var initial = ((c.name || c.email || '?')[0] || '?').toUpperCase();
+    var displayName = c.name || c.email.split('@')[0];
+
+    card.innerHTML =
+      '<div style="width:42px;height:42px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0">'+escHtml(initial)+'</div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-weight:700;font-size:14px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(displayName)+'</div>'+
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+escHtml(c.email)+(c.notes ? ' &middot; ' + escHtml(c.notes) : '')+'</div>'+
+      '</div>'+
+      '<span style="font-size:9px;font-weight:800;padding:4px 12px;border-radius:9999px;background:'+statusColor+';color:#fff;text-transform:uppercase;letter-spacing:.04em">'+statusLabel+'</span>'+
+      '<div class="contact-actions" style="display:flex;gap:6px;flex-shrink:0"></div>';
+
+    var actions = card.querySelector('.contact-actions');
+
+    if(!c.is_active && c.status !== 'invited'){
+      var inviteBtn = document.createElement('button');
+      inviteBtn.className = 'prio-btn primary';
+      inviteBtn.style.cssText += ';padding:6px 14px;font-size:11px';
+      inviteBtn.textContent = 'Send invite';
+      inviteBtn.onclick = function(){ sendContactInvite(c.id); };
+      actions.appendChild(inviteBtn);
+    } else if(c.status === 'invited' && !c.is_active){
+      var resendBtn = document.createElement('button');
+      resendBtn.className = 'prio-btn';
+      resendBtn.style.cssText += ';padding:6px 14px;font-size:11px';
+      resendBtn.textContent = 'Resend';
+      resendBtn.onclick = function(){ sendContactInvite(c.id); };
+      actions.appendChild(resendBtn);
+    }
+
+    var editBtn = document.createElement('button');
+    editBtn.className = 'prio-btn';
+    editBtn.style.cssText += ';padding:6px 12px;font-size:11px';
+    editBtn.textContent = 'Edit';
+    editBtn.onclick = function(){ openAddContactModal(c.id); };
+    actions.appendChild(editBtn);
+
+    var delBtn = document.createElement('button');
+    delBtn.className = 'prio-btn danger';
+    delBtn.style.cssText += ';padding:6px 10px;font-size:11px';
+    delBtn.textContent = '×';
+    delBtn.onclick = function(){ deleteContact(c.id); };
+    actions.appendChild(delBtn);
+
+    list.appendChild(card);
+  });
+
+  body.appendChild(list);
+}
+
+function openAddContactModal(contactId){
+  var existing = contactId ? _contactsCache.find(function(c){ return c.id === contactId; }) : null;
+  var title = existing ? 'Edit contact' : 'Add contact';
+  var html = '<div class="plan-modal-backdrop" onclick="if(event.target===this) closeAddContactModal()">'+
+    '<div class="plan-modal" style="width:480px">'+
+      '<div class="plan-modal-header"><h3>'+title+'</h3><button class="plan-modal-close" onclick="closeAddContactModal()">\u00D7</button></div>'+
+      '<div class="plan-modal-body">'+
+        '<div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5">Add someone who isn\'t (yet) registered on the platform. They\'ll be available as a task owner immediately. When you\'re ready, click <strong>Send invite</strong> on their card and they\'ll get an email to join.</div>'+
+        '<label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Email <span style="color:#dc2626">*</span></label>'+
+        '<input type="email" id="contactEmailInp" value="'+escHtml(existing ? existing.email : '')+'"'+(existing?' disabled':'')+' placeholder="[email protected]" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:9999px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box'+(existing?';background:#f8fafc;color:var(--muted)':'')+'">'+
+        '<label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 6px">Full name</label>'+
+        '<input type="text" id="contactNameInp" value="'+escHtml(existing ? (existing.name || '') : '')+'" placeholder="Jane Doe" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:9999px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">'+
+        '<label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 6px">Notes (optional)</label>'+
+        '<textarea id="contactNotesInp" rows="2" placeholder="Role, team, or any context\u2026" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:14px;font-size:13px;font-family:inherit;outline:none;resize:vertical;box-sizing:border-box">'+escHtml(existing ? (existing.notes || '') : '')+'</textarea>'+
+      '</div>'+
+      '<div class="plan-modal-footer">'+
+        '<button class="prio-btn" onclick="closeAddContactModal()">Cancel</button>'+
+        '<button class="prio-btn primary" onclick="saveContact('+(existing?'\''+escHtml(contactId)+'\'':'null')+')">'+(existing?'Save changes':'Add contact')+'</button>'+
+      '</div>'+
+    '</div>'+
+  '</div>';
+  var wrap = document.createElement('div');
+  wrap.id = 'addContactWrap';
+  wrap.innerHTML = html;
+  document.body.appendChild(wrap);
+  setTimeout(function(){
+    var inp = document.getElementById(existing ? 'contactNameInp' : 'contactEmailInp');
+    if(inp) inp.focus();
+  }, 50);
+}
+
+function closeAddContactModal(){
+  var w = document.getElementById('addContactWrap');
+  if(w) w.remove();
+}
+
+async function saveContact(contactId){
+  var email = (document.getElementById('contactEmailInp').value || '').trim();
+  var name = (document.getElementById('contactNameInp').value || '').trim();
+  var notes = (document.getElementById('contactNotesInp').value || '').trim();
+  if(!contactId && !email){ alert('Email is required.'); return; }
+  if(!contactId && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ alert('Invalid email format.'); return; }
+
+  try {
+    var res;
+    if(contactId){
+      res = await window.electronAPI.supaRequest({
+        path: '/functions/v1/contacts-api',
+        method: 'POST',
+        body: { action: 'update', id: contactId, name: name, notes: notes },
+        token: _accessToken
+      });
+    } else {
+      res = await window.electronAPI.supaRequest({
+        path: '/functions/v1/contacts-api',
+        method: 'POST',
+        body: { action: 'add', email: email, name: name, notes: notes },
+        token: _accessToken
+      });
+    }
+    if(res && res.ok && res.data && res.data.ok){
+      closeAddContactModal();
+      _contactsCacheAt = 0;  // force refresh
+      var tabContent = document.getElementById('adminTabContent');
+      if(tabContent) renderAdminContacts(tabContent);
+    } else {
+      var err = (res && res.data && (res.data.error || res.data.message)) || 'Unknown error';
+      alert('Failed: ' + err);
+    }
+  } catch(e){ alert('Network error: ' + e.message); }
+}
+
+async function deleteContact(contactId){
+  var c = _contactsCache.find(function(x){ return x.id === contactId; });
+  if(!c) return;
+  if(!confirm('Delete contact "' + (c.name || c.email) + '"?')) return;
+  try {
+    var res = await window.electronAPI.supaRequest({
+      path: '/functions/v1/contacts-api',
+      method: 'POST',
+      body: { action: 'delete', id: contactId },
+      token: _accessToken
+    });
+    if(res && res.ok && res.data && res.data.ok){
+      _contactsCache = _contactsCache.filter(function(x){ return x.id !== contactId; });
+      var tabContent = document.getElementById('adminTabContent');
+      if(tabContent) renderAdminContacts(tabContent);
+    } else {
+      alert('Failed to delete: ' + ((res && res.data && res.data.error) || 'unknown'));
+    }
+  } catch(e){ alert('Network error: ' + e.message); }
+}
+
+async function sendContactInvite(contactId){
+  if(!confirm('Send an invite email to this contact?')) return;
+  try {
+    var res = await window.electronAPI.supaRequest({
+      path: '/functions/v1/contacts-api',
+      method: 'POST',
+      body: { action: 'send_invite', id: contactId },
+      token: _accessToken
+    });
+    if(res && res.ok && res.data && res.data.ok){
+      if(res.data.email_sent === false){
+        alert('Contact marked as invited, but the invite email could not be sent. Check the Resend configuration.');
+      } else {
+        alert('Invite email sent. The contact will appear as "Invited" in your list.');
+      }
+      _contactsCacheAt = 0;
+      var tabContent = document.getElementById('adminTabContent');
+      if(tabContent) renderAdminContacts(tabContent);
+    } else {
+      alert('Failed to send invite: ' + ((res && res.data && res.data.error) || 'unknown'));
+    }
+  } catch(e){ alert('Network error: ' + e.message); }
 }
 
 async function viewUserRoadmap(userId,userEmail){

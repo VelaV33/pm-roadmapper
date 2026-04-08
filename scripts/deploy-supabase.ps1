@@ -19,7 +19,7 @@ $JwtFunctions = @(
 # - feedback-submit / feedback-vote: public (no JWT possible)
 # - feedback-list / admin-api: gateway check disabled to avoid Invalid JWT
 #   quirk; functions still call verifyRequest internally for security
-$NoJwtFunctions = @('create-user', 'reset-password', 'feedback-submit', 'feedback-vote', 'feedback-list', 'admin-api')
+$NoJwtFunctions = @('create-user', 'reset-password', 'feedback-submit', 'feedback-vote', 'feedback-list', 'admin-api', 'contacts-api')
 
 Write-Host '=============================================================='
 Write-Host ' 1/3  Pushing database migrations'
