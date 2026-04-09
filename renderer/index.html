@@ -3385,6 +3385,9 @@ function saveRow(){
   if(!canEdit('roadmap')){showToast('You don\'t have permission to edit the roadmap','error');return;}
   var name=document.getElementById('fName').value.trim();
   if(!name){showToast('Please enter a row label','error');return;}
+  // v1.26.9: lock the Save button so a double-click can't create two rows
+  var saveBtn = document.querySelector('#rowModal .btn-save');
+  if(saveBtn){ if(saveBtn.disabled) return; saveBtn.disabled = true; saveBtn._origLabel = saveBtn.textContent; saveBtn.textContent = 'Saving\u2026'; setTimeout(function(){ if(saveBtn){ saveBtn.disabled = false; if(saveBtn._origLabel) saveBtn.textContent = saveBtn._origLabel; } }, 500); }
   var sub=document.getElementById('fSub').value.trim();
   var secId=document.getElementById('fSection').value;
   var priority=document.getElementById('fPriority').value;
@@ -3571,11 +3574,15 @@ function confirmAddSection(){
     nameEl.focus();
     return;
   }
+  // v1.26.9: lock the confirm button so a fast double-click can't create two sections
+  var btn = document.querySelector('#addSectionModalWrap .prio-btn.primary');
+  if(btn){ if(btn.disabled) return; btn.disabled = true; btn.textContent = 'Adding\u2026'; }
   var color = (colorEl && colorEl.value) || '#0F1B3D';
   sections.push({ id: 's' + Date.now(), name: name, color: color });
   closeAddSectionModal();
   render();
   persistData();
+  showToast('Section added','success');
 }
 
 // Legacy inline form support — left in place for any callers that still use it.
@@ -9454,6 +9461,23 @@ document.addEventListener('click', function(e){
 });
 document.addEventListener('keydown', function(e){
   if(e.key==='Escape') closeDds();
+});
+
+// v1.26.9: Global backdrop-to-close. Click directly on a .modal-overlay
+// (not on its children) closes that modal. Static modals use the .hidden
+// class; dynamic modals are removed from the DOM. Skips modals that have
+// data-no-backdrop-close set so individual screens can opt out.
+document.addEventListener('mousedown', function(e){
+  var t = e.target;
+  if(!t || !t.classList) return;
+  if(!t.classList.contains('modal-overlay')) return;
+  if(t.hasAttribute('data-no-backdrop-close')) return;
+  // Static modals — toggle .hidden so they can be reopened
+  if(['rowModal','barModal','quartersModal'].indexOf(t.id) !== -1){
+    t.classList.add('hidden');
+  } else {
+    t.remove();
+  }
 });
 
 // v1.26.5: Modal focus trap. When the user is inside an open modal and
