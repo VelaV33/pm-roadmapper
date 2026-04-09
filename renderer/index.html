@@ -2355,7 +2355,7 @@ function addQuarterSilent(){
 }
 
 function removeLastQuarter(){
-  if(quarters.length<=1){alert('Need at least one quarter.');return;}
+  if(quarters.length<=1){showToast('Need at least one quarter','error');return;}
   if(!confirm('Remove the last quarter ('+quarters[quarters.length-1].label+')? Bars in that range will be clipped.')) return;
   quarters.pop();
   recomputeTimeline();
@@ -3372,7 +3372,7 @@ function attachRow(name,storedName){
 }
 function pickAndAttach(){
   if(!window.electronAPI || !window.electronAPI.pickAttachments){
-    alert('Attachments not supported in this environment'); return;
+    showToast('Attachments not supported in this environment','error'); return;
   }
   window.electronAPI.pickAttachments().then(function(res){
     if(!res || !res.ok) return;
@@ -3382,7 +3382,7 @@ function pickAndAttach(){
 }
 
 function saveRow(){
-  if(!canEdit('roadmap')){alert('You do not have permission to edit the roadmap.');return;}
+  if(!canEdit('roadmap')){showToast('You don\'t have permission to edit the roadmap','error');return;}
   var name=document.getElementById('fName').value.trim();
   if(!name){showToast('Please enter a row label','error');return;}
   var sub=document.getElementById('fSub').value.trim();
@@ -3996,7 +3996,7 @@ function exportPDF(){
   if(window.electronAPI){
     window.electronAPI.printPDF(p).then(function(res){
       if(res&&res.ok) console.log('PDF saved to',res.path);
-      else if(res&&res.error) alert('PDF error: '+res.error);
+      else if(res&&res.error) showToast('PDF error: '+res.error,'error');
     });
   } else {
     openPreview(p, 'PDF Preview  ·  Download as HTML → open in browser → Ctrl+P to print/save as PDF', 'html', p);
@@ -4030,10 +4030,10 @@ function openPreview(iframeContent, title, ext, downloadContent){
       // Last resort fallback — copy to clipboard
       if(navigator.clipboard) {
         navigator.clipboard.writeText(downloadContent).then(function(){
-          alert('Content copied to clipboard — paste into a text editor and save as .' + ext);
+          showToast('Copied to clipboard — paste into a text editor and save as .' + ext,'success');
         });
       } else {
-        alert('Download not available in this environment. Use the Electron desktop app to export files.');
+        showToast('Download not available — use the desktop app to export files','error');
       }
     }
   };
@@ -4487,7 +4487,7 @@ function buildQRow(q, qi){
   del.innerHTML = '🗑'; del.title = 'Remove this quarter';
   del.style.cssText = 'background:none;border:none;cursor:pointer;font-size:16px;color:#dc2626;flex-shrink:0;padding:0 2px';
   del.onclick = function(){
-    if(quarters.length<=1){alert('Need at least one quarter.');return;}
+    if(quarters.length<=1){showToast('Need at least one quarter','error');return;}
     quarters.splice(qi,1); openEditQuarters();
   };
   topRow.appendChild(del);
@@ -4562,7 +4562,7 @@ function saveEditQuarters(){
     var months = threeConsecutive(startIdx);
     newQuarters.push({ label:label, year:year, q:origQ.q, months:months });
   });
-  if(newQuarters.length===0){alert('Need at least one quarter.');return;}
+  if(newQuarters.length===0){showToast('Need at least one quarter','error');return;}
   quarters = newQuarters;
   recomputeTimeline(); renderTableHeader(); render(); persistData(); closeEditQuarters();
 }
@@ -5925,7 +5925,7 @@ function openSettings(){
     rows = []; tabs_data=[{id:'tab1',name:'Main Roadmap',stacked:false}]; activeTabId='tab1';
     recomputeTimeline(); renderTableHeader(); renderTabs(); renderStackedTabs(); render(); persistData();
     ov.remove();
-    alert('Done — roadmap cleared.');
+    showToast('Roadmap cleared','success');
   };
   body.appendChild(clearBtn);
 
@@ -6175,7 +6175,7 @@ function openProfile(){
       sections=[{id:'s1',name:'New Section',color:'#0F1B3D'}]; rows=[];
       tabs_data=[{id:'tab1',name:'Main Roadmap',stacked:false}]; activeTabId='tab1';
       recomputeTimeline(); renderTableHeader(); renderTabs(); renderStackedTabs(); render(); persistData();
-      ov.remove(); alert('Roadmap cleared.');
+      ov.remove(); showToast('Roadmap cleared','success');
     }
   ));
 
@@ -6712,7 +6712,7 @@ async function openSharedRoadmap(share){
   } catch(e){ console.warn('Edge function error:',e.message); }
 
   if(!roadmapPayload){
-    alert('Could not load shared roadmap. Please try again or ask the owner to re-share.');
+    showToast('Could not load shared roadmap','error');
     return;
   }
 
@@ -7798,7 +7798,7 @@ function addVoiceButton(targetInput){
 
 function toggleVoice(targetInput,btn){
   var SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SpeechRecognition){alert('Voice recognition not supported in this browser.');return;}
+  if(!SpeechRecognition){showToast('Voice recognition not supported in this browser','error');return;}
 
   // Stop if already recording
   if(_voiceRecognition&&_voiceActiveBtn===btn){
@@ -7841,7 +7841,7 @@ function toggleVoice(targetInput,btn){
 
   recognition.onerror=function(event){
     console.warn('[Voice] Error:',event.error);
-    if(event.error==='not-allowed') alert('Microphone access denied. Allow microphone in your system settings.');
+    if(event.error==='not-allowed') showToast('Microphone access denied — allow it in your system settings','error');
     btn.style.background='';btn.style.borderColor='var(--border)';btn.textContent='🎤';
     _voiceRecognition=null;_voiceActiveBtn=null;
   };
@@ -8097,7 +8097,7 @@ function buildMyCompanyView(container){
 }
 
 async function parseDocForProfile(container){
-  if(!window.electronAPI||!window.electronAPI.readFile){alert('File reading not available');return;}
+  if(!window.electronAPI||!window.electronAPI.readFile){showToast('File reading not available','error');return;}
   var res=await window.electronAPI.readFile({title:'Select your competitive analysis or company document'});
   if(!res||!res.ok)return;
 
@@ -8601,7 +8601,7 @@ async function runCompetitiveAnalysis(container,maxMode){
   if(_compCompetitors.length===0){showToast('Add at least one competitor','error');return;}
   var areas=getSelectedAreas();
   if(areas.length===0){showToast('Select at least one research area','error');return;}
-  if(_compCompetitors.length>5){alert('Maximum 5 competitors per analysis.');return;}
+  if(_compCompetitors.length>5){showToast('Maximum 5 competitors per analysis','error');return;}
 
   // Capture all config BEFORE destroying the DOM with loading screen
   var extApi=getExternalApiConfig();
@@ -9061,7 +9061,7 @@ function exportCompToWord(results){
 
 // ── EXPORT: Excel (.xlsx via SheetJS) ──
 function exportCompToExcel(results){
-  if(typeof XLSX==='undefined'){alert('Excel export library not loaded');return;}
+  if(typeof XLSX==='undefined'){showToast('Excel export library not loaded','error');return;}
   var wb=XLSX.utils.book_new();
 
   // Sheet 1: Comparison Matrix
@@ -10501,7 +10501,7 @@ function _syncG2MToPlanTasks(product, item){
 function convertG2MtoPlan(){
   if(!g2mCurrentProduct){ showToast('Select a product first','error'); return; }
   var items = getG2MItems(g2mCurrentProduct);
-  if(!items || !items.length){ alert('This checklist has no items to convert.'); return; }
+  if(!items || !items.length){ showToast('This checklist has no items to convert','error'); return; }
   if(!confirm('Create a new project plan from "'+g2mCurrentProduct+'" with '+items.length+' tasks?')) return;
 
   // Make sure every source item has a stable id before we link them
@@ -10601,7 +10601,7 @@ function convertG2MtoPlan(){
 
   // Toast-style confirmation
   setTimeout(function(){
-    alert('Created plan "' + plan.name + '" with ' + added + ' tasks. Showing Gantt view.');
+    showToast('Plan "' + plan.name + '" created with ' + added + ' tasks','success');
   }, 200);
 }
 
@@ -11080,7 +11080,7 @@ function addTodoItem(){
 }
 
 function confirmAddTodo(){
-  if(!canEdit('todo')){alert('You do not have permission to add tasks.');return;}
+  if(!canEdit('todo')){showToast('You don\'t have permission to add tasks','error');return;}
   var text=document.getElementById('todoNewText').value.trim();
   if(!text){document.getElementById('todoNewText').focus();return;}
   var initiative=document.getElementById('todoNewInit').value;
@@ -11799,7 +11799,7 @@ function openLibraryPickerModal(opts){
   seedTaskLibraryFromCapacity();
 
   if(!taskLibrary.length){
-    alert('Your library is empty. Add tasks via Plans, Excel import, or CapacityIQ \u2192 Task Library first.');
+    showToast('Your library is empty — add tasks via Plans, Excel import, or CapacityIQ first','info');
     return;
   }
 
@@ -12586,7 +12586,7 @@ function openMultiInputModal(opts){
       values[f.key] = v;
       if(f.required && !v && !missing) missing = f.label;
     });
-    if(missing){ alert(missing + ' is required.'); return; }
+    if(missing){ showToast(missing + ' is required','error'); return; }
     ov.remove();
     if(opts.onOk) opts.onOk(values);
   };
@@ -12608,7 +12608,7 @@ function openMultiInputModal(opts){
 function saveCurrentPlanAsTemplate(){
   var p = getActivePlan();
   if(!p){ showToast('No plan selected','error'); return; }
-  if(!p.tasks || !p.tasks.length){ alert('This plan has no tasks yet — add some first.'); return; }
+  if(!p.tasks || !p.tasks.length){ showToast('This plan has no tasks yet — add some first','error'); return; }
   openMultiInputModal({
     title: 'Save plan as template',
     message: 'This plan\u2019s structure (tasks, durations, predecessors, milestones) will be saved as a reusable template. Owners and dates are reset on each use.',
@@ -12696,7 +12696,7 @@ function instantiatePlanTemplate(tplId){
     defaultValue: _todayIso(),
     okLabel: 'Import tasks',
     onOk: function(startStr){
-      if(!/^\d{4}-\d{2}-\d{2}$/.test(startStr || '')){ alert('Pick a valid date.'); return; }
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(startStr || '')){ showToast('Pick a valid date','error'); return; }
       _finalizeInstantiateTemplate(p, tpl, startStr);
     }
   });
@@ -13588,7 +13588,7 @@ async function updateFeedbackStatus(id, status){
       if(item) item.status = status;
       renderFeedbackInbox();
     } else {
-      alert('Failed to update status: '+((res && res.data && res.data.error) || 'unknown'));
+      showToast('Failed to update status','error');
     }
   } catch(e){
     showToast('Network error: '+e.message,'error');
@@ -13608,7 +13608,7 @@ async function deleteFeedbackItem(id){
       _feedbackItems = _feedbackItems.filter(function(x){ return x.id !== id; });
       renderFeedbackInbox();
     } else {
-      alert('Failed to delete: '+((res && res.data && res.data.error) || 'unknown'));
+      showToast('Failed to delete','error');
     }
   } catch(e){
     showToast('Network error: '+e.message,'error');
@@ -13647,7 +13647,7 @@ function closeFeedbackLinkRowPicker(){
 }
 async function confirmFeedbackLinkRow(itemId){
   var picked = document.querySelector('input[name="fb-link-row"]:checked');
-  if(!picked){ alert('Pick a row first.'); return; }
+  if(!picked){ showToast('Pick a row first','error'); return; }
   try {
     var res = await window.electronAPI.supaRequest({
       path: '/functions/v1/feedback-list',
@@ -13661,7 +13661,7 @@ async function confirmFeedbackLinkRow(itemId){
       closeFeedbackLinkRowPicker();
       renderFeedbackInbox();
     } else {
-      alert('Failed to link: '+((res && res.data && res.data.error) || 'unknown'));
+      showToast('Failed to link','error');
     }
   } catch(e){
     showToast('Network error: '+e.message,'error');
@@ -13687,7 +13687,7 @@ async function unlinkFeedbackFromRow(itemId){
 }
 
 function openFeedbackShareLinkModal(){
-  if(!_currentUser){ alert('Sign in first.'); return; }
+  if(!_currentUser){ showToast('Sign in first','error'); return; }
   // The static feedback page is hosted in the public/ folder of the repo.
   // Since the user can host it on GitHub Pages, Netlify, or anywhere, we
   // give them the URL pattern to use AND the raw query-string params they
@@ -13737,7 +13737,7 @@ function copyFeedbackShareUrl(){
       setTimeout(function(){ btn.textContent = oldText; }, 1500);
     }
   } catch(e){
-    alert('Could not copy. Select the text manually and copy with Ctrl+C.');
+    showToast('Could not copy — select and Ctrl+C manually','error');
   }
 }
 
@@ -13851,7 +13851,7 @@ function openLinkRowPicker(){
   if(!rows.length){ showToast('No roadmap rows yet — add some initiatives first','error'); return; }
   var existing = new Set(p.linkedRowIds || []);
   var available = rows.filter(function(r){ return !existing.has(r.id); });
-  if(!available.length){ alert('All roadmap rows are already linked.'); return; }
+  if(!available.length){ showToast('All roadmap rows are already linked','info'); return; }
 
   var html = '<div class="plan-modal-backdrop" onclick="if(event.target===this) closeLinkRowPicker()">'+
     '<div class="plan-modal" style="width:480px">'+
