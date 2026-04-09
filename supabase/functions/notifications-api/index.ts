@@ -190,14 +190,31 @@ serve(handle(async (req) => {
       (u) => (u.email || "").toLowerCase() === cleanEmail,
     );
 
+    // Read recipient notification preferences from user_metadata. Defaults
+    // to "all on" so existing users see no behavior change. Each type has
+    // an in_app_<type> and email_<type> toggle, plus a master switch.
+    // Non-registered emails (contacts) can't have prefs, so they always
+    // get the email.
+    type Prefs = {
+      master?: boolean;
+      [key: string]: boolean | undefined;
+    };
+    const prefs: Prefs = (recipient?.user_metadata as { notification_prefs?: Prefs } | undefined)?.notification_prefs || {};
+    const masterOn = prefs.master !== false;
+    const cleanType = String(type).substring(0, 50);
+    const inAppKey = `in_app_${cleanType}`;
+    const emailKey = `email_${cleanType}`;
+    const wantInApp = masterOn && (prefs[inAppKey] !== false);
+    const wantEmail = masterOn && (prefs[emailKey] !== false);
+
     let inAppId: string | null = null;
-    if (recipient) {
+    if (recipient && wantInApp) {
       const { data, error } = await supabase
         .from("notifications")
         .insert({
           recipient_user_id: recipient.id,
           sender_user_id: user.id,
-          type: String(type).substring(0, 50),
+          type: cleanType,
           title: safeTitle,
           body: safeBody,
           link: safeLink,
@@ -212,22 +229,27 @@ serve(handle(async (req) => {
       }
     }
 
-    // Always attempt the email — works for both registered users and contacts
-    const emailResult = await sendNotificationEmail({
-      to: cleanEmail,
-      fromName: senderName,
-      title: safeTitle,
-      body: safeBody,
-      link: safeLink,
-      type: String(type),
-    });
+    // Email: always send for contacts (no prefs); for registered users, honour their pref.
+    let emailResult: { ok: boolean; error?: string; skipped?: string } = { ok: false, skipped: "pref" };
+    if (!recipient || wantEmail) {
+      emailResult = await sendNotificationEmail({
+        to: cleanEmail,
+        fromName: senderName,
+        title: safeTitle,
+        body: safeBody,
+        link: safeLink,
+        type: cleanType,
+      });
+    }
 
     return jsonResponse({
       ok: true,
       id: inAppId,
       registered: !!recipient,
+      in_app_sent: !!inAppId,
       email_sent: emailResult.ok,
       email_error: emailResult.error,
+      skipped_by_prefs: !inAppId && !emailResult.ok && !!recipient,
     });
   }
 

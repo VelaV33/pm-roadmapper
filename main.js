@@ -419,14 +419,17 @@ ipcMain.handle('read-file', async (_event, opts) => {
 });
 
 // Transcribe audio via Gemini API (runs in main process to avoid CORS)
+// v1.25.0: All transcript previews removed from logs — voice content is user
+// data and shouldn't be in stdout. Set PMR_DEBUG=1 to re-enable debug logging.
 ipcMain.handle('transcribe-audio', async (_event, { base64, apiKey, mimeType }) => {
   const mime = mimeType || 'audio/webm';
-  console.log(`[Transcribe] Starting — mime: ${mime}, base64 length: ${base64?.length || 0}`);
+  const DEBUG = process.env.PMR_DEBUG === '1';
+  if (DEBUG) console.log(`[Transcribe] Starting — mime: ${mime}`);
   let firstError = '';
   const models = ['gemini-3-flash-preview', 'gemini-3-pro-preview', 'gemini-3.1-pro-preview', 'gemini-2.5-flash'];
   for (const model of models) {
     try {
-      console.log(`[Transcribe] Trying ${model}...`);
+      if (DEBUG) console.log(`[Transcribe] Trying ${model}`);
       const payload = JSON.stringify({
         contents: [{ parts: [
           { inlineData: { mimeType: mime, data: base64 } },
@@ -446,12 +449,12 @@ ipcMain.handle('transcribe-audio', async (_event, { base64, apiKey, mimeType }) 
           let data = '';
           res.on('data', chunk => data += chunk);
           res.on('end', () => {
-            console.log(`[Transcribe] ${model} status: ${res.statusCode}, size: ${data.length}`);
+            if (DEBUG) console.log(`[Transcribe] ${model} status: ${res.statusCode}`);
             try { resolve({ ok: res.statusCode < 300, data: JSON.parse(data), status: res.statusCode }); }
             catch(e) { resolve({ ok: false, data: {}, status: res.statusCode }); }
           });
         });
-        req.on('error', e => { console.log(`[Transcribe] ${model} error: ${e.message}`); resolve({ ok: false, error: e.message }); });
+        req.on('error', e => { if (DEBUG) console.log(`[Transcribe] ${model} error`); resolve({ ok: false, error: e.message }); });
         req.write(payload);
         req.end();
       });
@@ -461,21 +464,20 @@ ipcMain.handle('transcribe-audio', async (_event, { base64, apiKey, mimeType }) 
         const parts = result.data.candidates[0]?.content?.parts || [];
         parts.forEach(p => { if (p.text) text += p.text; });
         if (text.trim() && !text.toLowerCase().includes('unable to process audio') && !text.toLowerCase().includes('cannot transcribe') && !text.toLowerCase().includes('[unclear audio]')) {
-          console.log(`[Transcribe] Success with ${model}: "${text.trim().substring(0, 50)}..."`);
+          if (DEBUG) console.log(`[Transcribe] Success with ${model}`);
           return { ok: true, text: text.trim(), model };
         }
-        console.log(`[Transcribe] ${model} returned: "${text.substring(0, 100)}"`);
+        if (DEBUG) console.log(`[Transcribe] ${model} returned empty / unclear`);
       } else {
-        const errDetail = JSON.stringify(result.data).substring(0, 300);
-        console.log(`[Transcribe] ${model} failed — status: ${result.status}, response:`, errDetail);
-        // Return the first error we get so user can see it
-        if (!firstError) firstError = `${model}: HTTP ${result.status} — ${errDetail}`;
+        if (DEBUG) console.log(`[Transcribe] ${model} failed — HTTP ${result.status}`);
+        // Return a generic error for the user — don't echo the model's response body
+        if (!firstError) firstError = `${model}: HTTP ${result.status}`;
       }
     } catch (e) {
-      console.log(`[Transcribe] ${model} exception: ${e.message}`);
+      if (DEBUG) console.log(`[Transcribe] ${model} exception`);
     }
   }
-  return { ok: false, error: firstError || ('All models failed. base64 size: ' + (base64?.length || 0)) };
+  return { ok: false, error: firstError || 'All transcription models failed.' };
 });
 
 // Save binary file (e.g. XLSX) from base64
@@ -706,7 +708,10 @@ ipcMain.handle('supa-db-request', async (_event, { path, method, body, token }) 
         try {
           const parsed = data.trim() ? JSON.parse(data) : (m === 'DELETE' ? [] : {});
           if (res.statusCode >= 300) {
-            console.error('[SUPABASE]', m, path, '→', res.statusCode, JSON.stringify(parsed).substring(0, 300));
+            // v1.25.0: log status + error code only — full bodies can leak
+            // schema details and JWT prefixes into local logs.
+            const code = (parsed && (parsed.code || parsed.error || parsed.error_description)) || '';
+            console.error('[SUPABASE]', m, path, '→', res.statusCode, code);
           }
           resolve({ ok: res.statusCode < 300, status: res.statusCode, data: parsed });
         } catch(e) {

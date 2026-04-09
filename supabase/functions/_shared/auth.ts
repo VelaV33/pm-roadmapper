@@ -80,8 +80,9 @@ export function handle(
       return await fn(req);
     } catch (e) {
       if (e instanceof Response) return e;
-      // Log internally, return generic message — never leak stack/message to caller.
-      console.error("[edge-function] unhandled:", (e as Error).message, (e as Error).stack);
+      // v1.25.0: log only name + message (no stack) to avoid leaking module
+      // paths and version info into Supabase logs.
+      console.error("[edge-function] unhandled:", (e as Error).name + ": " + (e as Error).message);
       return errorResponse("Internal error", 500);
     }
   };
