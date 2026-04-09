@@ -2,11 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<!-- v1.26.0: Content Security Policy. Blocks remote scripts (the xlsx CDN
+     is now vendored locally — see renderer/vendor/xlsx.full.min.js). Inline
+     scripts and event handlers are kept allowed because the renderer uses
+     them extensively and refactoring would touch ~3000 lines. eval is allowed
+     because xlsx and pptxgenjs use it internally. Network egress from the
+     renderer is locked to 'self' — all Supabase + AI traffic is routed
+     through the main process via the IPC bridge. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://nigusoyssktoebzscbwe.supabase.co wss://nigusoyssktoebzscbwe.supabase.co; object-src 'none'; base-uri 'self'; form-action 'none';">
 <title>PM Roadmapper</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMyNTYzYTgiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMWExNDY0Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHJ4PSI3IiBmaWxsPSJ1cmwoI2JnKSIvPgogIDxyZWN0IHg9IjQiIHk9IjYiICB3aWR0aD0iMjQiIGhlaWdodD0iNSIgcng9IjIuNSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwuOSkiLz4KICA8cmVjdCB4PSI0IiB5PSIxNCIgd2lkdGg9IjE1IiBoZWlnaHQ9IjUiIHJ4PSIyLjUiIGZpbGw9IiMxNmEzNGEiIG9wYWNpdHk9Ii45Ii8+CiAgPHJlY3QgeD0iNCIgeT0iMjEiIHdpZHRoPSIxMCIgaGVpZ2h0PSI1IiByeD0iMi41IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LC41KSIvPgogIDxyZWN0IHg9IjE3IiB5PSIyMSIgd2lkdGg9IjExIiBoZWlnaHQ9IjUiIHJ4PSIyLjUiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsLjI1KSIvPgogIDxjaXJjbGUgY3g9IjI4IiBjeT0iOC41IiByPSIzIiBmaWxsPSIjNGE5MGQ5IiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTkiIGN5PSIxNi41IiByPSIzIiBmaWxsPSIjZmZmIiBzdHJva2U9IiMxNmEzNGEiIHN0cm9rZS13aWR0aD0iMS41Ii8+Cjwvc3ZnPgo=">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="../node_modules/pptxgenjs/dist/pptxgen.bundle.js"></script>
+<!-- v1.26.0: xlsx + pptxgenjs vendored locally so CSP can stay strict and
+     no remote scripts are needed at runtime. -->
+<script src="vendor/xlsx.full.min.js"></script>
+<script src="vendor/pptxgen.bundle.js"></script>
 <style>
 :root{
   --navy:#0F1B3D;--blue:#005bb1;--accent:#005bb1;
@@ -58,6 +68,25 @@ body.dark-mode .plan-bulk-cb,body.dark-mode .plan-bulk-all{accent-color:#3b82f6}
 body.dark-mode hr{border-color:var(--border)}
 body.dark-mode .sidebar-item{color:var(--text)}
 body.dark-mode .sidebar-item:hover{background:#0f172a}
+/* v1.26.0: catch-all dark mode overrides for inline hardcoded colours that
+ * we can't easily replace at every call site. Lower-case selectors are scoped
+ * to common modal/card patterns so we don't accidentally darken intentional
+ * colour-coded UI (status pills, charts, etc.). */
+body.dark-mode [style*="background:#fff"]:not(.kanban-card):not(.modal):not(.plan-modal),
+body.dark-mode [style*="background: #fff"]:not(.kanban-card):not(.modal):not(.plan-modal),
+body.dark-mode [style*="background:#FFFFFF"],
+body.dark-mode [style*="background:#ffffff"]{background:var(--white)!important}
+body.dark-mode [style*="background:#f8fafc"],
+body.dark-mode [style*="background: #f8fafc"]{background:var(--surface-low)!important}
+body.dark-mode [style*="background:#f1f5f9"]{background:#0f172a!important}
+body.dark-mode [style*="background:#f4f7fc"]{background:var(--surface-low)!important}
+body.dark-mode [style*="color:#1a1464"],
+body.dark-mode [style*="color:#0F1B3D"],
+body.dark-mode [style*="color:#0f1b3d"]{color:var(--text)!important}
+body.dark-mode [style*="border:1px solid #e2e2e3"],
+body.dark-mode [style*="border:1px solid #e5e7eb"],
+body.dark-mode [style*="border:1px solid #f1f5f9"],
+body.dark-mode [style*="border-bottom:1px solid #f1f5f9"]{border-color:var(--border)!important}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);min-height:100vh;color:var(--text);font-size:14px;line-height:1.6;letter-spacing:0}
 button,input,select,textarea{font-family:'Inter',system-ui,-apple-system,sans-serif;font-size:14px}
@@ -9416,6 +9445,43 @@ document.addEventListener('keydown', function(e){
   if(e.key==='Escape') closeDds();
 });
 
+// v1.26.0: Focus restoration. We track the element that was focused right
+// before any modal-overlay or plan-modal-backdrop was added to the DOM, and
+// restore focus to it when the modal closes. Implemented as a MutationObserver
+// on body so we don't have to touch every modal call site.
+(function setupFocusRestoration(){
+  if(!('MutationObserver' in window)) return;
+  var focusStack = [];
+  function isModalNode(node){
+    if(!node || node.nodeType !== 1) return false;
+    if(node.classList && (node.classList.contains('modal-overlay') || node.classList.contains('plan-modal-backdrop'))) return true;
+    // wrapper divs that contain a backdrop child (e.g. addContactWrap)
+    if(node.querySelector && node.querySelector(':scope > .plan-modal-backdrop')) return true;
+    return false;
+  }
+  var mo = new MutationObserver(function(mutations){
+    mutations.forEach(function(m){
+      m.addedNodes.forEach(function(n){
+        if(isModalNode(n)){
+          // Snapshot the previously-focused element so we can restore later
+          var prev = document.activeElement;
+          if(prev && prev !== document.body) focusStack.push(prev);
+          else focusStack.push(null);
+        }
+      });
+      m.removedNodes.forEach(function(n){
+        if(isModalNode(n) && focusStack.length){
+          var prev = focusStack.pop();
+          if(prev && document.contains(prev)){
+            try { prev.focus({preventScroll: true}); } catch(e){}
+          }
+        }
+      });
+    });
+  });
+  mo.observe(document.body, { childList: true, subtree: false });
+})();
+
 // v1.25.0: Global Escape-to-close for modals. Closes the topmost open modal
 // in priority order. Doesn't intercept Esc inside inputs that the browser
 // already handles, only when no modal-aware element captured it first.
@@ -12370,7 +12436,7 @@ function openInputModal(opts){
   modal.appendChild(body);
 
   var ftr = document.createElement('div');
-  ftr.style.cssText = 'padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:#f8fafc';
+  ftr.style.cssText = 'padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:var(--surface-low)';
   var cancelBtn = document.createElement('button');
   cancelBtn.textContent = 'Cancel';
   cancelBtn.style.cssText = 'padding:8px 18px;border-radius:9999px;font-size:11px;font-weight:700;cursor:pointer;background:#fff;border:1px solid var(--border);color:var(--text)';
@@ -12450,7 +12516,7 @@ function openMultiInputModal(opts){
   modal.appendChild(body);
 
   var ftr = document.createElement('div');
-  ftr.style.cssText = 'padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:#f8fafc';
+  ftr.style.cssText = 'padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:var(--surface-low)';
   var cancelBtn = document.createElement('button'); cancelBtn.textContent = 'Cancel';
   cancelBtn.style.cssText = 'padding:8px 18px;border-radius:9999px;font-size:11px;font-weight:700;cursor:pointer;background:#fff;border:1px solid var(--border);color:var(--text)';
   cancelBtn.onclick = function(){ ov.remove(); };
@@ -13069,7 +13135,7 @@ function openEditTaskModal(taskId){
   modal.appendChild(body);
 
   var ftr = document.createElement('div');
-  ftr.style.cssText = 'padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:8px;background:#f8fafc';
+  ftr.style.cssText = 'padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:8px;background:var(--surface-low)';
   // Left side: indent / outdent / delete
   var leftBtns = document.createElement('div');
   leftBtns.style.cssText = 'display:flex;gap:6px';
@@ -18268,7 +18334,7 @@ async function openTeamMembersModal(capTeam, existingDbTeam){
   modal.appendChild(body);
 
   var ftr = document.createElement('div');
-  ftr.style.cssText = 'padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:#f8fafc';
+  ftr.style.cssText = 'padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:var(--surface-low)';
   var cancelBtn = document.createElement('button');
   cancelBtn.textContent = 'Cancel';
   cancelBtn.style.cssText = 'padding:8px 18px;border-radius:9999px;font-size:11px;font-weight:700;cursor:pointer;background:var(--white);border:1px solid var(--border);color:var(--text)';
@@ -18429,7 +18495,7 @@ async function openTeamEditorModal(team){
   modal.appendChild(body);
 
   var ftr = document.createElement('div');
-  ftr.style.cssText = 'padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:#f8fafc';
+  ftr.style.cssText = 'padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:var(--surface-low)';
   var cancelBtn = document.createElement('button');
   cancelBtn.textContent = 'Cancel';
   cancelBtn.style.cssText = 'padding:8px 18px;border-radius:9999px;font-size:11px;font-weight:700;cursor:pointer;background:var(--white);border:1px solid var(--border);color:var(--text)';
