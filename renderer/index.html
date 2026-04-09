@@ -4908,7 +4908,7 @@ _supabase = {
           _saveSession(r.data); return {data:{session:r.data}};
         }
         localStorage.removeItem('pmr_session'); return {data:{session:null}};
-      }catch(e){ return {data:{session:null}}; }
+      }catch(e){ console.warn('[auth.getSession]', e.message); return {data:{session:null}}; }
     },
     signInWithPassword: async function(creds){
       var r = await _sbFetch('/auth/v1/token?grant_type=password','POST',creds);
@@ -4923,7 +4923,7 @@ _supabase = {
       return {data:{user:r.data.user||null,session:null},error:null};
     },
     signOut: async function(){
-      await _sbFetch('/auth/v1/logout','POST',null,_accessToken).catch(function(){});
+      await _sbFetch('/auth/v1/logout','POST',null,_accessToken).catch(function(e){ console.warn('[auth.signOut] logout call failed', e && e.message); });
       _accessToken=null; _refreshToken=null; _currentUser=null;
       localStorage.removeItem('pmr_session');
     },
@@ -5015,7 +5015,7 @@ async function checkExistingSession(){
       } else {
         // Saved password no longer works (e.g. user changed it elsewhere).
         // Wipe so we don't keep failing, and let the user log in normally.
-        if(window.electronAPI.clearCredentials) window.electronAPI.clearCredentials().catch(function(){});
+        if(window.electronAPI.clearCredentials) window.electronAPI.clearCredentials().catch(function(e){ console.warn('[clearCredentials]', e && e.message); });
       }
     }
   } catch(e){
@@ -5256,7 +5256,7 @@ async function handleAuthPrimary(){
           console.warn('saveCredentials failed:',e&&e.message);
         });
       } else {
-        window.electronAPI.clearCredentials().catch(function(){});
+        window.electronAPI.clearCredentials().catch(function(e){ console.warn('[clearCredentials]', e && e.message); });
       }
     }
     _currentUser=result.data.user; onAuthSuccess(_currentUser);
@@ -5412,7 +5412,7 @@ async function signOut(){
   // Wipe saved credentials so the next launch goes back to the auth screen.
   // Without this, "Sign out" would be a no-op for users who ticked "Remember me".
   if(window.electronAPI && window.electronAPI.clearCredentials){
-    try { await window.electronAPI.clearCredentials(); } catch(e) {}
+    try { await window.electronAPI.clearCredentials(); } catch(e) { console.warn('[logout clearCredentials]', e && e.message); }
   }
 
   await _supabase.auth.signOut();
@@ -6140,12 +6140,12 @@ function openProfile(){
       pushCloudData().then(function(res){
         if(res && res.ok){
           if(res.reason==='empty'){
-            alert('Nothing to sync — your roadmap is empty.');
+            showToast('Nothing to sync \u2014 your roadmap is empty','info');
           } else {
-            alert('Sync successful.\n\n'+res.rows+' initiatives saved to the cloud at '+new Date(res.ts).toLocaleTimeString()+'.');
+            showToast('Synced ' + res.rows + ' initiatives','success');
           }
         } else {
-          alert('Sync failed.\n\nReason: '+(res&&res.reason||'unknown')+(res&&res.error?'\n\nDetails: '+res.error:''));
+          showToast('Sync failed: ' + (res&&res.reason||'unknown'),'error');
         }
       });
     }
@@ -7129,7 +7129,7 @@ async function _markNotificationRead(id){
       body: { action: 'mark_read', id: id },
       token: _accessToken
     });
-  } catch(e){}
+  } catch(e){ console.warn('[notifications mark_read]', e && e.message); }
   // Update local cache
   var n = _notifications.find(function(x){ return x.id === id; });
   if(n) n.read = true;
@@ -7145,7 +7145,7 @@ async function _markAllNotificationsRead(){
       body: { action: 'mark_all_read' },
       token: _accessToken
     });
-  } catch(e){}
+  } catch(e){ console.warn('[notifications mark_all_read]', e && e.message); }
   await loadNotifications();
   // Re-render the modal if open
   var ov = document.getElementById('notifModal');
@@ -7161,7 +7161,7 @@ async function _deleteNotification(id){
       body: { action: 'delete', id: id },
       token: _accessToken
     });
-  } catch(e){}
+  } catch(e){ console.warn('[notifications delete]', e && e.message); }
   _notifications = _notifications.filter(function(x){ return x.id !== id; });
   await loadNotifications();
   var ov = document.getElementById('notifModal');
@@ -8687,7 +8687,7 @@ async function runCompetitiveAnalysis(container,maxMode){
   var createRes;
   try{
     createRes=await _dbReq('/rest/v1/competitive_analyses','POST',{user_id:_currentUser.id,competitors:_compCompetitors,research_areas:areas,status:'pending'});
-  }catch(dbErr){}
+  }catch(dbErr){ console.warn('[comp-analysis create row]', dbErr && dbErr.message); }
   var analysisId=(createRes&&createRes.ok&&createRes.data&&createRes.data[0])?createRes.data[0].id:null;
 
   var _callStart=Date.now();
@@ -21695,15 +21695,14 @@ function openNotificationPrefsModal(){
         // Refresh local user object so subsequent modal opens reflect the change
         if(res.data) _currentUser = res.data;
         ov.remove();
-        if(typeof showToast==='function') showToast('Notification preferences saved','success');
-        else showToast('Notification preferences saved','success');
+        showToast('Notification preferences saved','success');
       } else {
         saveBtn.disabled=false; saveBtn.textContent='Save preferences';
-        alert('Failed to save preferences. Please try again.');
+        showToast('Failed to save preferences','error');
       }
     } catch(e){
       saveBtn.disabled=false; saveBtn.textContent='Save preferences';
-      alert('Failed to save preferences: '+(e&&e.message||e));
+      showToast('Failed to save preferences','error');
     }
   };
   ftr.appendChild(cancelBtn); ftr.appendChild(saveBtn);
