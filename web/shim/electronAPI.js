@@ -306,12 +306,10 @@
       }
 
       try {
-        // PDF — lazy-load pdf.js
+        // PDF — lazy-load pdf.js (vendored under /shim/)
         if (ext === '.pdf') {
-          await loadScript('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js');
-          // pdf.js needs its worker URL set explicitly
-          window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-            'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+          await loadScript('/shim/pdf.min.js');
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = '/shim/pdf.worker.min.js';
           const buf = await file.arrayBuffer();
           const doc = await window.pdfjsLib.getDocument({ data: buf }).promise;
           let text = '';
@@ -323,9 +321,9 @@
           return { ok: true, name, ext, text, storedName };
         }
 
-        // DOCX — lazy-load mammoth
+        // DOCX — lazy-load mammoth (vendored under /shim/)
         if (ext === '.docx') {
-          await loadScript('https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js');
+          await loadScript('/shim/mammoth.browser.min.js');
           const buf = await file.arrayBuffer();
           const result = await window.mammoth.extractRawText({ arrayBuffer: buf });
           return { ok: true, name, ext, text: result.value || '', storedName };
@@ -338,10 +336,10 @@
           return { ok: true, name, ext, base64: b64, storedName };
         }
 
-        // PPTX — lazy-load JSZip, extract <a:t> text from slide XML
+        // PPTX — lazy-load JSZip (vendored under /shim/), extract <a:t> text
         if (ext === '.pptx') {
           try {
-            await loadScript('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js');
+            await loadScript('/shim/jszip.min.js');
             const buf = await file.arrayBuffer();
             const zip = await window.JSZip.loadAsync(buf);
             let text = '';

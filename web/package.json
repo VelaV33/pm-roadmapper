@@ -8,7 +8,10 @@
     "dev": "vercel dev"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.0"
+    "@supabase/supabase-js": "^2.45.4",
+    "jszip": "^3.10.1",
+    "mammoth": "^1.6.0",
+    "pdfjs-dist": "^3.11.174"
   },
   "devDependencies": {
     "vercel": "^39.0.0"

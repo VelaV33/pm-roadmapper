@@ -29,18 +29,22 @@ let html = fs.readFileSync(rendererSrc, 'utf-8');
 //    renderer's own scripts so window.electronAPI is defined when the
 //    renderer first looks for it.
 //
-//    Loaded eagerly:
-//      • supabase-js — every method that talks to the DB needs it
-//      • the shim itself
+//    EVERYTHING is vendored from node_modules and served from /shim/. The
+//    renderer's CSP uses script-src 'self' which would block any CDN URL,
+//    so vendoring is mandatory, not an optimisation.
 //
-//    Loaded on-demand by the shim's readFile() (so they don't bloat the
-//    cold-start payload, but are cached after first use):
-//      • pdf.js   — PDF text extraction
-//      • mammoth  — DOCX text extraction
-//      • JSZip    — PPTX XML extraction
+//    Loaded eagerly:
+//      • /shim/supabase.js  — every shim method that talks to the DB needs it
+//      • /shim/electronAPI.js
+//
+//    Loaded on-demand by the shim's readFile() (so they don't bloat cold
+//    start, but are cached after first use):
+//      • /shim/pdf.min.js + pdf.worker.min.js — PDF text extraction
+//      • /shim/mammoth.browser.min.js         — DOCX text extraction
+//      • /shim/jszip.min.js                   — PPTX XML extraction
 const injection =
   '\n  <!-- web build: electronAPI shim — must load before all renderer scripts -->\n' +
-  '  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" crossorigin="anonymous"></script>\n' +
+  '  <script src="/shim/supabase.js"></script>\n' +
   '  <script src="/shim/electronAPI.js"></script>\n';
 
 if (!html.includes('<head>')) {
@@ -60,11 +64,33 @@ for (const f of fs.readdirSync(vendorSrc)) {
   fs.copyFileSync(path.join(vendorSrc, f), path.join(vendorDest, f));
 }
 
-// 6. Copy the shim folder into public/shim so it's served at /shim/...
-const shimDest = path.join(publicDir, 'shim');
+// 6. Copy the shim folder + vendored libraries from node_modules into
+//    public/shim so they're served from 'self' and pass the renderer's CSP.
+const shimDest    = path.join(publicDir, 'shim');
+const nodeModules = path.join(webDir, 'node_modules');
 fs.mkdirSync(shimDest, { recursive: true });
+
+// 6a. shim/electronAPI.js (the entrypoint)
 for (const f of fs.readdirSync(shimDir)) {
   fs.copyFileSync(path.join(shimDir, f), path.join(shimDest, f));
+}
+
+// 6b. Vendored libraries. Each entry: [src in node_modules, dest filename].
+//     Hard fail if any are missing — easier to spot than a runtime CSP block.
+const vendored = [
+  ['@supabase/supabase-js/dist/umd/supabase.js', 'supabase.js'],
+  ['pdfjs-dist/build/pdf.min.js',                'pdf.min.js'],
+  ['pdfjs-dist/build/pdf.worker.min.js',         'pdf.worker.min.js'],
+  ['mammoth/mammoth.browser.min.js',             'mammoth.browser.min.js'],
+  ['jszip/dist/jszip.min.js',                    'jszip.min.js'],
+];
+for (const [src, dest] of vendored) {
+  const fullSrc = path.join(nodeModules, src);
+  if (!fs.existsSync(fullSrc)) {
+    throw new Error('[web build] Missing vendored lib: ' + src + '\n' +
+                    '  Did you run "npm install" in web/?');
+  }
+  fs.copyFileSync(fullSrc, path.join(shimDest, dest));
 }
 
 console.log('[web build] OK — public/ written');
