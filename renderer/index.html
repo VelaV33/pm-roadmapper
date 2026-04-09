@@ -692,6 +692,9 @@ body.dark-mode .plan-task-table tr.summary:hover td{background:#0f172a}
 .task-kebab-btn{background:transparent;border:none;color:var(--muted);font-size:18px;line-height:1;cursor:pointer;width:26px;height:26px;border-radius:6px;font-family:inherit;padding:0}
 .task-kebab-btn:hover{background:#f1f5f9;color:var(--accent)}
 body.dark-mode .task-kebab-btn:hover{background:#0f172a}
+/* v1.26.1: shared spinner used by loadingHtml() */
+.pmr-spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:pmr-spin .9s linear infinite}
+@keyframes pmr-spin{to{transform:rotate(360deg)}}
 /* Kanban view (v1.23.0) */
 .plan-kanban{display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:14px;align-items:start}
 .kanban-col{background:#f8fafc;border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;flex-direction:column;min-height:260px;transition:background .15s,border-color .15s}
@@ -1217,7 +1220,7 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
       </svg>
       <span>Roadmapper</span>
     </span>
-    <button onclick="toggleSidebar()" style="background:none;border:none;padding:4px 8px;color:var(--muted);cursor:pointer;display:flex;align-items:center" title="Toggle sidebar"><span class="ico" style="width:20px;height:20px"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span></button>
+    <button onclick="toggleSidebar()" aria-label="Toggle navigation menu" aria-controls="appSidebar" style="background:none;border:none;padding:4px 8px;color:var(--muted);cursor:pointer;display:flex;align-items:center" title="Toggle sidebar"><span class="ico" aria-hidden="true" style="width:20px;height:20px"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span></button>
     <nav class="toolbar-nav" id="mainNav">
       <a onclick="showDashboard();return false;">Dashboard</a>
       <a class="active" onclick="closeAllOverlays();updateNavActive('Roadmap');return false;">Roadmap</a>
@@ -1230,10 +1233,10 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
       <span id="cloudSyncStatusHeader" title="Click to sync now"
             style="display:none;font-size:11px;font-weight:600;padding:6px 12px;border-radius:9999px;border:1px solid transparent;cursor:pointer;user-select:none">&#9729;</span>
       <!-- Collaboration -->
-      <button onclick="openShare()" title="Share" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'"><span class="ico"><svg viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg></span> Share</button>
-      <button onclick="openNotifications()" id="notifBtn" title="Notifications" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:8px;font-size:12px;cursor:pointer;transition:all .15s;position:relative;display:flex;align-items:center" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'"><span class="ico"><svg viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg></span><span id="notifBadge" style="display:none;position:absolute;top:-2px;right:-2px;background:#ef4444;color:#fff;font-size:8px;font-weight:700;min-width:16px;height:16px;border-radius:9999px;align-items:center;justify-content:center;padding:0 3px"></span></button>
-      <button onclick="openHelp()" title="Help" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:8px;font-size:12px;cursor:pointer;transition:all .15s;display:flex;align-items:center" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'"><span class="ico"><svg viewBox="0 0 24 24"><path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span></button>
-      <button onclick="openProfile()" id="profileBtn" title="Account" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'"><span class="ico"><svg viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg></span> Account</button>
+      <button onclick="openShare()" aria-label="Share roadmap" title="Share" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg></span> Share</button>
+      <button onclick="openNotifications()" id="notifBtn" aria-label="Notifications" title="Notifications" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:8px;font-size:12px;cursor:pointer;transition:all .15s;position:relative;display:flex;align-items:center" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg></span><span id="notifBadge" style="display:none;position:absolute;top:-2px;right:-2px;background:#ef4444;color:#fff;font-size:8px;font-weight:700;min-width:16px;height:16px;border-radius:9999px;align-items:center;justify-content:center;padding:0 3px"></span></button>
+      <button onclick="openHelp()" aria-label="Help" title="Help" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:8px;font-size:12px;cursor:pointer;transition:all .15s;display:flex;align-items:center" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span></button>
+      <button onclick="openProfile()" id="profileBtn" aria-label="Account" title="Account" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg></span> Account</button>
     </div>
   </div>
 
@@ -9166,12 +9169,20 @@ function getCurrentMonthIdx(){
   return 0;
 }
 
-function showToast(msg){
+function showToast(msg, kind){
+  // v1.26.1: optional 'kind' param: 'success' | 'error' | 'info' (default)
+  var color = kind === 'error' ? '#dc2626' : kind === 'success' ? '#16a34a' : 'var(--navy)';
   var t=document.createElement('div');
-  t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.3);transition:opacity .3s';
+  t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:'+color+';color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.3);transition:opacity .3s';
   t.textContent=msg;
   document.body.appendChild(t);
   setTimeout(function(){t.style.opacity='0';setTimeout(function(){t.remove();},300);},2500);
+}
+
+// v1.26.1: tiny loading-state helper. Returns HTML you can drop into a
+// container while an async fetch is in flight.
+function loadingHtml(label){
+  return '<div class="pmr-loading" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px;color:var(--muted);gap:14px"><div class="pmr-spinner"></div><div style="font-size:12px;font-weight:600">'+escHtml(label||'Loading\u2026')+'</div></div>';
 }
 
 // ── Save/Load Analysis Locally ──
@@ -12822,7 +12833,7 @@ function indentTask(taskId){
   var siblings = (p.tasks || []).filter(function(x){ return _samePid(x.parentId, t.parentId); })
     .sort(function(a,b){ return (a.sortIndex||0) - (b.sortIndex||0); });
   var idx = siblings.findIndex(function(x){ return x.id === t.id; });
-  if(idx <= 0) { alert('Cannot indent — this task has no task above it at the same level to become its parent.'); return; }
+  if(idx <= 0) { showToast('Move this task below another first to make it a sub-task', 'error'); return; }
   var newParent = siblings[idx - 1];
   // Don't allow making a task its own descendant's parent (impossible here
   // because new parent is a sibling, but be defensive)
@@ -12843,7 +12854,7 @@ function indentTask(taskId){
 function outdentTask(taskId){
   var p = getActivePlan(); if(!p) return;
   var t = getTaskById(p, taskId); if(!t) return;
-  if(!t.parentId) { alert('Cannot promote \u2014 this task is already at the top level.'); return; }
+  if(!t.parentId) { showToast('This task is already at the top level', 'error'); return; }
   var oldParent = getTaskById(p, t.parentId);
   t.parentId = oldParent ? (oldParent.parentId || null) : null;
   // Place after the old parent in the new sibling list
@@ -12961,12 +12972,19 @@ function openTaskKebabMenu(evt, taskId){
   pop.appendChild(row('Delete', '\u00D7', function(){ deletePlanTask(taskId); }, true));
 
   document.body.appendChild(pop);
-  // Click-outside to dismiss
+  // v1.26.1: dismiss on click-outside / scroll / resize so the floating popup
+  // can never get orphaned away from its row.
   setTimeout(function(){
     function dismiss(e){
-      if(!pop.contains(e.target)){ pop.remove(); document.removeEventListener('mousedown', dismiss); }
+      if(e && e.target && pop.contains(e.target)) return;  // click inside — keep open
+      pop.remove();
+      document.removeEventListener('mousedown', dismiss);
+      window.removeEventListener('scroll', dismiss, true);
+      window.removeEventListener('resize', dismiss);
     }
     document.addEventListener('mousedown', dismiss);
+    window.addEventListener('scroll', dismiss, true);  // capture-phase to catch nested scrollers
+    window.addEventListener('resize', dismiss);
   }, 0);
 }
 
@@ -13161,6 +13179,9 @@ function openEditTaskModal(taskId){
   saveBtn.textContent = 'Save';
   saveBtn.style.cssText = 'padding:8px 18px;border-radius:9999px;font-size:11px;font-weight:700;cursor:pointer;background:var(--accent);border:1px solid var(--accent);color:#fff';
   saveBtn.onclick = function(){
+    if(saveBtn.disabled) return;  // v1.26.1: prevent double-submit
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving\u2026';
     t.name = nameInp.value.trim() || t.name;
     if(!isSummary){
       t.startDate = startInp.value;
@@ -14397,7 +14418,9 @@ function openPredecessorPicker(taskId){
   } else {
     headerLine = escHtml(t.name);
   }
-  var msToggleBtn = '<button class="prio-btn" style="font-size:10px;padding:5px 12px" onclick="toggleTaskMilestone(\''+escHtml(taskId)+'\');closePredecessorPicker();openPredecessorPicker(\''+escHtml(taskId)+'\')">'+(t.isMilestone?'Convert to task':'Make this a milestone')+'</button>';
+  // v1.26.1: preserve current search query across the close/reopen so the user
+  // doesn't lose context when toggling milestone state
+  var msToggleBtn = '<button class="prio-btn" style="font-size:10px;padding:5px 12px" onclick="(function(){var s=document.getElementById(\'predPickerSearch\');var q=s?s.value:\'\';toggleTaskMilestone(\''+escHtml(taskId)+'\');closePredecessorPicker();openPredecessorPicker(\''+escHtml(taskId)+'\');setTimeout(function(){var s2=document.getElementById(\'predPickerSearch\');if(s2&&q){s2.value=q;_filterPredPicker(q);}},50);})()">'+(t.isMilestone?'Convert to task':'Make this a milestone')+'</button>';
 
   var html = '<div class="plan-modal-backdrop" onclick="if(event.target===this) closePredecessorPicker()">'+
     '<div class="plan-modal" style="width:620px;max-width:95vw">'+
@@ -18084,7 +18107,7 @@ async function renderAdminPage(){
 }
 
 async function renderAdminRegisteredUsers(body){
-  body.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)">Loading users...</div>';
+  body.innerHTML = loadingHtml('Loading users\u2026');
 
   try {
     var r=await window.electronAPI.supaRequest({
@@ -18188,7 +18211,7 @@ async function renderAdminRegisteredUsers(body){
 // so the foreign key holds). This way "team" lives in one place (CapacityIQ)
 // and the admin panel only manages who from auth.users belongs to it.
 async function renderAdminTeams(body){
-  body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">Loading teams...</div>';
+  body.innerHTML = loadingHtml('Loading teams\u2026');
 
   var capTeams = (capData && Array.isArray(capData.teams)) ? capData.teams : [];
 
@@ -18570,7 +18593,7 @@ async function refreshContactsCache(){
 }
 
 async function renderAdminContacts(body){
-  body.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)">Loading contacts...</div>';
+  body.innerHTML = loadingHtml('Loading contacts\u2026');
   await refreshContactsCache();
   var contacts = _contactsCache || [];
 
