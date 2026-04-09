@@ -710,6 +710,7 @@ body.dark-mode .kanban-col.drop-target{background:#1e3a8a;border-color:#3b82f6}
 .kanban-empty{text-align:center;font-size:11px;color:var(--muted);font-style:italic;padding:18px 6px;border:1px dashed var(--border);border-radius:10px}
 .kanban-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:12px;cursor:grab;box-shadow:0 1px 3px rgba(0,0,0,.05);transition:box-shadow .15s,transform .1s}
 .kanban-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.08);transform:translateY(-1px)}
+.kanban-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px;box-shadow:0 4px 14px rgba(0,0,0,.08)}
 .kanban-card:active{cursor:grabbing}
 .kanban-card.dragging{opacity:.45}
 .kanban-card.task-done{border-left:3px solid #16a34a}
@@ -1224,7 +1225,7 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
       <span>Roadmapper</span>
     </span>
     <button onclick="toggleSidebar()" aria-label="Toggle navigation menu" aria-controls="appSidebar" style="background:none;border:none;padding:4px 8px;color:var(--muted);cursor:pointer;display:flex;align-items:center" title="Toggle sidebar"><span class="ico" aria-hidden="true" style="width:20px;height:20px"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span></button>
-    <nav class="toolbar-nav" id="mainNav">
+    <nav class="toolbar-nav" id="mainNav" aria-label="Primary">
       <a onclick="showDashboard();return false;">Dashboard</a>
       <a class="active" onclick="closeAllOverlays();updateNavActive('Roadmap');return false;">Roadmap</a>
       <a onclick="closeAllOverlays();openG2M();updateNavActive('Checklist');return false;">Checklist</a>
@@ -1259,8 +1260,8 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
 
 <div class="toolbar-spacer"></div>
 
-<!-- LEFT SIDEBAR -->
-<nav class="app-sidebar collapsed" id="appSidebar">
+<!-- LEFT SIDEBAR (v1.26.12: aria-label so screen readers describe the landmark) -->
+<nav class="app-sidebar collapsed" id="appSidebar" aria-label="Modules and roadmap actions">
   <div class="sidebar-section">Modules</div>
   <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openReports()">
     <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
@@ -15663,7 +15664,9 @@ function renderPlanKanbanView(plan){
           ? '<div class="kanban-pct-bar"><div class="kanban-pct-fill" style="width:'+t.percentComplete+'%"></div></div>'
           : '';
         var cardCls = 'kanban-card' + (statusCls ? ' '+statusCls : '') + (t.isMilestone ? ' milestone' : '');
-        html += '<div class="'+cardCls+'" draggable="true" data-task-id="'+escHtml(t.id)+'" onclick="openEditTaskModal(\''+escHtml(t.id)+'\')">'+
+        // v1.26.12: tabindex + role + onkeydown so kanban cards are reachable
+        // by Tab and openable with Enter / Space (was click-only on a <div>)
+        html += '<div class="'+cardCls+'" draggable="true" tabindex="0" role="button" aria-label="'+escHtml('Edit task: ' + (t.name || '(unnamed)'))+'" data-task-id="'+escHtml(t.id)+'" onclick="openEditTaskModal(\''+escHtml(t.id)+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openEditTaskModal(\''+escHtml(t.id)+'\');}">'+
           '<div class="kanban-card-title">'+msPrefix+escHtml(t.name||'(unnamed)')+'</div>'+
           (ownerChip ? '<div style="margin-top:8px">'+ownerChip+'</div>' : '')+
           (dueLine || pctBar ? '<div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:10px">'+(dueLine || '<span></span>')+'<span style="font-size:10px;color:var(--muted);font-weight:700">'+(t.percentComplete||0)+'%</span></div>' : '')+
