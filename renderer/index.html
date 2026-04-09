@@ -695,6 +695,9 @@ body.dark-mode .task-kebab-btn:hover{background:#0f172a}
 /* v1.26.1: shared spinner used by loadingHtml() */
 .pmr-spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:pmr-spin .9s linear infinite}
 @keyframes pmr-spin{to{transform:rotate(360deg)}}
+/* Dashboard card focus state (v1.26.10) — keyboard nav indicator */
+.dash-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px;box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.dash-card:hover{cursor:pointer}
 /* Kanban view (v1.23.0) */
 .plan-kanban{display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:14px;align-items:start}
 .kanban-col{background:#f8fafc;border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;flex-direction:column;min-height:260px;transition:background .15s,border-color .15s}
@@ -1402,28 +1405,28 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
     </div>
   </div>
 
-  <!-- Bottom Grid -->
+  <!-- Bottom Grid (v1.26.10: real <button> elements for keyboard a11y) -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
-    <div onclick="closeAllOverlays();openTodo()" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04)" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
-      <div style="margin-bottom:8px;color:var(--accent)"><span class="ico" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></span></div>
+    <button class="dash-card" onclick="closeAllOverlays();openTodo()" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);text-align:left;font-family:inherit" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div style="margin-bottom:8px;color:var(--accent)"><span class="ico" aria-hidden="true" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></span></div>
       <h5 style="font-weight:700;font-size:13px;margin-bottom:4px">ToDo List</h5>
       <p style="font-size:11px;color:var(--muted)" id="dashTodoSummary">—</p>
-    </div>
-    <div onclick="closeAllOverlays();openKPI()" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04)" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
-      <div style="margin-bottom:8px;color:var(--accent)"><span class="ico" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path d="M16 8v8m-4-5v5m-4-2v2m-2 4h16a2 2 0 002-2V5a2 2 0 00-2-2H4a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></span></div>
+    </button>
+    <button class="dash-card" onclick="closeAllOverlays();openKPI()" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);text-align:left;font-family:inherit" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div style="margin-bottom:8px;color:var(--accent)"><span class="ico" aria-hidden="true" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path d="M16 8v8m-4-5v5m-4-2v2m-2 4h16a2 2 0 002-2V5a2 2 0 00-2-2H4a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></span></div>
       <h5 style="font-weight:700;font-size:13px;margin-bottom:4px">KPI Scorecard</h5>
       <p style="font-size:11px;color:var(--muted)">Track performance metrics</p>
-    </div>
-    <div onclick="closeAllOverlays();openCapacity()" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04)" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
-      <div style="margin-bottom:8px;color:var(--accent)"><span class="ico" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></span></div>
+    </button>
+    <button class="dash-card" onclick="closeAllOverlays();openCapacity()" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);text-align:left;font-family:inherit" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div style="margin-bottom:8px;color:var(--accent)"><span class="ico" aria-hidden="true" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></span></div>
       <h5 style="font-weight:700;font-size:13px;margin-bottom:4px">CapacityIQ</h5>
       <p style="font-size:11px;color:var(--muted)">Team capacity planning</p>
-    </div>
-    <div onclick="closeAllOverlays();openShare()" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04)" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
-      <div style="margin-bottom:8px;color:var(--accent)"><span class="ico" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg></span></div>
+    </button>
+    <button class="dash-card" onclick="closeAllOverlays();openShare()" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);text-align:left;font-family:inherit" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div style="margin-bottom:8px;color:var(--accent)"><span class="ico" aria-hidden="true" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg></span></div>
       <h5 style="font-weight:700;font-size:13px;margin-bottom:4px">Share Roadmap</h5>
       <p style="font-size:11px;color:var(--muted)" id="dashShareSummary">—</p>
-    </div>
+    </button>
   </div>
 </div>
 
@@ -7003,6 +7006,9 @@ async function sendNotification(recipientEmail, type, title, body, link){
       } else if(res.data.email_sent === true){
         _showNotifToast('Notified ' + recipientEmail + ' (email sent)', 'success');
       }
+    } else if(res && res.status === 429){
+      // v1.26.10: rate limit hit — give the user a clear message
+      _showNotifToast('Notification rate limit reached \u2014 try again in a minute', 'warn');
     } else {
       _showNotifToast('Failed to notify ' + recipientEmail + ': ' + ((res && res.data && res.data.error) || 'unknown'), 'warn');
     }
@@ -19003,6 +19009,9 @@ async function sendContactInvite(contactId){
       _contactsCacheAt = 0;
       var tabContent = document.getElementById('adminTabContent');
       if(tabContent) renderAdminContacts(tabContent);
+    } else if(res && res.status === 429){
+      // v1.26.10: friendly rate-limit message
+      showToast('Invite rate limit reached \u2014 try again in an hour','error');
     } else {
       showToast('Failed to send invite','error');
     }
