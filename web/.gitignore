@@ -3,3 +3,5 @@ public/
 .vercel/
 .env
 .env.local
+
+.vercel

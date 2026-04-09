@@ -4,8 +4,7 @@
   "private": true,
   "description": "Web version of PM Roadmapper — runs the Electron renderer in the browser via an electronAPI shim",
   "scripts": {
-    "build": "node scripts/build.js",
-    "dev": "vercel dev"
+    "build": "node scripts/build.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
