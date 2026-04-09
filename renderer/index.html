@@ -3039,7 +3039,7 @@ function openEditModal(rowId){
 }
 
 function openAddRowModal(secId){
-  if(!canEdit('roadmap')){alert('Read-only access. You cannot add rows.');return;}
+  if(!canEdit('roadmap')){showToast('Read-only access \u2014 you can\'t add rows','error');return;}
   editingRowId=null;
   document.getElementById('modalIntegrationSection').style.display='none';
   document.getElementById('modalTitle').textContent='Add New Row';
@@ -3497,7 +3497,7 @@ function deleteRow(rowId){
 // easy to miss. The dialog uses the same plan-modal styling as the rest of
 // the app for visual consistency.
 function toggleAddSection(){
-  if(!canEdit('roadmap')){ alert('Read-only access. You cannot add sections.'); return; }
+  if(!canEdit('roadmap')){ showToast('Read-only access \u2014 you can\'t add sections','error'); return; }
   // Remove any existing instance to avoid duplicates
   var existing = document.getElementById('addSectionModalWrap');
   if(existing) existing.remove();
@@ -12562,7 +12562,7 @@ function openMultiInputModal(opts){
 // template's own tasks array (not opaque IDs).
 function saveCurrentPlanAsTemplate(){
   var p = getActivePlan();
-  if(!p){ alert('No plan selected.'); return; }
+  if(!p){ showToast('No plan selected','error'); return; }
   if(!p.tasks || !p.tasks.length){ alert('This plan has no tasks yet — add some first.'); return; }
   openMultiInputModal({
     title: 'Save plan as template',
@@ -12641,7 +12641,7 @@ function deletePlanTemplate(tplId){
 // the freshly-minted task IDs. Existing plan tasks are untouched.
 function instantiatePlanTemplate(tplId){
   var p = getActivePlan();
-  if(!p){ alert('No plan selected.'); return; }
+  if(!p){ showToast('No plan selected','error'); return; }
   var tpl = planTemplates.find(function(t){ return t.id === tplId; });
   if(!tpl) return;
   openInputModal({
@@ -13437,7 +13437,7 @@ function closeFeedback(){
 async function loadFeedbackInbox(){
   var content = document.getElementById('feedbackContent');
   if(!content) return;
-  content.innerHTML = '<div class="fb-empty"><h3>Loading\u2026</h3></div>';
+  content.innerHTML = loadingHtml('Loading feedback\u2026');
   if(!_currentUser || !_accessToken){
     content.innerHTML = '<div class="fb-empty"><h3>Not signed in</h3><p>Sign in first to load your feedback inbox.</p></div>';
     return;
@@ -14483,7 +14483,7 @@ var _addTaskTab = 'custom';
 
 function openAddTaskModal(){
   if(!getActivePlan()){
-    alert('Pick or create a plan first.');
+    showToast('Pick or create a plan first','error');
     return;
   }
   _addTaskTab = 'custom';
@@ -15057,7 +15057,7 @@ function _parsePredecessorRefs(value){
 var _excelImportData = null;  // { headers, rows, mapping }
 
 function openExcelImportPicker(){
-  if(!getActivePlan()){ alert('Pick or create a plan first.'); return; }
+  if(!getActivePlan()){ showToast('Pick or create a plan first','error'); return; }
   // Use Electron's read-file IPC which already handles xlsx
   if(!window.electronAPI || !window.electronAPI.readFile){
     alert('Electron file picker not available.');
@@ -17144,7 +17144,7 @@ function closeUCR() {
 }
 
 function addNewUCR() {
-  if(!canEdit('ucr')){alert('Read-only access.');return;}
+  if(!canEdit('ucr')){showToast('Read-only access','error');return;}
   var ucr = makeNewUCR();
   ucrAllData.unshift(ucr);
   persistData();
@@ -17693,7 +17693,7 @@ function renderTimesheet(){
 }
 
 function addTSTask(){
-  if(!canEdit('timesheet')){alert('Read-only access.');return;}
+  if(!canEdit('timesheet')){showToast('Read-only access','error');return;}
   var data=getTimesheetWeek(_tsCurrentWeek);
   var days=['mon','tue','wed','thu','fri'];
   // Default to current day of week
@@ -18785,6 +18785,18 @@ function openAddContactModal(contactId){
   setTimeout(function(){
     var fi = document.getElementById(existing ? 'contactFirstNameInp' : 'contactEmailInp');
     if(fi) fi.focus();
+    // v1.26.2: Enter-to-submit on the simple text fields (not textarea)
+    var wrap = document.getElementById('addContactWrap');
+    if(wrap){
+      wrap.querySelectorAll('input[type=text], input[type=email], input[type=tel]').forEach(function(inp){
+        inp.addEventListener('keydown', function(e){
+          if(e.key === 'Enter'){
+            e.preventDefault();
+            saveContact(contactId || null);
+          }
+        });
+      });
+    }
   }, 50);
 }
 
@@ -18812,10 +18824,22 @@ async function saveContact(contactId){
   Object.keys(metadata).forEach(function(k){ if(!metadata[k]) delete metadata[k]; });
 
   if(!contactId){
-    if(!email){ alert('Email is required.'); return; }
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ alert('Invalid email format.'); return; }
-    if(!firstName){ alert('First name is required.'); return; }
-    if(!lastName){ alert('Last name is required.'); return; }
+    if(!email){ showToast('Email is required','error'); return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showToast('Invalid email format','error'); return; }
+    if(!firstName){ showToast('First name is required','error'); return; }
+    if(!lastName){ showToast('Last name is required','error'); return; }
+  }
+
+  // v1.26.2: lock the save button + show "Saving…" so the user can't double-submit
+  var saveBtn = document.querySelector('#addContactWrap .plan-modal-footer .prio-btn.primary');
+  if(saveBtn){
+    if(saveBtn.disabled) return;
+    saveBtn.disabled = true;
+    saveBtn._origLabel = saveBtn.textContent;
+    saveBtn.textContent = 'Saving\u2026';
+  }
+  function _restoreBtn(){
+    if(saveBtn){ saveBtn.disabled = false; if(saveBtn._origLabel) saveBtn.textContent = saveBtn._origLabel; }
   }
 
   try {
@@ -18837,6 +18861,7 @@ async function saveContact(contactId){
     }
     if(res && res.ok && res.data && res.data.ok){
       closeAddContactModal();
+      showToast(contactId ? 'Contact updated' : 'Contact added','success');
       _contactsCacheAt = 0;  // force refresh
       // Refresh contacts cache so getKnownOwners picks up the new contact immediately
       try { await refreshContactsCache(); } catch(e){}
@@ -18849,10 +18874,14 @@ async function saveContact(contactId){
         cb({ name: name, email: email });
       }
     } else {
+      _restoreBtn();
       var err = (res && res.data && (res.data.error || res.data.message)) || 'Unknown error';
-      alert('Failed: ' + err);
+      showToast(err,'error');
     }
-  } catch(e){ alert('Network error: ' + e.message); }
+  } catch(e){
+    _restoreBtn();
+    showToast('Network error: ' + e.message,'error');
+  }
 }
 
 async function deleteContact(contactId){
