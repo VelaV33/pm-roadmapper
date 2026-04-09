@@ -5825,7 +5825,7 @@ function saveProfileSettings(){
     localStorage.setItem('pmr_profile_'+uid,  JSON.stringify(userProfile));
     localStorage.setItem('pmr_settings_'+uid, JSON.stringify(appSettings));
     localStorage.setItem('pmr_role_'+uid, _userRole);
-  } catch(e){}
+  } catch(e){ console.warn('[saveProfileSettings]', e && e.message); }
 }
 
 function applyProfileToUI(){
@@ -18350,7 +18350,7 @@ async function openTeamMembersModal(capTeam, existingDbTeam){
       token:_accessToken||null
     });
     if(r.ok && r.data && r.data.ok) users = r.data.users || [];
-  } catch(e){}
+  } catch(e){ console.warn('[openTeamMembersModal list-users]', e && e.message); }
 
   var existingMembers = new Set(((existingDbTeam && existingDbTeam.members) || []).map(function(m){ return m.user_id; }));
 
@@ -18487,7 +18487,7 @@ async function openTeamEditorModal(team){
       token:_accessToken||null
     });
     if(r.ok && r.data && r.data.ok) users = r.data.users || [];
-  } catch(e){}
+  } catch(e){ console.warn('[openTeamEditorModal list-users]', e && e.message); }
 
   var ex = document.getElementById('teamEditorModal'); if(ex) ex.remove();
   var existingMembers = new Set((team && team.members ? team.members : []).map(function(m){ return m.user_id; }));
@@ -18920,7 +18920,7 @@ async function saveContact(contactId){
       showToast(contactId ? 'Contact updated' : 'Contact added','success');
       _contactsCacheAt = 0;  // force refresh
       // Refresh contacts cache so getKnownOwners picks up the new contact immediately
-      try { await refreshContactsCache(); } catch(e){}
+      try { await refreshContactsCache(); } catch(e){ console.warn('[saveContact refreshContactsCache]', e && e.message); }
       var tabContent = document.getElementById('adminTabContent');
       if(tabContent) renderAdminContacts(tabContent);
       // v1.23.0: if the owner picker triggered this contact add, fire its callback

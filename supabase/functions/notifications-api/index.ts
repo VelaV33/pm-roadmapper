@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { handle, verifyRequest, jsonResponse, errorResponse } from "../_shared/auth.ts";
+import { handle, verifyRequest, jsonResponse, errorResponse, rateLimit } from "../_shared/auth.ts";
 
 // Notifications CRUD + email delivery.
 //
@@ -157,6 +157,11 @@ serve(handle(async (req) => {
       return errorResponse("Missing recipient_email", 400);
     }
     if (!type || !title) return errorResponse("Missing type or title", 400);
+
+    // v1.26.8: rate-limit per sender. 100 notifications/hour is plenty for
+    // any legitimate use; bulk owner-assign on 50 tasks twice per hour fits.
+    // Stops a runaway loop or compromised token spamming via Resend.
+    await rateLimit("notif_create", user.id, 100, 3600);
 
     const cleanEmail = recipient_email.toLowerCase().trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
