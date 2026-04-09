@@ -1,6 +1,6 @@
 {
   "name": "netstar-roadmap",
-  "version": "1.26.12",
+  "version": "1.26.13",
   "description": "PM Roadmapper — Product Strategy & Roadmap Tool",
   "main": "main.js",
   "scripts": {
