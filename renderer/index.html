@@ -2150,7 +2150,7 @@ function renameTab(tabId, btn, nameSpan){
 }
 
 function closeTab(tabId){
-  if(tabs_data.length <= 1){ alert('Cannot close the last tab.'); return; }
+  if(tabs_data.length <= 1){ showToast('Cannot close the last tab','error'); return; }
   if(!confirm('Close this tab?')) return;
   tabs_data = tabs_data.filter(function(t){ return t.id !== tabId; });
   if(activeTabId === tabId) activeTabId = tabs_data[0].id;
@@ -3384,7 +3384,7 @@ function pickAndAttach(){
 function saveRow(){
   if(!canEdit('roadmap')){alert('You do not have permission to edit the roadmap.');return;}
   var name=document.getElementById('fName').value.trim();
-  if(!name){alert('Please enter a row label');return;}
+  if(!name){showToast('Please enter a row label','error');return;}
   var sub=document.getElementById('fSub').value.trim();
   var secId=document.getElementById('fSection').value;
   var priority=document.getElementById('fPriority').value;
@@ -3583,7 +3583,7 @@ function addSection(){
   var nameInp = document.getElementById('newSecName');
   if(!nameInp) return;
   var name = nameInp.value.trim();
-  if(!name){ alert('Enter a section name'); return; }
+  if(!name){ showToast('Enter a section name','error'); return; }
   var colorInp = document.getElementById('newSecColor');
   var color = colorInp ? colorInp.value : '#0F1B3D';
   sections.push({ id: 's' + Date.now(), name: name, color: color });
@@ -4169,7 +4169,7 @@ function runExportByQuarter(type){
   document.querySelectorAll('#qExportList input[type=checkbox]:checked').forEach(function(cb){
     selected.push(parseInt(cb.value));
   });
-  if(!selected.length){alert('Select at least one quarter');return;}
+  if(!selected.length){showToast('Select at least one quarter','error');return;}
 
   // Compute the flat month range for selected quarters
   // Build a filtered month index map: original index → new index (or -1 if excluded)
@@ -4371,7 +4371,7 @@ function closeBarModal(){
 
 function saveBarModal(){
   var name=document.getElementById('bName').value.trim();
-  if(!name){alert('Please enter an initiative name');return;}
+  if(!name){showToast('Please enter an initiative name','error');return;}
   var row=rows.find(function(r){return r.id===_editBarRowId}); if(!row) return;
   var b=row.bars.find(function(b){return Math.abs(b.s-_editBarStart)<0.001}); if(!b) return;
   b.t=name;
@@ -8253,9 +8253,9 @@ function showCreatePresetDialog(parentContainer){
   saveBtn.textContent='Save Preset';
   saveBtn.onclick=function(){
     var name=nameInp.value.trim();
-    if(!name){alert('Enter a preset name');return;}
+    if(!name){showToast('Enter a preset name','error');return;}
     var lines=areasTa.value.split('\n').filter(function(l){return l.trim();});
-    if(lines.length<1){alert('Add at least one research area');return;}
+    if(lines.length<1){showToast('Add at least one research area','error');return;}
     var emoji=emojiInp.value.trim()||'📋';
     var id='custom_'+Date.now();
     var areas=lines.map(function(line,i){
@@ -8598,9 +8598,9 @@ function getDemoResults(competitors,areas){
 
 async function runCompetitiveAnalysis(container,maxMode){
   try{
-  if(_compCompetitors.length===0){alert('Add at least one competitor.');return;}
+  if(_compCompetitors.length===0){showToast('Add at least one competitor','error');return;}
   var areas=getSelectedAreas();
-  if(areas.length===0){alert('Select at least one research area.');return;}
+  if(areas.length===0){showToast('Select at least one research area','error');return;}
   if(_compCompetitors.length>5){alert('Maximum 5 competitors per analysis.');return;}
 
   // Capture all config BEFORE destroying the DOM with loading screen
@@ -9216,7 +9216,7 @@ function getSavedAnalyses(){
 function mergeAnalyses(ids){
   var saved=getSavedAnalyses();
   var toMerge=saved.filter(function(a){return ids.indexOf(a.id)>=0;});
-  if(toMerge.length<2){alert('Select at least 2 analyses to merge.');return null;}
+  if(toMerge.length<2){showToast('Select at least 2 analyses to merge','error');return null;}
 
   var merged={
     overall_summary:'',
@@ -9320,7 +9320,7 @@ async function buildHistoryView(container){
     mergeBtn.onclick=function(){
       var checked=[];
       container.querySelectorAll('.merge-cb:checked').forEach(function(cb){checked.push(cb.value);});
-      if(checked.length<2){alert('Select at least 2 analyses to merge.');return;}
+      if(checked.length<2){showToast('Select at least 2 analyses to merge','error');return;}
       var merged=mergeAnalyses(checked);
       if(merged){
         // Save merged result
@@ -9454,6 +9454,38 @@ document.addEventListener('click', function(e){
 });
 document.addEventListener('keydown', function(e){
   if(e.key==='Escape') closeDds();
+});
+
+// v1.26.5: Modal focus trap. When the user is inside an open modal and
+// presses Tab/Shift-Tab, focus loops within the modal's focusable elements
+// instead of escaping to the background page. Picks the topmost open modal
+// (highest z-index) so nested modals work too.
+document.addEventListener('keydown', function(e){
+  if(e.key !== 'Tab') return;
+  // Find the topmost open modal — modal-overlay or plan-modal-backdrop
+  var modals = Array.prototype.slice.call(document.querySelectorAll('.modal-overlay, .plan-modal-backdrop'))
+    .filter(function(m){ return !m.classList.contains('hidden') && m.offsetParent !== null; });
+  if(!modals.length) return;
+  modals.sort(function(a,b){
+    var za = parseInt(window.getComputedStyle(a).zIndex, 10) || 0;
+    var zb = parseInt(window.getComputedStyle(b).zIndex, 10) || 0;
+    return zb - za;
+  });
+  var top = modals[0];
+  var focusables = top.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]):not([type=hidden]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+  if(!focusables.length) return;
+  var first = focusables[0];
+  var last = focusables[focusables.length - 1];
+  var active = document.activeElement;
+  if(e.shiftKey){
+    if(active === first || !top.contains(active)){
+      e.preventDefault(); last.focus();
+    }
+  } else {
+    if(active === last || !top.contains(active)){
+      e.preventDefault(); first.focus();
+    }
+  }
 });
 
 // v1.26.3: Mark decorative SVGs aria-hidden so screen readers don't double-
@@ -9917,7 +9949,7 @@ function openG2MTemplateBuilder(){
       useBtn.textContent='Apply to Current';
       useBtn.style.cssText='padding:5px 12px;border-radius:8px;background:var(--accent);color:#fff;border:none;font-size:11px;font-weight:600;cursor:pointer';
       useBtn.onclick=function(){
-        if(!g2mCurrentProduct){ alert('Please select a product initiative first.'); return; }
+        if(!g2mCurrentProduct){ showToast('Please select a product initiative first','error'); return; }
         if(!confirm('Apply template "'+tpl.name+'" to '+g2mCurrentProduct+'?\n\nThis will replace the current checklist.')) return;
         // Pre-fill the new G2M items with the template's owner / start / end / hours.
         var items=tpl.items.map(function(it){
@@ -10224,7 +10256,7 @@ function openG2MTemplateEditor(tplIdx){
     var name=nameInp.value.trim();
     if(!name){ nameInp.style.borderColor='var(--r1)'; nameInp.focus(); return; }
     var included=editItems.filter(function(it){return it.included;});
-    if(!included.length){ alert('Please include at least one checklist item.'); return; }
+    if(!included.length){ showToast('Please include at least one checklist item','error'); return; }
     // Save the full enriched item (text, hours, owner, start, end, cat, custom)
     var tplData={name:name,items:included.map(function(it){
       return {
@@ -10337,7 +10369,7 @@ function delG2MRow(product,idx){
 }
 
 function showG2MAddRowForm(){
-  if(!g2mCurrentProduct){alert('Select a product initiative first.');return;}
+  if(!g2mCurrentProduct){showToast('Select a product initiative first','error');return;}
   var form=document.getElementById('g2mAddRowForm');
   form.style.display='block';
   // Populate category dropdown
@@ -10467,7 +10499,7 @@ function _syncG2MToPlanTasks(product, item){
 //   • hours from item.hrs (if set), used to derive duration
 // Opens the Plans overlay focused on the new plan in Gantt view.
 function convertG2MtoPlan(){
-  if(!g2mCurrentProduct){ alert('Select a product first.'); return; }
+  if(!g2mCurrentProduct){ showToast('Select a product first','error'); return; }
   var items = getG2MItems(g2mCurrentProduct);
   if(!items || !items.length){ alert('This checklist has no items to convert.'); return; }
   if(!confirm('Create a new project plan from "'+g2mCurrentProduct+'" with '+items.length+' tasks?')) return;
@@ -10669,10 +10701,10 @@ function removeG2MItemLink(product,itemIdx,linkIdx){
 
 // ── G2M PER-CATEGORY WORD EXPORT ──
 function exportG2MCategoryWord(catName){
-  if(!g2mCurrentProduct){alert('Select a product initiative first.');return;}
+  if(!g2mCurrentProduct){showToast('Select a product initiative first','error');return;}
   var items=getG2MItems(g2mCurrentProduct);
   var ci=items.filter(function(i){return i.cat===catName;});
-  if(!ci.length){alert('No items in this category.');return;}
+  if(!ci.length){showToast('No items in this category','error');return;}
   var catYes=ci.filter(function(i){return i.value==='yes';}).length;
   var catNa=ci.filter(function(i){return i.value==='na';}).length;
   var catApplicable=ci.length-catNa;
@@ -11371,7 +11403,7 @@ function renderModalIntegration(rowName, rowId){
 }
 
 function exportG2MWord(){
-  if(!g2mCurrentProduct){alert('Select a product initiative first.');return;}
+  if(!g2mCurrentProduct){showToast('Select a product initiative first','error');return;}
   var items=getG2MItems(g2mCurrentProduct);
   var yesCount=items.filter(function(i){return i.value==='yes';}).length;
   var naCount=items.filter(function(i){return i.value==='na';}).length;
@@ -13584,7 +13616,7 @@ async function deleteFeedbackItem(id){
 }
 
 function openFeedbackLinkRowPicker(itemId){
-  if(!rows.length){ alert('No roadmap rows yet. Add some initiatives first.'); return; }
+  if(!rows.length){ showToast('No roadmap rows yet — add some initiatives first','error'); return; }
   var html = '<div class="plan-modal-backdrop" onclick="if(event.target===this) closeFeedbackLinkRowPicker()">'+
     '<div class="plan-modal" style="width:480px">'+
       '<div class="plan-modal-header"><h3>Link to roadmap row</h3><button class="plan-modal-close" onclick="closeFeedbackLinkRowPicker()">\u00D7</button></div>'+
@@ -13816,7 +13848,7 @@ function unlinkPlanFromRow(rowId){
 function openLinkRowPicker(){
   var p = getActivePlan();
   if(!p) return;
-  if(!rows.length){ alert('No roadmap rows yet. Add some initiatives first.'); return; }
+  if(!rows.length){ showToast('No roadmap rows yet — add some initiatives first','error'); return; }
   var existing = new Set(p.linkedRowIds || []);
   var available = rows.filter(function(r){ return !existing.has(r.id); });
   if(!available.length){ alert('All roadmap rows are already linked.'); return; }
@@ -14363,7 +14395,7 @@ function bulkShiftDates(){
     okLabel: 'Shift',
     onOk: function(raw){
       var days = parseInt(raw, 10);
-      if(!days || isNaN(days)){ alert('Enter a non-zero whole number.'); return; }
+      if(!days || isNaN(days)){ showToast('Enter a non-zero whole number','error'); return; }
       var doomed = new Set(_planSelectedTaskIds);
       p.tasks.forEach(function(t){
         if(!doomed.has(t.id)) return;
@@ -14807,7 +14839,7 @@ function renderAddTaskBody(){
 // already marked Yes or N/A.
 function importG2MTemplate(productName, openOnly){
   var p = getActivePlan();
-  if(!p){ alert('No active plan.'); return; }
+  if(!p){ showToast('No active plan','error'); return; }
   var checklist = (g2mAllData && g2mAllData[productName]) || null;
   if(!checklist || !checklist.items || !checklist.items.length){
     alert('That checklist is empty.');
@@ -14818,7 +14850,7 @@ function importG2MTemplate(productName, openOnly){
     return it.value !== 'yes' && it.value !== 'na';
   });
   if(!items.length){
-    alert('Nothing to import \u2014 every item in this checklist is already marked Yes or N/A.');
+    showToast('Nothing to import \u2014 every item is marked Yes or N/A','info');
     return;
   }
   if(!confirm('Import '+items.length+' tasks from "'+productName+'"?')) return;
@@ -14869,7 +14901,7 @@ function importG2MTemplate(productName, openOnly){
 // (→ owner placeholder).
 function importCapTemplate(templateId){
   var p = getActivePlan();
-  if(!p){ alert('No active plan.'); return; }
+  if(!p){ showToast('No active plan','error'); return; }
   var tpl = ((capData && capData.templates) || []).find(function(x){ return x.id === templateId; });
   if(!tpl){ alert('Template not found.'); return; }
   if(!tpl.tasks || !tpl.tasks.length){ alert('That template has no tasks.'); return; }
@@ -15328,7 +15360,7 @@ function confirmExcelImport(){
   var d = _excelImportData;
   if(!d) return;
   var p = getActivePlan();
-  if(!p){ alert('No active plan.'); return; }
+  if(!p){ showToast('No active plan','error'); return; }
 
   // Determine column index for each mapped field
   var colOf = {};
@@ -16106,7 +16138,7 @@ function openKrLinkPicker(objId, krId){
   if(!obj) return;
   var kr = (obj.keyResults || []).find(function(k){ return k.id === krId; });
   if(!kr) return;
-  if(!rows.length){ alert('No roadmap initiatives yet. Add some rows first.'); return; }
+  if(!rows.length){ showToast('No roadmap initiatives yet — add some rows first','error'); return; }
   var current = new Set(kr.linkedRowIds || []);
 
   var html = '<div class="plan-modal-backdrop" onclick="if(event.target===this) closeKrLinkPicker()">'+
@@ -18074,7 +18106,7 @@ async function checkSuperAdmin(){
 }
 
 function openAdmin(){
-  if(!_isSuperAdmin){ alert('Access denied. Super Admin role required.'); return; }
+  if(!_isSuperAdmin){ showToast('Access denied — Super Admin only','error'); return; }
   document.getElementById('adminOverlay').classList.add('open');
   renderAdminPage();
   updateNavActive('');  // v1.25.0
@@ -19630,8 +19662,8 @@ function openCalendarScreenshotImport(){
   extractBtn.textContent='Extract Meetings with AI';
   extractBtn.disabled=true; extractBtn.style.opacity='.5';
   extractBtn.onclick=async function(){
-    if(!imageBase64){ alert('Please upload or paste a screenshot first.'); return; }
-    if(!userAIKey||!userAIKey.key){ alert('Please configure an AI API key in Settings first (Gemini recommended for image analysis).'); return; }
+    if(!imageBase64){ showToast('Please upload or paste a screenshot first','error'); return; }
+    if(!userAIKey||!userAIKey.key){ showToast('Configure an AI API key in Settings first','error'); return; }
 
     extractBtn.disabled=true; extractBtn.textContent='Analyzing...';
     resultsDiv.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">🤖 AI is reading your calendar screenshot...</div>';
@@ -21275,7 +21307,7 @@ function _refreshArtRefDocs(){
 
 function _buildNewArtifact(){
   var title = document.getElementById('artNewTitle').value.trim();
-  if (!title) { alert('Please enter a title.'); return null; }
+  if (!title) { showToast('Please enter a title','error'); return null; }
   var type = document.getElementById('artNewType').value;
   var init = document.getElementById('artNewInit').value;
   var desc = document.getElementById('artNewDesc').value.trim();
@@ -21508,7 +21540,7 @@ function addArtLink(id) {
 function confirmArtLink(id) {
   var label = document.getElementById('artLinkLabel_' + id).value.trim();
   var url = document.getElementById('artLinkUrl_' + id).value.trim();
-  if (!url) { alert('Please enter a URL.'); return; }
+  if (!url) { showToast('Please enter a URL','error'); return; }
   var a = artifactsData.find(function(x){ return x.id === id; });
   if (!a) return;
   if (!a.links) a.links = [];
@@ -22102,7 +22134,7 @@ function saveAIKey(){
 async function callAI(prompt, systemPrompt){
   // Reload key from localStorage in case it was just saved
   loadAIKey();
-  if(!userAIKey.key){alert('Please set your AI API key in Settings (⚙️ button).');return null;}
+  if(!userAIKey.key){showToast('Set your AI API key in Settings first','error');return null;}
   console.log('[AI] Calling provider:',userAIKey.provider,'model:',userAIKey.model);  // v1.25.0: dropped key length
   try{
     // Route through main process IPC to bypass CORS
@@ -22127,7 +22159,7 @@ async function callAI(prompt, systemPrompt){
 
 // ── Brand Guide AI Analysis ──
 async function analyseBrandGuide(btnEl){
-  if(!brandGuideData.fileName){alert('Please upload a brand guide document first.');return;}
+  if(!brandGuideData.fileName){showToast('Upload a brand guide document first','error');return;}
 
   // Try to get text — either from saved extractedText or by re-reading the file
   var content=brandGuideData.extractedText||'';
