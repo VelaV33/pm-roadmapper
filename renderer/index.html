@@ -5936,7 +5936,7 @@ function openSettings(){
   cancel.textContent = 'Cancel'; cancel.onclick = function(){ ov.remove(); };
   var save = document.createElement('button'); save.className = 'btn-save';
   save.textContent = 'Save Settings';
-  save.onclick = function(){ saveProfileSettings(); ov.remove(); alert('Settings saved.'); };
+  save.onclick = function(){ saveProfileSettings(); ov.remove(); showToast('Settings saved','success'); };
   footer.appendChild(cancel); footer.appendChild(save);
   modal.appendChild(footer);
   ov.appendChild(modal); document.body.appendChild(ov);
@@ -9456,6 +9456,19 @@ document.addEventListener('keydown', function(e){
   if(e.key==='Escape') closeDds();
 });
 
+// v1.26.3: Mark decorative SVGs aria-hidden so screen readers don't double-
+// announce icons that sit next to a visible text label. Runs once after DOM
+// is ready and again whenever new sidebar/toolbar items are added.
+(function markDecorativeIcons(){
+  function mark(){
+    document.querySelectorAll('.sidebar-item svg, .toolbar-nav a svg, .ico svg, .prio-btn svg').forEach(function(svg){
+      if(!svg.hasAttribute('aria-hidden')) svg.setAttribute('aria-hidden', 'true');
+    });
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mark);
+  else mark();
+})();
+
 // v1.26.0: Focus restoration. We track the element that was focused right
 // before any modal-overlay or plan-modal-backdrop was added to the DOM, and
 // restore focus to it when the modal closes. Implemented as a MutationObserver
@@ -12622,7 +12635,7 @@ function _finalizeSaveAsTemplate(p, name, description){
   };
   planTemplates.push(tpl);
   persistData();
-  alert('Template "' + name + '" saved. You can now use it from any plan via + Add task → Import template → Plan templates.');
+  showToast('Template "' + name + '" saved','success');
 }
 
 function deletePlanTemplate(tplId){
@@ -13546,7 +13559,7 @@ async function updateFeedbackStatus(id, status){
       alert('Failed to update status: '+((res && res.data && res.data.error) || 'unknown'));
     }
   } catch(e){
-    alert('Network error: '+e.message);
+    showToast('Network error: '+e.message,'error');
   }
 }
 
@@ -13566,7 +13579,7 @@ async function deleteFeedbackItem(id){
       alert('Failed to delete: '+((res && res.data && res.data.error) || 'unknown'));
     }
   } catch(e){
-    alert('Network error: '+e.message);
+    showToast('Network error: '+e.message,'error');
   }
 }
 
@@ -13619,7 +13632,7 @@ async function confirmFeedbackLinkRow(itemId){
       alert('Failed to link: '+((res && res.data && res.data.error) || 'unknown'));
     }
   } catch(e){
-    alert('Network error: '+e.message);
+    showToast('Network error: '+e.message,'error');
   }
 }
 
@@ -13637,7 +13650,7 @@ async function unlinkFeedbackFromRow(itemId){
       renderFeedbackInbox();
     }
   } catch(e){
-    alert('Network error: '+e.message);
+    showToast('Network error: '+e.message,'error');
   }
 }
 
@@ -17912,7 +17925,14 @@ function closeAllOverlays(){
 function updateNavActive(tabName){
   var nav=document.getElementById('mainNav');
   if(!nav) return;
-  nav.querySelectorAll('a').forEach(function(a){ a.classList.remove('active'); if(a.textContent.trim()===tabName) a.classList.add('active'); });
+  // v1.26.3: also set aria-current="page" so screen readers and keyboard
+  // users know which top-level section is active.
+  nav.querySelectorAll('a').forEach(function(a){
+    var match = a.textContent.trim() === tabName;
+    a.classList.toggle('active', match);
+    if(match) a.setAttribute('aria-current', 'page');
+    else a.removeAttribute('aria-current');
+  });
 }
 
 function showDashboard(){
@@ -18187,7 +18207,7 @@ async function renderAdminRegisteredUsers(body){
             token:_accessToken||null
           });
           if(res.ok && res.data && res.data.ok){ renderAdminPage(); }
-          else { alert('Failed: '+((res.data&&res.data.error)||'Unknown error')); renderAdminPage(); }
+          else { showToast((res.data&&res.data.error)||'Failed to update role','error'); renderAdminPage(); }
         });
       })(u.id, u.email);
 
@@ -18398,7 +18418,7 @@ async function openTeamMembersModal(capTeam, existingDbTeam){
       ov.remove();
       renderAdminPage();
     } catch(e){
-      alert('Network error: '+e.message);
+      showToast('Network error: '+e.message,'error');
       saveBtn.disabled = false; saveBtn.textContent = 'Save members';
     }
   };
@@ -18418,9 +18438,9 @@ async function _deleteTeam(id, name){
     if(r.ok && r.data && r.data.ok){
       renderAdminPage();
     } else {
-      alert('Failed: '+((r.data&&r.data.error)||'Unknown error'));
+      showToast((r.data&&r.data.error)||'Failed to delete team','error');
     }
-  } catch(e){ alert('Network error: '+e.message); }
+  } catch(e){ showToast('Network error: '+e.message,'error'); }
 }
 
 // Team editor modal — create or edit a team and pick member users from the
@@ -18538,14 +18558,14 @@ async function openTeamEditorModal(team){
           body:{ action:'update-team', id:team.id, name:name, description:descInp.value, color:colorInp.value },
           token:_accessToken||null
         });
-        if(!u.ok || !u.data || !u.data.ok){ alert('Failed: '+((u.data&&u.data.error)||'unknown')); saveBtn.disabled = false; saveBtn.textContent='Save changes'; return; }
+        if(!u.ok || !u.data || !u.data.ok){ showToast((u.data&&u.data.error)||'Failed to save changes','error'); saveBtn.disabled = false; saveBtn.textContent='Save changes'; return; }
       } else {
         var c = await window.electronAPI.supaRequest({
           path:'/functions/v1/admin-api', method:'POST',
           body:{ action:'create-team', name:name, description:descInp.value, color:colorInp.value },
           token:_accessToken||null
         });
-        if(!c.ok || !c.data || !c.data.ok){ alert('Failed: '+((c.data&&c.data.error)||'unknown')); saveBtn.disabled = false; saveBtn.textContent='Create team'; return; }
+        if(!c.ok || !c.data || !c.data.ok){ showToast((c.data&&c.data.error)||'Failed to create team','error'); saveBtn.disabled = false; saveBtn.textContent='Create team'; return; }
         teamId = c.data.id;
       }
       // Set members
@@ -18556,11 +18576,15 @@ async function openTeamEditorModal(team){
         body:{ action:'set-team-members', id:teamId, member_user_ids:memberIds },
         token:_accessToken||null
       });
-      if(!m.ok || !m.data || !m.data.ok){ alert('Team saved but member update failed: '+((m.data&&m.data.error)||'unknown')); }
+      if(!m.ok || !m.data || !m.data.ok){
+        showToast('Team saved but member update failed','error');
+      } else {
+        showToast(team ? 'Team saved' : 'Team created','success');
+      }
       ov.remove();
       renderAdminPage();
     } catch(e){
-      alert('Network error: '+e.message);
+      showToast('Network error: '+e.message,'error');
       saveBtn.disabled = false; saveBtn.textContent = team ? 'Save changes' : 'Create team';
     }
   };
@@ -18902,7 +18926,7 @@ async function deleteContact(contactId){
     } else {
       alert('Failed to delete: ' + ((res && res.data && res.data.error) || 'unknown'));
     }
-  } catch(e){ alert('Network error: ' + e.message); }
+  } catch(e){ showToast('Network error: ' + e.message,'error'); }
 }
 
 async function sendContactInvite(contactId){
@@ -18926,7 +18950,7 @@ async function sendContactInvite(contactId){
     } else {
       alert('Failed to send invite: ' + ((res && res.data && res.data.error) || 'unknown'));
     }
-  } catch(e){ alert('Network error: ' + e.message); }
+  } catch(e){ showToast('Network error: ' + e.message,'error'); }
 }
 
 async function viewUserRoadmap(userId,userEmail){
@@ -21672,7 +21696,7 @@ function openNotificationPrefsModal(){
         if(res.data) _currentUser = res.data;
         ov.remove();
         if(typeof showToast==='function') showToast('Notification preferences saved','success');
-        else alert('Notification preferences saved');
+        else showToast('Notification preferences saved','success');
       } else {
         saveBtn.disabled=false; saveBtn.textContent='Save preferences';
         alert('Failed to save preferences. Please try again.');
@@ -21762,7 +21786,7 @@ function saveAIConfigKey(){
   if(typeof saveAIKey === 'function') saveAIKey();
   else { try { localStorage.setItem('pmr_ai_key', JSON.stringify(userAIKey)); } catch(e){} }
   closeAIConfigModal();
-  alert('AI key saved. The provider is now ' + prov + '.');
+  showToast('AI key saved \u00B7 ' + prov,'success');
 }
 
 // Brand Guide modal — extracted from the old Settings module. Lives inside
