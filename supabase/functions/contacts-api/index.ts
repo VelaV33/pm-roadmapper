@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { handle, verifyRequest, jsonResponse, errorResponse } from "../_shared/auth.ts";
+import { handle, verifyRequest, jsonResponse, errorResponse, rateLimit } from "../_shared/auth.ts";
 
 // Contacts CRUD + active/inactive split + invite flow.
 //
@@ -22,6 +22,18 @@ async function sendInviteEmail(to: string, inviterName: string): Promise<boolean
     console.error("[contacts-api] RESEND_API_KEY not set");
     return false;
   }
+  // v1.26.8: HTML-escape any value that gets interpolated into the email body.
+  // inviterName comes from the inviter's user_metadata, which is user-controlled,
+  // so a hostile display name could otherwise inject HTML into the recipient's
+  // mailbox. Same treatment for `to` since we echo it in the footer line.
+  const safe = (s: string) => String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+  const safeInviter = safe(inviterName);
+  const safeTo = safe(to);
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -36,13 +48,13 @@ async function sendInviteEmail(to: string, inviterName: string): Promise<boolean
               <h2 style="color:#fff;margin:0;font-size:20px">PM Roadmapper</h2>
             </div>
             <h2 style="color:#1a1464">You've been invited</h2>
-            <p style="color:#374151;font-size:15px">${inviterName} has added you as a teammate on their PM Roadmapper workspace and would like you to join.</p>
+            <p style="color:#374151;font-size:15px">${safeInviter} has added you as a teammate on their PM Roadmapper workspace and would like you to join.</p>
             <p style="color:#374151;font-size:14px">PM Roadmapper is a desktop product strategy and roadmap tool. Once you sign up, your assigned tasks will be visible in your account.</p>
             <div style="text-align:center;margin:24px 0">
               <a href="https://github.com/VelaV33/pm-roadmapper/releases/latest" style="display:inline-block;background:#1a1464;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600">Download PM Roadmapper</a>
             </div>
             <p style="color:#9ca3af;font-size:12px;margin-top:32px;border-top:1px solid #e5e7eb;padding-top:16px">
-              Download the app from the link above and sign up with this email address (${to}) to automatically link your account.
+              Download the app from the link above and sign up with this email address (${safeTo}) to automatically link your account.
             </p>
           </div>
         `,
@@ -231,6 +243,10 @@ serve(handle(async (req) => {
   if (action === "send_invite") {
     const { id } = body;
     if (!id) return errorResponse("Missing id", 400);
+    // v1.26.8: rate-limit invite sends per user — protects Resend reputation
+    // and stops accidental loops. 20 invites per hour is more than any human
+    // PM would legitimately send.
+    await rateLimit("send_invite", user.id, 20, 3600);
     // Look up the contact
     const { data: contact, error: lookupErr } = await supabase
       .from("contacts")

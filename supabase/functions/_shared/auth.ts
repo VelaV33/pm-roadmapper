@@ -68,6 +68,44 @@ export async function verifyRequest(req: Request): Promise<VerifiedRequest> {
   return { user: data.user, supabase };
 }
 
+// v1.26.8: Per-user / per-action rate limiter backed by Deno KV. Caller picks
+// the bucket key (e.g. "send_invite") and a quota (max calls per windowSec).
+// Returns null if the call is allowed; throws an errorResponse if exceeded.
+//
+// Storage: ['ratelimit', bucket, userId, windowStart] -> count
+// We bucket by aligned window so old entries fall off naturally and there's no
+// cleanup logic. Each key has a TTL of 2 windows just to be safe.
+let _kv: Deno.Kv | null = null;
+async function _getKv(): Promise<Deno.Kv | null> {
+  try {
+    if (!_kv) _kv = await Deno.openKv();
+    return _kv;
+  } catch (e) {
+    console.warn("[ratelimit] Deno KV unavailable:", (e as Error).message);
+    return null;
+  }
+}
+export async function rateLimit(
+  bucket: string,
+  userId: string,
+  max: number,
+  windowSec: number,
+): Promise<void> {
+  const kv = await _getKv();
+  if (!kv) return;  // fail-open if KV is down — better than blocking everyone
+  const windowStart = Math.floor(Date.now() / 1000 / windowSec) * windowSec;
+  const key = ["ratelimit", bucket, userId, windowStart];
+  const cur = await kv.get<number>(key);
+  const next = (cur.value || 0) + 1;
+  if (next > max) {
+    throw errorResponse(
+      `Rate limit exceeded — try again in ${windowSec} seconds.`,
+      429,
+    );
+  }
+  await kv.set(key, next, { expireIn: windowSec * 2 * 1000 });
+}
+
 // Wrap a handler with consistent error / CORS handling.
 export function handle(
   fn: (req: Request) => Promise<Response>,

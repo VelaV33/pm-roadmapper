@@ -207,10 +207,18 @@ ipcMain.handle('import-backup', async () => {
 
 // ── Print to PDF (native Electron) ────────────────────────────────────────────
 ipcMain.handle('print-pdf', async (_event, htmlContent) => {
-  // Create a hidden window, load the print HTML, then printToPDF
+  // v1.26.8: harden the hidden print window — sandbox + nodeIntegration off,
+  // webSecurity on, no preload. The HTML we load is built in the renderer
+  // and could in theory carry an XSS payload from a row name; this isolates it.
   const printWin = new BrowserWindow({
     show: false,
-    webPreferences: { contextIsolation: true },
+    webPreferences: {
+      contextIsolation: true,
+      sandbox: true,
+      nodeIntegration: false,
+      webSecurity: true,
+      javascript: false,  // no scripts needed for print rendering
+    },
   });
 
   await printWin.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(htmlContent));
