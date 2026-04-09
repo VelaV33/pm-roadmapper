@@ -25,12 +25,22 @@ fs.mkdirSync(publicDir, { recursive: true });
 // 2. Read the renderer.
 let html = fs.readFileSync(rendererSrc, 'utf-8');
 
-// 3. Inject the shim script tag immediately after <head>. Must load BEFORE
-//    any of the renderer's own scripts so window.electronAPI is defined when
-//    the renderer first looks for it.
+// 3. Inject script tags immediately after <head>. Must load BEFORE the
+//    renderer's own scripts so window.electronAPI is defined when the
+//    renderer first looks for it.
+//
+//    Loaded eagerly:
+//      • supabase-js — every method that talks to the DB needs it
+//      • the shim itself
+//
+//    Loaded on-demand by the shim's readFile() (so they don't bloat the
+//    cold-start payload, but are cached after first use):
+//      • pdf.js   — PDF text extraction
+//      • mammoth  — DOCX text extraction
+//      • JSZip    — PPTX XML extraction
 const injection =
   '\n  <!-- web build: electronAPI shim — must load before all renderer scripts -->\n' +
-  '  <script src="/shim/supabase.min.js"></script>\n' +
+  '  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" crossorigin="anonymous"></script>\n' +
   '  <script src="/shim/electronAPI.js"></script>\n';
 
 if (!html.includes('<head>')) {

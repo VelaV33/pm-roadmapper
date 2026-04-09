@@ -26,6 +26,19 @@ talks to the Electron main process via `window.electronAPI` (defined in
      API keys; the proxies are stateless and never store keys.
 4. Supabase Auth handles signup/login. Same `auth.users` table as Electron.
 
+## Auth — no separate web login screen
+
+The renderer already has a complete auth UI at `renderer/index.html:4919-5255`
+(signup, signin, password reset, refresh-token rotation), built on top of
+`electronAPI.supaRequest`. The shim forwards `supaRequest` directly to
+Supabase's Auth REST API, which is CORS-enabled, so **the existing login UI
+works unchanged in the browser**. A web user signs up once, and the same
+account works in Electron.
+
+`saveCredentials` / `loadCredentials` / `clearCredentials` are no-ops in
+the web shim — Supabase JS handles "remember me" via `persistSession` in
+localStorage automatically.
+
 ## Coexistence with Electron
 
 `web/` is **deliberately outside** the Electron `package.json` `build.files`
