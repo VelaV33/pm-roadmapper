@@ -1130,10 +1130,13 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
 .auth-success{background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:6px;padding:8px 12px;font-size:12px;margin-bottom:12px;text-align:left;display:none}
 .auth-success.show{display:block}
 .auth-version{font-size:10px;color:rgba(255,255,255,.3);position:fixed;bottom:16px;right:20px}
-
+/* v1.26.13: skip-to-main link — visually hidden until focused via Tab */
+.skip-to-main{position:fixed;top:-100px;left:8px;z-index:99999;background:var(--accent);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;border:none;cursor:pointer;transition:top .15s}
+.skip-to-main:focus{top:8px;outline:2px solid #fff;outline-offset:2px}
 </style>
 </head>
 <body>
+<a href="#mainContent" class="skip-to-main" onclick="event.preventDefault();var el=document.getElementById('mainContent')||document.getElementById('appContent');if(el){el.setAttribute('tabindex','-1');el.focus();}">Skip to main content</a>
 
 <!-- AUTH OVERLAY -->
 <div id="authOverlay">
@@ -1354,8 +1357,8 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
   </button>
 </nav>
 
-<!-- MAIN CONTENT WRAPPER -->
-<div class="app-content" id="appContent">
+<!-- MAIN CONTENT WRAPPER (v1.26.13: role+aria-label so it announces as a landmark) -->
+<div class="app-content" id="appContent" role="main" aria-label="Main content">
 <!-- ADD SECTION FORM -->
 <div class="page" style="padding-bottom:0;padding-top:12px">
 <div class="add-sec-form" id="addSecForm">
@@ -13845,17 +13848,20 @@ function renderPlanMain(){
   if(nameInp) nameInp.value = p.name || '';
   if(linkedDiv) linkedDiv.innerHTML = renderLinkedRowsChips(p);
 
-  // Sync view toggle UI
-  document.getElementById('planViewListBtn').classList.toggle('active', _planView === 'list');
-  document.getElementById('planViewGanttBtn').classList.toggle('active', _planView === 'gantt');
+  // Sync view toggle UI (v1.26.13: aria-pressed for screen readers)
+  var listBtn = document.getElementById('planViewListBtn');
+  var ganttBtn = document.getElementById('planViewGanttBtn');
   var kanBtn = document.getElementById('planViewKanbanBtn');
-  if(kanBtn) kanBtn.classList.toggle('active', _planView === 'kanban');
+  if(listBtn){ listBtn.classList.toggle('active', _planView === 'list'); listBtn.setAttribute('aria-pressed', _planView === 'list' ? 'true' : 'false'); }
+  if(ganttBtn){ ganttBtn.classList.toggle('active', _planView === 'gantt'); ganttBtn.setAttribute('aria-pressed', _planView === 'gantt' ? 'true' : 'false'); }
+  if(kanBtn){ kanBtn.classList.toggle('active', _planView === 'kanban'); kanBtn.setAttribute('aria-pressed', _planView === 'kanban' ? 'true' : 'false'); }
   // Sync colour toggle pill state
   var colorBtn = document.getElementById('planColorsToggleBtn');
   if(colorBtn){
     colorBtn.style.background = _planStatusColorsEnabled ? '#eef4ff' : '';
     colorBtn.style.borderColor = _planStatusColorsEnabled ? '#c7dbff' : '';
     colorBtn.style.color = _planStatusColorsEnabled ? 'var(--navy)' : '';
+    colorBtn.setAttribute('aria-pressed', _planStatusColorsEnabled ? 'true' : 'false');
   }
 
   if(_planView === 'list') renderPlanListView(p);
