@@ -9184,9 +9184,14 @@ function getCurrentMonthIdx(){
 
 function showToast(msg, kind){
   // v1.26.1: optional 'kind' param: 'success' | 'error' | 'info' (default)
+  // v1.26.11: Toasts get role="status" + aria-live="polite" so screen readers
+  // announce them. Errors use role="alert" for an assertive announcement.
   var color = kind === 'error' ? '#dc2626' : kind === 'success' ? '#16a34a' : 'var(--navy)';
   var t=document.createElement('div');
   t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:'+color+';color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.3);transition:opacity .3s';
+  t.setAttribute('role', kind === 'error' ? 'alert' : 'status');
+  t.setAttribute('aria-live', kind === 'error' ? 'assertive' : 'polite');
+  t.setAttribute('aria-atomic', 'true');
   t.textContent=msg;
   document.body.appendChild(t);
   setTimeout(function(){t.style.opacity='0';setTimeout(function(){t.remove();},300);},2500);
@@ -9194,8 +9199,10 @@ function showToast(msg, kind){
 
 // v1.26.1: tiny loading-state helper. Returns HTML you can drop into a
 // container while an async fetch is in flight.
+// v1.26.11: role=status + aria-live so screen readers announce the loading state.
 function loadingHtml(label){
-  return '<div class="pmr-loading" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px;color:var(--muted);gap:14px"><div class="pmr-spinner"></div><div style="font-size:12px;font-weight:600">'+escHtml(label||'Loading\u2026')+'</div></div>';
+  var lbl = label || 'Loading\u2026';
+  return '<div class="pmr-loading" role="status" aria-live="polite" aria-label="'+escHtml(lbl)+'" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px;color:var(--muted);gap:14px"><div class="pmr-spinner" aria-hidden="true"></div><div style="font-size:12px;font-weight:600">'+escHtml(lbl)+'</div></div>';
 }
 
 // ── Save/Load Analysis Locally ──
@@ -9485,6 +9492,28 @@ document.addEventListener('mousedown', function(e){
     t.remove();
   }
 });
+
+// v1.26.11: tag every newly-added .modal-overlay with role="dialog" +
+// aria-modal="true" so assistive tech treats it as a real modal context.
+// Done via MutationObserver so we don't have to touch every modal helper.
+(function tagModalA11y(){
+  if(!('MutationObserver' in window)) return;
+  function tag(el){
+    if(!el || el.nodeType !== 1) return;
+    if(el.classList && el.classList.contains('modal-overlay')){
+      if(!el.hasAttribute('role')) el.setAttribute('role', 'dialog');
+      if(!el.hasAttribute('aria-modal')) el.setAttribute('aria-modal', 'true');
+    }
+  }
+  var mo = new MutationObserver(function(mutations){
+    mutations.forEach(function(m){
+      m.addedNodes.forEach(tag);
+    });
+  });
+  mo.observe(document.body, { childList: true, subtree: false });
+  // Initial pass for static modals already in the DOM
+  document.querySelectorAll('.modal-overlay').forEach(tag);
+})();
 
 // v1.26.5: Modal focus trap. When the user is inside an open modal and
 // presses Tab/Shift-Tab, focus loops within the modal's focusable elements
