@@ -6493,16 +6493,27 @@ function openProfile(){
   var foot=document.createElement('div');
   foot.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-top:1px solid var(--border);background:#fafbff;border-radius:0 0 16px 16px';
 
-  // TODO(privacy-policy): once a real Roadmap OS privacy policy is
-  // published (likely at https://pmroadmapper.com/privacy), reinstate
-  // the link below pointing at it. The previous version of this code
-  // pointed at https://www.anthropic.com/privacy as a placeholder, which
-  // shipped to production — that's why this link is currently absent.
-  // Use a left-aligned spacer so the right-side button cluster keeps
-  // its layout in the meantime.
-  var privacySpacer=document.createElement('span');
-  privacySpacer.style.cssText='font-size:11px;color:var(--muted);';
-  foot.appendChild(privacySpacer);
+  // v1.27.6: real Privacy Policy lives at app.pmroadmapper.com/privacy.html
+  // (built from web/static/privacy.html). Absolute URL so it works from
+  // both the web (where window.location.origin is app.pmroadmapper.com)
+  // and from Electron (where window.location.protocol is file://).
+  var privacyLink=document.createElement('a');
+  privacyLink.href='https://app.pmroadmapper.com/privacy.html';
+  privacyLink.target='_blank';
+  privacyLink.rel='noopener noreferrer';
+  privacyLink.style.cssText='font-size:11px;color:var(--muted);text-decoration:none;';
+  privacyLink.onmouseover=function(){ privacyLink.style.color='var(--accent)'; };
+  privacyLink.onmouseout=function(){ privacyLink.style.color='var(--muted)'; };
+  privacyLink.textContent='Privacy Policy';
+  // In Electron route through openExternal so it lands in the user's
+  // default browser; in the web build the regular target=_blank works.
+  privacyLink.onclick=function(e){
+    if(window.location.protocol === 'file:' && window.electronAPI && window.electronAPI.openExternal){
+      e.preventDefault();
+      window.electronAPI.openExternal(privacyLink.href);
+    }
+  };
+  foot.appendChild(privacyLink);
 
   var rightBtns=document.createElement('div'); rightBtns.style.cssText='display:flex;gap:8px;align-items:center';
 
