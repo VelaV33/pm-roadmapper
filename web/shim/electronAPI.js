@@ -488,6 +488,12 @@
     saveCredentials:  async (_opts) => ({ ok: true }),
     loadCredentials:  async ()      => ({ ok: true, found: false }),
     clearCredentials: async ()      => ({ ok: true }),
+
+    // ── OAuth deep-link callback (Electron only) ────────────────────────────
+    // No-op in the browser. The web version handles OAuth via URL fragment in
+    // checkOAuthRedirect() instead — it never needs to forward the URL across
+    // a process boundary.
+    onOAuthCallback: (_cb) => {},
   };
 
   console.log('[electronAPI shim] ready — running in browser mode');

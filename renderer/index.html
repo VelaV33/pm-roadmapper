@@ -5084,18 +5084,25 @@ _supabase = {
     },
     signInWithOAuth: async function(opts){
       // Where Supabase should redirect after the OAuth provider returns the user.
-      // Web: back to the current origin so the URL fragment with the token lands on
-      //      the page (checkOAuthRedirect picks it up on load).
-      // Electron: same target — but the user signs in via their default browser.
-      //   Phase 2 TODO: register a pmroadmapper:// custom protocol so the desktop
-      //   app receives the session directly.
+      //
+      //   Web (https): back to the current page. checkOAuthRedirect parses the
+      //     fragment and signs the user in.
+      //
+      //   Electron (file:): the user signs in in their default browser, so we
+      //     send them to https://app.pmroadmapper.com/?to=desktop. The web
+      //     page detects the to=desktop query param, builds a custom-scheme
+      //     URL pmroadmapper://oauth-callback#access_token=..., and triggers
+      //     it. The OS routes the URL back to the desktop app via the
+      //     protocol handler registered in main.js, and main.js forwards the
+      //     tokens to this renderer via IPC (oauth-callback). The renderer
+      //     parses the fragment and calls _saveSession.
+      var isElectron = window.location.protocol === 'file:';
       var redirectTo = (opts.options && opts.options.redirectTo) ||
-                       (window.location.protocol === 'file:'
-                          ? 'https://app.pmroadmapper.com'
+                       (isElectron
+                          ? 'https://app.pmroadmapper.com/?to=desktop'
                           : (window.location.origin + window.location.pathname));
       var url = SUPABASE_URL+'/auth/v1/authorize?provider='+opts.provider+
                 '&redirect_to='+encodeURIComponent(redirectTo);
-      var isElectron = window.location.protocol === 'file:';
       if(isElectron){
         // Open in user's default browser via main.js setWindowOpenHandler.
         try{ window.open(url, '_blank'); }catch(e){ window.location.href = url; }
@@ -5162,32 +5169,34 @@ function hidePassword(inputId, btn){
 // v1.27.2: After an OAuth provider (Google / Microsoft) returns the user,
 // Supabase redirects back to our site_url with the access + refresh tokens
 // in the URL fragment: #access_token=...&refresh_token=...&expires_in=...
-// Detect that, fetch the user, save as a session, and clean up the URL.
+//
+// v1.27.3: This same code path also handles the desktop OAuth handoff. When
+// the desktop app initiates an OAuth flow, signInWithOAuth sends the user to
+// https://app.pmroadmapper.com/?to=desktop. After Supabase redirects back to
+// that URL, this function detects the `?to=desktop` query param and BRIDGES
+// the session to the desktop app via the pmroadmapper:// custom protocol —
+// in addition to setting the session locally as a fallback.
+//
 // Returns true if a session was successfully restored from the fragment.
-async function checkOAuthRedirect(){
-  if(!window.location.hash || window.location.hash.indexOf('access_token=') === -1) return false;
+async function _processOAuthFragment(fragment){
+  if(!fragment) return false;
+  if(fragment[0] === '#') fragment = fragment.substring(1);
   try {
-    var hash = window.location.hash.substring(1);
-    var params = new URLSearchParams(hash);
+    var params = new URLSearchParams(fragment);
     var access_token  = params.get('access_token');
     var refresh_token = params.get('refresh_token');
     var expires_in    = parseInt(params.get('expires_in') || '3600', 10);
     var oauth_error   = params.get('error_description') || params.get('error');
     if(oauth_error){
       console.warn('[oauth] provider error:', oauth_error);
-      // Clean the URL so the error doesn't stick on refresh.
-      history.replaceState(null, '', window.location.pathname + window.location.search);
-      showAuthError('Sign-in cancelled or failed: ' + oauth_error);
+      try { showAuthError('Sign-in cancelled or failed: ' + oauth_error); } catch(_){}
       return false;
     }
     if(!access_token) return false;
 
-    // Look up the user with the access token. /auth/v1/user requires a valid
-    // bearer token; if it fails the token was bogus.
     var r = await _sbFetch('/auth/v1/user', 'GET', null, access_token);
     if(!r.ok || !r.data || !r.data.id){
       console.warn('[oauth] failed to fetch user from token, status', r.status);
-      history.replaceState(null, '', window.location.pathname + window.location.search);
       return false;
     }
 
@@ -5200,14 +5209,79 @@ async function checkOAuthRedirect(){
     _accessToken  = access_token;
     _refreshToken = refresh_token;
     _currentUser  = r.data;
-
-    // Clean the URL so the token isn't visible / replayable.
-    history.replaceState(null, '', window.location.pathname + window.location.search);
     return true;
   } catch(e){
-    console.warn('[oauth] checkOAuthRedirect failed:', e && e.message);
+    console.warn('[oauth] _processOAuthFragment failed:', e && e.message);
     return false;
   }
+}
+
+async function checkOAuthRedirect(){
+  if(!window.location.hash || window.location.hash.indexOf('access_token=') === -1) return false;
+
+  // ── Desktop handoff path ────────────────────────────────────────────────
+  // If ?to=desktop is in the query string, we're acting as a bridge: hand
+  // the tokens off to the desktop app via the pmroadmapper:// custom
+  // protocol, then ALSO sign the user in here as a fallback (so if the OS
+  // can't open the desktop app, the web at least works).
+  var qs = new URLSearchParams(window.location.search);
+  if (qs.get('to') === 'desktop') {
+    var raw = window.location.hash; // includes the leading '#'
+    var deepLink = 'pmroadmapper://oauth-callback' + raw;
+    try {
+      // Show a tiny visible indicator since we're about to navigate away.
+      try {
+        var msg = document.createElement('div');
+        msg.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0a1228;color:#fff;font-family:Inter,system-ui,sans-serif;font-size:14px;z-index:99999;flex-direction:column;gap:18px;text-align:center;padding:24px';
+        msg.innerHTML = '<div style="font-size:18px;font-weight:700">Returning to PM Roadmapper desktop…</div>' +
+                        '<div style="color:rgba(255,255,255,.6);max-width:380px;line-height:1.5">If your browser asks "Open PM Roadmapper?", click <strong>Open</strong>.<br>If nothing happens after a few seconds, the desktop app may not be installed — you can still use the web app from this page.</div>' +
+                        '<button id="_oauthFallbackBtn" style="margin-top:8px;padding:10px 18px;background:#34d399;color:#0a1228;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit">Continue in browser instead</button>';
+        document.body.appendChild(msg);
+        document.getElementById('_oauthFallbackBtn').onclick = function(){
+          // User wants to use the web app. Sign in here and dismiss the overlay.
+          _processOAuthFragment(raw).then(function(ok){
+            history.replaceState(null, '', window.location.pathname);
+            msg.remove();
+            if(ok && _currentUser) onAuthSuccess(_currentUser);
+          });
+        };
+      } catch(_){}
+      // Trigger the deep link.
+      window.location.href = deepLink;
+    } catch(e){
+      console.warn('[oauth] desktop handoff trigger failed:', e && e.message);
+    }
+    return false; // do NOT auto-sign-in on the web side; user picks via the bridge UI
+  }
+
+  // ── Standard web sign-in path ───────────────────────────────────────────
+  var ok = await _processOAuthFragment(window.location.hash);
+  // Clean the URL so the token isn't visible / replayable.
+  history.replaceState(null, '', window.location.pathname + window.location.search);
+  return ok;
+}
+
+// v1.27.3: Receive OAuth tokens forwarded from main.js via the
+// pmroadmapper:// custom protocol. Only fires in the Electron build —
+// the web shim's onOAuthCallback is a no-op stub.
+if (window.electronAPI && typeof window.electronAPI.onOAuthCallback === 'function') {
+  window.electronAPI.onOAuthCallback(async function(deepLinkUrl){
+    try {
+      var hashIdx = deepLinkUrl.indexOf('#');
+      if (hashIdx === -1) {
+        console.warn('[oauth] deep link has no fragment:', deepLinkUrl);
+        return;
+      }
+      var fragment = deepLinkUrl.substring(hashIdx + 1);
+      var ok = await _processOAuthFragment(fragment);
+      if (ok && _currentUser) {
+        // Mirror the password sign-in path: hide auth overlay + boot the app.
+        try { onAuthSuccess(_currentUser); } catch(e){ console.warn('[oauth] onAuthSuccess threw:', e && e.message); }
+      }
+    } catch(e){
+      console.warn('[oauth] deep link handler failed:', e && e.message);
+    }
+  });
 }
 
 async function checkExistingSession(){

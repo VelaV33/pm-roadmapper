@@ -6,6 +6,78 @@ let pdfParse, mammoth;
 try { pdfParse = require('pdf-parse-new'); } catch(e) { try { pdfParse = require('pdf-parse'); } catch(e2) { console.warn('pdf-parse not available:', e2.message); } }
 try { mammoth = require('mammoth'); } catch(e) { console.warn('mammoth not available:', e.message); }
 
+// ── Custom protocol (pmroadmapper://) for OAuth deep-link handoff ────────────
+// v1.27.3: When the desktop user signs in with Google/Microsoft, the OAuth
+// flow runs in their default browser. After Supabase completes auth, the web
+// page at app.pmroadmapper.com builds a pmroadmapper://oauth-callback#... URL
+// and triggers it; the OS routes it back here, and we forward the tokens to
+// the renderer via IPC. See checkOAuthRedirect() and onOAuthCallback() in
+// renderer/index.html for the other half.
+//
+// On Windows the protocol must be registered BEFORE app.whenReady() and is
+// stored per-user under HKCU\Software\Classes\pmroadmapper. Linux uses
+// .desktop files. macOS uses Info.plist (handled at build time by
+// electron-builder, but the runtime registration is also needed for dev).
+if (process.defaultApp) {
+  // Running via `electron .` in dev — pass our script path so the OS can
+  // re-launch us correctly when the deep link arrives.
+  if (process.argv.length >= 2) {
+    app.setAsDefaultProtocolClient('pmroadmapper', process.execPath, [path.resolve(process.argv[1])]);
+  }
+} else {
+  app.setAsDefaultProtocolClient('pmroadmapper');
+}
+
+// Single-instance lock — without this, opening a deep link launches a SECOND
+// copy of the app instead of routing to the existing one. With the lock, the
+// 2nd launch immediately quits and fires 'second-instance' on the original.
+const _gotTheLock = app.requestSingleInstanceLock();
+if (!_gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (_event, commandLine /*, workingDirectory */) => {
+    // Bring the original window to the foreground.
+    if (win) {
+      if (win.isMinimized()) win.restore();
+      win.focus();
+    }
+    // Find the deep-link URL in the launch arguments and forward it.
+    const deepLink = commandLine.find((arg) => typeof arg === 'string' && arg.startsWith('pmroadmapper://'));
+    if (deepLink) handleDeepLink(deepLink);
+  });
+
+  // macOS only: deep links arrive via 'open-url' instead of CLI args.
+  app.on('open-url', (event, url) => {
+    event.preventDefault();
+    handleDeepLink(url);
+  });
+}
+
+// Forward a deep-link URL to the renderer. Idempotent — safe to call multiple
+// times. The renderer parses the URL and sets the Supabase session.
+function handleDeepLink(url) {
+  if (!url || typeof url !== 'string') return;
+  if (!url.startsWith('pmroadmapper://')) return;
+  // Wait until the window exists, then send.
+  const sendNow = () => { try { win.webContents.send('oauth-callback', url); } catch (_) {} };
+  if (win && win.webContents) {
+    sendNow();
+  } else {
+    // App was launched cold by the deep link — store and send once the window is ready.
+    app.once('browser-window-created', () => setTimeout(sendNow, 800));
+  }
+}
+
+// Also handle the case where the cold-start launch arg IS the deep link
+// (Windows/Linux). app.argv on cold start includes any URL the OS handed us.
+const _coldStartDeepLink = process.argv.find((arg) => typeof arg === 'string' && arg.startsWith('pmroadmapper://'));
+if (_coldStartDeepLink) {
+  // Defer until the window has loaded, otherwise the IPC send is dropped.
+  app.whenReady().then(() => {
+    setTimeout(() => handleDeepLink(_coldStartDeepLink), 1500);
+  });
+}
+
 // ── Data file path (stored in OS user data dir, scoped by user ID) ───────────
 let _activeUserId = null;
 
