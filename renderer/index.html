@@ -6201,15 +6201,16 @@ function openProfile(){
   var foot=document.createElement('div');
   foot.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-top:1px solid var(--border);background:#fafbff;border-radius:0 0 16px 16px';
 
-  var privacyLink=document.createElement('a');
-  privacyLink.href='https://www.anthropic.com/privacy'; // placeholder — swap for your own policy URL
-  privacyLink.target='_blank';
-  privacyLink.rel='noopener noreferrer';
-  privacyLink.style.cssText='font-size:11px;color:var(--muted);text-decoration:none;';
-  privacyLink.onmouseover=function(){ privacyLink.style.color='var(--accent)'; };
-  privacyLink.onmouseout=function(){ privacyLink.style.color='var(--muted)'; };
-  privacyLink.textContent='Privacy Policy';
-  foot.appendChild(privacyLink);
+  // TODO(privacy-policy): once a real PM Roadmapper privacy policy is
+  // published (likely at https://pmroadmapper.com/privacy), reinstate
+  // the link below pointing at it. The previous version of this code
+  // pointed at https://www.anthropic.com/privacy as a placeholder, which
+  // shipped to production — that's why this link is currently absent.
+  // Use a left-aligned spacer so the right-side button cluster keeps
+  // its layout in the meantime.
+  var privacySpacer=document.createElement('span');
+  privacySpacer.style.cssText='font-size:11px;color:var(--muted);';
+  foot.appendChild(privacySpacer);
 
   var rightBtns=document.createElement('div'); rightBtns.style.cssText='display:flex;gap:8px;align-items:center';
 
