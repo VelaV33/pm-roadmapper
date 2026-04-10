@@ -1,4 +1,4 @@
-# PM Roadmapper
+# Roadmap OS
 
 Product strategy and roadmap tool. Ships as both a desktop app (Electron)
 and a web app, sharing one Supabase backend so a single user account works

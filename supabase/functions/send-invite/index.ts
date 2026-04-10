@@ -39,7 +39,7 @@ serve(handle(async (req) => {
   }
 
   const RESEND_KEY = Deno.env.get("RESEND_API_KEY");
-  const FROM_EMAIL = Deno.env.get("FROM_EMAIL") || "PM Roadmapper <onboarding@resend.dev>";
+  const FROM_EMAIL = Deno.env.get("FROM_EMAIL") || "Roadmap OS <onboarding@resend.dev>";
 
   // 1. Save share record (owner_id derived from JWT — cannot be spoofed)
   const { error: shareErr } = await supabase
@@ -79,11 +79,11 @@ serve(handle(async (req) => {
     body: JSON.stringify({
       from: FROM_EMAIL,
       to: [recipient_email],
-      subject: `${owner_name} shared a roadmap with you — PM Roadmapper`,
+      subject: `${owner_name} shared a roadmap with you — Roadmap OS`,
       html: `
         <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px">
           <div style="background:#1a1464;border-radius:10px;padding:20px 24px;margin-bottom:24px">
-            <h2 style="color:#fff;margin:0;font-size:20px">PM Roadmapper</h2>
+            <h2 style="color:#fff;margin:0;font-size:20px">Roadmap OS</h2>
           </div>
           <h2 style="color:#1a1464">You've been invited</h2>
           <p style="color:#374151;font-size:15px"><strong>${safeOwner}</strong> has shared their roadmap with you:</p>
@@ -91,13 +91,13 @@ serve(handle(async (req) => {
             <p style="margin:0;font-size:11px;color:#7b8db0;text-transform:uppercase;letter-spacing:.08em">Shared roadmap</p>
             <p style="margin:6px 0 0;font-size:16px;font-weight:700;color:#1a1464">${safeRoadmap}</p>
           </div>
-          <p style="color:#374151;font-size:14px">Log in to PM Roadmapper to view it — the roadmap will appear as a tab when you sign in.</p>
+          <p style="color:#374151;font-size:14px">Log in to Roadmap OS to view it — the roadmap will appear as a tab when you sign in.</p>
           <div style="text-align:center;margin:24px 0">
-            <a href="https://github.com/VelaV33/pm-roadmapper/releases/latest" style="display:inline-block;background:#1a1464;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600">Download PM Roadmapper</a>
+            <a href="https://github.com/VelaV33/pm-roadmapper/releases/latest" style="display:inline-block;background:#1a1464;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600">Download Roadmap OS</a>
           </div>
           <p style="color:#9ca3af;font-size:12px;margin-top:32px;border-top:1px solid #e5e7eb;padding-top:16px">
             This invite was sent by ${safeOwner} (${safeOwnerEmail}).<br>
-            If you don't have PM Roadmapper yet, download it from the link above and create a free account.<br>
+            If you don't have Roadmap OS yet, download it from the link above and create a free account.<br>
             If you weren't expecting this, you can safely ignore it.
           </p>
         </div>

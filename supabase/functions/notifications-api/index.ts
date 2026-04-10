@@ -20,7 +20,7 @@ import { handle, verifyRequest, jsonResponse, errorResponse, rateLimit } from ".
 // the recipient's RLS).
 
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM_EMAIL = Deno.env.get("FROM_EMAIL") || "PM Roadmapper <onboarding@resend.dev>";
+const FROM_EMAIL = Deno.env.get("FROM_EMAIL") || "Roadmap OS <onboarding@resend.dev>";
 
 async function sendNotificationEmail(opts: {
   to: string;
@@ -39,13 +39,13 @@ async function sendNotificationEmail(opts: {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
-  const ctaLabel = "Open PM Roadmapper";
-  const ctaUrl = "https://github.com/VelaV33/pm-roadmapper/releases/latest";
+  const ctaLabel = "Open Roadmap OS";
+  const ctaUrl = "https://app.pmroadmapper.com";
 
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;color:#374151">
       <div style="background:#1a1464;border-radius:10px;padding:18px 24px;margin-bottom:24px">
-        <h2 style="color:#fff;margin:0;font-size:18px;font-weight:800">PM Roadmapper</h2>
+        <h2 style="color:#fff;margin:0;font-size:18px;font-weight:800">Roadmap OS</h2>
       </div>
       <h2 style="color:#1a1464;font-size:22px;font-weight:800;margin:0 0 14px">${safe(opts.title)}</h2>
       ${opts.body ? `<p style="font-size:15px;line-height:1.55;color:#374151;margin:0 0 18px">${safe(opts.body)}</p>` : ""}
@@ -54,11 +54,11 @@ async function sendNotificationEmail(opts: {
         <a href="${ctaUrl}" style="display:inline-block;background:#1a1464;color:#fff;text-decoration:none;padding:12px 28px;border-radius:9999px;font-size:14px;font-weight:700">${ctaLabel}</a>
       </div>
       <p style="color:#9ca3af;font-size:11px;margin-top:32px;border-top:1px solid #e5e7eb;padding-top:16px">
-        You're receiving this because you're a teammate on PM Roadmapper. Open the app to see all your assigned items, and to manage notification preferences.
+        You're receiving this because you're a teammate on Roadmap OS. Open the app to see all your assigned items, and to manage notification preferences.
       </p>
     </div>
   `;
-  const text = `${opts.title}\n${opts.body || ""}\nFrom ${opts.fromName}\n\nOpen PM Roadmapper: ${ctaUrl}`;
+  const text = `${opts.title}\n${opts.body || ""}\nFrom ${opts.fromName}\n\nOpen Roadmap OS: ${ctaUrl}`;
 
   try {
     const res = await fetch("https://api.resend.com/emails", {
