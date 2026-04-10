@@ -192,15 +192,22 @@ serve(async (req) => {
     if (authErr || !user) return errResp(401, "Invalid token");
     log(`Auth OK — user: ${user.email}`);
 
-    // Premium check
-    const PREMIUM_EMAILS = ["velasabelo.com@gmail.com"];
-    let isPremium = PREMIUM_EMAILS.includes((user.email || "").toLowerCase());
-    if (!isPremium) {
-      const { data: profile } = await supabase.from("user_profiles").select("tier,tier_expires_at").eq("user_id", user.id).single();
-      isPremium = !!(profile?.tier === "premium" && (!profile.tier_expires_at || new Date(profile.tier_expires_at) > new Date()));
+    // AI gate — Pro and legacy Premium tiers can use Competitive Analysis.
+    // Standard ($17/mo) does NOT include AI features.
+    const ADMIN_EMAILS = ["velasabelo.com@gmail.com"];
+    const AI_TIERS = new Set(["pro", "premium"]);
+    let hasAI = ADMIN_EMAILS.includes((user.email || "").toLowerCase());
+    if (!hasAI) {
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("tier,tier_expires_at")
+        .eq("user_id", user.id)
+        .single();
+      const notExpired = !profile?.tier_expires_at || new Date(profile.tier_expires_at) > new Date();
+      hasAI = !!(profile && AI_TIERS.has(profile.tier) && notExpired);
     }
-    if (!isPremium) return errResp(403, "Premium subscription required");
-    log("Premium OK");
+    if (!hasAI) return errResp(403, "Pro subscription required for AI features");
+    log("AI access OK");
 
     // Profile parse mode — use guidance as the document text, skip normal flow
     if (isProfileParse && guidance) {

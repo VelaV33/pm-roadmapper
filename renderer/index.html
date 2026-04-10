@@ -8179,23 +8179,32 @@ function toggleVoice(targetInput,btn){
   showToast('Listening... speak now');
 }
 
-// ── PREMIUM TIER ─────────────────────────────────────────────────────────────
+// ── SUBSCRIPTION TIER ────────────────────────────────────────────────────────
+// Tiers: 'basic' (no subscription), 'standard' ($17/mo, no AI),
+// 'pro' ($25/mo, includes AI), 'premium' (legacy alias for pro).
 var _userTier='basic';
 
-// Premium admin emails — these users always get premium access
-var PREMIUM_EMAILS=['velasabelo.com@gmail.com'];
+// Admin override — these users always get pro-equivalent access
+var ADMIN_EMAILS=['velasabelo.com@gmail.com'];
+
+// Tiers that include AI features (Competitive Analysis, AI Artifacts, etc).
+var AI_TIERS=['pro','premium'];
+// Tiers that count as "paid" for any feature gate.
+var PAID_TIERS=['standard','pro','premium'];
 
 async function loadUserTier(){
   if(!_currentUser||!_accessToken){_userTier='basic';return;}
-  // Check admin whitelist first
-  if(_currentUser.email&&PREMIUM_EMAILS.indexOf(_currentUser.email.toLowerCase())>=0){
-    _userTier='premium';return;
+  // Admin override
+  if(_currentUser.email&&ADMIN_EMAILS.indexOf(_currentUser.email.toLowerCase())>=0){
+    _userTier='pro';return;
   }
   try{
     var r=await _dbReq('/rest/v1/user_profiles?select=tier,tier_expires_at&user_id=eq.'+_currentUser.id);
     if(r.ok&&Array.isArray(r.data)&&r.data.length>0){
       var p=r.data[0];
-      if(p.tier==='premium'&&p.tier_expires_at&&new Date(p.tier_expires_at)<new Date()){_userTier='basic';}
+      var isPaid=PAID_TIERS.indexOf(p.tier)>=0;
+      var expired=p.tier_expires_at && new Date(p.tier_expires_at)<new Date();
+      if(isPaid && expired){_userTier='basic';}
       else{_userTier=p.tier||'basic';}
     } else {
       // Create basic profile row
@@ -8204,17 +8213,23 @@ async function loadUserTier(){
     }
   }catch(e){_userTier='basic';}
 }
-function isPremium(){return _userTier==='premium';}
+// True iff the user has any active paid subscription (Standard, Pro, Premium).
+function isPaid(){return PAID_TIERS.indexOf(_userTier)>=0;}
+// True iff the user has access to AI features (Pro tier or legacy Premium).
+function hasAI(){return AI_TIERS.indexOf(_userTier)>=0;}
+// Legacy alias kept so existing call sites keep working.
+function isPremium(){return hasAI();}
 
 function showPremiumGate(container){
   container.innerHTML='';
   var g=document.createElement('div');g.className='premium-gate';
+  var msg = isPaid()
+    ? 'AI-powered Competitive Analysis is a Pro feature. Upgrade from Standard ($17/mo) to Pro ($25/mo) to unlock intelligent market research, SWOT analysis, threat scoring, and one-click roadmap initiative creation.'
+    : 'AI-powered Competitive Analysis is available on the Pro plan ($25/mo). Subscribe to unlock intelligent market research, SWOT analysis, threat scoring, and one-click roadmap initiative creation — all powered by Claude AI.';
   g.innerHTML='<div style="font-size:48px;margin-bottom:16px">🔒</div>'+
-    '<h3>Premium Feature</h3>'+
-    '<p>AI-powered Competitive Analysis is available for Premium users.<br>'+
-    'Upgrade to unlock intelligent market research, SWOT analysis, threat scoring,<br>'+
-    'and one-click roadmap initiative creation — all powered by Claude AI.</p>'+
-    '<button class="btn green" style="padding:10px 28px;font-size:14px;border-radius:8px" onclick="showToast(\'Contact your administrator to upgrade\',\'info\')">Learn About Premium</button>';
+    '<h3>Pro Feature</h3>'+
+    '<p>'+msg+'</p>'+
+    '<a class="btn green" style="padding:10px 28px;font-size:14px;border-radius:8px;text-decoration:none;display:inline-block" href="https://paystack.shop/pay/roadmapos" target="_blank" rel="noopener">Upgrade to Pro</a>';
   container.appendChild(g);
 }
 
@@ -8289,7 +8304,7 @@ function openCompetitiveAnalysis(){
 
   var body=document.createElement('div');body.className='modal-body';
 
-  if(!isPremium()){
+  if(!hasAI()){
     showPremiumGate(body);
     modal.appendChild(body);ov.appendChild(modal);document.body.appendChild(ov);return;
   }
@@ -22533,6 +22548,8 @@ function saveAIKey(){
 
 // ── AI API Call Helper ──
 async function callAI(prompt, systemPrompt){
+  // Pro-only gate (defense in depth — feature-level UI gates show nicer copy).
+  if(!hasAI()){showToast('AI features are available on the Pro plan ($25/mo). Upgrade to unlock.','warning');return null;}
   // Reload key from localStorage in case it was just saved
   loadAIKey();
   if(!userAIKey.key){showToast('Set your AI API key in Settings first','error');return null;}
@@ -22694,6 +22711,11 @@ function removeArtTemplate(typeId){
 
 // ── AI Artifact Generation ──
 async function generateArtifact(artId){
+  // Pro-only: AI Artifact generation. Standard subscribers see an upgrade nudge.
+  if(!hasAI()){
+    showToast('AI Artifact generation is a Pro feature. Upgrade to Pro ($25/mo) to unlock.','warning');
+    return;
+  }
   var art=artifactsData.find(function(a){return a.id===artId;});
   if(!art){return;}
   var formatEl=document.getElementById('artGenFormat_'+artId);
