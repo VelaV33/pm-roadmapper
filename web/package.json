@@ -1,0 +1,18 @@
+{
+  "name": "pm-roadmapper-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Web version of PM Roadmapper — runs the Electron renderer in the browser via an electronAPI shim",
+  "scripts": {
+    "build": "node scripts/build.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
+    "jszip": "^3.10.1",
+    "mammoth": "^1.6.0",
+    "pdfjs-dist": "^3.11.174"
+  },
+  "devDependencies": {
+    "vercel": "^39.0.0"
+  }
+}
