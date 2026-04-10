@@ -22,4 +22,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveCredentials:  (opts)     => ipcRenderer.invoke('credentials:save', opts),
   loadCredentials:  ()         => ipcRenderer.invoke('credentials:load'),
   clearCredentials: ()         => ipcRenderer.invoke('credentials:clear'),
+  // v1.27.3: OAuth deep-link handoff. main.js receives a pmroadmapper://...
+  // URL from the OS and forwards it here. The renderer parses the URL
+  // fragment to recover the Supabase session.
+  onOAuthCallback:  (cb)       => ipcRenderer.on('oauth-callback', (_e, url) => cb(url)),
 });
