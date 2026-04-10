@@ -37,3 +37,4 @@ dist2/
 # Supabase CLI local state — should never be committed
 supabase/.temp/
 supabase/.branches/
+.vercel

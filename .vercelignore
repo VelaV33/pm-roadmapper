@@ -1,0 +1,50 @@
+# Vercel-specific ignore at the repo root.
+#
+# The web build is the only thing Vercel needs to see from this repo.
+# Everything Electron-related is huge and useless on Vercel:
+#   • dist/   ~3 GB of every Electron installer ever built
+#   • node_modules/   500 MB of Electron toolchain
+#   • assets/, main.js, preload.js   Electron-only runtime files
+#
+# Vercel CLI does NOT reliably respect .gitignore for monorepo deploys
+# (verified by a 3 GB upload + Internal Server Error before this file
+# existed). Mirror the relevant gitignore exclusions here.
+
+# Heavy excluded by .gitignore — re-exclude here for Vercel
+node_modules
+dist
+out
+dist2
+.git
+.github
+.claude
+.vercel
+*.log
+.env
+.env.local
+
+# Electron-only runtime files Vercel doesn't execute
+# (package.json + package-lock.json are kept — Vercel reads them for
+# project metadata even though our installCommand cd's into web/)
+main.js
+preload.js
+assets
+PM_Roadmapper_User_Guide.md
+ROADMAP_OS_USER_GUIDE.md
+README.md
+public
+
+# Supabase — deployed separately via supabase CLI / MCP
+supabase
+
+# Web build artifacts — Vercel builds fresh
+web/node_modules
+web/public
+web/.vercel
+
+# Editor / OS clutter
+.DS_Store
+Thumbs.db
+.vscode
+.idea
+*.swp
