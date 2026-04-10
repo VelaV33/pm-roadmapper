@@ -997,12 +997,78 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
 
 
 /* ── AUTH OVERLAY ── */
+/* ── AUTH OVERLAY: 2-column split (hero left, form right) ─────────────── */
 #authOverlay{
-  position:fixed;inset:0;background:linear-gradient(135deg,#001b3d 0%,#00468b 50%,#001b3d 100%);
-  z-index:9999;display:flex;align-items:center;justify-content:center;
+  position:fixed;inset:0;
+  z-index:9999;
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(420px,540px);
   font-family:'Inter',system-ui,sans-serif;
+  overflow-y:auto;
+  background:#0a1228;
 }
 #authOverlay.hidden{display:none}
+
+@media (max-width: 960px){
+  #authOverlay{grid-template-columns:1fr}
+  .auth-hero{display:none !important}
+}
+
+.auth-hero{
+  position:relative;overflow:hidden;
+  padding:48px 56px;
+  display:flex;flex-direction:column;justify-content:space-between;
+  background:
+    radial-gradient(ellipse at top left, rgba(22,163,74,.10) 0%, transparent 50%),
+    linear-gradient(135deg,#001b3d 0%,#00468b 55%,#001b3d 100%);
+}
+.auth-hero::before{
+  /* subtle grid pattern overlay */
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+  background-size:36px 36px;
+  mask-image:radial-gradient(ellipse at center, #000 30%, transparent 80%);
+  -webkit-mask-image:radial-gradient(ellipse at center, #000 30%, transparent 80%);
+}
+.auth-hero-content{position:relative;max-width:540px;width:100%;margin:0 auto;display:flex;flex-direction:column;flex:1}
+
+.auth-hero-logo{display:flex;align-items:center;gap:10px;margin-bottom:auto}
+.auth-hero-logo svg{width:32px;height:32px}
+.auth-hero-logo span{font-size:14px;font-weight:700;color:rgba(255,255,255,.85);letter-spacing:-0.01em}
+
+.auth-hero h1{
+  font-size:52px;font-weight:800;color:#fff;line-height:1.04;letter-spacing:-0.03em;margin:48px 0 0;
+}
+.auth-hero h1 .accent{color:#34d399;display:block;font-weight:800;margin-top:6px;font-size:20px;letter-spacing:.01em}
+
+.auth-hero-desc{
+  font-size:16px;color:rgba(255,255,255,.68);line-height:1.55;margin:20px 0 40px;max-width:460px;
+}
+
+.auth-hero-features{display:flex;flex-direction:column;gap:18px;margin-bottom:auto}
+.auth-hero-feat{display:flex;gap:14px;align-items:flex-start}
+.auth-hero-feat-icon{
+  width:36px;height:36px;border-radius:10px;
+  background:rgba(52,211,153,.10);
+  border:1px solid rgba(52,211,153,.22);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.auth-hero-feat-icon svg{width:18px;height:18px;stroke:#34d399;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.auth-hero-feat-text strong{display:block;color:#fff;font-size:14px;font-weight:700;margin-bottom:3px;letter-spacing:-0.005em}
+.auth-hero-feat-text span{display:block;color:rgba(255,255,255,.55);font-size:13px;line-height:1.45}
+
+.auth-hero-trust{margin-top:48px;padding-top:24px;border-top:1px solid rgba(255,255,255,.08)}
+.auth-hero-trust-label{
+  font-size:10px;font-weight:700;color:rgba(255,255,255,.4);
+  text-transform:uppercase;letter-spacing:.14em;margin-bottom:6px;
+}
+.auth-hero-trust-tag{font-size:13px;color:rgba(255,255,255,.6);font-weight:500;letter-spacing:.01em}
+
+.auth-right{
+  display:flex;align-items:center;justify-content:center;
+  padding:40px 32px;
+}
 
 /* ── TOOLBAR DROPDOWNS ── */
 .tb-dropdown{position:relative;display:inline-block}
@@ -1101,17 +1167,17 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
 .premium-badge{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:8px;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:.1em;vertical-align:middle;margin-left:4px}
 
 .auth-card{
-  background:rgba(255,255,255,.06);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
-  border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:48px 40px;
-  width:400px;max-width:94vw;
-  box-shadow:0 24px 80px rgba(0,0,0,.3);
-  text-align:center;
+  background:transparent;
+  border:none;border-radius:0;padding:0;
+  width:100%;max-width:400px;
+  box-shadow:none;
+  text-align:left;
 }
-.auth-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px}
-.auth-logo svg{width:40px;height:40px}
-.auth-logo span{font-size:22px;font-weight:800;font-style:italic;color:#fff;letter-spacing:-0.02em}
-.auth-title{font-size:22px;font-weight:800;color:#fff;margin-bottom:4px;letter-spacing:-0.02em}
-.auth-sub{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:24px}
+.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:36px}
+.auth-logo svg{width:36px;height:36px}
+.auth-logo span{font-size:18px;font-weight:800;color:#fff;letter-spacing:-0.01em}
+.auth-title{font-size:28px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-0.02em}
+.auth-sub{font-size:14px;color:rgba(255,255,255,.55);margin-bottom:28px}
 .auth-field{margin-bottom:16px;text-align:left}
 .auth-field label{display:block;font-size:11px;font-weight:600;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
 .auth-field input{width:100%;padding:12px 14px;border:1px solid rgba(255,255,255,.15);border-radius:12px;font-size:14px;color:#fff;background:rgba(255,255,255,.08);outline:none;box-sizing:border-box;transition:all .15s}
@@ -1140,8 +1206,76 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
 <body>
 <a href="#mainContent" class="skip-to-main" onclick="event.preventDefault();var el=document.getElementById('mainContent')||document.getElementById('appContent');if(el){el.setAttribute('tabindex','-1');el.focus();}">Skip to main content</a>
 
-<!-- AUTH OVERLAY -->
+<!-- AUTH OVERLAY (2-column split: marketing hero left, sign-in form right) -->
 <div id="authOverlay">
+
+  <!-- LEFT: marketing hero -->
+  <aside class="auth-hero" aria-hidden="true">
+    <div class="auth-hero-content">
+
+      <div class="auth-hero-logo">
+        <svg viewBox="0 0 32 32">
+          <rect width="32" height="32" rx="7" fill="rgba(255,255,255,.08)"/>
+          <rect x="4" y="6"  width="24" height="5" rx="2.5" fill="rgba(255,255,255,.9)"/>
+          <rect x="4" y="14" width="15" height="5" rx="2.5" fill="#34d399"/>
+          <rect x="4" y="21" width="10" height="5" rx="2.5" fill="rgba(255,255,255,.5)"/>
+          <circle cx="28" cy="8.5" r="3" fill="#4a90d9" stroke="#fff" stroke-width="1.5"/>
+          <circle cx="19" cy="16.5" r="3" fill="#fff" stroke="#34d399" stroke-width="1.5"/>
+        </svg>
+        <span>PM Roadmapper</span>
+      </div>
+
+      <h1>
+        The Roadmap That
+        <span class="accent">Drives Outcomes</span>
+      </h1>
+
+      <p class="auth-hero-desc">
+        From quarterly strategy to weekly delivery — PM Roadmapper turns
+        scattered specs into a single source of truth your whole team can
+        rally behind.
+      </p>
+
+      <div class="auth-hero-features">
+        <div class="auth-hero-feat">
+          <div class="auth-hero-feat-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+          </div>
+          <div class="auth-hero-feat-text">
+            <strong>Strategy + delivery in one view</strong>
+            <span>Roadmaps, OKRs, capacity planning, and prioritization side by side.</span>
+          </div>
+        </div>
+        <div class="auth-hero-feat">
+          <div class="auth-hero-feat-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 3l1.9 5.8H20l-4.9 3.6 1.9 5.8L12 14.6l-5 3.6 1.9-5.8L4 8.8h6.1z"/></svg>
+          </div>
+          <div class="auth-hero-feat-text">
+            <strong>AI you can actually trust</strong>
+            <span>Bring your own OpenAI, Anthropic, or Gemini key. Your key never touches our servers.</span>
+          </div>
+        </div>
+        <div class="auth-hero-feat">
+          <div class="auth-hero-feat-icon">
+            <svg viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+          </div>
+          <div class="auth-hero-feat-text">
+            <strong>Cloud + desktop, always in sync</strong>
+            <span>Sign in once. Use it in the browser or the Electron desktop app — your data follows you.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-hero-trust">
+        <div class="auth-hero-trust-label">Built for product teams at</div>
+        <div class="auth-hero-trust-tag">Startups · Scale-ups · Enterprise</div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- RIGHT: existing sign-in form -->
+  <div class="auth-right">
   <div class="auth-card">
     <!-- Logo -->
     <div class="auth-logo">
@@ -1209,7 +1343,8 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
       Don't have an account? <a onclick="switchToSignup()">Create account</a>
     </div>
   </div>
-  <div class="auth-version">v1.1.0</div>
+  </div><!-- /.auth-right -->
+  <div class="auth-version">v1.27.1</div>
 </div>
 
 <!-- TOOLBAR -->
@@ -4948,8 +5083,26 @@ _supabase = {
       return r.ok ? {error:null} : {error:{message:r.data.message||'Error'}};
     },
     signInWithOAuth: async function(opts){
-      var url = SUPABASE_URL+'/auth/v1/authorize?provider='+opts.provider;
-      try{ require('electron').shell.openExternal(url); }catch(e){ window.open(url); }
+      // Where Supabase should redirect after the OAuth provider returns the user.
+      // Web: back to the current origin so the URL fragment with the token lands on
+      //      the page (checkOAuthRedirect picks it up on load).
+      // Electron: same target — but the user signs in via their default browser.
+      //   Phase 2 TODO: register a pmroadmapper:// custom protocol so the desktop
+      //   app receives the session directly.
+      var redirectTo = (opts.options && opts.options.redirectTo) ||
+                       (window.location.protocol === 'file:'
+                          ? 'https://app.pmroadmapper.com'
+                          : (window.location.origin + window.location.pathname));
+      var url = SUPABASE_URL+'/auth/v1/authorize?provider='+opts.provider+
+                '&redirect_to='+encodeURIComponent(redirectTo);
+      var isElectron = window.location.protocol === 'file:';
+      if(isElectron){
+        // Open in user's default browser via main.js setWindowOpenHandler.
+        try{ window.open(url, '_blank'); }catch(e){ window.location.href = url; }
+      } else {
+        // Web: same-tab full-page redirect for the OAuth flow.
+        window.location.href = url;
+      }
       return {error:null};
     }
   },
@@ -5006,7 +5159,67 @@ function hidePassword(inputId, btn){
   if(btn){ btn.innerHTML = '\uD83D\uDC41'; btn.title = 'Hold to show password'; }
 }
 
+// v1.27.2: After an OAuth provider (Google / Microsoft) returns the user,
+// Supabase redirects back to our site_url with the access + refresh tokens
+// in the URL fragment: #access_token=...&refresh_token=...&expires_in=...
+// Detect that, fetch the user, save as a session, and clean up the URL.
+// Returns true if a session was successfully restored from the fragment.
+async function checkOAuthRedirect(){
+  if(!window.location.hash || window.location.hash.indexOf('access_token=') === -1) return false;
+  try {
+    var hash = window.location.hash.substring(1);
+    var params = new URLSearchParams(hash);
+    var access_token  = params.get('access_token');
+    var refresh_token = params.get('refresh_token');
+    var expires_in    = parseInt(params.get('expires_in') || '3600', 10);
+    var oauth_error   = params.get('error_description') || params.get('error');
+    if(oauth_error){
+      console.warn('[oauth] provider error:', oauth_error);
+      // Clean the URL so the error doesn't stick on refresh.
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+      showAuthError('Sign-in cancelled or failed: ' + oauth_error);
+      return false;
+    }
+    if(!access_token) return false;
+
+    // Look up the user with the access token. /auth/v1/user requires a valid
+    // bearer token; if it fails the token was bogus.
+    var r = await _sbFetch('/auth/v1/user', 'GET', null, access_token);
+    if(!r.ok || !r.data || !r.data.id){
+      console.warn('[oauth] failed to fetch user from token, status', r.status);
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+      return false;
+    }
+
+    _saveSession({
+      access_token:  access_token,
+      refresh_token: refresh_token,
+      expires_in:    expires_in,
+      user:          r.data
+    });
+    _accessToken  = access_token;
+    _refreshToken = refresh_token;
+    _currentUser  = r.data;
+
+    // Clean the URL so the token isn't visible / replayable.
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+    return true;
+  } catch(e){
+    console.warn('[oauth] checkOAuthRedirect failed:', e && e.message);
+    return false;
+  }
+}
+
 async function checkExistingSession(){
+  // 0. OAuth redirect-back — if there's an access_token in the URL fragment,
+  //    parse it, fetch the user, persist the session, and continue as if the
+  //    user just signed in normally.
+  var fromOAuth = await checkOAuthRedirect();
+  if(fromOAuth && _currentUser){
+    await onAuthSuccess(_currentUser);
+    return;
+  }
+
   // 1. Try the cached Supabase session (refresh-token rotation handled inside).
   var result = await _supabase.auth.getSession();
   if(result.data && result.data.session && result.data.session.user){
@@ -5279,7 +5492,17 @@ async function handleAuthPrimary(){
   }
 }
 async function handleGoogleAuth(){
-  await _supabase.auth.signInWithOAuth({provider:'google'});
+  // Pass redirectTo so Supabase sends the user back to wherever they came from
+  // (the web app at app.pmroadmapper.com or, in the desktop case, the web app
+  // since Electron can't yet receive an OAuth callback directly — Phase 2).
+  var isElectron = window.location.protocol === 'file:';
+  var redirectTo = isElectron
+    ? 'https://app.pmroadmapper.com'
+    : (window.location.origin + window.location.pathname);
+  await _supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options:  { redirectTo: redirectTo }
+  });
 }
 async function onAuthSuccess(user){
   hideAuthOverlay();
