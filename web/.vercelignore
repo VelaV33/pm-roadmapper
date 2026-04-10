@@ -1,0 +1,11 @@
+# Vercel-specific ignore. The repo .gitignore excludes web/public/ because
+# the bundle is built locally — but Vercel needs that public/ folder to be
+# uploaded so it can serve it without rebuilding. We override here.
+node_modules
+.env
+.env.local
+.vercel
+scripts
+shim
+api/node_modules
+package-lock.json
