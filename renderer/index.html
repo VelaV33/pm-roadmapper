@@ -5566,17 +5566,12 @@ async function handleAuthPrimary(){
   }
 }
 async function handleGoogleAuth(){
-  // Pass redirectTo so Supabase sends the user back to wherever they came from
-  // (the web app at app.pmroadmapper.com or, in the desktop case, the web app
-  // since Electron can't yet receive an OAuth callback directly — Phase 2).
-  var isElectron = window.location.protocol === 'file:';
-  var redirectTo = isElectron
-    ? 'https://app.pmroadmapper.com'
-    : (window.location.origin + window.location.pathname);
-  await _supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options:  { redirectTo: redirectTo }
-  });
+  // Let signInWithOAuth pick the right redirectTo automatically:
+  //   web    → window.location.origin + pathname  (sign in on this page)
+  //   desktop → https://app.pmroadmapper.com/?to=desktop  (web bridges back
+  //             to the desktop via the pmroadmapper:// custom protocol)
+  // Don't override here, otherwise the explicit value masks the smart default.
+  await _supabase.auth.signInWithOAuth({ provider: 'google' });
 }
 async function onAuthSuccess(user){
   hideAuthOverlay();

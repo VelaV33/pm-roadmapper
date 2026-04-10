@@ -1,10 +1,38 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu, shell, safeStorage } = require('electron');
-const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
-let pdfParse, mammoth;
-try { pdfParse = require('pdf-parse-new'); } catch(e) { try { pdfParse = require('pdf-parse'); } catch(e2) { console.warn('pdf-parse not available:', e2.message); } }
-try { mammoth = require('mammoth'); } catch(e) { console.warn('mammoth not available:', e.message); }
+
+// v1.27.4: Heavy modules are lazy-loaded on first use to keep cold-start
+// fast. Previously these were synchronously required at the top of main.js
+// and added ~3s of disk I/O + module parsing to every cold start, even if
+// the user never opened a PDF / DOCX or ran an update check.
+let pdfParse = null;        // pdf-parse-new — required by read-file handler
+let mammoth  = null;        // DOCX parser — required by read-file handler
+let _autoUpdater = null;    // electron-updater — required only once after window-ready
+
+function getPdfParse() {
+  if (pdfParse) return pdfParse;
+  try { pdfParse = require('pdf-parse-new'); }
+  catch (e) {
+    try { pdfParse = require('pdf-parse'); }
+    catch (e2) { console.warn('pdf-parse not available:', e2.message); }
+  }
+  return pdfParse;
+}
+
+function getMammoth() {
+  if (mammoth) return mammoth;
+  try { mammoth = require('mammoth'); }
+  catch (e) { console.warn('mammoth not available:', e.message); }
+  return mammoth;
+}
+
+function getAutoUpdater() {
+  if (_autoUpdater) return _autoUpdater;
+  try { _autoUpdater = require('electron-updater').autoUpdater; }
+  catch (e) { console.warn('electron-updater not available:', e.message); }
+  return _autoUpdater;
+}
 
 // ── Custom protocol (pmroadmapper://) for OAuth deep-link handoff ────────────
 // v1.27.3: When the desktop user signs in with Google/Microsoft, the OAuth
@@ -100,6 +128,11 @@ function createWindow() {
     title: 'PM Roadmapper',
     icon: iconPath,
     backgroundColor: '#f4f7fc',
+    // v1.27.4: don't show the window until the renderer has painted at least
+    // once. Without this you see a blank/white window for the first second or
+    // two of cold start while the 1.3 MB renderer parses. With it the window
+    // appears already-rendered, which feels significantly snappier.
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -110,6 +143,10 @@ function createWindow() {
       backgroundThrottling: false,
     },
   });
+  win.once('ready-to-show', () => { win.show(); });
+  // Safety net: if ready-to-show never fires (e.g. renderer crash during init),
+  // force the window to appear after 5s so the user isn't stuck with nothing.
+  setTimeout(() => { try { if (win && !win.isVisible()) win.show(); } catch(_){} }, 5000);
 
   // Permission policy: deny by default, allow only what we explicitly need.
   // The renderer is local trusted code but a future XSS via shared content
@@ -442,21 +479,27 @@ ipcMain.handle('read-file', async (_event, opts) => {
     const storedPath = path.join(attachDir, storedName);
     try { fs.copyFileSync(filePath, storedPath); } catch(copyErr) { console.warn('Could not copy file:', copyErr.message); }
 
-    // PDF — extract text
-    if (ext === '.pdf' && pdfParse) {
-      try {
-        const data = await pdfParse(buf);
-        return { ok: true, name, ext, text: data.text || '', storedName };
-      } catch(pdfErr) {
-        console.warn('PDF parse failed:', pdfErr.message);
-        return { ok: true, name, ext, text: '[PDF text extraction failed - ' + pdfErr.message + ']', storedName };
+    // PDF — extract text (pdf-parse loaded lazily on first use)
+    if (ext === '.pdf') {
+      const pp = getPdfParse();
+      if (pp) {
+        try {
+          const data = await pp(buf);
+          return { ok: true, name, ext, text: data.text || '', storedName };
+        } catch(pdfErr) {
+          console.warn('PDF parse failed:', pdfErr.message);
+          return { ok: true, name, ext, text: '[PDF text extraction failed - ' + pdfErr.message + ']', storedName };
+        }
       }
     }
 
-    // Word (.docx) — extract text
-    if (ext === '.docx' && mammoth) {
-      const result = await mammoth.extractRawText({ buffer: buf });
-      return { ok: true, name, ext, text: result.value || '', storedName };
+    // Word (.docx) — extract text (mammoth loaded lazily on first use)
+    if (ext === '.docx') {
+      const mm = getMammoth();
+      if (mm) {
+        const result = await mm.extractRawText({ buffer: buf });
+        return { ok: true, name, ext, text: result.value || '', storedName };
+      }
     }
 
     // Excel — return base64 for SheetJS in renderer
@@ -585,37 +628,42 @@ app.whenReady().then(() => {
   });
 
   // ── Auto-update ──
-  autoUpdater.autoDownload = true;
-  autoUpdater.autoInstallOnAppQuit = true;
-
-  autoUpdater.on('update-available', (info) => {
-    console.log('Update available:', info.version);
-    if (win) win.webContents.send('update-available', info.version);
-  });
-
-  autoUpdater.on('update-downloaded', (info) => {
-    console.log('Update downloaded:', info.version);
-    if (win) {
-      dialog.showMessageBox(win, {
-        type: 'info',
-        title: 'Update Ready',
-        message: 'Version ' + info.version + ' has been downloaded.',
-        detail: 'The update will be installed when you restart the app.',
-        buttons: ['Restart Now', 'Later'],
-        defaultId: 0
-      }).then((result) => {
-        if (result.response === 0) autoUpdater.quitAndInstall();
-      });
-    }
-  });
-
-  autoUpdater.on('error', (err) => {
-    console.log('Auto-update error:', err.message);
-  });
-
-  // Check for updates after a short delay
+  // v1.27.4: electron-updater is lazy-loaded and the entire wiring runs on a
+  // 5-second timer so it never competes with cold-start. Module require alone
+  // used to add ~0.5-1s before window-paint.
   setTimeout(() => {
-    autoUpdater.checkForUpdatesAndNotify().catch(err => {
+    const updater = getAutoUpdater();
+    if (!updater) return;
+
+    updater.autoDownload = true;
+    updater.autoInstallOnAppQuit = true;
+
+    updater.on('update-available', (info) => {
+      console.log('Update available:', info.version);
+      if (win) win.webContents.send('update-available', info.version);
+    });
+
+    updater.on('update-downloaded', (info) => {
+      console.log('Update downloaded:', info.version);
+      if (win) {
+        dialog.showMessageBox(win, {
+          type: 'info',
+          title: 'Update Ready',
+          message: 'Version ' + info.version + ' has been downloaded.',
+          detail: 'The update will be installed when you restart the app.',
+          buttons: ['Restart Now', 'Later'],
+          defaultId: 0
+        }).then((result) => {
+          if (result.response === 0) updater.quitAndInstall();
+        });
+      }
+    });
+
+    updater.on('error', (err) => {
+      console.log('Auto-update error:', err.message);
+    });
+
+    updater.checkForUpdatesAndNotify().catch(err => {
       console.log('Update check failed:', err.message);
     });
   }, 5000);
