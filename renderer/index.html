@@ -541,6 +541,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .cap-sidebar-item svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .cap-sidebar-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9)}
 .cap-sidebar-item.active{background:rgba(45,107,244,.15);color:var(--accent);border-left-color:var(--accent)}
+.cap-sidebar-item:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;color:rgba(255,255,255,.95)}
 
 /* ── Prioritization overlay ──────────────────────────────────────────── */
 #prioritizationOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
@@ -550,6 +551,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .prio-sidebar-item svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .prio-sidebar-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9)}
 .prio-sidebar-item.active{background:rgba(45,107,244,.15);color:var(--accent);border-left-color:var(--accent)}
+.prio-sidebar-item:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;color:rgba(255,255,255,.95)}
 .prio-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .prio-topbar{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .prio-topbar h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
@@ -1438,7 +1440,7 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
 
 <!-- HEADER -->
 <div class="header">
-  <div class="logo" id="logoZone" onclick="triggerLogoUpload()" title="Click to upload your company logo (PNG, JPG, SVG)">
+  <div class="logo" id="logoZone" role="button" tabindex="0" onclick="triggerLogoUpload()" title="Click to upload your company logo (PNG, JPG, SVG)" aria-label="Upload company logo">
     <span class="logo-text" id="logoText">
     <svg width="36" height="36" viewBox="0 0 32 32">
       <rect width="32" height="32" rx="7" fill="rgba(255,255,255,.12)"/>
@@ -1888,31 +1890,31 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
         </div>
         <div style="font-size:9px;color:#64748b;margin-top:2px">Team Capacity Planning</div>
       </div>
-      <div class="cap-sidebar-item active" data-cap-nav="dashboard" onclick="capNav('dashboard')">
+      <div class="cap-sidebar-item active" data-cap-nav="dashboard" role="button" tabindex="0" aria-current="page" onclick="capNav('dashboard')">
         <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
         Dashboard
       </div>
-      <div class="cap-sidebar-item" data-cap-nav="initiatives" onclick="capNav('initiatives')">
+      <div class="cap-sidebar-item" data-cap-nav="initiatives" role="button" tabindex="0" onclick="capNav('initiatives')">
         <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
         Initiatives
       </div>
-      <div class="cap-sidebar-item" data-cap-nav="templates" onclick="capNav('templates')">
+      <div class="cap-sidebar-item" data-cap-nav="templates" role="button" tabindex="0" onclick="capNav('templates')">
         <svg viewBox="0 0 24 24"><path d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
         Templates
       </div>
-      <div class="cap-sidebar-item" data-cap-nav="teams" onclick="capNav('teams')">
+      <div class="cap-sidebar-item" data-cap-nav="teams" role="button" tabindex="0" onclick="capNav('teams')">
         <svg viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
         Teams &amp; People
       </div>
-      <div class="cap-sidebar-item" data-cap-nav="sprints" onclick="capNav('sprints')">
+      <div class="cap-sidebar-item" data-cap-nav="sprints" role="button" tabindex="0" onclick="capNav('sprints')">
         <svg viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
         Sprints
       </div>
-      <div class="cap-sidebar-item" data-cap-nav="tasktypes" onclick="capNav('tasktypes')">
+      <div class="cap-sidebar-item" data-cap-nav="tasktypes" role="button" tabindex="0" onclick="capNav('tasktypes')">
         <svg viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
         Task Reference
       </div>
-      <div class="cap-sidebar-item" data-cap-nav="library" onclick="capNav('library')">
+      <div class="cap-sidebar-item" data-cap-nav="library" role="button" tabindex="0" onclick="capNav('library')">
         <svg viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
         Task Library
       </div>
@@ -2005,19 +2007,19 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
         </div>
         <div style="font-size:9px;color:#64748b;margin-top:2px">Score, rank &amp; decide</div>
       </div>
-      <div class="prio-sidebar-item active" data-prio-nav="score" onclick="prioNav('score')">
+      <div class="prio-sidebar-item active" data-prio-nav="score" role="button" tabindex="0" aria-current="page" onclick="prioNav('score')">
         <svg viewBox="0 0 24 24"><path d="M3 10h18M3 14h18M5 6h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z"/></svg>
         Score
       </div>
-      <div class="prio-sidebar-item" data-prio-nav="frameworks" onclick="prioNav('frameworks')">
+      <div class="prio-sidebar-item" data-prio-nav="frameworks" role="button" tabindex="0" onclick="prioNav('frameworks')">
         <svg viewBox="0 0 24 24"><path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 9h-6L8 4z"/></svg>
         Frameworks
       </div>
-      <div class="prio-sidebar-item" data-prio-nav="matrix" onclick="prioNav('matrix')">
+      <div class="prio-sidebar-item" data-prio-nav="matrix" role="button" tabindex="0" onclick="prioNav('matrix')">
         <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z M4 12h16 M12 4v16"/></svg>
         Matrix
       </div>
-      <div class="prio-sidebar-item" data-prio-nav="okrs" onclick="prioNav('okrs')">
+      <div class="prio-sidebar-item" data-prio-nav="okrs" role="button" tabindex="0" onclick="prioNav('okrs')">
         <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/><circle cx="12" cy="12" r="9"/></svg>
         OKRs
       </div>
@@ -6202,6 +6204,7 @@ function openProfile(){
   var privacyLink=document.createElement('a');
   privacyLink.href='https://www.anthropic.com/privacy'; // placeholder — swap for your own policy URL
   privacyLink.target='_blank';
+  privacyLink.rel='noopener noreferrer';
   privacyLink.style.cssText='font-size:11px;color:var(--muted);text-decoration:none;';
   privacyLink.onmouseover=function(){ privacyLink.style.color='var(--accent)'; };
   privacyLink.onmouseout=function(){ privacyLink.style.color='var(--muted)'; };
@@ -9478,6 +9481,23 @@ document.addEventListener('click', function(e){
 });
 document.addEventListener('keydown', function(e){
   if(e.key==='Escape') closeDds();
+});
+
+// v1.26.14: Global keyboard activation for div-based interactives. Any
+// element marked role="button" tabindex="0" (other than real <button>/<a>
+// which already handle Enter/Space natively) is activated by Enter/Space.
+// Use this for interactive divs (sidebar nav items, logo upload zone, etc.)
+// to avoid rewriting them as <button> with all the CSS that implies.
+document.addEventListener('keydown', function(e){
+  if(e.key!=='Enter' && e.key!==' ') return;
+  var t = e.target;
+  if(!t || typeof t.matches !== 'function') return;
+  if(t.tagName === 'BUTTON' || t.tagName === 'A' || t.tagName === 'INPUT' ||
+     t.tagName === 'TEXTAREA' || t.tagName === 'SELECT') return;
+  if(t.getAttribute && t.getAttribute('role')==='button' && t.getAttribute('tabindex')==='0'){
+    e.preventDefault();
+    t.click();
+  }
 });
 
 // v1.26.9: Global backdrop-to-close. Click directly on a .modal-overlay
@@ -16016,7 +16036,10 @@ function closePrioritization(){
 function prioNav(page){
   _prioPage = page;
   document.querySelectorAll('.prio-sidebar-item').forEach(function(el){
-    el.classList.toggle('active', el.dataset.prioNav === page);
+    var isActive = el.dataset.prioNav === page;
+    el.classList.toggle('active', isActive);
+    if(isActive) el.setAttribute('aria-current','page');
+    else el.removeAttribute('aria-current');
   });
   var titles = { score: 'Score Initiatives', frameworks: 'Frameworks', matrix: 'Value vs Effort Matrix', okrs: 'Objectives & Key Results' };
   document.getElementById('prioPageTitle').textContent = titles[page] || page;
@@ -17432,7 +17455,7 @@ function renderUCRCard(ucr) {
   if (ucr.links && ucr.links.length) {
     ucr.links.forEach(function(lnk, idx) {
       h += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">';
-      h += '<a href="'+esc(lnk.url)+'" target="_blank" style="font-size:12px;color:var(--accent)">'+esc(lnk.label)+'</a>';
+      h += '<a href="'+esc(lnk.url)+'" target="_blank" rel="noopener noreferrer" style="font-size:12px;color:var(--accent)">'+esc(lnk.label)+'</a>';
       h += '<button onclick="removeUCRLink(\''+id+'\','+idx+')" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:12px">✕</button>';
       h += '</div>';
     });
@@ -20106,7 +20129,10 @@ function closeCapacity(){document.getElementById('capOverlay').classList.remove(
 function capNav(page){
   _capPage=page;
   document.querySelectorAll('.cap-sidebar-item').forEach(function(el){
-    el.classList.toggle('active',el.dataset.capNav===page);
+    var isActive = el.dataset.capNav === page;
+    el.classList.toggle('active', isActive);
+    if(isActive) el.setAttribute('aria-current','page');
+    else el.removeAttribute('aria-current');
   });
   var titles={dashboard:'Capacity Dashboard',initiatives:'Initiatives',templates:'Templates',teams:'Teams & People',sprints:'Sprints',tasktypes:'Task Reference',library:'Task Library'};
   document.getElementById('capPageTitle').textContent=titles[page]||page;
@@ -21989,7 +22015,7 @@ function openSettings(){
   h+='<div><label style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:3px">API Key <span style="font-weight:400;color:#b0bbd0">(stored locally per user — never shared)</span></label>';
   h+='<div style="display:flex;gap:6px"><input id="settAIKey" type="password" value="'+_esc(userAIKey.key||'')+'" placeholder="Paste your API key..." style="flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px">';
   h+='<button onclick="saveSettingsAIKey()" style="padding:7px 14px;background:var(--navy);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">Save Key</button></div></div>';
-  h+='<div style="font-size:9px;color:var(--muted);margin-top:4px">Your key is encrypted in local storage and never sent to our servers. Get keys from: <a style="color:var(--accent)" href="#" onclick="event.preventDefault()">Gemini</a> · <a style="color:var(--accent)" href="#" onclick="event.preventDefault()">OpenAI</a> · <a style="color:var(--accent)" href="#" onclick="event.preventDefault()">Claude</a></div>';
+  h+='<div style="font-size:9px;color:var(--muted);margin-top:4px">Your key is encrypted in local storage and never sent to our servers. Get keys from: <a style="color:var(--accent);cursor:pointer" onclick="event.preventDefault();if(window.electronAPI&&window.electronAPI.openExternal)window.electronAPI.openExternal(\'https://aistudio.google.com/apikey\')">Gemini</a> · <a style="color:var(--accent);cursor:pointer" onclick="event.preventDefault();if(window.electronAPI&&window.electronAPI.openExternal)window.electronAPI.openExternal(\'https://platform.openai.com/api-keys\')">OpenAI</a> · <a style="color:var(--accent);cursor:pointer" onclick="event.preventDefault();if(window.electronAPI&&window.electronAPI.openExternal)window.electronAPI.openExternal(\'https://console.anthropic.com/settings/keys\')">Claude</a></div>';
   h+='</div>';
 
   // ── Brand Guide ──
