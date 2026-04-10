@@ -1,0 +1,334 @@
+<!doctype html>
+<!--
+  Roadmap OS — Privacy Policy
+  ──────────────────────────────────────────────────────────────────
+  This page is served at https://app.pmroadmapper.com/privacy.html
+  and linked from the auth screen footer of both the web and the
+  Electron app. It is also referenced from the marketing site.
+
+  ⚠️  LEGAL DISCLAIMER ⚠️
+  This document was drafted by the engineering team to be honest and
+  accurate about the actual data flows in the product. It is NOT
+  legal advice and has NOT been reviewed by a lawyer. Before relying
+  on this for any compliance purpose (POPIA, GDPR, CCPA, etc.), have
+  a qualified legal professional review and update it for your
+  jurisdiction. The "Last updated" date below MUST be incremented
+  whenever a substantive change is made.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy Policy — Roadmap OS</title>
+  <meta name="robots" content="index, follow">
+  <style>
+    :root {
+      --bg: #0a1228;
+      --bg-card: #0f1b3d;
+      --accent: #34d399;
+      --text: #e5e7eb;
+      --text-muted: rgba(255,255,255,.65);
+      --border: rgba(255,255,255,.08);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    .container { max-width: 760px; margin: 0 auto; padding: 64px 24px 96px; }
+    header { border-bottom: 1px solid var(--border); padding-bottom: 32px; margin-bottom: 40px; }
+    .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; text-decoration: none; color: var(--text); }
+    .brand svg { width: 32px; height: 32px; }
+    .brand span { font-size: 18px; font-weight: 800; letter-spacing: -0.01em; }
+    h1 { font-size: 36px; margin: 0 0 8px; letter-spacing: -0.02em; font-weight: 800; }
+    .updated { color: var(--text-muted); font-size: 14px; margin: 0; }
+    h2 { font-size: 20px; margin: 40px 0 12px; letter-spacing: -0.01em; font-weight: 700; color: #fff; }
+    h3 { font-size: 15px; margin: 24px 0 8px; font-weight: 700; color: #fff; }
+    p, li { font-size: 15px; color: var(--text); }
+    ul { padding-left: 22px; }
+    li { margin-bottom: 6px; }
+    a { color: var(--accent); }
+    code { background: rgba(255,255,255,.06); padding: 2px 6px; border-radius: 4px; font-size: 13px; font-family: ui-monospace, Menlo, Consolas, monospace; }
+    .toc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; margin-bottom: 40px; }
+    .toc strong { display: block; margin-bottom: 10px; color: #fff; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; }
+    .toc ol { margin: 0; padding-left: 22px; color: var(--text-muted); font-size: 14px; }
+    .toc a { color: var(--text-muted); text-decoration: none; }
+    .toc a:hover { color: var(--accent); }
+    .footer { margin-top: 64px; padding-top: 32px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 13px; }
+    .footer a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <a class="brand" href="https://app.pmroadmapper.com">
+        <svg viewBox="0 0 32 32">
+          <rect width="32" height="32" rx="7" fill="rgba(255,255,255,.08)"/>
+          <rect x="4" y="6" width="24" height="5" rx="2.5" fill="rgba(255,255,255,.9)"/>
+          <rect x="4" y="14" width="15" height="5" rx="2.5" fill="#34d399"/>
+          <rect x="4" y="21" width="10" height="5" rx="2.5" fill="rgba(255,255,255,.5)"/>
+          <circle cx="28" cy="8.5" r="3" fill="#4a90d9" stroke="#fff" stroke-width="1.5"/>
+          <circle cx="19" cy="16.5" r="3" fill="#fff" stroke="#34d399" stroke-width="1.5"/>
+        </svg>
+        <span>Roadmap OS</span>
+      </a>
+      <h1>Privacy Policy</h1>
+      <p class="updated">Last updated: 10 April 2026</p>
+    </header>
+
+    <p>
+      Roadmap OS (“we”, “us”, the “Service”) provides product strategy and roadmap
+      tooling as a desktop application and a web application at
+      <a href="https://app.pmroadmapper.com">app.pmroadmapper.com</a>. This page
+      explains what personal information we collect, why we collect it, how we
+      store it, and what choices you have. We aim to be brief, accurate, and
+      free of dark patterns. If anything in here is unclear, contact us — see
+      Section 11.
+    </p>
+
+    <div class="toc">
+      <strong>Contents</strong>
+      <ol>
+        <li><a href="#who">Who we are</a></li>
+        <li><a href="#what">What we collect</a></li>
+        <li><a href="#why">Why we use it</a></li>
+        <li><a href="#where">Where it's stored</a></li>
+        <li><a href="#third-parties">Third parties</a></li>
+        <li><a href="#cookies">Cookies and local storage</a></li>
+        <li><a href="#rights">Your rights</a></li>
+        <li><a href="#retention">Data retention</a></li>
+        <li><a href="#children">Children</a></li>
+        <li><a href="#changes">Changes to this policy</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ol>
+    </div>
+
+    <h2 id="who">1. Who we are</h2>
+    <p>
+      Roadmap OS is operated from South Africa. The desktop app is distributed
+      via GitHub Releases at
+      <a href="https://github.com/VelaV33/pm-roadmapper/releases">github.com/VelaV33/pm-roadmapper/releases</a>.
+      The web app is at
+      <a href="https://app.pmroadmapper.com">app.pmroadmapper.com</a>. Marketing
+      and product information lives at
+      <a href="https://pmroadmapper.com">pmroadmapper.com</a>.
+    </p>
+
+    <h2 id="what">2. What we collect</h2>
+
+    <h3>2.1 Account information</h3>
+    <p>
+      When you create an account we receive your email address and a salted,
+      hashed password (or, if you sign in with Google, an OAuth token plus
+      your email, name, and profile picture from your Google account). We
+      never see your actual password. If you sign in with Google, we receive
+      only the fields Google chooses to share with us — typically email,
+      name, profile picture URL, and a stable Google user ID.
+    </p>
+
+    <h3>2.2 Roadmap content</h3>
+    <p>
+      The roadmap data you create — sections, rows, OKRs, capacity plans,
+      contacts, comments, attachments, AI conversation history, and any other
+      content you enter into the product — is stored in your account and is
+      visible only to you and to people you explicitly share specific roadmaps
+      with. Per-user database isolation is enforced at the database level via
+      row-level security policies; we cannot accidentally show another user's
+      data because the database itself refuses to return it.
+    </p>
+
+    <h3>2.3 Files you upload</h3>
+    <p>
+      When you attach a file (PDF, DOCX, image, etc.) it is uploaded to a
+      private storage bucket scoped to your user ID. Other users cannot
+      access your files, and we do not view the contents of your files
+      except when troubleshooting an issue you have explicitly reported to
+      us.
+    </p>
+
+    <h3>2.4 Technical information</h3>
+    <p>
+      We collect minimal technical metadata required for the Service to
+      function: your IP address (for rate limiting and abuse prevention),
+      your browser/OS user agent string, the version of the desktop app you
+      are running (so the auto-updater can serve you the right binary),
+      and standard server logs from our hosting providers. We do not run
+      third-party analytics, advertising, or tracking pixels.
+    </p>
+
+    <h3>2.5 AI provider data</h3>
+    <p>
+      Roadmap OS lets you connect your own OpenAI, Anthropic, or Google
+      Gemini API key to use AI-powered features inside the product. When
+      you do this:
+    </p>
+    <ul>
+      <li>Your API key is stored in your local browser storage (for the
+        web app) or your local app data folder (for the desktop app). It
+        is never transmitted to our servers in plaintext.</li>
+      <li>When you trigger an AI action, the request to the AI provider
+        is routed through a stateless proxy on our infrastructure
+        (necessary because browsers block direct calls to the AI providers
+        for security reasons). The proxy forwards your key to the
+        provider, returns the response, and never stores the key, the
+        prompt, or the response.</li>
+      <li>The AI provider you chose receives the prompt and any context
+        you sent. Their privacy policy applies to that data, not ours.
+        Review the privacy policy of whichever provider you connect.</li>
+    </ul>
+
+    <h2 id="why">3. Why we use it</h2>
+    <ul>
+      <li><strong>To provide the Service.</strong> Authenticate you, save
+        your roadmap data, sync between devices.</li>
+      <li><strong>To keep the Service secure.</strong> Detect and block
+        abuse, enforce rate limits, prevent unauthorized access.</li>
+      <li><strong>To send you essential transactional emails.</strong>
+        Password reset codes, sign-in confirmations, share-roadmap
+        notifications, and contact invites you explicitly trigger. We do
+        not send marketing email.</li>
+      <li><strong>To deliver auto-updates to the desktop app.</strong>
+        The desktop app polls our GitHub Releases endpoint for new
+        versions and downloads them automatically.</li>
+      <li><strong>To respond to support requests</strong> when you
+        explicitly contact us.</li>
+    </ul>
+    <p>
+      We do not sell, rent, or otherwise share your data with third
+      parties for advertising, marketing, or profiling purposes.
+    </p>
+
+    <h2 id="where">4. Where it's stored</h2>
+    <p>
+      The database, file storage, authentication, and edge functions
+      that power Roadmap OS are hosted on
+      <a href="https://supabase.com" target="_blank" rel="noopener noreferrer">Supabase</a>
+      in their <code>eu-west-1</code> region (Ireland). The web app is
+      hosted on
+      <a href="https://vercel.com" target="_blank" rel="noopener noreferrer">Vercel</a>'s
+      global edge network. The desktop app installer is distributed via
+      GitHub Releases. All connections between your device and our
+      backend use HTTPS.
+    </p>
+
+    <h2 id="third-parties">5. Third parties</h2>
+    <p>
+      The full list of subprocessors we share personal data with, and
+      what each one receives:
+    </p>
+    <ul>
+      <li><strong>Supabase</strong> — auth identities, account profiles,
+        roadmap content, file attachments. Subprocessor agreement on
+        their site. EU region.</li>
+      <li><strong>Vercel</strong> — web app hosting, serverless function
+        execution, request logs. They see your IP and request metadata.
+        Global edge.</li>
+      <li><strong>GitHub</strong> — desktop app installer distribution.
+        They see your IP when your installed app polls for updates.</li>
+      <li><strong>Google</strong> — only if you choose Google sign-in.
+        They authenticate you and share your basic profile with us.</li>
+      <li><strong>Resend</strong> — transactional email delivery. They
+        see your email address and the body of any password-reset,
+        invite, or notification email we send to you.</li>
+      <li><strong>Your chosen AI provider</strong> (OpenAI, Anthropic,
+        Google) — only if you connect an API key and trigger an AI
+        action. They see your prompt and the context you send.</li>
+    </ul>
+    <p>
+      We do not use any other third parties to process your personal data.
+      We do not run third-party analytics, advertising, or tracking.
+    </p>
+
+    <h2 id="cookies">6. Cookies and local storage</h2>
+    <p>
+      We use browser local storage (not cookies) to keep you signed in
+      across page reloads. The keys we set under <code>localStorage</code>
+      are: <code>pmr_session</code> (your Supabase access token and
+      refresh token), <code>pmr-web-auth</code> (Supabase JS auth state),
+      and any preference flags the app needs to remember between
+      sessions. We do not set any tracking cookies. We do not use
+      third-party cookies.
+    </p>
+    <p>
+      The desktop app uses the OS keychain (Windows DPAPI / macOS
+      Keychain / Linux libsecret) to optionally remember your password
+      between launches if you tick "Remember me". This data lives only
+      on your machine; we never receive it.
+    </p>
+
+    <h2 id="rights">7. Your rights</h2>
+    <p>
+      Depending on where you live, you may have additional rights under
+      laws such as POPIA (South Africa), GDPR (EU/EEA/UK), or CCPA
+      (California). Regardless of jurisdiction, you can:
+    </p>
+    <ul>
+      <li><strong>Access</strong> all the data we hold about you — your
+        entire account contents are visible to you within the app at
+        any time.</li>
+      <li><strong>Correct</strong> any of it, directly through the app
+        UI.</li>
+      <li><strong>Export</strong> a complete JSON backup of your roadmap
+        data via the in-app "Export Backup" feature.</li>
+      <li><strong>Delete</strong> your account and all associated data.
+        Email us (see Section 11) to request deletion. We will action
+        the request within 30 days.</li>
+      <li><strong>Object</strong> to specific processing or
+        <strong>restrict</strong> it. Contact us.</li>
+      <li><strong>Lodge a complaint</strong> with your local data
+        protection authority if you believe we have mishandled your
+        data. The South African Information Regulator is at
+        <a href="https://inforegulator.org.za" target="_blank" rel="noopener noreferrer">inforegulator.org.za</a>.</li>
+    </ul>
+
+    <h2 id="retention">8. Data retention</h2>
+    <p>
+      We retain your account data for as long as your account is
+      active. If you delete your account, we delete all associated
+      personal data and roadmap content within 30 days, with the
+      exception of:
+    </p>
+    <ul>
+      <li>Anonymized server logs (no PII), kept for up to 90 days for
+        security and abuse investigation.</li>
+      <li>Backup snapshots, which roll off automatically within 30
+        days.</li>
+    </ul>
+    <p>
+      Inactive accounts (no sign-in for 24 months) may be deleted with
+      30 days' notice via email.
+    </p>
+
+    <h2 id="children">9. Children</h2>
+    <p>
+      Roadmap OS is intended for use by adults in a professional product
+      management context. It is not directed at children under 16, and
+      we do not knowingly collect data from children under 16. If you
+      believe we have inadvertently collected data from a child, please
+      contact us and we will delete it.
+    </p>
+
+    <h2 id="changes">10. Changes to this policy</h2>
+    <p>
+      We may update this policy from time to time. When we do, we update
+      the "Last updated" date at the top. For any material change that
+      affects how we collect or use personal data, we will notify
+      registered users by email at least 14 days in advance. Continued
+      use of the Service after a change takes effect constitutes
+      acceptance of the updated policy.
+    </p>
+
+    <h2 id="contact">11. Contact</h2>
+    <p>
+      Questions, requests, or concerns about your privacy?
+      Email <a href="mailto:velasabelo.com@gmail.com">velasabelo.com@gmail.com</a>.
+      We aim to respond within 5 business days.
+    </p>
+
+    <div class="footer">
+      <p>
+        © 2026 Roadmap OS. ·
+        <a href="https://app.pmroadmapper.com">app.pmroadmapper.com</a> ·
+        <a href="https://pmroadmapper.com">pmroadmapper.com</a>
+      </p>
+    </div>
+  </main>
+</body>
+</html>

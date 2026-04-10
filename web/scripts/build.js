@@ -93,7 +93,24 @@ for (const [src, dest] of vendored) {
   fs.copyFileSync(fullSrc, path.join(shimDest, dest));
 }
 
+// 7. Copy committed static files (privacy.html etc.) from web/static/ into
+//    public/ at the root. These are NOT processed — they ship as-is. Skipped
+//    silently if web/static/ doesn't exist (no static files yet is fine).
+const staticDir = path.join(webDir, 'static');
+let staticCount = 0;
+if (fs.existsSync(staticDir)) {
+  for (const f of fs.readdirSync(staticDir)) {
+    const fullSrc = path.join(staticDir, f);
+    const stat = fs.statSync(fullSrc);
+    if (stat.isFile()) {
+      fs.copyFileSync(fullSrc, path.join(publicDir, f));
+      staticCount++;
+    }
+  }
+}
+
 console.log('[web build] OK — public/ written');
 console.log('[web build]   index.html: ' + (html.length / 1024).toFixed(1) + ' KB');
 console.log('[web build]   vendor/:    ' + fs.readdirSync(vendorDest).length + ' files');
 console.log('[web build]   shim/:      ' + fs.readdirSync(shimDest).length + ' files');
+console.log('[web build]   static/:    ' + staticCount + ' files');
