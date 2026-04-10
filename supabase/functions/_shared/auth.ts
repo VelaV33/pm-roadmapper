@@ -1,4 +1,4 @@
-// Shared auth + CORS helpers for PM Roadmapper edge functions.
+// Shared auth + CORS helpers for Roadmap OS edge functions.
 // Every function MUST verify the JWT before performing any privileged work.
 // The service role key bypasses RLS, so identity must come from a verified JWT
 // — never from a field in the request body.

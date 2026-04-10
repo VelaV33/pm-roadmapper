@@ -1,6 +1,6 @@
-# PM Roadmapper — Web Version
+# Roadmap OS — Web Version
 
-A Vercel-hosted browser build of the PM Roadmapper Electron app, running on
+A Vercel-hosted browser build of the Roadmap OS Electron app, running on
 the same Supabase project so a single user account works on both platforms.
 
 ## How it works

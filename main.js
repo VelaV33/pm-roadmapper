@@ -125,7 +125,7 @@ function createWindow() {
     height: 900,
     minWidth: 900,
     minHeight: 600,
-    title: 'PM Roadmapper',
+    title: 'Roadmap OS',
     icon: iconPath,
     backgroundColor: '#f4f7fc',
     // v1.27.4: don't show the window until the renderer has painted at least

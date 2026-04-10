@@ -1,7 +1,7 @@
 {
   "name": "netstar-roadmap",
-  "version": "1.27.4",
-  "description": "PM Roadmapper — Product Strategy & Roadmap Tool",
+  "version": "1.27.5",
+  "description": "Roadmap OS — Product Strategy & Roadmap Tool",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -11,7 +11,7 @@
   },
   "build": {
     "appId": "com.pmroadmapper.app",
-    "productName": "PM Roadmapper",
+    "productName": "Roadmap OS",
     "publish": {
       "provider": "github",
       "owner": "VelaV33",
@@ -51,7 +51,7 @@
     "electron": "^28.3.3",
     "electron-builder": "^24.13.3"
   },
-  "productName": "PM Roadmapper",
+  "productName": "Roadmap OS",
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
     "adm-zip": "^0.5.16",

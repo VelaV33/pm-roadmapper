@@ -47,7 +47,7 @@ async function rateLimited(ip: string): Promise<boolean> {
 
 async function sendRecoveryOtpEmail(to: string, otp: string): Promise<boolean> {
   const RESEND_KEY = Deno.env.get("RESEND_API_KEY");
-  const FROM_EMAIL = Deno.env.get("FROM_EMAIL") || "PM Roadmapper <onboarding@resend.dev>";
+  const FROM_EMAIL = Deno.env.get("FROM_EMAIL") || "Roadmap OS <onboarding@resend.dev>";
   if (!RESEND_KEY) {
     console.error("[reset-password] RESEND_API_KEY not set");
     return false;
@@ -61,17 +61,17 @@ async function sendRecoveryOtpEmail(to: string, otp: string): Promise<boolean> {
     body: JSON.stringify({
       from: FROM_EMAIL,
       to: [to],
-      subject: "Your PM Roadmapper password reset code",
+      subject: "Your Roadmap OS password reset code",
       // text fallback so the code is always copy-pasteable
-      text: `Your PM Roadmapper password reset code is: ${otp}\n\nOpen PM Roadmapper, click "Forgot password" then "I have a code", and paste it along with your new password. The code expires in 1 hour.`,
+      text: `Your Roadmap OS password reset code is: ${otp}\n\nOpen Roadmap OS, click "Forgot password" then "I have a code", and paste it along with your new password. The code expires in 1 hour.`,
       html: `
         <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px">
           <h2 style="color:#1a1464;margin-top:0">Password reset code</h2>
-          <p style="color:#374151">Enter this 6-digit code in PM Roadmapper to reset your password:</p>
+          <p style="color:#374151">Enter this 6-digit code in Roadmap OS to reset your password:</p>
           <div style="text-align:center;margin:28px 0">
             <div style="display:inline-block;font-family:'Courier New',monospace;font-size:32px;font-weight:700;letter-spacing:8px;color:#1a1464;background:#f0f5ff;border:1px solid #c5d5ea;border-radius:10px;padding:18px 28px">${otp}</div>
           </div>
-          <p style="color:#374151;font-size:13px">This code expires in 1 hour. Open PM Roadmapper, click "Forgot password" on the sign-in screen, then click "I have a code" and enter it along with your new password.</p>
+          <p style="color:#374151;font-size:13px">This code expires in 1 hour. Open Roadmap OS, click "Forgot password" on the sign-in screen, then click "I have a code" and enter it along with your new password.</p>
           <p style="color:#9ca3af;font-size:12px;margin-top:24px">If you didn't request this, you can safely ignore this email — your password has not been changed.</p>
         </div>
       `,
@@ -113,7 +113,7 @@ serve(handle(async (req) => {
 
   // Generate a recovery OTP via admin API. We use the email_otp from the
   // returned properties — a 6-digit code the user types into the app — instead
-  // of a clickable link, because PM Roadmapper is a desktop app with no web
+  // of a clickable link, because Roadmap OS is a desktop app with no web
   // page to redirect to. If the user does not exist this call returns an
   // error — we swallow it and still return the generic message.
   try {

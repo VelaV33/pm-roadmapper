@@ -15,7 +15,7 @@ import { handle, verifyRequest, jsonResponse, errorResponse, rateLimit } from ".
 //                      in auth.users (used by the User Management page)
 
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM_EMAIL = Deno.env.get("FROM_EMAIL") || "PM Roadmapper <onboarding@resend.dev>";
+const FROM_EMAIL = Deno.env.get("FROM_EMAIL") || "Roadmap OS <onboarding@resend.dev>";
 
 async function sendInviteEmail(to: string, inviterName: string): Promise<boolean> {
   if (!RESEND_KEY) {
@@ -41,20 +41,20 @@ async function sendInviteEmail(to: string, inviterName: string): Promise<boolean
       body: JSON.stringify({
         from: FROM_EMAIL,
         to: [to],
-        subject: `${inviterName} has invited you to PM Roadmapper`,
+        subject: `${inviterName} has invited you to Roadmap OS`,
         html: `
           <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px">
             <div style="background:#1a1464;border-radius:10px;padding:20px 24px;margin-bottom:24px">
-              <h2 style="color:#fff;margin:0;font-size:20px">PM Roadmapper</h2>
+              <h2 style="color:#fff;margin:0;font-size:20px">Roadmap OS</h2>
             </div>
             <h2 style="color:#1a1464">You've been invited</h2>
-            <p style="color:#374151;font-size:15px">${safeInviter} has added you as a teammate on their PM Roadmapper workspace and would like you to join.</p>
-            <p style="color:#374151;font-size:14px">PM Roadmapper is a desktop product strategy and roadmap tool. Once you sign up, your assigned tasks will be visible in your account.</p>
+            <p style="color:#374151;font-size:15px">${safeInviter} has added you as a teammate on their Roadmap OS workspace and would like you to join.</p>
+            <p style="color:#374151;font-size:14px">Roadmap OS is a desktop product strategy and roadmap tool. Once you sign up, your assigned tasks will be visible in your account.</p>
             <div style="text-align:center;margin:24px 0">
-              <a href="https://github.com/VelaV33/pm-roadmapper/releases/latest" style="display:inline-block;background:#1a1464;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600">Download PM Roadmapper</a>
+              <a href="https://app.pmroadmapper.com" style="display:inline-block;background:#1a1464;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600">Open Roadmap OS</a>
             </div>
             <p style="color:#9ca3af;font-size:12px;margin-top:32px;border-top:1px solid #e5e7eb;padding-top:16px">
-              Download the app from the link above and sign up with this email address (${safeTo}) to automatically link your account.
+              Sign up at app.pmroadmapper.com with this email address (${safeTo}) to automatically link your account.
             </p>
           </div>
         `,

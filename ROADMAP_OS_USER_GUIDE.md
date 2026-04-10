@@ -1,4 +1,4 @@
-# PM Roadmapper — User Guide
+# Roadmap OS — User Guide
 
 **Version 1.1.0 | April 2026**
 
@@ -24,12 +24,12 @@
 ## 1. Getting Started
 
 ### Installation
-1. Run `PM Roadmapper Setup 1.1.0.exe`
+1. Run `Roadmap OS Setup 1.1.0.exe`
 2. The app installs to your user profile (no admin required)
 3. A desktop shortcut is created automatically
 
 ### First Login
-1. Open PM Roadmapper
+1. Open Roadmap OS
 2. Enter your email and password, or click **Create Account**
 3. On first login, an **interactive tour** walks you through every feature
 4. Click the **?** button in the toolbar anytime to replay the tour
@@ -463,4 +463,4 @@ Three options:
 
 ---
 
-**PM Roadmapper v1.1.0** — Built for Netstar Product Management
+**Roadmap OS v1.1.0** — Built for Netstar Product Management
