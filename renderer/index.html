@@ -3855,7 +3855,7 @@ function exportHTML(){
   var blob=new Blob([content],{type:'text/html'});
   var url=URL.createObjectURL(blob);
   var a=document.createElement('a');
-  a.href=url; a.download='pm_roadmapper_edited.html';
+  a.href=url; a.download='roadmap_os_edited.html';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(function(){URL.revokeObjectURL(url);},1000);
 }
@@ -3901,7 +3901,7 @@ function exportExcel(){
 
   // ── Header row 1: Logo + Quarters ──
   t+='<tr>';
-  t+='<th class="th-init" rowspan="2" style="font-size:13pt;letter-spacing:.05em;width:200px">PM ROADMAPPER<br><span style="font-size:8pt;font-weight:400;color:#a0aec0">FY27 ROADMAP</span></th>';
+  t+='<th class="th-init" rowspan="2" style="font-size:13pt;letter-spacing:.05em;width:200px">ROADMAP OS<br><span style="font-size:8pt;font-weight:400;color:#a0aec0">FY27 ROADMAP</span></th>';
   var quarters=[
     {label:'Q1 · FY26',span:3,bg:'#0F1B3D'},
     {label:'Q2 · FY26',span:3,bg:'#1e3478'},
@@ -3994,7 +3994,7 @@ function exportExcel(){
   t+='</table></body></html>';
 
   if(window.electronAPI){
-    window.electronAPI.saveFile({content:t,defaultName:'PM_Roadmapper_FY27.xls',ext:'xls',label:'Excel Spreadsheet'})
+    window.electronAPI.saveFile({content:t,defaultName:'Roadmap_OS_FY27.xls',ext:'xls',label:'Excel Spreadsheet'})
       .then(function(res){ if(res&&res.ok) console.log('Excel saved'); });
   } else {
     openPreview(t, 'Excel Preview — Right-click table → Copy to paste into Excel', 'xls', t);
@@ -4172,7 +4172,7 @@ function openPreview(iframeContent, title, ext, downloadContent){
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a');
       a.href = url;
-      a.download = 'PM_Roadmapper_FY27.' + ext;
+      a.download = 'Roadmap_OS_FY27.' + ext;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -4373,7 +4373,7 @@ function exportExcelFiltered(selQ,cols,colMap,fNM){
   var t='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
   t+='<head><meta charset="UTF-8"><style>td,th{font-family:Calibri,Arial,sans-serif;font-size:10pt;white-space:nowrap;border:1px solid #d0d8e8;padding:3px 6px;vertical-align:middle}.th-init{background:var(--navy);color:#fff;font-weight:700;font-size:9pt;min-width:200px}.qh{color:#fff;font-weight:700;font-size:9pt;text-align:center}.mh{background:#2563a8;color:#fff;font-weight:700;font-size:8pt;text-align:center;width:38px}.sec{font-weight:700;font-size:9pt;color:#fff}.lbl{background:#f4f7fc;font-weight:700;font-size:9pt}.empty{background:#fff}.bar-cell{color:#fff;font-weight:700;font-size:8pt;text-align:center}.alt{background:#f8faff}.prio{background:#f5f0ff;color:#6d28d9;font-size:8pt;font-style:italic}.deliv{background:#f0f9ff;color:#0369a1;font-size:8pt;font-style:italic}</style></head><body>';
   t+='<table style="border-collapse:collapse;table-layout:fixed">';
-  t+='<tr><th class="th-init" rowspan="2">PM ROADMAPPER<br><span style="font-size:8pt;font-weight:400;color:#a0aec0">'+selQ.map(function(q){return q.label;}).join(' · ')+'</span></th>';
+  t+='<tr><th class="th-init" rowspan="2">ROADMAP OS<br><span style="font-size:8pt;font-weight:400;color:#a0aec0">'+selQ.map(function(q){return q.label;}).join(' · ')+'</span></th>';
   selQ.forEach(function(q){ t+='<th class="qh" colspan="'+q.months.length+'" style="background:'+Q_BG[q.q-1]+'">'+(q.label)+'</th>'; });
   t+='</tr><tr>';
   selQ.forEach(function(q){ q.months.forEach(function(m){ t+='<th class="mh">'+m+'</th>'; }); });
@@ -4407,7 +4407,7 @@ function exportExcelFiltered(selQ,cols,colMap,fNM){
   });
   t+='</table></body></html>';
 
-  var fname='PM_Roadmapper_'+selQ.map(function(q){return q.label.replace(' · ','_').replace(' ','');}).join('-')+'.xls';
+  var fname='Roadmap_OS_'+selQ.map(function(q){return q.label.replace(' · ','_').replace(' ','');}).join('-')+'.xls';
   if(window.electronAPI){
     window.electronAPI.saveFile({content:t,defaultName:fname,ext:'xls',label:'Excel Spreadsheet'}).then(function(){});
   } else {
@@ -4473,7 +4473,7 @@ function exportPDFFiltered(selQ,cols,colMap,fNM){
   p+='</tbody></table><div class="footer"><span><b>Roadmap OS</b></span><span>Confidential</span><span>'+new Date().toLocaleDateString()+'</span></div></body></html>';
 
   if(window.electronAPI){
-    var fname2='PM_Roadmapper_'+selQ.map(function(q){return q.label.replace(' · ','_').replace(' ','');}).join('-')+'.pdf';
+    var fname2='Roadmap_OS_'+selQ.map(function(q){return q.label.replace(' · ','_').replace(' ','');}).join('-')+'.pdf';
     window.electronAPI.printPDF(p).then(function(){});
   } else {
     openPreview(p,'PDF Preview — '+selQ.map(function(q){return q.label;}).join(', '),'html',p);
@@ -23055,7 +23055,7 @@ function downloadXlsxTemplate(){
       // Electron: use native save dialog
       window.electronAPI.saveBinaryFile({
         base64:XLSX_TEMPLATE_B64,
-        defaultName:'PM_Roadmapper_Import_Template.xlsx',
+        defaultName:'Roadmap_OS_Import_Template.xlsx',
         ext:'xlsx',
         label:'Excel Template'
       }).then(function(res){
@@ -23068,7 +23068,7 @@ function downloadXlsxTemplate(){
       for(var i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
       var blob=new Blob([arr],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
       var url=URL.createObjectURL(blob);
-      var a=document.createElement('a'); a.href=url; a.download='PM_Roadmapper_Import_Template.xlsx';
+      var a=document.createElement('a'); a.href=url; a.download='Roadmap_OS_Import_Template.xlsx';
       document.body.appendChild(a); a.click();
       setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); }, 500);
     }
