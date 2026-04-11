@@ -30,7 +30,6 @@ CREATE TABLE IF NOT EXISTS public.feedback_items (
 );
 CREATE INDEX IF NOT EXISTS feedback_items_owner_idx ON public.feedback_items (owner_user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS feedback_items_status_idx ON public.feedback_items (owner_user_id, status);
-
 CREATE TABLE IF NOT EXISTS public.feedback_votes (
   id                uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   feedback_item_id  uuid        NOT NULL REFERENCES public.feedback_items(id) ON DELETE CASCADE,
@@ -39,13 +38,11 @@ CREATE TABLE IF NOT EXISTS public.feedback_votes (
   CONSTRAINT feedback_votes_unique_per_email UNIQUE (feedback_item_id, voter_email)
 );
 CREATE INDEX IF NOT EXISTS feedback_votes_item_idx ON public.feedback_votes (feedback_item_id);
-
 -- RLS on, deny by default (edge functions use service role)
 ALTER TABLE public.feedback_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.feedback_items FORCE  ROW LEVEL SECURITY;
 ALTER TABLE public.feedback_votes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.feedback_votes FORCE  ROW LEVEL SECURITY;
-
 -- Owner can read & update their own feedback items via JWT-authenticated client.
 DROP POLICY IF EXISTS "Owners read own feedback"   ON public.feedback_items;
 DROP POLICY IF EXISTS "Owners update own feedback" ON public.feedback_items;
@@ -53,7 +50,6 @@ DROP POLICY IF EXISTS "Owners delete own feedback" ON public.feedback_items;
 CREATE POLICY "Owners read own feedback"   ON public.feedback_items FOR SELECT USING (auth.uid() = owner_user_id);
 CREATE POLICY "Owners update own feedback" ON public.feedback_items FOR UPDATE USING (auth.uid() = owner_user_id);
 CREATE POLICY "Owners delete own feedback" ON public.feedback_items FOR DELETE USING (auth.uid() = owner_user_id);
-
 -- No SELECT policy on feedback_votes for the public — they're aggregated into vote_count.
 
 -- Trigger to keep vote_count in sync
@@ -66,7 +62,6 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
-
 DROP TRIGGER IF EXISTS feedback_votes_count_trigger ON public.feedback_votes;
 CREATE TRIGGER feedback_votes_count_trigger
 AFTER INSERT OR DELETE ON public.feedback_votes

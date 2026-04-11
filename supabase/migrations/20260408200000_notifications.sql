@@ -24,16 +24,13 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   created_at      timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS notifications_recipient_idx ON public.notifications (recipient_user_id, read, created_at DESC);
-
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications FORCE  ROW LEVEL SECURITY;
-
 -- Only the recipient can read / update / delete their own notifications.
 -- Inserts happen via the service-role edge function.
 DROP POLICY IF EXISTS "Recipients read own notifications"   ON public.notifications;
 DROP POLICY IF EXISTS "Recipients update own notifications" ON public.notifications;
 DROP POLICY IF EXISTS "Recipients delete own notifications" ON public.notifications;
-
 CREATE POLICY "Recipients read own notifications"   ON public.notifications FOR SELECT USING (auth.uid() = recipient_user_id);
 CREATE POLICY "Recipients update own notifications" ON public.notifications FOR UPDATE USING (auth.uid() = recipient_user_id);
 CREATE POLICY "Recipients delete own notifications" ON public.notifications FOR DELETE USING (auth.uid() = recipient_user_id);

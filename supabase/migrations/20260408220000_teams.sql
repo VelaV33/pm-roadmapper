@@ -22,7 +22,6 @@ CREATE TABLE IF NOT EXISTS public.teams (
   CONSTRAINT teams_name_unique UNIQUE (name)
 );
 CREATE INDEX IF NOT EXISTS teams_name_idx ON public.teams (lower(name));
-
 CREATE TABLE IF NOT EXISTS public.team_members (
   team_id         uuid        NOT NULL REFERENCES public.teams(id) ON DELETE CASCADE,
   user_id         uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -32,18 +31,15 @@ CREATE TABLE IF NOT EXISTS public.team_members (
   PRIMARY KEY (team_id, user_id)
 );
 CREATE INDEX IF NOT EXISTS team_members_user_idx ON public.team_members (user_id);
-
 -- RLS: everyone signed in can read; only service-role (admin-api) writes.
 ALTER TABLE public.teams         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.team_members  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.teams         FORCE  ROW LEVEL SECURITY;
 ALTER TABLE public.team_members  FORCE  ROW LEVEL SECURITY;
-
 DROP POLICY IF EXISTS "Authenticated read teams"        ON public.teams;
 DROP POLICY IF EXISTS "Authenticated read team_members" ON public.team_members;
 CREATE POLICY "Authenticated read teams"        ON public.teams        FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated read team_members" ON public.team_members FOR SELECT USING (auth.role() = 'authenticated');
-
 -- updated_at trigger
 CREATE OR REPLACE FUNCTION public.teams_touch_updated_at() RETURNS trigger AS $$
 BEGIN
@@ -51,7 +47,6 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
 DROP TRIGGER IF EXISTS teams_updated_at_trigger ON public.teams;
 CREATE TRIGGER teams_updated_at_trigger
 BEFORE UPDATE ON public.teams

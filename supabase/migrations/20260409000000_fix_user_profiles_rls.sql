@@ -44,12 +44,10 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 DROP TRIGGER IF EXISTS on_auth_user_created_user_profile ON auth.users;
 CREATE TRIGGER on_auth_user_created_user_profile
 AFTER INSERT ON auth.users
 FOR EACH ROW EXECUTE FUNCTION public.handle_new_user_profile();
-
 -- 2. Backfill existing users. Idempotent.
 INSERT INTO public.user_profiles (user_id, tier)
 SELECT u.id, 'basic'
@@ -57,7 +55,6 @@ SELECT u.id, 'basic'
   LEFT JOIN public.user_profiles p ON p.user_id = u.id
  WHERE p.id IS NULL
 ON CONFLICT (user_id) DO NOTHING;
-
 -- 3. Self-INSERT fallback. Tier is forced to 'basic' so a malicious client
 --    cannot self-grant premium. Tier upgrades remain service-role only.
 DROP POLICY IF EXISTS "Users create own basic profile" ON public.user_profiles;
@@ -65,6 +62,5 @@ CREATE POLICY "Users create own basic profile"
   ON public.user_profiles
   FOR INSERT
   WITH CHECK (auth.uid() = user_id AND tier = 'basic');
-
 -- 4. Drop the dangerous open policy. Service role bypasses RLS without it.
 DROP POLICY IF EXISTS "Service role full access" ON public.user_profiles;

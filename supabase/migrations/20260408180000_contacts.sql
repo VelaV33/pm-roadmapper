@@ -30,10 +30,8 @@ CREATE TABLE IF NOT EXISTS public.contacts (
 );
 CREATE INDEX IF NOT EXISTS contacts_owner_idx  ON public.contacts (owner_user_id, status);
 CREATE INDEX IF NOT EXISTS contacts_email_idx  ON public.contacts (lower(email));
-
 ALTER TABLE public.contacts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contacts FORCE  ROW LEVEL SECURITY;
-
 -- Owner-only RLS: each user sees / writes their own contacts. Service-role
 -- edge functions bypass RLS for cross-user lookups (e.g. matching contacts
 -- against auth.users to compute the active/inactive split).
@@ -41,12 +39,10 @@ DROP POLICY IF EXISTS "Owners read own contacts"   ON public.contacts;
 DROP POLICY IF EXISTS "Owners write own contacts"  ON public.contacts;
 DROP POLICY IF EXISTS "Owners update own contacts" ON public.contacts;
 DROP POLICY IF EXISTS "Owners delete own contacts" ON public.contacts;
-
 CREATE POLICY "Owners read own contacts"   ON public.contacts FOR SELECT USING (auth.uid() = owner_user_id);
 CREATE POLICY "Owners write own contacts"  ON public.contacts FOR INSERT WITH CHECK (auth.uid() = owner_user_id);
 CREATE POLICY "Owners update own contacts" ON public.contacts FOR UPDATE USING (auth.uid() = owner_user_id);
 CREATE POLICY "Owners delete own contacts" ON public.contacts FOR DELETE USING (auth.uid() = owner_user_id);
-
 -- updated_at trigger
 CREATE OR REPLACE FUNCTION public.contacts_touch_updated_at() RETURNS trigger AS $$
 BEGIN
@@ -54,7 +50,6 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
 DROP TRIGGER IF EXISTS contacts_updated_at_trigger ON public.contacts;
 CREATE TRIGGER contacts_updated_at_trigger
 BEFORE UPDATE ON public.contacts

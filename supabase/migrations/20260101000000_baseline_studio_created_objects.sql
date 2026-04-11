@@ -37,7 +37,6 @@ CREATE TABLE IF NOT EXISTS public.roadmap_data (
   data        jsonb       NOT NULL,
   updated_at  timestamptz DEFAULT now()
 );
-
 -- ─── shared_roadmaps ──────────────────────────────────────────────────────
 -- "User A shares their roadmap with email B". Recipient may or may not be a
 -- registered user yet. Lookup by recipient_email at sign-in time so the
@@ -52,7 +51,6 @@ CREATE TABLE IF NOT EXISTS public.shared_roadmaps (
   created_at      timestamptz DEFAULT now(),
   CONSTRAINT shared_roadmaps_owner_id_recipient_email_key UNIQUE (owner_id, recipient_email)
 );
-
 -- ─── roadmap_comments ─────────────────────────────────────────────────────
 -- Threaded comments on a specific row inside a user's roadmap. Visible to
 -- the roadmap owner, the comment author, and anyone the roadmap is shared
@@ -71,7 +69,6 @@ CREATE TABLE IF NOT EXISTS public.roadmap_comments (
   resolved          boolean     DEFAULT false,
   created_at        timestamptz DEFAULT now()
 );
-
 -- ─── Enable RLS on the baseline tables ────────────────────────────────────
 -- Each of these is later FORCE'd in 20260408000000_security_hardening.sql
 -- and 20260409100000_web_launch_isolation_and_storage.sql. We just turn it
