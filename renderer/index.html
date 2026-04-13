@@ -3078,7 +3078,7 @@ function render(){
       '<span class="drag-handle" title="Drag up or down to reorder this row within the roadmap">⠿</span>'+
       prioBadge+
       '<div class="lbl-text">'+
-        '<div class="name" style="color:'+nc+'" onclick="openEditModal(\''+row.id+'\')">'+sectionDot+row.name+prioScoreBadge+planBadge+'</div>'+
+        '<div class="name" style="color:'+nc+'" onclick="openEditModal(\''+escHtml(row.id)+'\')">'+sectionDot+row.name+prioScoreBadge+planBadge+'</div>'+
         '<div class="sub" title="'+subLine+'">'+subLine+' '+g2mBadgeHtml+todoBadgeHtml+'</div>'+
       '</div>'+
       '<div class="row-btns">'+
@@ -3165,8 +3165,10 @@ function render(){
 
 // ── MODAL HELPERS ─────────────────────────────────────────────────────────────
 function openEditModal(rowId){
-  editingRowId=rowId;
+  if(!rowId){ showToast('No row selected','error'); return; }
   var row=rows.find(function(r){return r.id===rowId});
+  if(!row){ showToast('Row not found — it may have been deleted','error'); console.warn('[openEditModal] row not found:', rowId); return; }
+  editingRowId=rowId;
   document.getElementById('modalTitle').textContent='Edit Row';
   document.getElementById('fName').value=row.name;
   document.getElementById('fSub').value=row.sub;
