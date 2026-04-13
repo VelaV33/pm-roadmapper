@@ -59,6 +59,23 @@ serve(handle(async (req) => {
       }
     }
 
+    // Enrich with organization info
+    const { data: profiles } = await supabase
+      .from("user_profiles")
+      .select("user_id, organization_id, tier, subscription_status");
+    const { data: orgs } = await supabase
+      .from("organizations")
+      .select("id, name");
+    const orgMap: Record<string, string> = {};
+    (orgs || []).forEach((o: { id: string; name: string }) => { orgMap[o.id] = o.name; });
+    const profileMap: Record<string, { organization_id?: string; tier?: string; subscription_status?: string }> = {};
+    (profiles || []).forEach((p: { user_id: string; organization_id?: string; tier?: string; subscription_status?: string }) => { profileMap[p.user_id] = p; });
+    users.forEach((u) => {
+      const prof = profileMap[u.id];
+      (u as Record<string, unknown>).organization_id = prof?.organization_id || null;
+      (u as Record<string, unknown>).org_name = prof?.organization_id ? (orgMap[prof.organization_id] || null) : null;
+    });
+
     return jsonResponse({ ok: true, users });
   }
 
@@ -256,6 +273,92 @@ serve(handle(async (req) => {
         return errorResponse("Failed to add members", 500);
       }
     }
+    return jsonResponse({ ok: true });
+  }
+
+  // ── ORGANIZATIONS ──────────────────────────────────────────────────────
+  // ACTION: list-organizations — returns all orgs with user counts
+  if (action === "list-organizations") {
+    const { data: orgs, error } = await supabase
+      .from("organizations")
+      .select("*")
+      .order("name");
+    if (error) return errorResponse("Failed to list organizations", 500);
+
+    // Get user counts per org
+    const { data: profiles } = await supabase
+      .from("user_profiles")
+      .select("organization_id");
+
+    const counts: Record<string, number> = {};
+    (profiles || []).forEach((p: { organization_id?: string }) => {
+      if (p.organization_id) counts[p.organization_id] = (counts[p.organization_id] || 0) + 1;
+    });
+
+    const enriched = (orgs || []).map((o: { id: string }) => ({
+      ...o,
+      user_count: counts[o.id] || 0,
+    }));
+
+    return jsonResponse({ ok: true, organizations: enriched });
+  }
+
+  // ACTION: create-organization — creates an org (platform_admin only)
+  if (action === "create-organization") {
+    if (!isPlatformAdmin(user)) return errorResponse("Platform admin required", 403);
+    const { name, domain } = body;
+    if (!name) return errorResponse("Name required", 400);
+
+    const { data, error } = await supabase
+      .from("organizations")
+      .insert({ name, domain: domain || null, created_by: user.id })
+      .select("id")
+      .single();
+    if (error) return errorResponse(error.message, 500);
+    return jsonResponse({ ok: true, id: data.id });
+  }
+
+  // ACTION: update-organization — updates org name/domain
+  if (action === "update-organization") {
+    if (!isPlatformAdmin(user)) return errorResponse("Platform admin required", 403);
+    const { id, name, domain } = body;
+    if (!id) return errorResponse("Missing id", 400);
+    const updates: Record<string, unknown> = {};
+    if (name != null) updates.name = name;
+    if (domain !== undefined) updates.domain = domain || null;
+
+    const { error } = await supabase
+      .from("organizations")
+      .update(updates)
+      .eq("id", id);
+    if (error) return errorResponse(error.message, 500);
+    return jsonResponse({ ok: true });
+  }
+
+  // ACTION: delete-organization — deletes org (nulls user_profiles.organization_id)
+  if (action === "delete-organization") {
+    if (!isPlatformAdmin(user)) return errorResponse("Platform admin required", 403);
+    const { id } = body;
+    if (!id) return errorResponse("Missing id", 400);
+
+    // Unlink users first
+    await supabase.from("user_profiles").update({ organization_id: null }).eq("organization_id", id);
+
+    const { error } = await supabase.from("organizations").delete().eq("id", id);
+    if (error) return errorResponse(error.message, 500);
+    return jsonResponse({ ok: true });
+  }
+
+  // ACTION: assign-user-org — assigns a user to an org
+  if (action === "assign-user-org") {
+    const { user_id, organization_id } = body;
+    if (!user_id) return errorResponse("Missing user_id", 400);
+
+    const { error } = await supabase
+      .from("user_profiles")
+      .update({ organization_id: organization_id || null })
+      .eq("user_id", user_id);
+    if (error) return errorResponse(error.message, 500);
     return jsonResponse({ ok: true });
   }
 

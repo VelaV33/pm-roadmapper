@@ -694,6 +694,36 @@ body.dark-mode .pa-role-sel{background:var(--surface-low);border-color:var(--bor
 body.dark-mode .pa-table th{background:var(--bg);color:var(--muted)}
 body.dark-mode .pa-table td{border-color:var(--border);color:var(--text)}
 body.dark-mode .pa-table tr:hover td{background:rgba(255,255,255,.03)}
+.pa-org-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:10px;transition:border-color .12s}
+.pa-org-card:hover{border-color:var(--accent)}
+.pa-org-header{display:flex;align-items:center;gap:12px;cursor:pointer}
+.pa-org-header .org-name{font-weight:700;font-size:14px;color:var(--text)}
+.pa-org-header .org-domain{font-size:11px;color:var(--muted);font-style:italic}
+.pa-org-header .org-count{font-size:11px;font-weight:600;color:var(--accent);margin-left:auto}
+.pa-org-members{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:none}
+.pa-org-members.open{display:block}
+.pa-org-member{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:12px;color:var(--text)}
+.pa-org-member .remove-btn{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;padding:2px 8px;border-radius:4px;transition:all .12s}
+.pa-org-member .remove-btn:hover{background:#fef2f2;color:#ef4444}
+body.dark-mode .pa-org-member .remove-btn:hover{background:#7f1d1d;color:#f87171}
+.pa-org-form{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.pa-org-form input{padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:var(--white);color:var(--text)}
+.pa-org-form input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(45,107,244,.15)}
+.pa-org-form button{padding:8px 16px;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .12s}
+.pa-org-btn-primary{background:var(--accent);color:#fff}
+.pa-org-btn-primary:hover{opacity:.9}
+.pa-org-btn-danger{background:none;border:1px solid #ef4444!important;color:#ef4444}
+.pa-org-btn-danger:hover{background:#fef2f2}
+body.dark-mode .pa-org-btn-danger:hover{background:#7f1d1d}
+.pa-org-inline-edit{display:flex;gap:6px;align-items:center}
+.pa-org-inline-edit input{padding:4px 8px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--white);color:var(--text);font-family:inherit}
+.pa-org-inline-edit input:focus{outline:none;border-color:var(--accent)}
+.pa-org-inline-edit button{padding:4px 10px;font-size:11px;font-weight:600;border:none;border-radius:6px;cursor:pointer;font-family:inherit}
+.pa-org-domain-note{font-size:10px;color:var(--muted);font-style:italic;margin-top:2px}
+.pa-org-filter{padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--white);color:var(--text);font-family:inherit;cursor:pointer}
+body.dark-mode .pa-org-form input{background:var(--surface-low);border-color:var(--border);color:var(--text)}
+body.dark-mode .pa-org-inline-edit input{background:var(--surface-low);border-color:var(--border);color:var(--text)}
+body.dark-mode .pa-org-filter{background:var(--surface-low);border-color:var(--border);color:var(--text)}
 .auth-btn.microsoft{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:none;margin-top:8px}
 .auth-btn.microsoft:hover{background:rgba(255,255,255,.15)}
 .auth-btn.microsoft svg{width:18px;height:18px;flex-shrink:0}
@@ -6193,6 +6223,22 @@ async function onAuthSuccess(user){
   setTimeout(refreshContactsCache, 1700);
   // Notifications: load and start polling every 30 seconds
   setTimeout(function(){ loadNotifications(); _startNotificationPolling(); }, 1900);
+  // Auto-detect organization from email domain
+  setTimeout(async function(){
+    try{
+      var profileRes=await _dbReq('/rest/v1/user_profiles?select=organization_id&user_id=eq.'+_currentUser.id);
+      if(profileRes.ok&&profileRes.data&&profileRes.data[0]&&!profileRes.data[0].organization_id){
+        var emailDomain=(_currentUser.email||'').split('@')[1];
+        if(emailDomain){
+          var orgRes=await _dbReq('/rest/v1/organizations?select=id,name&domain=eq.'+encodeURIComponent(emailDomain.toLowerCase()));
+          if(orgRes.ok&&orgRes.data&&orgRes.data.length>0){
+            await _dbReq('/rest/v1/user_profiles?user_id=eq.'+_currentUser.id,'PATCH',{organization_id:orgRes.data[0].id});
+            console.log('Auto-assigned to organization:',orgRes.data[0].name);
+          }
+        }
+      }
+    }catch(e){console.warn('Org auto-detect failed:',e.message);}
+  },2000);
 }
 
 function _resetLocalData(){
@@ -19143,9 +19189,11 @@ function closeAdmin(){
 }
 
 // ── PLATFORM ADMIN ──────────────────────────────────────────────────────
-var _paTab='users'; // 'users' | 'stats' | 'teams'
+var _paTab='users'; // 'users' | 'stats' | 'teams' | 'orgs'
 var _paUsers=[];
 var _paSearch='';
+var _paOrgs=[];
+var _paOrgFilter='';
 
 function openPlatformAdmin(){
   if(!_isPlatformAdmin && !_isSuperAdmin){ showToast('Access denied — Platform Admin only','error'); return; }
@@ -19165,13 +19213,13 @@ async function renderPlatformAdmin(){
   var hdr=document.createElement('div');
   hdr.style.cssText='margin-bottom:20px';
   hdr.innerHTML='<h2 style="font-size:24px;font-weight:800;letter-spacing:-0.03em;margin-bottom:4px;color:var(--text)">Platform Admin</h2>'+
-    '<p style="font-size:13px;color:var(--muted)">System-wide user directory, stats, and team management.</p>';
+    '<p style="font-size:13px;color:var(--muted)">System-wide user directory, stats, team management, and organizations.</p>';
   body.appendChild(hdr);
 
   // Tab bar
   var tabBar=document.createElement('div');
   tabBar.className='pa-tab-bar';
-  var tabDefs=[{key:'users',label:'User Directory'},{key:'stats',label:'System Stats'},{key:'teams',label:'Team Management'}];
+  var tabDefs=[{key:'users',label:'User Directory'},{key:'stats',label:'System Stats'},{key:'teams',label:'Team Management'},{key:'orgs',label:'Organizations'}];
   tabDefs.forEach(function(td){
     var btn=document.createElement('button');
     btn.textContent=td.label;
@@ -19188,6 +19236,7 @@ async function renderPlatformAdmin(){
   if(_paTab==='users') await renderPAUsers(content);
   else if(_paTab==='stats') await renderPAStats(content);
   else if(_paTab==='teams') await renderPATeams(content);
+  else if(_paTab==='orgs') await renderPAOrgs(content);
 }
 
 async function _paFetchUsers(){
@@ -19210,11 +19259,20 @@ async function renderPAUsers(container){
   // Search bar + count
   var toolbar=document.createElement('div');
   toolbar.style.cssText='display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap';
+  // Build org filter options
+  var orgNames={};
+  users.forEach(function(u){ if(u.org_name) orgNames[u.org_name]=1; });
+  var orgFilterHtml='<select class="pa-org-filter" id="paOrgFilter"><option value="">All Organizations</option><option value="__none__">Unaffiliated</option>';
+  Object.keys(orgNames).sort().forEach(function(n){ orgFilterHtml+='<option value="'+escHtml(n)+'"'+(n===_paOrgFilter?' selected':'')+'>'+escHtml(n)+'</option>'; });
+  orgFilterHtml+='</select>';
   toolbar.innerHTML='<input class="pa-search" id="paSearchInput" placeholder="Search by email or name..." value="'+(_paSearch||'')+'">'+
+    orgFilterHtml+
     '<span style="font-size:12px;color:var(--muted);font-weight:600">'+users.length+' total users</span>';
   container.appendChild(toolbar);
   var searchInput=document.getElementById('paSearchInput');
   searchInput.oninput=function(){ _paSearch=this.value; renderPAUsersTable(users,container); };
+  var orgFilterEl=document.getElementById('paOrgFilter');
+  if(orgFilterEl) orgFilterEl.onchange=function(){ _paOrgFilter=this.value; renderPAUsersTable(users,container); };
 
   // Table container
   var tblWrap=document.createElement('div');
@@ -19229,12 +19287,14 @@ function renderPAUsersTable(users,container){
   if(!wrap) return;
   var q=(_paSearch||'').toLowerCase();
   var filtered=users.filter(function(u){
-    if(!q) return true;
-    return (u.email||'').toLowerCase().indexOf(q)!==-1 || (u.role||'').toLowerCase().indexOf(q)!==-1;
+    if(q && (u.email||'').toLowerCase().indexOf(q)===-1 && (u.role||'').toLowerCase().indexOf(q)===-1) return false;
+    if(_paOrgFilter==='__none__' && u.org_name) return false;
+    if(_paOrgFilter && _paOrgFilter!=='__none__' && u.org_name!==_paOrgFilter) return false;
+    return true;
   });
-  var html='<table class="pa-table"><thead><tr><th>Email</th><th>Role</th><th>Tier</th><th>Status</th><th>Created</th><th>Set Role</th></tr></thead><tbody>';
+  var html='<table class="pa-table"><thead><tr><th>Email</th><th>Role</th><th>Organization</th><th>Tier</th><th>Status</th><th>Created</th><th>Set Role</th></tr></thead><tbody>';
   if(filtered.length===0){
-    html+='<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">No users found</td></tr>';
+    html+='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">No users found</td></tr>';
   }
   filtered.forEach(function(u){
     var created=u.created_at?new Date(u.created_at).toLocaleDateString():'—';
@@ -19244,6 +19304,7 @@ function renderPAUsersTable(users,container){
     html+='<tr class="clickable" onclick="showPAUserDetail(\''+u.id+'\')">';
     html+='<td style="font-weight:600">'+escHtml(u.email||'—')+'</td>';
     html+='<td><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:9999px;background:rgba(45,107,244,.1);color:#3b82f6;text-transform:uppercase;letter-spacing:.04em">'+escHtml(u.role||'user')+'</span></td>';
+    html+='<td style="font-size:12px">'+(u.org_name?escHtml(u.org_name):'<span style="color:var(--muted)">--</span>')+'</td>';
     html+='<td style="text-transform:capitalize">'+escHtml(tier)+'</td>';
     html+='<td><span style="color:'+statusColor+';font-weight:600;font-size:11px">'+status+'</span></td>';
     html+='<td style="font-size:11px;color:var(--muted)">'+created+'</td>';
@@ -19411,6 +19472,341 @@ async function renderPATeams(container){
       container.appendChild(card);
     });
   }catch(e){container.innerHTML='<p style="color:var(--muted)">Error loading teams: '+e.message+'</p>';}
+}
+
+// ── PLATFORM ADMIN: ORGANIZATIONS TAB ─────────────────────────────────────
+async function _paFetchOrgs(force){
+  if(!force && _paOrgs.length>0) return _paOrgs;
+  try{
+    var r=await window.electronAPI.supaRequest({
+      path:'/functions/v1/admin-api',method:'POST',
+      body:{action:'list-organizations'},token:_accessToken||null
+    });
+    if(r.ok&&r.data&&r.data.organizations) _paOrgs=r.data.organizations;
+  }catch(e){showToast('Failed to load organizations: '+e.message,'error');}
+  return _paOrgs;
+}
+
+async function renderPAOrgs(container){
+  container.innerHTML='<p style="color:var(--muted);font-size:13px">Loading organizations...</p>';
+  var orgs=await _paFetchOrgs(true);
+  var users=await _paFetchUsers();
+  container.innerHTML='';
+
+  // Create organization form
+  var formWrap=document.createElement('div');
+  formWrap.style.cssText='margin-bottom:20px';
+  formWrap.innerHTML='<h3 style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px">Create Organization</h3>'+
+    '<div class="pa-org-form" id="paOrgCreateForm">'+
+    '<input id="paNewOrgName" placeholder="Organization name" style="flex:1;min-width:180px">'+
+    '<input id="paNewOrgDomain" placeholder="Email domain (e.g. company.co.za)" style="flex:1;min-width:180px">'+
+    '<button class="pa-org-btn-primary" onclick="paCreateOrg()">Create</button>'+
+    '</div>';
+  container.appendChild(formWrap);
+
+  // Stats
+  var statsGrid=document.createElement('div');
+  statsGrid.className='pa-stat-grid';
+  var totalUsers=0;
+  orgs.forEach(function(o){ totalUsers+=o.user_count||0; });
+  var unaffiliated=users.filter(function(u){ return !u.organization_id; }).length;
+  statsGrid.innerHTML=
+    '<div class="pa-stat"><div class="num" style="color:#8b5cf6">'+orgs.length+'</div><div class="lbl">Organizations</div></div>'+
+    '<div class="pa-stat"><div class="num" style="color:#10b981">'+totalUsers+'</div><div class="lbl">Affiliated Users</div></div>'+
+    '<div class="pa-stat"><div class="num" style="color:#f59e0b">'+unaffiliated+'</div><div class="lbl">Unaffiliated Users</div></div>';
+  container.appendChild(statsGrid);
+
+  // Org list
+  if(orgs.length===0){
+    var empty=document.createElement('div');
+    empty.className='pa-detail-card';
+    empty.innerHTML='<h3>No organizations yet</h3><p style="font-size:12px;color:var(--muted)">Create one above to get started.</p>';
+    container.appendChild(empty);
+  } else {
+    orgs.forEach(function(org){
+      var card=document.createElement('div');
+      card.className='pa-org-card';
+      card.id='paOrgCard_'+org.id;
+      var created=org.created_at?new Date(org.created_at).toLocaleDateString():'--';
+      var domainNote=org.domain?'<div class="pa-org-domain-note">Users signing up with @'+escHtml(org.domain)+' will be auto-assigned</div>':'';
+      card.innerHTML=
+        '<div class="pa-org-header" onclick="paToggleOrgMembers(\''+org.id+'\')">'+
+          '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:var(--accent);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>'+
+          '<div style="flex:1;min-width:0">'+
+            '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+              '<span class="org-name">'+escHtml(org.name)+'</span>'+
+              (org.domain?'<span class="org-domain">@'+escHtml(org.domain)+'</span>':'')+
+            '</div>'+
+            domainNote+
+          '</div>'+
+          '<span class="org-count">'+org.user_count+' user'+(org.user_count!==1?'s':'')+'</span>'+
+          '<span style="font-size:10px;color:var(--muted);margin-left:8px">Created '+created+'</span>'+
+          '<button onclick="event.stopPropagation();paEditOrg(\''+org.id+'\')" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;margin-left:4px" title="Edit">'+
+            '<svg viewBox="0 0 20 20" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.829-2.828z"/></svg>'+
+          '</button>'+
+          '<button onclick="event.stopPropagation();paDeleteOrg(\''+org.id+'\',\''+escHtml(org.name).replace(/'/g,"\\'")+'\')" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px" title="Delete">'+
+            '<svg viewBox="0 0 20 20" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5"><path d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"/></svg>'+
+          '</button>'+
+        '</div>'+
+        '<div class="pa-org-members" id="paOrgMembers_'+org.id+'"></div>';
+      container.appendChild(card);
+    });
+  }
+
+  // Unaffiliated users section
+  var unaffUsers=users.filter(function(u){ return !u.organization_id; });
+  if(unaffUsers.length>0){
+    var unaffCard=document.createElement('div');
+    unaffCard.className='pa-detail-card';
+    unaffCard.style.marginTop='20px';
+    unaffCard.innerHTML='<h3>Unaffiliated Users ('+unaffUsers.length+')</h3>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:6px" id="paUnaffUsers"></div>';
+    container.appendChild(unaffCard);
+    var unaffWrap=unaffCard.querySelector('#paUnaffUsers');
+    unaffUsers.forEach(function(u){
+      var chip=document.createElement('span');
+      chip.style.cssText='font-size:11px;padding:4px 12px;background:var(--bg);border:1px solid var(--border);border-radius:9999px;color:var(--text);display:inline-flex;align-items:center;gap:6px';
+      chip.innerHTML=escHtml(u.email||u.id);
+      if(orgs.length>0){
+        var assignBtn=document.createElement('button');
+        assignBtn.style.cssText='background:none;border:none;color:var(--accent);cursor:pointer;font-size:10px;font-weight:600;padding:0';
+        assignBtn.textContent='Assign';
+        assignBtn.onclick=(function(uid,uemail){
+          return function(){ paShowAssignOrgPicker(uid,uemail); };
+        })(u.id,u.email);
+        chip.appendChild(assignBtn);
+      }
+      unaffWrap.appendChild(chip);
+    });
+  }
+}
+
+async function paCreateOrg(){
+  var nameEl=document.getElementById('paNewOrgName');
+  var domainEl=document.getElementById('paNewOrgDomain');
+  var name=(nameEl?nameEl.value:'').trim();
+  var domain=(domainEl?domainEl.value:'').trim();
+  if(!name){ showToast('Organization name required','error'); return; }
+  try{
+    var r=await window.electronAPI.supaRequest({
+      path:'/functions/v1/admin-api',method:'POST',
+      body:{action:'create-organization',name:name,domain:domain||null},token:_accessToken||null
+    });
+    if(r.ok&&r.data&&r.data.ok){
+      showToast('Organization created','success');
+      _paOrgs=[];
+      _paUsers=[];
+      await renderPAOrgs(document.getElementById('paTabContent'));
+    } else {
+      showToast('Failed: '+(r.data&&r.data.error||'Unknown error'),'error');
+    }
+  }catch(e){showToast('Error: '+e.message,'error');}
+}
+
+function paToggleOrgMembers(orgId){
+  var el=document.getElementById('paOrgMembers_'+orgId);
+  if(!el) return;
+  if(el.classList.contains('open')){
+    el.classList.remove('open');
+    return;
+  }
+  el.classList.add('open');
+  paRenderOrgMembers(orgId);
+}
+
+async function paRenderOrgMembers(orgId){
+  var el=document.getElementById('paOrgMembers_'+orgId);
+  if(!el) return;
+  var users=await _paFetchUsers();
+  var orgUsers=users.filter(function(u){ return u.organization_id===orgId; });
+  var unaffUsers=users.filter(function(u){ return !u.organization_id; });
+
+  var html='';
+  if(orgUsers.length===0){
+    html+='<p style="font-size:12px;color:var(--muted);margin:8px 0">No members yet.</p>';
+  } else {
+    orgUsers.forEach(function(u){
+      html+='<div class="pa-org-member">'+
+        '<span style="width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">'+(u.email||'?')[0].toUpperCase()+'</span>'+
+        '<span>'+escHtml(u.email||u.id)+'</span>'+
+        '<button class="remove-btn" onclick="paRemoveUserFromOrg(\''+u.id+'\',\''+orgId+'\')">Remove</button>'+
+      '</div>';
+    });
+  }
+
+  // Add user button
+  html+='<div style="margin-top:8px"><button class="pa-org-btn-primary" style="font-size:11px;padding:6px 14px;border:none;border-radius:8px;cursor:pointer" onclick="paShowAddUserToOrg(\''+orgId+'\')">+ Add User</button></div>';
+
+  // Add user picker (hidden by default)
+  html+='<div id="paAddUserPicker_'+orgId+'" style="display:none;margin-top:8px">'+
+    '<select id="paAddUserSel_'+orgId+'" class="pa-org-filter" style="min-width:200px"><option value="">Select a user...</option>';
+  unaffUsers.forEach(function(u){
+    html+='<option value="'+u.id+'">'+escHtml(u.email||u.id)+'</option>';
+  });
+  html+='</select> '+
+    '<button class="pa-org-btn-primary" style="font-size:11px;padding:6px 12px;border:none;border-radius:6px;cursor:pointer;margin-left:4px" onclick="paAssignUserToOrg(\''+orgId+'\')">Assign</button>'+
+    '<button style="font-size:11px;padding:6px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;margin-left:4px;background:var(--white);color:var(--text)" onclick="document.getElementById(\'paAddUserPicker_'+orgId+'\').style.display=\'none\'">Cancel</button>'+
+  '</div>';
+
+  el.innerHTML=html;
+}
+
+function paShowAddUserToOrg(orgId){
+  var picker=document.getElementById('paAddUserPicker_'+orgId);
+  if(picker) picker.style.display='block';
+}
+
+async function paAssignUserToOrg(orgId){
+  var sel=document.getElementById('paAddUserSel_'+orgId);
+  if(!sel||!sel.value){ showToast('Select a user first','error'); return; }
+  try{
+    var r=await window.electronAPI.supaRequest({
+      path:'/functions/v1/admin-api',method:'POST',
+      body:{action:'assign-user-org',user_id:sel.value,organization_id:orgId},token:_accessToken||null
+    });
+    if(r.ok&&r.data&&r.data.ok){
+      showToast('User assigned to organization','success');
+      _paUsers=[];
+      _paOrgs=[];
+      await renderPAOrgs(document.getElementById('paTabContent'));
+    } else {
+      showToast('Failed: '+(r.data&&r.data.error||'Unknown error'),'error');
+    }
+  }catch(e){showToast('Error: '+e.message,'error');}
+}
+
+async function paRemoveUserFromOrg(userId,orgId){
+  if(!confirm('Remove this user from the organization?')) return;
+  try{
+    var r=await window.electronAPI.supaRequest({
+      path:'/functions/v1/admin-api',method:'POST',
+      body:{action:'assign-user-org',user_id:userId,organization_id:null},token:_accessToken||null
+    });
+    if(r.ok&&r.data&&r.data.ok){
+      showToast('User removed from organization','success');
+      _paUsers=[];
+      _paOrgs=[];
+      await renderPAOrgs(document.getElementById('paTabContent'));
+    } else {
+      showToast('Failed: '+(r.data&&r.data.error||'Unknown error'),'error');
+    }
+  }catch(e){showToast('Error: '+e.message,'error');}
+}
+
+function paShowAssignOrgPicker(userId,userEmail){
+  // Build a small modal/picker to choose which org to assign the user to
+  var existing=document.getElementById('paAssignOrgModal');
+  if(existing) existing.remove();
+  var modal=document.createElement('div');
+  modal.id='paAssignOrgModal';
+  modal.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center';
+  var card=document.createElement('div');
+  card.style.cssText='background:var(--white);border:1px solid var(--border);border-radius:12px;padding:24px;min-width:320px;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.2)';
+  card.innerHTML='<h3 style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px">Assign to Organization</h3>'+
+    '<p style="font-size:12px;color:var(--muted);margin-bottom:14px">'+escHtml(userEmail)+'</p>'+
+    '<select id="paAssignOrgSel" class="pa-org-filter" style="width:100%;padding:10px 12px;margin-bottom:14px"><option value="">Select organization...</option></select>'+
+    '<div style="display:flex;gap:8px;justify-content:flex-end">'+
+      '<button onclick="document.getElementById(\'paAssignOrgModal\').remove()" style="padding:8px 16px;border:1px solid var(--border);border-radius:8px;background:var(--white);color:var(--text);font-size:12px;font-weight:600;cursor:pointer">Cancel</button>'+
+      '<button id="paAssignOrgConfirmBtn" class="pa-org-btn-primary" style="padding:8px 16px;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">Assign</button>'+
+    '</div>';
+  modal.appendChild(card);
+  document.body.appendChild(modal);
+  modal.onclick=function(e){ if(e.target===modal) modal.remove(); };
+
+  var sel=document.getElementById('paAssignOrgSel');
+  _paOrgs.forEach(function(o){
+    var opt=document.createElement('option');
+    opt.value=o.id;
+    opt.textContent=o.name;
+    sel.appendChild(opt);
+  });
+
+  document.getElementById('paAssignOrgConfirmBtn').onclick=async function(){
+    if(!sel.value){ showToast('Select an organization','error'); return; }
+    try{
+      var r=await window.electronAPI.supaRequest({
+        path:'/functions/v1/admin-api',method:'POST',
+        body:{action:'assign-user-org',user_id:userId,organization_id:sel.value},token:_accessToken||null
+      });
+      if(r.ok&&r.data&&r.data.ok){
+        showToast('User assigned','success');
+        modal.remove();
+        _paUsers=[];
+        _paOrgs=[];
+        await renderPAOrgs(document.getElementById('paTabContent'));
+      } else {
+        showToast('Failed: '+(r.data&&r.data.error||'Unknown error'),'error');
+      }
+    }catch(e){showToast('Error: '+e.message,'error');}
+  };
+}
+
+function paEditOrg(orgId){
+  var org=_paOrgs.find(function(o){return o.id===orgId;});
+  if(!org) return;
+  var card=document.getElementById('paOrgCard_'+orgId);
+  if(!card) return;
+  var header=card.querySelector('.pa-org-header');
+  if(!header) return;
+  // Replace header with inline edit form
+  var editDiv=document.createElement('div');
+  editDiv.className='pa-org-inline-edit';
+  editDiv.innerHTML=
+    '<input id="paEditOrgName_'+orgId+'" value="'+escHtml(org.name)+'" placeholder="Name" style="flex:1;min-width:120px">'+
+    '<input id="paEditOrgDomain_'+orgId+'" value="'+escHtml(org.domain||'')+'" placeholder="Domain" style="flex:1;min-width:120px">'+
+    '<button style="background:var(--accent);color:#fff" onclick="paSaveOrgEdit(\''+orgId+'\')">Save</button>'+
+    '<button style="background:var(--white);color:var(--text);border:1px solid var(--border)" onclick="paCancelOrgEdit(\''+orgId+'\')">Cancel</button>';
+  header.style.display='none';
+  card.insertBefore(editDiv, header.nextSibling);
+}
+
+function paCancelOrgEdit(orgId){
+  var card=document.getElementById('paOrgCard_'+orgId);
+  if(!card) return;
+  var editDiv=card.querySelector('.pa-org-inline-edit');
+  if(editDiv) editDiv.remove();
+  var header=card.querySelector('.pa-org-header');
+  if(header) header.style.display='';
+}
+
+async function paSaveOrgEdit(orgId){
+  var nameEl=document.getElementById('paEditOrgName_'+orgId);
+  var domainEl=document.getElementById('paEditOrgDomain_'+orgId);
+  var name=(nameEl?nameEl.value:'').trim();
+  var domain=(domainEl?domainEl.value:'').trim();
+  if(!name){ showToast('Name required','error'); return; }
+  try{
+    var r=await window.electronAPI.supaRequest({
+      path:'/functions/v1/admin-api',method:'POST',
+      body:{action:'update-organization',id:orgId,name:name,domain:domain||null},token:_accessToken||null
+    });
+    if(r.ok&&r.data&&r.data.ok){
+      showToast('Organization updated','success');
+      _paOrgs=[];
+      _paUsers=[];
+      await renderPAOrgs(document.getElementById('paTabContent'));
+    } else {
+      showToast('Failed: '+(r.data&&r.data.error||'Unknown error'),'error');
+    }
+  }catch(e){showToast('Error: '+e.message,'error');}
+}
+
+async function paDeleteOrg(orgId,orgName){
+  if(!confirm('Delete organization "'+orgName+'"? All users will be unaffiliated.')) return;
+  try{
+    var r=await window.electronAPI.supaRequest({
+      path:'/functions/v1/admin-api',method:'POST',
+      body:{action:'delete-organization',id:orgId},token:_accessToken||null
+    });
+    if(r.ok&&r.data&&r.data.ok){
+      showToast('Organization deleted','success');
+      _paOrgs=[];
+      _paUsers=[];
+      await renderPAOrgs(document.getElementById('paTabContent'));
+    } else {
+      showToast('Failed: '+(r.data&&r.data.error||'Unknown error'),'error');
+    }
+  }catch(e){showToast('Error: '+e.message,'error');}
 }
 
 // ── END PLATFORM ADMIN ──────────────────────────────────────────────────
