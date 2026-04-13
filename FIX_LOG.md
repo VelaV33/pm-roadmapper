@@ -38,3 +38,9 @@
 **Decision:** Both features already existed as full overlays accessible from the sidebar. `openTodo()` at line 11203 and `openPlans()` at line 13788 were fully implemented. The top nav at `<nav class="toolbar-nav">` only had Dashboard, Roadmap, Checklist, Strategy, Insights. Added Plans and To-Do links between Checklist and Strategy. Both use the existing `closeAllOverlays() + open*() + updateNavActive()` pattern already used by the other nav items. `updateNavActive()` uses text matching so no registry changes needed.
 **Changes:** Two new `<a>` elements added to the top nav bar.
 **Files:** renderer/index.html (toolbar-nav section)
+
+## Fix 6: Edit Row Popup Too Large
+**Status:** Fixed
+**Root cause:** The `.row-kebab-menu` CSS class set `position:absolute; right:0;`. The JS that creates the menu overrides to `position:fixed; left:leftPx;`. But it did NOT override `right`. With BOTH `left` AND `right:0` applied, the browser stretches the element from leftPx to the viewport's right edge — making it span the full screen width.
+**Fix:** Added `menu.style.right = 'auto';` and `menu.style.width = menuW + 'px';` in the JS `openRowKebab()` function. The menu is now a fixed 180px width, right-aligned to the kebab button, clamped to the viewport.
+**Files:** renderer/index.html (openRowKebab function)
