@@ -58,3 +58,71 @@
 **Fix:** Added dark mode overrides for `.prio-sidebar`, `.cap-sidebar`, and `.plans-sidebar` to use `#0f172a` (dark navy) background with `#334155` border. Also overrode their item text colors, hover states, and active states to use explicit light values instead of relying on the inverted `--navy` variable.
 **Scope:** Prio sidebar, Cap sidebar, Plans sidebar — all three had the same issue.
 **Files:** renderer/index.html (dark mode CSS section, after line 63)
+
+## Fix 9: Top 10 Priorities Overview Page
+**Status:** Fixed
+**Decision:** Created a new overlay page that derives the top 10 ranked initiatives from the existing `rows` array using a scoring formula: priority weight (P1=30, P2=20, P3=10) + status urgency (At Risk=15, Delayed=10, In Progress=5, Not Started=3, Complete=1). No new data stored — purely derived from existing `rows`.
+**Changes:**
+1. Added `#top10Overlay` CSS with dark mode support
+2. Added overlay HTML with header and body container
+3. Added sidebar button (after Prioritization)
+4. Added `top10Overlay` to `closeAllOverlays()` list
+5. Added `openTop10()`, `closeTop10()`, `_top10Score()`, and `renderTop10()` functions
+6. Cards show: rank number, name, subtitle, priority badge, status badge, section, owner, date range
+**Files:** renderer/index.html (CSS, HTML overlay, sidebar nav, JS functions)
+
+## Fix 10: Plans Template Defaults to "Globalisation Initiative"
+**Status:** Fixed
+**Decision:** Found two occurrences of "Globalization" in default section names: `{id:"s4",name:"Globalization · Malaysia"}` and `{id:"s5",name:"Globalization · Australia"}` — both in the initial `sections` array AND in the `onResetData` handler. These are Netstar-specific names that shouldn't ship as defaults.
+**Changes:** Replaced both with generic names: "Expansion · Phase 1" and "Expansion · Phase 2". All 4 occurrences updated (2 in initial data, 2 in reset handler).
+**Files:** renderer/index.html (sections array, onResetData handler)
+
+## Fix 11: CapacityIQ Button Non-Responsive
+**Status:** Fixed
+**Root cause:** Same as Fix 7 (Edit Timeline). The CapacityIQ sidebar button calls `openCapacity()` which correctly opens `#capOverlay`, but the sidebar (z-index 4500) stays open on top. The overlay opens underneath, user sees the sidebar and thinks the button didn't work.
+**Fix:** Added sidebar auto-collapse to the onclick: `var sb=document.getElementById('appSidebar');if(sb)sb.classList.add('collapsed');` before `closeAllOverlays();openCapacity()`.
+**Files:** renderer/index.html (CapacityIQ sidebar button onclick)
+
+## Fix 12: Change Request Button Non-Responsive
+**Status:** Fixed
+**Root cause:** Same sidebar-overlay z-index issue as Fixes 7/11. The Change Requests page already exists as `openUCR()` with full overlay, form fields, status workflow, and Word export. The sidebar button correctly calls `openUCR()` but the sidebar stays on top.
+**Fix:** Added sidebar auto-collapse to the onclick, same pattern as Fix 11.
+**Note:** The UCR page is already feature-complete with: title, description, requester, priority, status workflow (Draft/Submitted/Approved/Rejected/Implemented), systems impact checklist, approval workflow, and Word export.
+**Files:** renderer/index.html (Change Requests sidebar button onclick)
+
+## Fix 13: Artefacts Button Routes to Roadmap Instead
+**Status:** Fixed
+**Root cause:** Same sidebar-overlay z-index issue. The Artifacts sidebar button calls `closeAllOverlays();openArtifacts()` which is correct — `closeAllOverlays()` shows the roadmap page by default, then `openArtifacts()` opens the art overlay on top. But because the sidebar stays open and covers the overlay, the user only sees the roadmap underneath and thinks "it routes to Roadmap."
+**Fix:** Added sidebar auto-collapse to the onclick.
+**Files:** renderer/index.html (Artifacts sidebar button onclick)
+
+## Fix 14: Dark Mode — Competitive Analysis Text Invisible
+**Status:** Fixed
+**Root cause:** The Competitive Analysis modal uses many hardcoded light-mode colors: `.comp-chip` (background:#e8f4fd), `.comp-tab` (background:#fff), `.comp-history-item` (background:#fff), `.comp-rec` (background:#f8faff), `.comp-checkbox-grid label` hover/checked states, and `.comp-swot-cell` quadrants (hardcoded pastel backgrounds with dark text). In dark mode these backgrounds stay light while text inherits light colors, making text invisible.
+**Fix:** Added 24 dark mode CSS overrides for all competitive analysis classes: chips, tabs, history items, recommendation cards, checkbox grid, SWOT cells (using dark-appropriate background/text pairs), section borders, add buttons, and premium gate.
+**Files:** renderer/index.html (dark mode CSS section)
+
+## Fix 15: Super Admin -> User Management + Platform Admin
+**Status:** Partially fixed (Part A — UI label rename)
+**Decision:** Renamed all user-facing "Super Admin" labels to "User Management" while keeping the underlying `super_admin` role value unchanged in code. This is a pure UI rename — no backend changes.
+**Changes:**
+1. Sidebar button text: "Super Admin" -> "User Management"
+2. Admin overlay header: "Super Admin" -> "User Management"
+3. Role labels object: `super_admin:'Super Admin'` -> `super_admin:'User Management'`
+4. Role picker dropdown: label changed to "User Management"
+5. Access denied toast updated
+6. Added TODO comment for Parts B+C (new platform_admin role + Platform Admin page) which require backend edge function changes
+**Deferred:** Parts B (new admin role in auth) and C (Platform Admin page for system-wide settings) require backend changes to the admin-api edge function.
+**Files:** renderer/index.html (sidebar, admin overlay header, role labels, role picker, access denied message)
+
+## Fix 16: Save Backup — Full Data Export
+**Status:** Fixed
+**Root cause:** The old `exportBackup()` delegated entirely to `window.electronAPI.exportBackup()` which only included sections, rows, and quarters. All other data (G2M, ToDo, KPI, UCR, CapacityIQ, Artifacts, Brand Guide, Plans, OKRs, Prioritization, Task Library, Timesheets) was lost on backup.
+**Changes:**
+1. Replaced `exportBackup()` with a comprehensive version that builds a full data blob containing ALL 20+ data keys (matching the cloud push payload)
+2. Added `_backupVersion: 2`, `_exportedAt` timestamp, and `_appVersion` metadata
+3. Uses `electronAPI.saveFile()` for Electron, with fallback to `electronAPI.exportBackup()` (legacy) and web Blob download
+4. Updated `restoreJsonBackup()` to restore ALL data keys from v2 backups while maintaining backwards compatibility with v1 backups (sections+rows only)
+5. Restore now calls `renderTabs()` and `renderStackedTabs()` in addition to existing render calls
+6. Shows backup version in success toast
+**Files:** renderer/index.html (exportBackup, restoreJsonBackup functions)

@@ -79,6 +79,31 @@ body.dark-mode .plan-bulk-btn{background:#1e293b;color:#e2e8f0;border-color:#475
 body.dark-mode .pred-row:hover{background:#0f172a}
 body.dark-mode .plan-bulk-cb,body.dark-mode .plan-bulk-all{accent-color:#3b82f6}
 body.dark-mode hr{border-color:var(--border)}
+/* v1.28.0 Fix 14: Competitive Analysis dark mode text visibility */
+body.dark-mode .comp-chip{background:#1e3a5f;border-color:#3b82f6;color:#93c5fd}
+body.dark-mode .comp-tab{background:var(--white);color:var(--muted);border-color:var(--border)}
+body.dark-mode .comp-tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+body.dark-mode .comp-history-item{background:var(--white);border-color:var(--border);color:var(--text)}
+body.dark-mode .comp-history-item:hover{background:#0f172a}
+body.dark-mode .comp-rec{background:var(--surface-low);border-color:var(--border)}
+body.dark-mode .comp-rec-body h5{color:var(--text)}
+body.dark-mode .comp-rec-body p{color:var(--muted)}
+body.dark-mode .comp-checkbox-grid label{border-color:var(--border);color:var(--text)}
+body.dark-mode .comp-checkbox-grid label:hover{border-color:var(--accent);background:rgba(45,107,244,.1)}
+body.dark-mode .comp-checkbox-grid label.checked{border-color:var(--accent);background:rgba(45,107,244,.15)}
+body.dark-mode .comp-card-body{background:var(--white);color:var(--text)}
+body.dark-mode .comp-section{border-bottom-color:var(--border)}
+body.dark-mode .comp-section h4{color:var(--muted)}
+body.dark-mode .comp-section p{color:var(--text)}
+body.dark-mode .comp-section ul{color:var(--text)}
+body.dark-mode .comp-swot-cell.sw-s{background:#064e3b;color:#6ee7b7}
+body.dark-mode .comp-swot-cell.sw-w{background:#7f1d1d;color:#fca5a5}
+body.dark-mode .comp-swot-cell.sw-o{background:#1e3a8a;color:#93c5fd}
+body.dark-mode .comp-swot-cell.sw-t{background:#78350f;color:#fcd34d}
+body.dark-mode .comp-add-btn{border-color:var(--accent);color:var(--accent)}
+body.dark-mode .comp-add-btn:hover{background:rgba(45,107,244,.1)}
+body.dark-mode .premium-gate h3{color:var(--text)}
+body.dark-mode .premium-gate p{color:var(--muted)}
 body.dark-mode .sidebar-item{color:var(--text)}
 body.dark-mode .sidebar-item:hover{background:#0f172a}
 /* v1.26.0: catch-all dark mode overrides for inline hardcoded colours that
@@ -555,6 +580,23 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .cap-sidebar-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.9)}
 .cap-sidebar-item.active{background:rgba(45,107,244,.15);color:var(--accent);border-left-color:var(--accent)}
 .cap-sidebar-item:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;color:rgba(255,255,255,.95)}
+
+/* ── Top 10 Priorities overlay ──────────────────────────────────────── */
+#top10Overlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
+#top10Overlay.open{display:flex}
+.top10-header{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.top10-body{flex:1;overflow-y:auto;padding:28px 32px}
+.top10-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:12px;display:flex;align-items:flex-start;gap:16px;transition:box-shadow .15s}
+.top10-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.top10-rank{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff;flex-shrink:0}
+.top10-card-body{flex:1;min-width:0}
+.top10-card-body h3{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px}
+.top10-card-body p{font-size:12px;color:var(--muted);margin:0}
+.top10-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.top10-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:9999px;text-transform:uppercase;letter-spacing:.04em}
+body.dark-mode #top10Overlay .top10-header{background:var(--toolbar-bg)}
+body.dark-mode .top10-card{background:var(--white);border-color:var(--border)}
+body.dark-mode .top10-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.3)}
 
 /* ── Prioritization overlay ──────────────────────────────────────────── */
 #prioritizationOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
@@ -1434,21 +1476,25 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
     <svg viewBox="0 0 24 24"><path d="M16 8v8m-4-5v5m-4-2v2m-2 4h16a2 2 0 002-2V5a2 2 0 00-2-2H4a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
     KPI Scorecard
   </button>
-  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openUCR()">
+  <button class="sidebar-item" onclick="closeDds();var sb=document.getElementById('appSidebar');if(sb)sb.classList.add('collapsed');closeAllOverlays();openUCR()">
     <svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
     Change Requests
   </button>
-  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openArtifacts()">
+  <button class="sidebar-item" onclick="closeDds();var sb=document.getElementById('appSidebar');if(sb)sb.classList.add('collapsed');closeAllOverlays();openArtifacts()">
     <svg viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
     Artifacts
   </button>
-  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openCapacity()">
+  <button class="sidebar-item" onclick="closeDds();var sb=document.getElementById('appSidebar');if(sb)sb.classList.add('collapsed');closeAllOverlays();openCapacity()">
     <svg viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
     CapacityIQ
   </button>
   <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openPrioritization()">
     <svg viewBox="0 0 24 24"><path d="M3 4h18M3 12h12M3 20h6"/></svg>
     Prioritization
+  </button>
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openTop10()">
+    <svg viewBox="0 0 24 24"><path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+    Top 10 Priorities
   </button>
   <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openPlans()">
     <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h.01M9 12h.01M15 12h.01m-6 4h6"/></svg>
@@ -1505,7 +1551,7 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
   <div class="sidebar-divider" id="adminSidebarDivider" style="display:none"></div>
   <button class="sidebar-item" id="adminSidebarBtn" style="display:none" onclick="closeDds();closeAllOverlays();openAdmin()">
     <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-    Super Admin
+    User Management
   </button>
 </nav>
 
@@ -2003,7 +2049,7 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
 <!-- ADMIN OVERLAY -->
 <div id="adminOverlay">
   <div style="background:rgba(249,249,250,.9);backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0">
-    <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.03em;color:var(--text)">Super Admin</h2>
+    <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.03em;color:var(--text)">User Management</h2>
     <button onclick="closeAdmin()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">&times;</button>
   </div>
   <div id="adminBody" style="flex:1;overflow-y:auto;padding:28px 32px"></div>
@@ -2144,6 +2190,20 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
       <div class="plans-content" id="plansContent"></div>
     </div>
   </div>
+</div>
+
+<!-- ── TOP 10 PRIORITIES OVERLAY ──────────────────────────────────────────── -->
+<div id="top10Overlay">
+  <div class="top10-header">
+    <h2 style="color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em;display:flex;align-items:center;gap:10px">
+      <svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+      Top 10 Priorities
+    </h2>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <button onclick="closeTop10()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;transition:color .12s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">&times;</button>
+    </div>
+  </div>
+  <div class="top10-body" id="top10Body"></div>
 </div>
 
 <!-- ── PRIORITIZATION OVERLAY ─────────────────────────────────────────────── -->
@@ -2680,8 +2740,8 @@ var sections=[
   {id:"s1",name:"Overarching Strategy",color:"#7c3aed"},
   {id:"s2",name:"Stability",color:"#0369a1"},
   {id:"s3",name:"Product Initiative",color:"#0F1B3D"},
-  {id:"s4",name:"Globalization · Malaysia",color:"#0f766e"},
-  {id:"s5",name:"Globalization · Australia",color:"#b45309"},
+  {id:"s4",name:"Expansion · Phase 1",color:"#0f766e"},
+  {id:"s5",name:"Expansion · Phase 2",color:"#b45309"},
 ];
 
 var rows=[
@@ -4954,12 +5014,12 @@ function canView(feature){
 function isManager(){return _userRole==='manager';}
 
 function getRoleBadgeHtml(role){
-  var labels={super_admin:'Super Admin',manager:'Manager',product_manager:'Product Manager',developer:'Developer',viewer:'Viewer',read_only:'Read Only'};
+  var labels={super_admin:'User Management',manager:'Manager',product_manager:'Product Manager',developer:'Developer',viewer:'Viewer',read_only:'Read Only'};
   return '<span class="role-badge '+(role||'viewer')+'">'+(labels[role]||'Unknown')+'</span>';
 }
 // v1.24.0: human-readable role labels (used by the admin panel dropdown)
 var ROLE_OPTIONS = [
-  { value:'super_admin',     label:'Super Admin',     desc:'Full access + role + team management' },
+  { value:'super_admin',     label:'User Management', desc:'Full access + role + team management' },
   { value:'manager',         label:'Manager',         desc:'Full edit access across the platform' },
   { value:'product_manager', label:'Product Manager', desc:'Full edit access except role management' },
   { value:'developer',       label:'Developer',       desc:'Edit ToDo and CapacityIQ; read-only elsewhere' },
@@ -18388,7 +18448,7 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 
 function closeAllOverlays(){
-  ['g2mOverlay','todoOverlay','kpiOverlay','ucrOverlay','capOverlay','artOverlay','previewOverlay','reportsOverlay','insightsOverlay','adminOverlay','prioritizationOverlay','plansOverlay','feedbackOverlay'].forEach(function(id){
+  ['g2mOverlay','todoOverlay','kpiOverlay','ucrOverlay','capOverlay','artOverlay','previewOverlay','reportsOverlay','insightsOverlay','adminOverlay','prioritizationOverlay','plansOverlay','feedbackOverlay','top10Overlay'].forEach(function(id){
     var el=document.getElementById(id);
     if(el) el.classList.remove('open');
   });
@@ -18561,7 +18621,10 @@ async function checkSuperAdmin(){
 }
 
 function openAdmin(){
-  if(!_isSuperAdmin){ showToast('Access denied — Super Admin only','error'); return; }
+  if(!_isSuperAdmin){ showToast('Access denied — User Management admin only','error'); return; }
+  // TODO (Fix 15 Parts B+C): Add platform_admin role in backend auth + create
+  // a dedicated Platform Admin page for system-wide settings. Requires backend
+  // changes to the admin-api edge function to support the new role.
   document.getElementById('adminOverlay').classList.add('open');
   renderAdminPage();
   updateNavActive('');  // v1.25.0
@@ -21435,6 +21498,73 @@ function capExportDashboard(){
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// ── TOP 10 PRIORITIES ──────────────────────────────────────────────────────
+// Derives the top 10 highest-priority initiatives from the `rows` array.
+// Scoring: priority weight (P1=30, P2=20, P3=10) + status weight (At Risk=15, Delayed=10, In Progress=5).
+function openTop10(){
+  document.getElementById('top10Overlay').classList.add('open');
+  updateNavActive('');
+  renderTop10();
+}
+function closeTop10(){
+  document.getElementById('top10Overlay').classList.remove('open');
+}
+function _top10Score(row){
+  var prioW = {P1:30,P2:20,P3:10};
+  var statW = {'At Risk':15,'Delayed':10,'In Progress':5,'Not Started':3,'Complete':1};
+  var p = (row.priority && prioW[row.priority]) || 0;
+  var s = (row.status && statW[row.status]) || 0;
+  return p + s;
+}
+function renderTop10(){
+  var body = document.getElementById('top10Body');
+  if(!body) return;
+  var scored = rows.map(function(r){ return {row:r, score:_top10Score(r)}; });
+  scored.sort(function(a,b){ return b.score - a.score; });
+  var top = scored.slice(0, 10);
+  if(top.length === 0){
+    body.innerHTML = '<div style="text-align:center;padding:60px 20px"><h3 style="color:var(--text);margin-bottom:8px">No Initiatives Yet</h3><p style="color:var(--muted);font-size:13px">Add initiatives to your roadmap and they\'ll be ranked here automatically.</p></div>';
+    return;
+  }
+  var rankColors = ['#7c3aed','#2563eb','#0891b2','#059669','#d97706','#dc2626','#7c3aed','#2563eb','#0891b2','#059669'];
+  var prioBg = {P1:'background:#fee2e2;color:#991b1b',P2:'background:#fef3c7;color:#92400e',P3:'background:#dbeafe;color:#1e40af'};
+  var statusBg = {'At Risk':'background:#fee2e2;color:#dc2626','Delayed':'background:#fef3c7;color:#d97706','In Progress':'background:#dbeafe;color:#2563eb','Complete':'background:#dcfce7;color:#16a34a','Not Started':'background:#f1f5f9;color:#64748b'};
+  var html = '<div style="max-width:720px;margin:0 auto">';
+  html += '<p style="color:var(--muted);font-size:13px;margin-bottom:20px;line-height:1.5">Your top initiatives ranked by priority level and status urgency. Derived automatically from your roadmap data.</p>';
+  top.forEach(function(item, idx){
+    var r = item.row;
+    var sec = sections.find(function(s){ return s.id === r.sec; });
+    var secName = sec ? sec.name : '';
+    var prio = r.priority || 'None';
+    var stat = r.status || 'Not Started';
+    var owner = r.owner || '';
+    var dateRange = '';
+    if(r.bars && r.bars.length){
+      var minS = Infinity, maxE = -Infinity;
+      r.bars.forEach(function(b){ if(b.s < minS) minS = b.s; if(b.e > maxE) maxE = b.e; });
+      if(minS !== Infinity) dateRange = 'Q' + (Math.floor(minS/3)+1) + ' — Q' + (Math.floor((maxE-1)/3)+1);
+    }
+    html += '<div class="top10-card">';
+    html += '<div class="top10-rank" style="background:'+rankColors[idx]+'">'+(idx+1)+'</div>';
+    html += '<div class="top10-card-body">';
+    html += '<h3>'+escHtml(r.name)+'</h3>';
+    if(r.sub) html += '<p>'+escHtml(r.sub)+'</p>';
+    html += '<div class="top10-meta">';
+    if(prio !== 'None'){
+      var ps = prioBg[prio] || 'background:#f1f5f9;color:#64748b';
+      html += '<span class="top10-badge" style="'+ps+'">'+escHtml(prio)+'</span>';
+    }
+    var ss = statusBg[stat] || 'background:#f1f5f9;color:#64748b';
+    html += '<span class="top10-badge" style="'+ss+'">'+escHtml(stat)+'</span>';
+    if(secName) html += '<span class="top10-badge" style="background:var(--surface-low);color:var(--muted)">'+escHtml(secName)+'</span>';
+    if(owner) html += '<span class="top10-badge" style="background:var(--surface-low);color:var(--muted)">'+escHtml(owner)+'</span>';
+    if(dateRange) html += '<span class="top10-badge" style="background:var(--surface-low);color:var(--muted)">'+dateRange+'</span>';
+    html += '</div></div></div>';
+  });
+  html += '</div>';
+  body.innerHTML = html;
+}
+
 // ── ARTIFACTS / COLLATERAL ──────────────────────────────────────────────────
 
 function openArtifacts() {
@@ -22990,10 +23120,63 @@ function persistData() {
 
 // ── BACKUP / IMPORT ────────────────────────────────────────────────────────────
 function exportBackup() {
-  if (!window.electronAPI) return;
-  window.electronAPI.exportBackup().then(function(res) {
-    if (res && res.ok) showToast('Backup saved','success');
-  });
+  // v1.28.0 Fix 16: Full data export with all keys, version, and timestamp
+  var customKPIs=[];
+  try { KPI_TEMPLATE.forEach(function(g){g.items.forEach(function(k){if(k.custom) customKPIs.push({group:g.group,color:g.color,item:k});});}); } catch(e){}
+  var backup = {
+    _backupVersion: 2,
+    _exportedAt: new Date().toISOString(),
+    _appVersion: 'v1.28.0',
+    sections: sections,
+    rows: rows,
+    quarters: quarters,
+    tabs_data: tabs_data,
+    activeTabId: activeTabId,
+    g2mData: g2mAllData,
+    todoData: todoAllData,
+    kpiData: kpiAllData,
+    kpiCustomKPIs: customKPIs,
+    timesheetData: timesheetData,
+    ucrData: ucrAllData,
+    artifactsData: artifactsData,
+    brandGuideData: brandGuideData,
+    artTemplates: artTemplates,
+    capData: capData,
+    prioritization: typeof prioritizationData !== 'undefined' ? prioritizationData : undefined,
+    roadmapSortBy: typeof _roadmapSortBy !== 'undefined' ? _roadmapSortBy : undefined,
+    projectPlans: typeof projectPlans !== 'undefined' ? projectPlans : undefined,
+    planTemplates: typeof planTemplates !== 'undefined' ? planTemplates : undefined,
+    okrs: typeof okrsData !== 'undefined' ? okrsData : undefined,
+    roadmapView: typeof _roadmapView !== 'undefined' ? _roadmapView : undefined,
+    taskLibrary: typeof taskLibrary !== 'undefined' ? taskLibrary : undefined,
+    taskLibrarySeeded: typeof _taskLibrarySeeded !== 'undefined' ? _taskLibrarySeeded : undefined
+  };
+
+  if (window.electronAPI && window.electronAPI.saveFile) {
+    // Electron: use native save dialog
+    window.electronAPI.saveFile({
+      content: JSON.stringify(backup, null, 2),
+      defaultName: 'RoadmapOS_Backup_' + new Date().toISOString().slice(0,10) + '.json',
+      ext: 'json',
+      label: 'JSON Backup'
+    }).then(function(res){
+      if(res && res.ok) showToast('Full backup saved','success');
+    });
+  } else if (window.electronAPI && window.electronAPI.exportBackup) {
+    // Legacy Electron: fallback to old API
+    window.electronAPI.exportBackup().then(function(res) {
+      if (res && res.ok) showToast('Backup saved','success');
+    });
+  } else {
+    // Web fallback: download via blob
+    var blob = new Blob([JSON.stringify(backup, null, 2)], {type: 'application/json'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'RoadmapOS_Backup_' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast('Full backup downloaded','success');
+  }
 }
 // ── EXCEL TEMPLATE (base64 embedded) ─────────────────────────
 var XLSX_TEMPLATE_B64 = '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';
@@ -23419,10 +23602,32 @@ function restoreJsonBackup(){
   if(!confirm('Restore a JSON backup? This will replace all current data.')) return;
   window.electronAPI.importBackup().then(function(res){
     if(res && res.ok){
-      sections = res.data.sections || sections;
-      rows     = res.data.rows     || rows;
-      if(res.data.quarters) quarters = res.data.quarters;
-      recomputeTimeline(); renderTableHeader(); render(); persistData();
+      var d = res.data;
+      // v1.28.0 Fix 16: Backwards-compatible restore — handles both v1 (sections+rows only) and v2 (full export)
+      if(d.sections) sections = d.sections;
+      if(d.rows) rows = d.rows;
+      if(d.quarters) quarters = d.quarters;
+      if(d.tabs_data) tabs_data = d.tabs_data;
+      if(d.activeTabId) activeTabId = d.activeTabId;
+      if(d.g2mData) g2mAllData = d.g2mData;
+      if(d.todoData) todoAllData = d.todoData;
+      if(d.kpiData) kpiAllData = d.kpiData;
+      if(d.timesheetData) timesheetData = d.timesheetData;
+      if(d.ucrData) ucrAllData = d.ucrData;
+      if(d.artifactsData) artifactsData = d.artifactsData;
+      if(d.brandGuideData) brandGuideData = d.brandGuideData;
+      if(d.artTemplates) artTemplates = d.artTemplates;
+      if(d.capData) capData = d.capData;
+      if(d.prioritization && typeof prioritizationData !== 'undefined') prioritizationData = d.prioritization;
+      if(d.projectPlans && typeof projectPlans !== 'undefined') projectPlans = d.projectPlans;
+      if(d.planTemplates && typeof planTemplates !== 'undefined') planTemplates = d.planTemplates;
+      if(d.okrs && typeof okrsData !== 'undefined') okrsData = d.okrs;
+      if(d.taskLibrary && typeof taskLibrary !== 'undefined') taskLibrary = d.taskLibrary;
+      if(d.roadmapSortBy && typeof _roadmapSortBy !== 'undefined') _roadmapSortBy = d.roadmapSortBy;
+      if(d.roadmapView && typeof _roadmapView !== 'undefined') _roadmapView = d.roadmapView;
+      recomputeTimeline(); renderTableHeader(); renderTabs(); renderStackedTabs(); render(); persistData();
+      var ver = d._backupVersion ? ' (v'+d._backupVersion+')' : '';
+      showToast('Backup restored'+ver,'success');
     } else if(res && res.error){
       showToast('Restore failed: '+res.error,'error');
     }
@@ -23445,8 +23650,8 @@ async function init() {
           {id:"s1",name:"Overarching Strategy",color:"#7c3aed"},
           {id:"s2",name:"Stability",color:"#0369a1"},
           {id:"s3",name:"Product Initiative",color:"#0F1B3D"},
-          {id:"s4",name:"Globalization · Malaysia",color:"#0f766e"},
-          {id:"s5",name:"Globalization · Australia",color:"#b45309"},
+          {id:"s4",name:"Expansion · Phase 1",color:"#0f766e"},
+          {id:"s5",name:"Expansion · Phase 2",color:"#b45309"},
         ];
         rows = DEFAULT_ROWS.map(function(r){ return JSON.parse(JSON.stringify(r)); });
         persistData();
