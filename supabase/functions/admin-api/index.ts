@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { handle, verifyRequest, jsonResponse, errorResponse, isSuperAdmin, SUPER_ADMINS } from "../_shared/auth.ts";
+import { handle, verifyRequest, jsonResponse, errorResponse, isSuperAdmin, isPlatformAdmin, SUPER_ADMINS } from "../_shared/auth.ts";
 
 serve(handle(async (req) => {
   // verifyRequest enforces a valid JWT — caller identity comes from there.
@@ -13,13 +13,14 @@ serve(handle(async (req) => {
     return jsonResponse({
       ok: true,
       is_super_admin: isSuperAdmin(user),
+      is_platform_admin: isPlatformAdmin(user),
       email: user.email,
     });
   }
 
-  // All other actions require super admin (derived from verified JWT).
-  if (!isSuperAdmin(user)) {
-    return errorResponse("Access denied. Super Admin role required.", 403);
+  // All other actions require super admin or platform admin (derived from verified JWT).
+  if (!isSuperAdmin(user) && !isPlatformAdmin(user)) {
+    return errorResponse("Access denied. Super Admin or Platform Admin role required.", 403);
   }
 
   // ACTION: list-users

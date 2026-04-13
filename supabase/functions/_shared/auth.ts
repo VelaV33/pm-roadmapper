@@ -35,6 +35,12 @@ export function isSuperAdmin(user: User | null): boolean {
   return role === "super_admin";
 }
 
+export function isPlatformAdmin(user: User | null): boolean {
+  if (!user) return false;
+  const meta = user.app_metadata as { platform_admin?: boolean } | undefined;
+  return meta?.platform_admin === true;
+}
+
 export interface VerifiedRequest {
   user: User;
   supabase: SupabaseClient;
