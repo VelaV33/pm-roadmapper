@@ -32,3 +32,9 @@
 2. Non-200 responses from the cloud load (404 for new users, 500 for server errors) were silently caught. Added per-status console logging and a user-facing toast for genuine failures (not 404, which is expected for new accounts).
 **Root cause (likely):** The user signed in via Google OAuth, which may have created a new auth.users entry or the account simply had no roadmap_data row yet. The aggressive empty-check then rejected the default-state data that DID come back from the cloud.
 **Files:** renderer/index.html (onAuthSuccess function, cloud load logic)
+
+## Fix 4 + 5: Add To-Do and Plans to Top Navigation
+**Status:** Fixed (batched — both were the same edit)
+**Decision:** Both features already existed as full overlays accessible from the sidebar. `openTodo()` at line 11203 and `openPlans()` at line 13788 were fully implemented. The top nav at `<nav class="toolbar-nav">` only had Dashboard, Roadmap, Checklist, Strategy, Insights. Added Plans and To-Do links between Checklist and Strategy. Both use the existing `closeAllOverlays() + open*() + updateNavActive()` pattern already used by the other nav items. `updateNavActive()` uses text matching so no registry changes needed.
+**Changes:** Two new `<a>` elements added to the top nav bar.
+**Files:** renderer/index.html (toolbar-nav section)
