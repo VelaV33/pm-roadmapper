@@ -51,3 +51,10 @@
 **Fix:** Added sidebar auto-collapse to the onclick: `var sb=document.getElementById('appSidebar');if(sb)sb.classList.add('collapsed');` before `openEditQuarters()`. Now the sidebar slides away as the modal opens, making the result visible immediately.
 **Not a function bug:** `openEditQuarters()` and the modal HTML/CSS are correct. The issue was purely UX — the modal was hidden by the sidebar.
 **Files:** renderer/index.html (sidebar Edit Timeline button onclick)
+
+## Fix 8: Dark Mode — Prioritisation/CapacityIQ/Plans Sidebar Buttons Too Light
+**Status:** Fixed
+**Root cause:** `--navy` is used as both a TEXT color (headings, labels) and a BACKGROUND color (sidebar panels). Dark mode inverts `--navy` from `#0f1b3d` to `#e2e8f0` — correct for text (dark→light) but wrong for backgrounds (dark→light makes sidebar nearly white). Sidebar items use `rgba(255,255,255,.6)` text — invisible on a light background.
+**Fix:** Added dark mode overrides for `.prio-sidebar`, `.cap-sidebar`, and `.plans-sidebar` to use `#0f172a` (dark navy) background with `#334155` border. Also overrode their item text colors, hover states, and active states to use explicit light values instead of relying on the inverted `--navy` variable.
+**Scope:** Prio sidebar, Cap sidebar, Plans sidebar — all three had the same issue.
+**Files:** renderer/index.html (dark mode CSS section, after line 63)

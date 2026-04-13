@@ -61,6 +61,19 @@ body.dark-mode .plan-task-table tr:hover td{background:#0f172a}
 body.dark-mode .plan-task-wrap{background:var(--white)}
 body.dark-mode .prio-btn{background:var(--white);color:var(--text);border-color:var(--border)}
 body.dark-mode .prio-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+/* v1.28.0: The prio/cap sidebars use var(--navy) as a dark surface. In dark
+   mode --navy flips to #e2e8f0 (for text inversion), which makes the sidebar
+   background LIGHT while its items use semi-transparent white text — invisible.
+   Override to keep them on a proper dark surface. */
+body.dark-mode .prio-sidebar,body.dark-mode .cap-sidebar{background:#0f172a;border-right-color:#334155}
+body.dark-mode .prio-sidebar-item,body.dark-mode .cap-sidebar-item{color:rgba(226,232,240,.7)}
+body.dark-mode .prio-sidebar-item:hover,body.dark-mode .cap-sidebar-item:hover{background:rgba(255,255,255,.06);color:rgba(226,232,240,.95)}
+body.dark-mode .prio-sidebar-item.active,body.dark-mode .cap-sidebar-item.active{background:rgba(45,107,244,.2);color:var(--accent);border-left-color:var(--accent)}
+/* Plans sidebar has the same issue */
+body.dark-mode .plans-sidebar{background:#0f172a;border-right-color:#334155}
+body.dark-mode .plans-sidebar-item{color:rgba(226,232,240,.7)}
+body.dark-mode .plans-sidebar-item:hover{background:rgba(255,255,255,.06);color:rgba(226,232,240,.95)}
+body.dark-mode .plans-sidebar-item.active{background:rgba(45,107,244,.2);color:var(--accent)}
 body.dark-mode .plan-bulk-bar{background:#1e3a8a;border-color:#3b82f6;color:#dbeafe}
 body.dark-mode .plan-bulk-btn{background:#1e293b;color:#e2e8f0;border-color:#475569}
 body.dark-mode .pred-row:hover{background:#0f172a}
