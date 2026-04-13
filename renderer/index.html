@@ -1469,7 +1469,7 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
   </button>
   <div class="sidebar-divider"></div>
   <div class="sidebar-section">Data</div>
-  <button class="sidebar-item" onclick="closeDds();openEditQuarters()">
+  <button class="sidebar-item" onclick="closeDds();var sb=document.getElementById('appSidebar');if(sb)sb.classList.add('collapsed');openEditQuarters()">
     <svg viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
     Edit Timeline
   </button>

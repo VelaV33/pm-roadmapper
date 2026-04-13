@@ -44,3 +44,10 @@
 **Root cause:** The `.row-kebab-menu` CSS class set `position:absolute; right:0;`. The JS that creates the menu overrides to `position:fixed; left:leftPx;`. But it did NOT override `right`. With BOTH `left` AND `right:0` applied, the browser stretches the element from leftPx to the viewport's right edge — making it span the full screen width.
 **Fix:** Added `menu.style.right = 'auto';` and `menu.style.width = menuW + 'px';` in the JS `openRowKebab()` function. The menu is now a fixed 180px width, right-aligned to the kebab button, clamped to the viewport.
 **Files:** renderer/index.html (openRowKebab function)
+
+## Fix 7: Edit Timeline Button Non-Responsive
+**Status:** Fixed
+**Root cause:** The "Edit Timeline" button (sidebar line 1472) calls `openEditQuarters()` which DOES work — it opens the `#quartersModal` (z-index 6000). But the sidebar (z-index 4500) stays open after the click because the onclick didn't auto-collapse it. The modal opens underneath the sidebar overlay, and the user thinks nothing happened.
+**Fix:** Added sidebar auto-collapse to the onclick: `var sb=document.getElementById('appSidebar');if(sb)sb.classList.add('collapsed');` before `openEditQuarters()`. Now the sidebar slides away as the modal opens, making the result visible immediately.
+**Not a function bug:** `openEditQuarters()` and the modal HTML/CSS are correct. The issue was purely UX — the modal was hidden by the sidebar.
+**Files:** renderer/index.html (sidebar Edit Timeline button onclick)
