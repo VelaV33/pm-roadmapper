@@ -10236,7 +10236,10 @@ function renderG2M(){
   var globalNum=0;
   G2M_CATEGORIES.forEach(function(cat){
     var catItems=items.filter(function(it){return it.cat===cat.name;});
-    if(catItems.length===0) return;
+    // v1.28.0: Always show every category even if empty. Previously
+    // `if(catItems.length===0) return;` hid empty categories, which made
+    // it look like checklist items were missing when a user had deleted
+    // all items in a category or when custom templates had sparse coverage.
     var div=document.createElement('div');
     div.className='g2m-cat';
     var catYes=catItems.filter(function(i){return i.value==='yes';}).length;
@@ -10292,6 +10295,15 @@ function renderG2M(){
     });
     tbl.appendChild(tbody);
     div.appendChild(tbl);
+    // If category has no items, show an empty-state row with an "Add Item" prompt
+    if(catItems.length===0){
+      var empty=document.createElement('div');
+      empty.style.cssText='padding:16px 20px;text-align:center;color:var(--muted);font-size:12px;border:1px dashed var(--border);border-radius:8px;margin:8px 0';
+      var escapedProduct2=g2mCurrentProduct.replace(/'/g,"\\'");
+      var escapedCatName2=cat.name.replace(/'/g,"\\'");
+      empty.innerHTML='No items in this category. <a style="color:var(--accent);cursor:pointer;font-weight:600" onclick="addG2MRow(\''+escapedProduct2+'\',\''+escapedCatName2+'\')">+ Add item</a>';
+      div.appendChild(empty);
+    }
     body.appendChild(div);
   });
   updateG2MScore();

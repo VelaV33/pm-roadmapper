@@ -18,3 +18,9 @@
 2. The timeline-view row name div used `row.id` without `escHtml()` escaping (unlike the kanban card which correctly uses `escHtml(row.id)`). Could break the onclick if ID contained special chars.
 **Changes:** Added null checks with user-facing toast messages + console.warn. Added escHtml() on the timeline row name onclick.
 **Files:** renderer/index.html (openEditModal function + row render)
+
+## Fix 2: Checklist Tab Not Showing Full Checklist
+**Status:** Fixed
+**Decision:** `renderG2M()` skipped categories where `catItems.length===0` (line 10238: `if(catItems.length===0) return;`). If a user deleted all items in a category, or if a custom template had sparse coverage, entire categories disappeared — making it look like items were missing. The rendering loop, category data, and CSS scrolling were all correct. The filter was the root cause.
+**Changes:** Removed the `return` guard on empty categories. Added an empty-state row with "No items in this category. + Add item" prompt so users always see all 14 G2M categories regardless of item count. Preserved the existing add-item flow via `addG2MRow()`.
+**Files:** renderer/index.html (renderG2M function)
