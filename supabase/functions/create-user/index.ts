@@ -45,7 +45,7 @@ serve(handle(async (req) => {
     return errorResponse("Too many signup attempts. Please wait and try again.", 429);
   }
 
-  const { email, password } = await req.json().catch(() => ({}));
+  const { email, password, user_metadata } = await req.json().catch(() => ({} as Record<string, unknown>));
 
   if (!email || !password || typeof email !== "string" || typeof password !== "string") {
     return errorResponse("Email and password are required", 400);
@@ -67,10 +67,20 @@ serve(handle(async (req) => {
 
   // Try to create. If the email already exists, Supabase returns an error;
   // we map that to the generic OK message so the response is identical.
+  // Build user_metadata from optional signup fields
+  const meta: Record<string, string> = {};
+  if (user_metadata && typeof user_metadata === "object") {
+    for (const k of ["full_name", "company", "phone", "designation"]) {
+      const v = (user_metadata as Record<string, unknown>)[k];
+      if (typeof v === "string" && v.trim()) meta[k] = v.trim();
+    }
+  }
+
   const { data, error } = await supabase.auth.admin.createUser({
     email: cleanEmail,
     password,
     email_confirm: true,
+    user_metadata: Object.keys(meta).length > 0 ? meta : undefined,
   });
 
   if (error) {

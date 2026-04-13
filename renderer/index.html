@@ -1547,6 +1547,26 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
       </div>
     </div>
 
+    <!-- Extra signup fields (signup only) -->
+    <div id="authSignupFields" style="display:none">
+      <div class="auth-field">
+        <label>Full Name</label>
+        <input type="text" id="authFullName" placeholder="e.g. Sabelo Vela" autocomplete="name">
+      </div>
+      <div class="auth-field">
+        <label>Company / Organisation</label>
+        <input type="text" id="authCompany" placeholder="e.g. Netstar" autocomplete="organization">
+      </div>
+      <div class="auth-field">
+        <label>Phone Number</label>
+        <input type="tel" id="authPhone" placeholder="+27 82 123 4567" autocomplete="tel">
+      </div>
+      <div class="auth-field">
+        <label>Designation / Role</label>
+        <input type="text" id="authDesignation" placeholder="e.g. Product Manager">
+      </div>
+    </div>
+
     <!-- Remember me + Forgot password row (login view only) -->
     <div id="authForgotRow" style="display:flex;align-items:center;justify-content:space-between;margin:-4px 0 12px;font-size:11px">
       <label style="display:flex;align-items:center;gap:6px;color:#374151;cursor:pointer;user-select:none">
@@ -5872,6 +5892,7 @@ function switchToSignup(){
   document.getElementById('authPassField').style.display='block';
   document.getElementById('authConfirmField').style.display='block';
   document.getElementById('authForgotRow').style.display='none';
+  var sf=document.getElementById('authSignupFields'); if(sf) sf.style.display='block';
   _hideAuthCodeField();
   document.getElementById('authToggle').innerHTML='Already have an account? <a onclick="switchToLogin()">Sign in</a>';
 }
@@ -5883,6 +5904,7 @@ function switchToLogin(){
   document.getElementById('authConfirmField').style.display='none';
   document.getElementById('authPassField').style.display='block';
   document.getElementById('authForgotRow').style.display='block';
+  var sf=document.getElementById('authSignupFields'); if(sf) sf.style.display='none';
   _hideAuthCodeField();
   document.getElementById('authToggle').innerHTML="Don't have an account? <a onclick=\"switchToSignup()\">Create account</a>";
 }
@@ -5896,6 +5918,7 @@ function showForgot(){
   document.getElementById('authPassField').style.display='none';
   document.getElementById('authConfirmField').style.display='none';
   document.getElementById('authForgotRow').style.display='none';
+  var sf=document.getElementById('authSignupFields'); if(sf) sf.style.display='none';
   _hideAuthCodeField();
   document.getElementById('authToggle').innerHTML='<a onclick="showResetCode()">I have a code</a> &middot; <a onclick="switchToLogin()">&larr; Back to sign in</a>';
   document.getElementById('authPassword').value='';
@@ -5910,6 +5933,7 @@ function showResetCode(){
   document.getElementById('authPassField').style.display='block';
   document.getElementById('authConfirmField').style.display='block';
   document.getElementById('authForgotRow').style.display='none';
+  var sf=document.getElementById('authSignupFields'); if(sf) sf.style.display='none';
   // Inject a code field if it doesn't exist yet.
   var emailField=document.getElementById('authEmailField')||document.getElementById('authEmail').parentElement;
   if(!document.getElementById('authCodeField')){
@@ -6027,12 +6051,22 @@ async function handleAuthPrimary(){
   setAuthLoading(true);
 
   if(_authMode==='signup'){
+    // Collect optional profile metadata from signup fields
+    var meta={};
+    var fn=document.getElementById('authFullName');
+    if(fn&&fn.value.trim()) meta.full_name=fn.value.trim();
+    var co=document.getElementById('authCompany');
+    if(co&&co.value.trim()) meta.company=co.value.trim();
+    var ph=document.getElementById('authPhone');
+    if(ph&&ph.value.trim()) meta.phone=ph.value.trim();
+    var dg=document.getElementById('authDesignation');
+    if(dg&&dg.value.trim()) meta.designation=dg.value.trim();
     // Use edge function for signup (bypasses rate limits, auto-confirms)
     try {
       var signupRes=await window.electronAPI.supaRequest({
         path:'/functions/v1/create-user',
         method:'POST',
-        body:{email:email,password:password},
+        body:{email:email,password:password,user_metadata:meta},
         token:null
       });
       setAuthLoading(false);
@@ -6233,7 +6267,19 @@ async function onAuthSuccess(user){
           var orgRes=await _dbReq('/rest/v1/organizations?select=id,name&domain=eq.'+encodeURIComponent(emailDomain.toLowerCase()));
           if(orgRes.ok&&orgRes.data&&orgRes.data.length>0){
             await _dbReq('/rest/v1/user_profiles?user_id=eq.'+_currentUser.id,'PATCH',{organization_id:orgRes.data[0].id});
-            console.log('Auto-assigned to organization:',orgRes.data[0].name);
+            console.log('Auto-assigned to organization by domain:',orgRes.data[0].name);
+          }
+        }
+        // If still no org and user has a company name in metadata, try name match
+        var stillNoOrg=true;
+        var recheckRes=await _dbReq('/rest/v1/user_profiles?select=organization_id&user_id=eq.'+_currentUser.id);
+        if(recheckRes.ok&&recheckRes.data&&recheckRes.data[0]&&recheckRes.data[0].organization_id) stillNoOrg=false;
+        if(stillNoOrg&&_currentUser.user_metadata&&_currentUser.user_metadata.company){
+          var companyName=_currentUser.user_metadata.company.trim();
+          var orgNameRes=await _dbReq('/rest/v1/organizations?select=id,name&name=ilike.'+encodeURIComponent(companyName));
+          if(orgNameRes.ok&&orgNameRes.data&&orgNameRes.data.length>0){
+            await _dbReq('/rest/v1/user_profiles?user_id=eq.'+_currentUser.id,'PATCH',{organization_id:orgNameRes.data[0].id});
+            console.log('Auto-assigned to organization by company name:',orgNameRes.data[0].name);
           }
         }
       }
@@ -6393,11 +6439,12 @@ function applyDataPayload(d){
     _taskLibrarySeeded = !!d.taskLibrarySeeded;
   }
   if(Array.isArray(d.planTemplates)) planTemplates = d.planTemplates;
+  if(d._usageStats && typeof d._usageStats==='object') _usageStats=d._usageStats;
   var aTab=tabs_data.find(function(t){return t.id===activeTabId&&!t.stacked;});
   if(aTab&&aTab.sections){sections=aTab.sections;rows=aTab.rows;if(aTab.quarters)quarters=aTab.quarters;}
 }
 function buildDataPayload(){
-  return {sections:sections,rows:rows,quarters:quarters,tabs_data:tabs_data,activeTabId:activeTabId,g2mData:g2mAllData,todoData:todoAllData,kpiData:kpiAllData,timesheetData:timesheetData,ucrData:ucrAllData,artifactsData:artifactsData,brandGuideData:brandGuideData,artTemplates:artTemplates,capData:capData,prioritization:prioritizationData,roadmapSortBy:_roadmapSortBy,projectPlans:projectPlans,planTemplates:planTemplates,okrs:okrsData,roadmapView:_roadmapView,taskLibrary:taskLibrary,taskLibrarySeeded:_taskLibrarySeeded};
+  return {sections:sections,rows:rows,quarters:quarters,tabs_data:tabs_data,activeTabId:activeTabId,g2mData:g2mAllData,todoData:todoAllData,kpiData:kpiAllData,timesheetData:timesheetData,ucrData:ucrAllData,artifactsData:artifactsData,brandGuideData:brandGuideData,artTemplates:artTemplates,capData:capData,prioritization:prioritizationData,roadmapSortBy:_roadmapSortBy,projectPlans:projectPlans,planTemplates:planTemplates,okrs:okrsData,roadmapView:_roadmapView,taskLibrary:taskLibrary,taskLibrarySeeded:_taskLibrarySeeded,_usageStats:_usageStats};
 }
 
 // ── CLOUD SYNC ────────────────────────────────────────────────────────────────
@@ -8747,6 +8794,14 @@ function toggleVoice(targetInput,btn){
 // 'pro' ($25/mo, includes AI), 'premium' (legacy alias for pro).
 var _userTier='basic';
 
+// ── Usage Tracking ───────────────────────────────────────────────────────────
+var _usageStats={};
+function trackPageView(pageName){
+  if(!_usageStats[pageName]) _usageStats[pageName]={views:0,lastVisited:null};
+  _usageStats[pageName].views++;
+  _usageStats[pageName].lastVisited=new Date().toISOString();
+}
+
 // Admin override — these users always get pro-equivalent access
 var ADMIN_EMAILS=['velasabelo.com@gmail.com'];
 
@@ -8762,19 +8817,56 @@ async function loadUserTier(){
     _userTier='pro';return;
   }
   try{
-    var r=await _dbReq('/rest/v1/user_profiles?select=tier,tier_expires_at&user_id=eq.'+_currentUser.id);
+    var r=await _dbReq('/rest/v1/user_profiles?select=tier,tier_expires_at,subscription_status&user_id=eq.'+_currentUser.id);
     if(r.ok&&Array.isArray(r.data)&&r.data.length>0){
       var p=r.data[0];
       var isPaid=PAID_TIERS.indexOf(p.tier)>=0;
       var expired=p.tier_expires_at && new Date(p.tier_expires_at)<new Date();
       if(isPaid && expired){_userTier='basic';}
       else{_userTier=p.tier||'basic';}
+      // Subscription enforcement: downgrade if past_due or cancelled
+      var subStatus=p.subscription_status||'';
+      if(subStatus==='past_due'||subStatus==='cancelled'){
+        _userTier='basic';
+        showSubscriptionBanner(subStatus);
+      }
     } else {
       // Create basic profile row
       await _dbReq('/rest/v1/user_profiles','POST',{user_id:_currentUser.id,tier:'basic'});
       _userTier='basic';
     }
   }catch(e){_userTier='basic';}
+}
+function showSubscriptionBanner(status){
+  var existing=document.getElementById('subscriptionBanner');
+  if(existing) existing.remove();
+  var banner=document.createElement('div');
+  banner.id='subscriptionBanner';
+  banner.style.cssText='position:fixed;top:52px;left:0;right:0;z-index:9000;padding:10px 20px;text-align:center;font-size:13px;font-weight:600;';
+  if(status==='past_due'){
+    banner.style.background='#fef3c7';
+    banner.style.color='#92400e';
+    banner.style.borderBottom='1px solid #fde68a';
+    banner.innerHTML='Your subscription payment is overdue. <a href="https://pmroadmapper.com/pricing" target="_blank" style="color:#d97706;text-decoration:underline">Update payment method</a> to restore Pro features.';
+  } else if(status==='cancelled'){
+    banner.style.background='#fee2e2';
+    banner.style.color='#991b1b';
+    banner.style.borderBottom='1px solid #fca5a5';
+    banner.innerHTML='Your subscription has been cancelled. <a href="https://pmroadmapper.com/pricing" target="_blank" style="color:#dc2626;text-decoration:underline">Resubscribe</a> to restore Pro features.';
+  }
+  // Dark mode overrides
+  if(document.body.classList.contains('dark-mode')){
+    if(status==='past_due'){
+      banner.style.background='#451a03';
+      banner.style.color='#fbbf24';
+      banner.style.borderBottom='1px solid #78350f';
+    } else if(status==='cancelled'){
+      banner.style.background='#450a0a';
+      banner.style.color='#fca5a5';
+      banner.style.borderBottom='1px solid #7f1d1d';
+    }
+  }
+  document.body.appendChild(banner);
 }
 // True iff the user has any active paid subscription (Standard, Pro, Premium).
 function isPaid(){return PAID_TIERS.indexOf(_userTier)>=0;}
@@ -10649,6 +10741,7 @@ var g2mCurrentProduct='';
 var todoAllData={};
 
 function openG2M(){
+  trackPageView('G2M');
   document.getElementById('g2mOverlay').classList.add('open');
   populateG2MProductSelect();
   renderG2MTabs();
@@ -11751,6 +11844,7 @@ var _todoView='list'; // 'list' or 'kanban'
 
 var _todoReturnTo=''; // track where user came from
 function openTodo(){
+  trackPageView('ToDo');
   document.getElementById('todoOverlay').classList.add('open');
   populateTodoFilterSelect();
   updateTodoBackBtn();
@@ -14402,6 +14496,7 @@ function planProgress(plan){
 
 // ── Plans overlay open / close / render ─────────────────────────────────────
 function openPlans(){
+  trackPageView('Plans');
   var ov = document.getElementById('plansOverlay');
   if(!ov) return;
   ov.classList.add('open');
@@ -14513,6 +14608,7 @@ function _createPlanForRow(rowId, rowName){
 var _feedbackItems = [];
 
 function openFeedback(){
+  trackPageView('Feedback');
   var ov = document.getElementById('feedbackOverlay');
   if(!ov) return;
   ov.classList.add('open');
@@ -16985,6 +17081,7 @@ function getPriorityTier(score, allScores){
 
 // ── Open / close / nav ──────────────────────────────────────────────────────
 function openPrioritization(){
+  trackPageView('Prioritization');
   var ov = document.getElementById('prioritizationOverlay');
   if(!ov) return;
   ov.classList.add('open');
@@ -19021,6 +19118,7 @@ function updateNavActive(tabName){
 }
 
 function showDashboard(){
+  trackPageView('Dashboard');
   closeAllOverlays();
   _showingDashboard=true;
   var dp=document.getElementById('dashboardPage'); if(dp) dp.style.display='block';
@@ -19282,30 +19380,41 @@ async function renderPAUsers(container){
   renderPAUsersTable(users,container);
 }
 
+function _paSubBadge(status){
+  if(status==='active') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:9999px;background:rgba(16,185,129,.12);color:#10b981">Active</span>';
+  if(status==='past_due') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:9999px;background:rgba(245,158,11,.12);color:#f59e0b">Past Due</span>';
+  if(status==='cancelled') return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:9999px;background:rgba(239,68,68,.12);color:#ef4444">Cancelled</span>';
+  return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:9999px;background:rgba(100,116,139,.12);color:#64748b">Free</span>';
+}
 function renderPAUsersTable(users,container){
   var wrap=document.getElementById('paUsersTableWrap');
   if(!wrap) return;
   var q=(_paSearch||'').toLowerCase();
   var filtered=users.filter(function(u){
-    if(q && (u.email||'').toLowerCase().indexOf(q)===-1 && (u.role||'').toLowerCase().indexOf(q)===-1) return false;
+    var uName=(u.user_metadata&&u.user_metadata.full_name)||'';
+    if(q && (u.email||'').toLowerCase().indexOf(q)===-1 && (u.role||'').toLowerCase().indexOf(q)===-1 && uName.toLowerCase().indexOf(q)===-1) return false;
     if(_paOrgFilter==='__none__' && u.org_name) return false;
     if(_paOrgFilter && _paOrgFilter!=='__none__' && u.org_name!==_paOrgFilter) return false;
     return true;
   });
-  var html='<table class="pa-table"><thead><tr><th>Email</th><th>Role</th><th>Organization</th><th>Tier</th><th>Status</th><th>Created</th><th>Set Role</th></tr></thead><tbody>';
+  var html='<table class="pa-table"><thead><tr><th>Email</th><th>Name</th><th>Company</th><th>Role</th><th>Organization</th><th>Tier</th><th>Subscription</th><th>Status</th><th>Created</th><th>Set Role</th></tr></thead><tbody>';
   if(filtered.length===0){
-    html+='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px">No users found</td></tr>';
+    html+='<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:24px">No users found</td></tr>';
   }
   filtered.forEach(function(u){
     var created=u.created_at?new Date(u.created_at).toLocaleDateString():'—';
-    var tier=(u.app_metadata&&u.app_metadata.tier)||'basic';
+    var tier=u.tier||'basic';
     var status=u.last_sign_in?'Active':'Pending';
     var statusColor=status==='Active'?'#10b981':'#f59e0b';
+    var um=u.user_metadata||{};
     html+='<tr class="clickable" onclick="showPAUserDetail(\''+u.id+'\')">';
-    html+='<td style="font-weight:600">'+escHtml(u.email||'—')+'</td>';
+    html+='<td style="font-weight:600;font-size:12px">'+escHtml(u.email||'—')+'</td>';
+    html+='<td style="font-size:12px">'+(um.full_name?escHtml(um.full_name):'<span style="color:var(--muted)">--</span>')+'</td>';
+    html+='<td style="font-size:12px">'+(um.company?escHtml(um.company):'<span style="color:var(--muted)">--</span>')+'</td>';
     html+='<td><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:9999px;background:rgba(45,107,244,.1);color:#3b82f6;text-transform:uppercase;letter-spacing:.04em">'+escHtml(u.role||'user')+'</span></td>';
     html+='<td style="font-size:12px">'+(u.org_name?escHtml(u.org_name):'<span style="color:var(--muted)">--</span>')+'</td>';
-    html+='<td style="text-transform:capitalize">'+escHtml(tier)+'</td>';
+    html+='<td style="text-transform:capitalize;font-size:12px">'+escHtml(tier)+'</td>';
+    html+='<td>'+_paSubBadge(u.subscription_status)+'</td>';
     html+='<td><span style="color:'+statusColor+';font-weight:600;font-size:11px">'+status+'</span></td>';
     html+='<td style="font-size:11px;color:var(--muted)">'+created+'</td>';
     html+='<td onclick="event.stopPropagation()"><select class="pa-role-sel" onchange="paSetRole(\''+u.id+'\',this.value)">';
@@ -19328,22 +19437,68 @@ function showPAUserDetail(userId){
   detail.id='paUserDetail';
   detail.className='pa-detail-card';
   detail.style.cssText='margin-top:16px;animation:fadeIn .15s';
-  var created=u.created_at?new Date(u.created_at).toLocaleDateString():'—';
+  var created=u.created_at?new Date(u.created_at).toLocaleDateString():'---';
   var lastSign=u.last_sign_in?new Date(u.last_sign_in).toLocaleDateString():'Never';
+  var um=u.user_metadata||{};
+  var lbl='<span style="color:var(--muted);font-size:10px;font-weight:600;text-transform:uppercase;display:block;margin-bottom:2px">';
   detail.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'+
     '<h3 style="margin:0">User Details</h3>'+
     '<button onclick="this.parentElement.parentElement.remove()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer">&times;</button></div>'+
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px">'+
-    '<div><span style="color:var(--muted);font-size:10px;font-weight:600;text-transform:uppercase;display:block;margin-bottom:2px">Email</span>'+escHtml(u.email||'—')+'</div>'+
-    '<div><span style="color:var(--muted);font-size:10px;font-weight:600;text-transform:uppercase;display:block;margin-bottom:2px">User ID</span><span style="font-size:11px;font-family:monospace">'+escHtml(u.id)+'</span></div>'+
-    '<div><span style="color:var(--muted);font-size:10px;font-weight:600;text-transform:uppercase;display:block;margin-bottom:2px">Role</span>'+escHtml(u.role||'user')+'</div>'+
-    '<div><span style="color:var(--muted);font-size:10px;font-weight:600;text-transform:uppercase;display:block;margin-bottom:2px">Created</span>'+created+'</div>'+
-    '<div><span style="color:var(--muted);font-size:10px;font-weight:600;text-transform:uppercase;display:block;margin-bottom:2px">Last Sign-in</span>'+lastSign+'</div>'+
-    '<div><span style="color:var(--muted);font-size:10px;font-weight:600;text-transform:uppercase;display:block;margin-bottom:2px">Roadmap Rows</span>'+u.rows_count+'</div>'+
-    '<div><span style="color:var(--muted);font-size:10px;font-weight:600;text-transform:uppercase;display:block;margin-bottom:2px">Sections</span>'+u.sections_count+'</div>'+
-    '</div>';
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:13px">'+
+    '<div>'+lbl+'Email</span>'+escHtml(u.email||'---')+'</div>'+
+    '<div>'+lbl+'Full Name</span>'+escHtml(um.full_name||'---')+'</div>'+
+    '<div>'+lbl+'Company</span>'+escHtml(um.company||'---')+'</div>'+
+    '<div>'+lbl+'Phone</span>'+escHtml(um.phone||'---')+'</div>'+
+    '<div>'+lbl+'Designation</span>'+escHtml(um.designation||'---')+'</div>'+
+    '<div>'+lbl+'User ID</span><span style="font-size:11px;font-family:monospace">'+escHtml(u.id)+'</span></div>'+
+    '<div>'+lbl+'Role</span>'+escHtml(u.role||'user')+'</div>'+
+    '<div>'+lbl+'Tier</span><span style="text-transform:capitalize">'+escHtml(u.tier||'basic')+'</span></div>'+
+    '<div>'+lbl+'Subscription</span>'+_paSubBadge(u.subscription_status)+'</div>'+
+    '<div>'+lbl+'Organization</span>'+escHtml(u.org_name||'---')+'</div>'+
+    '<div>'+lbl+'Created</span>'+created+'</div>'+
+    '<div>'+lbl+'Last Sign-in</span>'+lastSign+'</div>'+
+    '<div>'+lbl+'Roadmap Rows</span>'+u.rows_count+'</div>'+
+    '<div>'+lbl+'Sections</span>'+u.sections_count+'</div>'+
+    '</div>'+
+    '<div id="paUserUsageStats" style="margin-top:14px"></div>';
   var wrap=document.getElementById('paUsersTableWrap');
   if(wrap) wrap.parentElement.appendChild(detail);
+  // Fetch usage stats from user's roadmap data
+  _paLoadUserUsage(userId);
+}
+async function _paLoadUserUsage(userId){
+  var container=document.getElementById('paUserUsageStats');
+  if(!container) return;
+  container.innerHTML='<span style="font-size:11px;color:var(--muted)">Loading usage...</span>';
+  try{
+    var r=await window.electronAPI.supaRequest({
+      path:'/functions/v1/admin-api',method:'POST',
+      body:{action:'get-user-data',target_user_id:userId},token:_accessToken||null
+    });
+    if(!r.ok||!r.data||!r.data.data||!r.data.data._usageStats){
+      container.innerHTML='<span style="font-size:11px;color:var(--muted)">No usage data available</span>';
+      return;
+    }
+    var stats=r.data.data._usageStats;
+    var entries=Object.keys(stats).map(function(k){ return {page:k,views:stats[k].views||0,last:stats[k].lastVisited}; });
+    entries.sort(function(a,b){ return b.views-a.views; });
+    var top5=entries.slice(0,5);
+    if(top5.length===0){ container.innerHTML='<span style="font-size:11px;color:var(--muted)">No page views recorded</span>'; return; }
+    var maxV=top5[0].views||1;
+    var lbl='<span style="color:var(--muted);font-size:10px;font-weight:600;text-transform:uppercase;display:block;margin-bottom:6px">';
+    var html=lbl+'Top Pages</span>';
+    top5.forEach(function(e){
+      var pct=Math.round((e.views/maxV)*100);
+      html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:12px">'+
+        '<span style="width:100px;flex-shrink:0;font-weight:600">'+escHtml(e.page)+'</span>'+
+        '<div style="flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden">'+
+        '<div style="width:'+pct+'%;height:100%;background:var(--accent);border-radius:4px"></div></div>'+
+        '<span style="color:var(--muted);font-size:11px;width:36px;text-align:right">'+e.views+'</span></div>';
+    });
+    container.innerHTML=html;
+  }catch(e){
+    container.innerHTML='<span style="font-size:11px;color:var(--muted)">Failed to load usage</span>';
+  }
 }
 
 async function paSetRole(userId,role){
@@ -19388,6 +19543,23 @@ async function renderPAStats(container){
     else byTier.basic++;
   });
 
+  // Count by subscription status
+  var bySub={active:0,past_due:0,cancelled:0,none:0};
+  users.forEach(function(u){
+    var s=u.subscription_status||'none';
+    if(bySub[s]!==undefined) bySub[s]++;
+    else bySub.none++;
+  });
+  // Revenue estimate: standard=$17, pro=$25
+  var revenueEstimate=0;
+  users.forEach(function(u){
+    if(u.subscription_status==='active'){
+      var t=u.tier||'basic';
+      if(t==='standard') revenueEstimate+=17;
+      else if(t==='pro'||t==='premium') revenueEstimate+=25;
+    }
+  });
+
   // Overview stats
   var statsGrid=document.createElement('div');
   statsGrid.className='pa-stat-grid';
@@ -19395,7 +19567,10 @@ async function renderPAStats(container){
     '<div class="pa-stat"><div class="num" style="color:#3b82f6">'+total+'</div><div class="lbl">Total Users</div></div>'+
     '<div class="pa-stat"><div class="num" style="color:#10b981">'+recentSignups+'</div><div class="lbl">Signups (7 days)</div></div>'+
     '<div class="pa-stat"><div class="num" style="color:#8b5cf6">'+byRole.super_admin+'</div><div class="lbl">Super Admins</div></div>'+
-    '<div class="pa-stat"><div class="num" style="color:#f59e0b">'+byRole.admin+'</div><div class="lbl">Admins</div></div>';
+    '<div class="pa-stat"><div class="num" style="color:#f59e0b">'+byRole.admin+'</div><div class="lbl">Admins</div></div>'+
+    '<div class="pa-stat"><div class="num" style="color:#10b981">'+bySub.active+'</div><div class="lbl">Paying Users</div></div>'+
+    '<div class="pa-stat"><div class="num" style="color:#f59e0b">'+bySub.past_due+'</div><div class="lbl">Past Due</div></div>'+
+    '<div class="pa-stat"><div class="num" style="color:#22c55e">$'+revenueEstimate+'</div><div class="lbl">Monthly Revenue (est)</div></div>';
   container.appendChild(statsGrid);
 
   // By Role card
@@ -19426,6 +19601,22 @@ async function renderPAStats(container){
   tierList+='</div>';
   tierCard.innerHTML+= tierList;
   container.appendChild(tierCard);
+
+  // By Subscription card
+  var subCard=document.createElement('div');
+  subCard.className='pa-detail-card';
+  subCard.innerHTML='<h3>Users by Subscription Status</h3>';
+  var subColors={active:'#10b981',past_due:'#f59e0b',cancelled:'#ef4444',none:'#64748b'};
+  var subLabels={active:'Active',past_due:'Past Due',cancelled:'Cancelled',none:'Free'};
+  var subList='<div style="display:flex;gap:16px;flex-wrap:wrap">';
+  Object.keys(bySub).forEach(function(s){
+    subList+='<div style="text-align:center;padding:10px 20px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">'+
+      '<div style="font-size:20px;font-weight:700;color:'+(subColors[s]||'var(--text)')+'">'+bySub[s]+'</div>'+
+      '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:.04em;margin-top:2px">'+(subLabels[s]||s)+'</div></div>';
+  });
+  subList+='</div>';
+  subCard.innerHTML+=subList;
+  container.appendChild(subCard);
 }
 
 async function renderPATeams(container){
@@ -20711,6 +20902,7 @@ async function viewUserRoadmap(userId,userEmail){
 // ══════════════════════════════════════════════════════════════════════════════
 
 function openInsights(){
+  trackPageView('Insights');
   document.getElementById('insightsOverlay').classList.add('open');
   renderInsights();
   updateNavActive('Insights');
@@ -20941,6 +21133,7 @@ var RPT_REPORTS=[
 ];
 
 function openReports(){
+  trackPageView('Reports');
   document.getElementById('reportsOverlay').classList.add('open');
   renderReportsSidebar();
   renderReport(_rptCurrentReport);
@@ -21725,6 +21918,7 @@ function renderCapacityYearly(body){
 // ── CapacityIQ ───────────────────────────────────────────────────────────────
 
 function openCapacity(){
+  trackPageView('CapacityIQ');
   document.getElementById('capOverlay').classList.add('open');
   if(capData.teams.length===0) seedCapData();
   capNav(_capPage);
@@ -22951,6 +23145,7 @@ function filterDocRepo(){
 }
 
 function openArtifacts() {
+  trackPageView('Artifacts');
   var ov = document.getElementById('artOverlay');
   ov.classList.add('open');
   populateArtFilters();

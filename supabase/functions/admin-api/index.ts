@@ -32,6 +32,7 @@ serve(handle(async (req) => {
     }
     const users = (allUsers?.users || []).map((u) => {
       const appRole = (u.app_metadata as { role?: string } | undefined)?.role;
+      const uMeta = (u.user_metadata || {}) as Record<string, unknown>;
       return {
         id: u.id,
         email: u.email,
@@ -42,6 +43,12 @@ serve(handle(async (req) => {
         role: appRole || "product_manager",
         rows_count: 0,
         sections_count: 0,
+        user_metadata: {
+          full_name: uMeta.full_name || uMeta.display_name || null,
+          company: uMeta.company || null,
+          phone: uMeta.phone || null,
+          designation: uMeta.designation || null,
+        },
       };
     });
 
@@ -74,6 +81,8 @@ serve(handle(async (req) => {
       const prof = profileMap[u.id];
       (u as Record<string, unknown>).organization_id = prof?.organization_id || null;
       (u as Record<string, unknown>).org_name = prof?.organization_id ? (orgMap[prof.organization_id] || null) : null;
+      (u as Record<string, unknown>).tier = prof?.tier || "basic";
+      (u as Record<string, unknown>).subscription_status = prof?.subscription_status || null;
     });
 
     return jsonResponse({ ok: true, users });
