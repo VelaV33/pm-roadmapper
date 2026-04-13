@@ -5626,14 +5626,25 @@ async function onAuthSuccess(user){
     });
     if(cr.ok&&cr.data&&cr.data.ok&&cr.data.data){
       var cd=cr.data.data;
-      if((cd.rows&&cd.rows.length>0)||(cd.sections&&cd.sections.length>2)){
+      // v1.28.0: Accept ANY cloud data that has a sections array, even if
+      // rows is empty. The previous check required `rows.length > 0 ||
+      // sections.length > 2`, which rejected data from users who had
+      // customised section names/colors but hadn't added rows yet. Loading
+      // default-looking data is harmless — it's the same as the in-memory
+      // default and will be overwritten when the user makes real changes.
+      if(cd.sections || (cd.rows && cd.rows.length > 0)){
         applyDataPayload(cd);
         cloudLoaded=true;
         if(cr.data.updated_at) _lastCloudTs=new Date(cr.data.updated_at).getTime();
         console.log('Cloud data loaded:',sections.length,'sections,',rows.length,'rows');
       } else {
-        console.log('Cloud data empty');
+        console.log('Cloud data present but has no sections or rows — using defaults');
       }
+    } else if(cr.status===404){
+      console.log('No cloud data for this account yet (new user)');
+    } else if(!cr.ok){
+      console.warn('Cloud data load failed:', cr.status, cr.data && (cr.data.error || cr.data.message || ''));
+      showToast('Could not load your data from the cloud — working offline','warning');
     }
   } catch(e){
     console.warn('Cloud pull on login failed (offline?):', e.message);
