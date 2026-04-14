@@ -161,6 +161,23 @@ body.dark-mode #newSecInline input{background:var(--surface-low);color:var(--tex
 body.dark-mode #newSecInline button{color:var(--text)}
 body.dark-mode .modal-integration-card{background:var(--surface-low);border-color:var(--border);color:var(--text)}
 
+/* v1.32.0 FIX 19: Global contrast audit overrides */
+body.dark-mode [style*="color:#64748b"]{color:var(--muted)!important}
+body.dark-mode [style*="color:#475569"]{color:var(--muted)!important}
+body.dark-mode [style*="color:#cbd5e1"]{color:var(--muted)!important}
+body.dark-mode [style*="color:#334155"]{color:var(--muted)!important}
+body.dark-mode [style*="color:#1e293b"]{color:var(--text)!important}
+body.dark-mode [style*="color: #64748b"]{color:var(--muted)!important}
+body.dark-mode [style*="background:#f8f9fb"]{background:var(--surface-low)!important}
+body.dark-mode [style*="background:#f4f7fc"]{background:var(--surface-low)!important}
+body.dark-mode [style*="background:#e8edf7"]{background:var(--border)!important}
+body.dark-mode [style*="background:white"],body.dark-mode [style*="background: white"]{background:var(--white)!important}
+body.dark-mode .onboard-card{background:var(--white)}
+/* Ensure light mode text is never lighter than #666 on white backgrounds */
+body:not(.dark-mode) [style*="color:#94a3b8"]{color:#64748b!important}
+body:not(.dark-mode) [style*="color:#cbd5e1"]{color:#94a3b8!important}
+body:not(.dark-mode) [style*="color:rgba(255,255,255"]:not(.g2m-header *):not([class*="score"]){color:var(--text)!important}
+
 /* ── CapacityIQ dashboard & content ── */
 body.dark-mode .cap-main{background:var(--bg)}
 body.dark-mode .cap-content{background:var(--bg)}
@@ -522,10 +539,10 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .g2m-radio:checked+.g2m-radio-label.g2m-yes{background:var(--g1);border-color:var(--g1);color:#fff}
 .g2m-radio:checked+.g2m-radio-label.g2m-no-btn{background:var(--r1);border-color:var(--r1);color:#fff}
 .g2m-radio:checked+.g2m-radio-label.g2m-na{background:var(--muted);border-color:var(--muted);color:#fff}
-/* v1.29.0 FIX 10: smaller stepper buttons for G2M hours input */
-.g2m-table td input[type="number"]{-moz-appearance:textfield;width:50px!important}
+/* v1.29.0 FIX 10 + v1.32.0 FIX 20: smaller stepper buttons for G2M hours input */
+.g2m-table td input[type="number"]{-moz-appearance:textfield;width:60px!important;max-height:24px;padding:3px 4px;font-size:12px;text-align:center;border:1px solid var(--border);border-radius:4px}
 .g2m-table td input[type="number"]::-webkit-inner-spin-button,
-.g2m-table td input[type="number"]::-webkit-outer-spin-button{height:16px;width:12px;opacity:.6}
+.g2m-table td input[type="number"]::-webkit-outer-spin-button{height:14px;width:10px;opacity:.5}
 .g2m-del-btn{background:none;border:none;color:var(--r1);cursor:pointer;font-size:14px;opacity:0;transition:opacity .15s}
 .g2m-table tr:hover .g2m-del-btn{opacity:1}
 .g2m-cat-export{padding:3px 10px;border-radius:9999px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);font-size:9px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s}
@@ -834,7 +851,7 @@ body.dark-mode .tpl-task-table th{background:var(--bg)}
 .prio-sidebar-item.active{background:rgba(45,107,244,.15);color:var(--accent);border-left-color:var(--accent)}
 .prio-sidebar-item:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;color:rgba(255,255,255,.95)}
 .prio-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.prio-topbar{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.prio-topbar{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;min-height:52px;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .prio-topbar h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
 .prio-content{flex:1;overflow-y:auto;padding:24px 28px;background:var(--bg)}
 .prio-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);font-size:12px}
@@ -896,7 +913,7 @@ body.dark-mode .tpl-task-table th{background:var(--bg)}
 .plans-sidebar-item .plan-actions button{background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:11px;padding:2px 4px}
 .plans-sidebar-item .plan-actions button:hover{color:#fff}
 .plans-main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
-.plans-topbar{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:flex-start;gap:14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.plans-topbar{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;min-height:52px;gap:14px;border-bottom:1px solid var(--border);flex-shrink:0}
 .plan-view-toggle{background:transparent;border:none;font-size:11px;font-weight:700;padding:6px 14px;border-radius:9999px;cursor:pointer;color:var(--muted);transition:all .15s}
 .plan-view-toggle.active{background:var(--white);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .plans-content{flex:1;overflow:auto;padding:20px 28px}
@@ -1131,7 +1148,7 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
 .kanban-card-section{display:inline-flex;align-items:center;gap:4px;font-weight:600}
 .kanban-col.drag-over{background:rgba(45,107,244,.04);border-color:var(--accent)}
 .cap-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.cap-topbar{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.cap-topbar{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;min-height:52px;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .cap-topbar h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
 .cap-content{flex:1;overflow-y:auto;padding:24px 28px;background:var(--bg)}
 .cap-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
@@ -1172,8 +1189,8 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
 .cap-template-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;transition:all .15s}
 .cap-template-card:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(45,107,244,.08)}
 .cap-template-card .icon{font-size:24px;margin-bottom:6px}
-.cap-template-card .name{font-size:13px;font-weight:700;color:#e2e8f0}
-.cap-template-card .desc{font-size:10px;color:#64748b;margin-top:4px}
+.cap-template-card .name{font-size:13px;font-weight:700;color:var(--text)}
+.cap-template-card .desc{font-size:10px;color:var(--muted);margin-top:4px}
 
 /* ── RBAC ── */
 .rbac-disabled{pointer-events:none;opacity:.5;position:relative}
@@ -1492,9 +1509,37 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
 /* v1.26.13: skip-to-main link — visually hidden until focused via Tab */
 .skip-to-main{position:fixed;top:-100px;left:8px;z-index:99999;background:var(--accent);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;border:none;cursor:pointer;transition:top .15s}
 .skip-to-main:focus{top:8px;outline:2px solid #fff;outline-offset:2px}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * v1.32.0 — Loading Overlay (reusable async spinner)
+ * ═══════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════
+ * v1.32.0 FIX 15 — Onboarding Overlay
+ * ═══════════════════════════════════════════════════════════════════════════ */
+.onboard-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:99980;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.onboard-card{background:var(--white);border-radius:16px;width:520px;max-width:95vw;max-height:90vh;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.onboard-body{padding:32px 36px;text-align:center}
+.onboard-body h2{font-size:22px;font-weight:800;color:var(--text);margin:0 0 10px}
+.onboard-body p{font-size:13px;color:var(--muted);line-height:1.6;margin:0 0 20px}
+.onboard-dots{display:flex;gap:8px;justify-content:center;margin-bottom:20px}
+.onboard-dots .dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:background .2s}
+.onboard-dots .dot.active{background:var(--accent)}
+.onboard-actions{display:flex;gap:10px;justify-content:center}
+.onboard-actions button{padding:10px 24px;border-radius:9999px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--text);transition:all .12s;font-family:inherit}
+.onboard-actions button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.onboard-actions button:hover{filter:brightness(.92)}
+body.dark-mode .onboard-card{background:#1e293b}
+
+.loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:99990;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;background:rgba(15,23,42,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .2s}
+.loading-overlay.active{opacity:1;pointer-events:auto}
+.loading-spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,.15);border-top-color:#3b82f6;border-radius:50%;animation:loadSpin .7s linear infinite}
+@keyframes loadSpin{to{transform:rotate(360deg)}}
+.loading-overlay .loading-msg{font-size:13px;font-weight:600;color:#e2e8f0;letter-spacing:.01em}
 </style>
 </head>
 <body>
+<!-- v1.32.0: Global loading overlay — used by JSON upload, Excel import, sync, backup restore, template import -->
+<div id="loadingOverlay" class="loading-overlay" aria-live="polite"><div class="loading-spinner"></div><div class="loading-msg" id="loadingMsg">Loading...</div></div>
 <a href="#mainContent" class="skip-to-main" onclick="event.preventDefault();var el=document.getElementById('mainContent')||document.getElementById('appContent');if(el){el.setAttribute('tabindex','-1');el.focus();}">Skip to main content</a>
 
 <!-- AUTH OVERLAY (2-column split: marketing hero left, sign-in form right) -->
@@ -1693,6 +1738,8 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
       <!-- Cloud sync status (click to force sync) -->
       <span id="cloudSyncStatusHeader" title="Click to sync now"
             style="display:none;font-size:11px;font-weight:600;padding:6px 12px;border-radius:9999px;border:1px solid transparent;cursor:pointer;user-select:none">&#9729;</span>
+      <!-- v1.32.0 FIX 10: Roadmap owner + collaborators -->
+      <span id="roadmapOwnerBadge" style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px"></span>
       <!-- Collaboration -->
       <button onclick="openShare()" aria-label="Share roadmap" title="Share" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg></span> Share</button>
       <button onclick="openNotifications()" id="notifBtn" aria-label="Notifications" title="Notifications" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:8px;font-size:12px;cursor:pointer;transition:all .15s;position:relative;display:flex;align-items:center" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg></span><span id="notifBadge" style="display:none;position:absolute;top:-2px;right:-2px;background:#ef4444;color:#fff;font-size:8px;font-weight:700;min-width:16px;height:16px;border-radius:9999px;align-items:center;justify-content:center;padding:0 3px"></span></button>
@@ -1718,7 +1765,7 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
 <div class="toolbar-spacer"></div>
 
 <!-- LEFT SIDEBAR (v1.26.12: aria-label so screen readers describe the landmark) -->
-<nav class="app-sidebar collapsed" id="appSidebar" aria-label="Modules and roadmap actions">
+<nav class="app-sidebar" id="appSidebar" aria-label="Modules and roadmap actions">
   <div class="sidebar-section">Modules</div>
   <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openReports()">
     <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
@@ -1726,7 +1773,7 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
   </button>
   <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openG2M()">
     <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-    G2M Checklist
+    Checklist
   </button>
   <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openTodo()">
     <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
@@ -1863,7 +1910,7 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
         <h3 style="font-size:18px;font-weight:700;margin:8px 0 16px;letter-spacing:-0.02em;color:#fff">What would you like to do?</h3>
         <div style="display:flex;flex-direction:column;gap:8px">
           <button onclick="closeAllOverlays();openAddRowModal(null)" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;text-align:left;transition:all .12s;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">+ Add Initiative</button>
-          <button onclick="closeAllOverlays();openG2M()" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;text-align:left;transition:all .12s;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">G2M Checklist</button>
+          <button onclick="closeAllOverlays();openG2M()" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;text-align:left;transition:all .12s;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">Checklist</button>
           <button onclick="closeAllOverlays();openReports()" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;text-align:left;transition:all .12s;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">View Reports</button>
         </div>
       </div>
@@ -2145,7 +2192,7 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
 <!-- ── G2M OVERLAY ── -->
 <div id="g2mOverlay">
   <div class="g2m-header">
-    <h2 style="display:flex;align-items:center;gap:10px"><svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>GO-TO-MARKET &mdash; Business Readiness</h2>
+    <h2 style="display:flex;align-items:center;gap:10px"><svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Checklist &mdash; Business Readiness</h2>
     <div class="g2m-score">
       <div>
         <div class="score-pct" id="g2mPct">0%</div>
@@ -2223,7 +2270,10 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
   <!-- Inline add task form -->
   <div id="todoAddForm" style="display:none;padding:12px 24px;background:var(--light-blue-bg);border-bottom:1px solid var(--border)">
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <input id="todoNewText" placeholder="Task description..." style="flex:2;min-width:200px;padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:12px;background:rgba(255,255,255,.1);color:#fff;font-family:inherit">
+      <div style="position:relative;flex:2;min-width:200px">
+        <input id="todoNewText" placeholder="Task description... (type to search library)" autocomplete="off" style="width:100%;padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:12px;background:rgba(255,255,255,.1);color:#fff;font-family:inherit;box-sizing:border-box" oninput="_todoLibAutocomplete(this)">
+        <div id="todoLibSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:100;background:var(--white);border:1px solid var(--border);border-radius:8px;max-height:180px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.15);margin-top:2px"></div>
+      </div>
       <select id="todoNewInit" style="flex:1;min-width:180px;padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:12px;background:#3b2d7c;color:#fff"></select>
       <input id="todoNewDue" type="date" style="padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:12px;background:rgba(255,255,255,.1);color:#fff">
       <input id="todoNewEstimate" type="number" min="0" step="0.5" placeholder="Est. hours" style="width:80px;padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:12px;background:rgba(255,255,255,.1);color:#fff">
@@ -2498,6 +2548,10 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
   <div class="tpl-header">
     <h2><svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>Template Library</h2>
     <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      <button class="prio-btn" onclick="uploadTemplateFromExcel()" style="display:inline-flex;align-items:center;gap:6px">
+        <svg viewBox="0 0 20 20" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><path d="M3 17h14M10 3v10M6 7l4-4 4 4"/></svg>
+        Upload Template
+      </button>
       <button id="tplCreateBtn" class="prio-btn primary" style="display:none" onclick="tplShowCreate()">+ Create Template</button>
       <button onclick="closeTemplateLibrary()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;transition:color .12s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">&times;</button>
     </div>
@@ -2525,7 +2579,11 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
         </div>
         <div style="font-size:9px;color:#64748b;margin-top:2px">Score, rank &amp; decide</div>
       </div>
-      <div class="prio-sidebar-item active" data-prio-nav="score" role="button" tabindex="0" aria-current="page" onclick="prioNav('score')">
+      <div class="prio-sidebar-item active" data-prio-nav="top10" role="button" tabindex="0" aria-current="page" onclick="prioNav('top10')">
+        <svg viewBox="0 0 24 24"><path d="M3 4h18M3 12h12M3 20h6"/></svg>
+        Top 10
+      </div>
+      <div class="prio-sidebar-item" data-prio-nav="score" role="button" tabindex="0" onclick="prioNav('score')">
         <svg viewBox="0 0 24 24"><path d="M3 10h18M3 14h18M5 6h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z"/></svg>
         Score
       </div>
@@ -5296,6 +5354,12 @@ function renderStackedTabs(){
     addRowBtn2.style.cssText = 'padding:3px 10px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:5px;font-size:11px;cursor:pointer';
     (function(tid2){ addRowBtn2.onclick = function(){ openAddRowModalForTab(tid2); }; })(tab.id);
     bBtns2.appendChild(addRowBtn2);
+    // v1.32.0 FIX 9: Merge button to combine stacked tab into active tab
+    var mergeBtn2 = document.createElement('button');
+    mergeBtn2.textContent = 'Merge into Main';
+    mergeBtn2.style.cssText = 'padding:3px 10px;border:1px solid rgba(255,255,255,.35);background:rgba(16,163,127,.2);color:#6ee7b7;border-radius:5px;font-size:11px;cursor:pointer';
+    (function(tid2){ mergeBtn2.onclick = function(){ mergeStackedTab(tid2); }; })(tab.id);
+    bBtns2.appendChild(mergeBtn2);
     var removeBtn2 = document.createElement('button');
     removeBtn2.textContent = '\u2715 Remove';
     removeBtn2.style.cssText = 'padding:3px 8px;border:1px solid rgba(255,100,100,.4);background:rgba(220,38,38,.15);color:#fca5a5;border-radius:5px;font-size:11px;cursor:pointer';
@@ -5498,6 +5562,35 @@ function removeStackedTab(tabId){
   renderTabs();
   renderStackedTabs();
   persistData();
+}
+
+// v1.32.0 FIX 9: Merge stacked tab into active (main) tab
+function mergeStackedTab(tabId){
+  var tab = tabs_data.find(function(t){ return t.id===tabId; });
+  if(!tab) return;
+  if(!confirm('Merge all sections and rows from "'+tab.name+'" into the active roadmap? This will remove the stacked tab.')) return;
+  var tabSections = tab.sections || [];
+  var tabRows = tab.rows || [];
+  // Merge sections (add any that don't exist by name)
+  tabSections.forEach(function(ts){
+    var exists = sections.some(function(s){ return s.name === ts.name; });
+    if(!exists){
+      sections.push({id:'sec_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), name:ts.name, color:ts.color||'#e2e8f0'});
+    }
+  });
+  // Merge rows (give new IDs to avoid clashes)
+  tabRows.forEach(function(tr){
+    var newRow = JSON.parse(JSON.stringify(tr));
+    newRow.id = 'mrg_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+    // Map section to matching name in main
+    var matchSec = sections.find(function(s){ return s.name === newRow.section; });
+    if(matchSec) newRow.section = matchSec.name;
+    rows.push(newRow);
+  });
+  // Remove stacked tab
+  tabs_data = tabs_data.filter(function(t){ return t.id!==tabId; });
+  recomputeTimeline(); renderTableHeader(); renderTabs(); renderStackedTabs(); render(); persistData();
+  showToast('Merged '+tabRows.length+' rows from "'+tab.name+'"','success');
 }
 
 function openAddRowModalForTab(tabId){
@@ -6312,9 +6405,13 @@ async function onAuthSuccess(user){
   userProfile.email=user.email||'';
   if(!userProfile.name&&user.user_metadata&&user.user_metadata.full_name){
     userProfile.name=user.user_metadata.full_name;
-    if(user.user_metadata.avatar_url) userProfile.avatarUrl=user.user_metadata.avatar_url;
   }
-  saveProfileSettings(); applyProfileToUI();
+  // v1.32.0 FIX 2: Always sync Google OAuth avatar so it shows even if name was cached
+  if(user.user_metadata){
+    var oauthAvatar = user.user_metadata.avatar_url || user.user_metadata.picture || '';
+    if(oauthAvatar && !userProfile.avatarUrl) userProfile.avatarUrl = oauthAvatar;
+  }
+  saveProfileSettings(); applyProfileToUI(); updateRoadmapOwnerBadge();
 
   // ── STEP 8: Render with this user's data ──
   recomputeTimeline(); renderTableHeader(); renderTabs(); renderStackedTabs(); render();
@@ -6337,6 +6434,7 @@ async function onAuthSuccess(user){
 
   setTimeout(function(){ loadAllCommentBadges(); loadSharedToMe(); loadUserTier(); }, 800);
   setTimeout(checkShowTour, 2500);
+  setTimeout(checkOnboarding, 1500); // v1.32.0 FIX 15: trigger onboarding for new users
   console.log('Signed in successfully');  // v1.25.0: PII removed from log
   // Show dashboard as default view on login
   setTimeout(showDashboard, 500);
@@ -6818,7 +6916,25 @@ function saveProfileSettings(){
   } catch(e){ console.warn('[saveProfileSettings]', e && e.message); }
 }
 
-/* v1.29.0 FIX 12 — User Avatar Circle */
+/* v1.29.0 FIX 12 — User Avatar Circle
+ * v1.32.0 FIX 2: Check Google OAuth avatar_url/picture, then custom upload, then initials */
+function loadUserAvatar(){
+  // Priority: 1) Google OAuth metadata, 2) custom upload (userProfile.avatarUrl), 3) initials
+  var avatarUrl = '';
+  if(_currentUser && _currentUser.user_metadata){
+    avatarUrl = _currentUser.user_metadata.avatar_url
+      || _currentUser.user_metadata.picture
+      || '';
+  }
+  // Custom upload overrides OAuth if set
+  if(userProfile.avatarUrl && userProfile.avatarUrl.indexOf('data:image') === 0){
+    avatarUrl = userProfile.avatarUrl;
+  } else if(!avatarUrl && userProfile.avatarUrl){
+    avatarUrl = userProfile.avatarUrl;
+  }
+  return avatarUrl;
+}
+
 function applyProfileToUI(){
   var btn = document.getElementById('profileBtn');
   if(btn && userProfile.name){
@@ -6826,10 +6942,28 @@ function applyProfileToUI(){
     var initials = parts.length >= 2
       ? (parts[0][0] + parts[parts.length-1][0]).toUpperCase()
       : (parts[0][0] || '?').toUpperCase();
-    btn.innerHTML =
-      '<span style="width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:.02em">' + escHtml(initials) + '</span>' +
+    var avatarUrl = loadUserAvatar();
+    var avatarHtml = avatarUrl
+      ? '<span style="width:28px;height:28px;border-radius:50%;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0"><img src="'+escHtml(avatarUrl)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML=\''+escHtml(initials)+'\'"></span>'
+      : '<span style="width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:.02em">' + escHtml(initials) + '</span>';
+    btn.innerHTML = avatarHtml +
       ' <span style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(parts[0]) + '</span>';
   }
+}
+
+// v1.32.0 FIX 10: Populate roadmap owner + collaborators in header
+function updateRoadmapOwnerBadge(){
+  var el = document.getElementById('roadmapOwnerBadge');
+  if(!el) return;
+  var ownerName = (userProfile && userProfile.name) ? userProfile.name.split(' ')[0] : (userProfile && userProfile.email ? userProfile.email.split('@')[0] : '');
+  var collabs = (typeof _sharedWith !== 'undefined' && Array.isArray(_sharedWith)) ? _sharedWith : [];
+  var html = '<svg viewBox="0 0 20 20" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.5"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 8a7 7 0 1114 0H3z"/></svg>';
+  html += '<span style="font-weight:600">'+escHtml(ownerName)+'</span>';
+  if(collabs.length > 0){
+    html += '<span style="color:var(--border);margin:0 2px">|</span>';
+    html += '<span style="color:var(--muted)">'+collabs.length+' collaborator'+(collabs.length!==1?'s':'')+'</span>';
+  }
+  el.innerHTML = html;
 }
 
 // ── SETTINGS MODAL ────────────────────────────────────────────────────────────
@@ -6996,8 +7130,9 @@ function openProfile(){
   var avatarWrap=document.createElement('div'); avatarWrap.style.cssText='position:relative;flex-shrink:0';
   var avatarEl=document.createElement('div');
   avatarEl.style.cssText='width:72px;height:72px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;overflow:hidden;cursor:pointer;border:3px solid var(--accent);transition:opacity .15s';
-  if(userProfile.avatarUrl){
-    avatarEl.innerHTML='<img src="'+userProfile.avatarUrl+'" style="width:100%;height:100%;object-fit:cover">';
+  var _settingsAvatarUrl = loadUserAvatar();
+  if(_settingsAvatarUrl){
+    avatarEl.innerHTML='<img src="'+_settingsAvatarUrl+'" style="width:100%;height:100%;object-fit:cover">';
   } else {
     avatarEl.textContent = userProfile.name ? userProfile.name[0].toUpperCase() : '?';
   }
@@ -10298,6 +10433,18 @@ function showToast(msg, kind){
   setTimeout(function(){t.style.opacity='0';setTimeout(function(){t.remove();},300);},2500);
 }
 
+// v1.32.0: Global loading overlay — reusable for any async op.
+function showLoading(msg){
+  var ov=document.getElementById('loadingOverlay');
+  var msgEl=document.getElementById('loadingMsg');
+  if(msgEl) msgEl.textContent=msg||'Loading...';
+  if(ov) ov.classList.add('active');
+}
+function hideLoading(){
+  var ov=document.getElementById('loadingOverlay');
+  if(ov) ov.classList.remove('active');
+}
+
 // v1.26.1: tiny loading-state helper. Returns HTML you can drop into a
 // container while an async fetch is in flight.
 // v1.26.11: role=status + aria-live so screen readers announce the loading state.
@@ -12018,7 +12165,7 @@ function populateTodoFilterSelect(){
     var og=document.createElement('optgroup');og.label=sec.name;
     grp.forEach(function(r){
       var o=document.createElement('option');o.value=r.name;o.textContent=r.name;
-      o.style.cssText='background:#fff;color:var(--text)';
+      o.style.cssText='background:var(--white);color:var(--text)';
       og.appendChild(o);
     });
     sel.appendChild(og);
@@ -12224,6 +12371,33 @@ function renderKanban(allTodos){
   body.appendChild(wrap);
 }
 
+// v1.32.0 FIX 14: Autocomplete from task library for ToDo add-task input
+function _todoLibAutocomplete(inp){
+  var sugBox = document.getElementById('todoLibSuggestions');
+  if(!sugBox) return;
+  var q = (inp.value || '').toLowerCase().trim();
+  if(!q || q.length < 2 || !taskLibrary.length){
+    sugBox.style.display = 'none';
+    return;
+  }
+  var matches = taskLibrary.filter(function(e){
+    return (e.name || '').toLowerCase().indexOf(q) >= 0;
+  }).slice(0, 8);
+  if(!matches.length){
+    sugBox.style.display = 'none';
+    return;
+  }
+  sugBox.innerHTML = matches.map(function(e){
+    return '<div style="padding:6px 10px;font-size:12px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border)" onmouseover="this.style.background=\'var(--surface-low)\'" onmouseout="this.style.background=\'transparent\'" onclick="document.getElementById(\'todoNewText\').value=\''+escHtml(e.name)+'\';var est=document.getElementById(\'todoNewEstimate\');if(est&&'+e.hours+')est.value='+e.hours+';document.getElementById(\'todoLibSuggestions\').style.display=\'none\'"><strong>'+escHtml(e.name)+'</strong> <span style="color:var(--muted);font-size:10px">'+escHtml(e.category||'')+' - '+(e.hours||0)+'h</span></div>';
+  }).join('');
+  sugBox.style.display = 'block';
+}
+// Close suggestions on click outside
+document.addEventListener('click', function(e){
+  var sugBox = document.getElementById('todoLibSuggestions');
+  if(sugBox && !sugBox.contains(e.target) && e.target.id !== 'todoNewText') sugBox.style.display = 'none';
+});
+
 function addTodoItem(){
   var form=document.getElementById('todoAddForm');
   form.style.display='block';
@@ -12237,7 +12411,7 @@ function addTodoItem(){
     var og=document.createElement('optgroup');og.label=sec.name;
     grp.forEach(function(r){
       var o=document.createElement('option');o.value=r.name;o.textContent=r.name;
-      o.style.cssText='background:#fff;color:var(--text)';
+      o.style.cssText='background:var(--white);color:var(--text)';
       og.appendChild(o);
     });
     sel.appendChild(og);
@@ -12251,7 +12425,7 @@ function addTodoItem(){
     var og=document.createElement('optgroup');og.label=g.group;
     g.items.forEach(function(kpi){
       var o=document.createElement('option');o.value=kpi.id;o.textContent=kpi.name;
-      o.style.cssText='background:#fff;color:var(--text)';
+      o.style.cssText='background:var(--white);color:var(--text)';
       og.appendChild(o);
     });
     kpiSel.appendChild(og);
@@ -12973,6 +13147,236 @@ function seedTaskLibraryFromCapacity(){
     }
   });
   _taskLibrarySeeded = true;
+}
+
+// v1.32.0 FIX 3: Seed 200+ default tasks across 10 categories
+var _defaultTaskLibrarySeeded = false;
+function seedDefaultTaskLibrary(){
+  if(_defaultTaskLibrarySeeded) return;
+  if(taskLibrary.length >= 20) { _defaultTaskLibrarySeeded = true; return; } // already has content
+  var tasks = [
+    // ── Engineering (25) ──
+    {name:'Architecture design document',category:'Engineering',hours:24,priority:'High'},
+    {name:'API endpoint design and spec',category:'Engineering',hours:16,priority:'High'},
+    {name:'Database schema design',category:'Engineering',hours:12,priority:'High'},
+    {name:'Backend service implementation',category:'Engineering',hours:40,priority:'High'},
+    {name:'Frontend component development',category:'Engineering',hours:32,priority:'High'},
+    {name:'REST API implementation',category:'Engineering',hours:24,priority:'Medium'},
+    {name:'GraphQL schema and resolvers',category:'Engineering',hours:20,priority:'Medium'},
+    {name:'Authentication and authorization',category:'Engineering',hours:16,priority:'High'},
+    {name:'Caching layer implementation',category:'Engineering',hours:12,priority:'Medium'},
+    {name:'Search functionality build',category:'Engineering',hours:16,priority:'Medium'},
+    {name:'File upload and storage service',category:'Engineering',hours:12,priority:'Medium'},
+    {name:'Notification system',category:'Engineering',hours:16,priority:'Medium'},
+    {name:'Payment integration',category:'Engineering',hours:24,priority:'High'},
+    {name:'Email service integration',category:'Engineering',hours:8,priority:'Low'},
+    {name:'Logging and monitoring setup',category:'Engineering',hours:8,priority:'Medium'},
+    {name:'Error handling and retry logic',category:'Engineering',hours:8,priority:'Medium'},
+    {name:'Rate limiting implementation',category:'Engineering',hours:6,priority:'Medium'},
+    {name:'Data migration script',category:'Engineering',hours:12,priority:'Medium'},
+    {name:'Background job processor',category:'Engineering',hours:16,priority:'Medium'},
+    {name:'WebSocket real-time features',category:'Engineering',hours:20,priority:'Medium'},
+    {name:'Third-party API integration',category:'Engineering',hours:16,priority:'Medium'},
+    {name:'Mobile responsive implementation',category:'Engineering',hours:16,priority:'Medium'},
+    {name:'Performance optimization pass',category:'Engineering',hours:12,priority:'Medium'},
+    {name:'Security audit remediation',category:'Engineering',hours:16,priority:'High'},
+    {name:'Technical debt cleanup',category:'Engineering',hours:20,priority:'Low'},
+    // ── Product (20) ──
+    {name:'Product requirements document (PRD)',category:'Product',hours:24,priority:'High'},
+    {name:'User story mapping workshop',category:'Product',hours:8,priority:'High'},
+    {name:'Competitive analysis report',category:'Product',hours:16,priority:'Medium'},
+    {name:'Feature prioritization exercise',category:'Product',hours:6,priority:'High'},
+    {name:'Roadmap planning session',category:'Product',hours:4,priority:'High'},
+    {name:'Sprint planning preparation',category:'Product',hours:4,priority:'Medium'},
+    {name:'Stakeholder alignment meeting',category:'Product',hours:3,priority:'High'},
+    {name:'Customer interview sessions',category:'Product',hours:12,priority:'Medium'},
+    {name:'Market research analysis',category:'Product',hours:16,priority:'Medium'},
+    {name:'Feature specification writing',category:'Product',hours:8,priority:'High'},
+    {name:'Acceptance criteria definition',category:'Product',hours:6,priority:'High'},
+    {name:'Release planning',category:'Product',hours:4,priority:'Medium'},
+    {name:'Beta program coordination',category:'Product',hours:12,priority:'Medium'},
+    {name:'Pricing model analysis',category:'Product',hours:8,priority:'Medium'},
+    {name:'Go-to-market strategy document',category:'Product',hours:16,priority:'High'},
+    {name:'Product metrics dashboard setup',category:'Product',hours:8,priority:'Medium'},
+    {name:'User persona development',category:'Product',hours:8,priority:'Medium'},
+    {name:'A/B test planning',category:'Product',hours:4,priority:'Medium'},
+    {name:'Feature flag rollout plan',category:'Product',hours:4,priority:'Low'},
+    {name:'Post-mortem analysis',category:'Product',hours:4,priority:'Medium'},
+    // ── Design (20) ──
+    {name:'User research and interviews',category:'Design',hours:16,priority:'High'},
+    {name:'Wireframe creation',category:'Design',hours:12,priority:'High'},
+    {name:'High-fidelity mockups',category:'Design',hours:24,priority:'High'},
+    {name:'Interactive prototype',category:'Design',hours:16,priority:'Medium'},
+    {name:'Design system component creation',category:'Design',hours:20,priority:'Medium'},
+    {name:'Usability testing sessions',category:'Design',hours:12,priority:'High'},
+    {name:'Information architecture mapping',category:'Design',hours:8,priority:'Medium'},
+    {name:'User flow diagrams',category:'Design',hours:6,priority:'Medium'},
+    {name:'Icon and illustration set',category:'Design',hours:12,priority:'Low'},
+    {name:'Responsive design specifications',category:'Design',hours:8,priority:'Medium'},
+    {name:'Accessibility audit (WCAG)',category:'Design',hours:12,priority:'High'},
+    {name:'Color palette and typography guide',category:'Design',hours:6,priority:'Low'},
+    {name:'Animation and micro-interaction spec',category:'Design',hours:8,priority:'Low'},
+    {name:'Design review and feedback session',category:'Design',hours:4,priority:'Medium'},
+    {name:'Design handoff documentation',category:'Design',hours:6,priority:'Medium'},
+    {name:'Landing page design',category:'Design',hours:12,priority:'Medium'},
+    {name:'Email template design',category:'Design',hours:6,priority:'Low'},
+    {name:'Dashboard layout design',category:'Design',hours:12,priority:'Medium'},
+    {name:'Onboarding flow design',category:'Design',hours:10,priority:'Medium'},
+    {name:'Error state and empty state designs',category:'Design',hours:6,priority:'Low'},
+    // ── QA (20) ──
+    {name:'Test plan creation',category:'QA',hours:12,priority:'High'},
+    {name:'Unit test suite development',category:'QA',hours:20,priority:'High'},
+    {name:'Integration test suite',category:'QA',hours:16,priority:'High'},
+    {name:'End-to-end test automation',category:'QA',hours:24,priority:'High'},
+    {name:'Regression test execution',category:'QA',hours:8,priority:'Medium'},
+    {name:'Performance load testing',category:'QA',hours:12,priority:'Medium'},
+    {name:'Security penetration testing',category:'QA',hours:16,priority:'High'},
+    {name:'API contract testing',category:'QA',hours:8,priority:'Medium'},
+    {name:'Cross-browser compatibility testing',category:'QA',hours:8,priority:'Medium'},
+    {name:'Mobile device testing matrix',category:'QA',hours:12,priority:'Medium'},
+    {name:'Accessibility testing (screen reader)',category:'QA',hours:8,priority:'Medium'},
+    {name:'Smoke test suite maintenance',category:'QA',hours:4,priority:'Low'},
+    {name:'Bug triage and classification',category:'QA',hours:4,priority:'Medium'},
+    {name:'Test data generation scripts',category:'QA',hours:8,priority:'Low'},
+    {name:'CI/CD test pipeline setup',category:'QA',hours:8,priority:'Medium'},
+    {name:'Exploratory testing session',category:'QA',hours:6,priority:'Medium'},
+    {name:'User acceptance testing (UAT)',category:'QA',hours:12,priority:'High'},
+    {name:'Chaos engineering experiments',category:'QA',hours:8,priority:'Low'},
+    {name:'Test coverage analysis and gaps',category:'QA',hours:4,priority:'Medium'},
+    {name:'Release verification testing',category:'QA',hours:4,priority:'High'},
+    // ── Marketing (20) ──
+    {name:'Brand positioning document',category:'Marketing',hours:16,priority:'High'},
+    {name:'Content marketing strategy',category:'Marketing',hours:12,priority:'Medium'},
+    {name:'Blog post writing and editing',category:'Marketing',hours:6,priority:'Low'},
+    {name:'Social media campaign planning',category:'Marketing',hours:8,priority:'Medium'},
+    {name:'Email marketing campaign setup',category:'Marketing',hours:8,priority:'Medium'},
+    {name:'SEO keyword research and optimization',category:'Marketing',hours:10,priority:'Medium'},
+    {name:'Paid advertising campaign setup',category:'Marketing',hours:8,priority:'Medium'},
+    {name:'Press release drafting',category:'Marketing',hours:6,priority:'Medium'},
+    {name:'Case study creation',category:'Marketing',hours:12,priority:'Medium'},
+    {name:'Product launch event planning',category:'Marketing',hours:20,priority:'High'},
+    {name:'Webinar content and setup',category:'Marketing',hours:10,priority:'Medium'},
+    {name:'Marketing analytics dashboard',category:'Marketing',hours:8,priority:'Medium'},
+    {name:'Customer testimonial collection',category:'Marketing',hours:8,priority:'Low'},
+    {name:'Competitive positioning matrix',category:'Marketing',hours:8,priority:'Medium'},
+    {name:'Sales collateral creation',category:'Marketing',hours:12,priority:'Medium'},
+    {name:'Product demo video production',category:'Marketing',hours:16,priority:'Medium'},
+    {name:'Newsletter template and send',category:'Marketing',hours:4,priority:'Low'},
+    {name:'Trade show preparation',category:'Marketing',hours:20,priority:'Medium'},
+    {name:'Partner co-marketing materials',category:'Marketing',hours:8,priority:'Low'},
+    {name:'Brand guidelines update',category:'Marketing',hours:8,priority:'Low'},
+    // ── Sales (20) ──
+    {name:'Sales playbook development',category:'Sales',hours:16,priority:'High'},
+    {name:'CRM setup and configuration',category:'Sales',hours:12,priority:'High'},
+    {name:'Lead scoring model creation',category:'Sales',hours:8,priority:'Medium'},
+    {name:'Sales training program',category:'Sales',hours:16,priority:'High'},
+    {name:'Pipeline review and forecasting',category:'Sales',hours:4,priority:'High'},
+    {name:'Proposal template creation',category:'Sales',hours:8,priority:'Medium'},
+    {name:'Contract template drafting',category:'Sales',hours:8,priority:'Medium'},
+    {name:'Competitive battle cards',category:'Sales',hours:8,priority:'Medium'},
+    {name:'Demo environment setup',category:'Sales',hours:12,priority:'Medium'},
+    {name:'Customer onboarding process design',category:'Sales',hours:12,priority:'High'},
+    {name:'Territory planning',category:'Sales',hours:6,priority:'Medium'},
+    {name:'Partner program framework',category:'Sales',hours:12,priority:'Medium'},
+    {name:'Pricing calculator tool',category:'Sales',hours:8,priority:'Medium'},
+    {name:'ROI calculator development',category:'Sales',hours:10,priority:'Medium'},
+    {name:'Sales enablement content',category:'Sales',hours:8,priority:'Medium'},
+    {name:'Objection handling guide',category:'Sales',hours:6,priority:'Low'},
+    {name:'Win/loss analysis',category:'Sales',hours:6,priority:'Medium'},
+    {name:'Account planning template',category:'Sales',hours:6,priority:'Low'},
+    {name:'Referral program design',category:'Sales',hours:8,priority:'Medium'},
+    {name:'Upsell/cross-sell strategy',category:'Sales',hours:8,priority:'Medium'},
+    // ── Legal (15) ──
+    {name:'Terms of service drafting',category:'Legal',hours:16,priority:'High'},
+    {name:'Privacy policy creation (GDPR/POPIA)',category:'Legal',hours:16,priority:'High'},
+    {name:'Data processing agreement',category:'Legal',hours:12,priority:'High'},
+    {name:'Vendor contract review',category:'Legal',hours:8,priority:'Medium'},
+    {name:'NDA template creation',category:'Legal',hours:4,priority:'Medium'},
+    {name:'IP and trademark registration',category:'Legal',hours:12,priority:'Medium'},
+    {name:'Compliance audit preparation',category:'Legal',hours:16,priority:'High'},
+    {name:'Software license review',category:'Legal',hours:6,priority:'Medium'},
+    {name:'Employment contract templates',category:'Legal',hours:8,priority:'Low'},
+    {name:'Cookie consent implementation',category:'Legal',hours:4,priority:'Medium'},
+    {name:'Regulatory filing preparation',category:'Legal',hours:12,priority:'High'},
+    {name:'Partnership agreement drafting',category:'Legal',hours:10,priority:'Medium'},
+    {name:'Export control assessment',category:'Legal',hours:8,priority:'Medium'},
+    {name:'Insurance policy review',category:'Legal',hours:4,priority:'Low'},
+    {name:'Litigation risk assessment',category:'Legal',hours:8,priority:'High'},
+    // ── Infrastructure (20) ──
+    {name:'Cloud architecture design',category:'Infrastructure',hours:24,priority:'High'},
+    {name:'Kubernetes cluster setup',category:'Infrastructure',hours:20,priority:'High'},
+    {name:'CI/CD pipeline configuration',category:'Infrastructure',hours:12,priority:'High'},
+    {name:'Database cluster deployment',category:'Infrastructure',hours:16,priority:'High'},
+    {name:'Load balancer configuration',category:'Infrastructure',hours:8,priority:'Medium'},
+    {name:'SSL certificate management',category:'Infrastructure',hours:4,priority:'Medium'},
+    {name:'DNS and domain configuration',category:'Infrastructure',hours:4,priority:'Medium'},
+    {name:'Monitoring and alerting setup',category:'Infrastructure',hours:12,priority:'High'},
+    {name:'Log aggregation pipeline',category:'Infrastructure',hours:10,priority:'Medium'},
+    {name:'Backup and disaster recovery plan',category:'Infrastructure',hours:16,priority:'High'},
+    {name:'VPN and network security',category:'Infrastructure',hours:12,priority:'High'},
+    {name:'Container registry setup',category:'Infrastructure',hours:4,priority:'Low'},
+    {name:'Infrastructure as Code (Terraform)',category:'Infrastructure',hours:20,priority:'Medium'},
+    {name:'Auto-scaling policy configuration',category:'Infrastructure',hours:8,priority:'Medium'},
+    {name:'CDN setup and optimization',category:'Infrastructure',hours:6,priority:'Medium'},
+    {name:'Secret management (Vault)',category:'Infrastructure',hours:8,priority:'Medium'},
+    {name:'Cost optimization review',category:'Infrastructure',hours:6,priority:'Medium'},
+    {name:'Service mesh configuration',category:'Infrastructure',hours:12,priority:'Medium'},
+    {name:'Staging environment build',category:'Infrastructure',hours:12,priority:'Medium'},
+    {name:'Production environment hardening',category:'Infrastructure',hours:16,priority:'High'},
+    // ── Support (20) ──
+    {name:'Help center knowledge base setup',category:'Support',hours:16,priority:'High'},
+    {name:'Support ticket workflow design',category:'Support',hours:8,priority:'High'},
+    {name:'FAQ documentation writing',category:'Support',hours:8,priority:'Medium'},
+    {name:'Chatbot configuration',category:'Support',hours:12,priority:'Medium'},
+    {name:'SLA definition and monitoring',category:'Support',hours:6,priority:'High'},
+    {name:'Escalation process documentation',category:'Support',hours:6,priority:'Medium'},
+    {name:'Customer satisfaction survey setup',category:'Support',hours:6,priority:'Medium'},
+    {name:'Support agent training materials',category:'Support',hours:12,priority:'Medium'},
+    {name:'Canned response templates',category:'Support',hours:4,priority:'Low'},
+    {name:'Bug report template creation',category:'Support',hours:3,priority:'Low'},
+    {name:'Release notes writing',category:'Support',hours:4,priority:'Medium'},
+    {name:'API documentation',category:'Support',hours:16,priority:'High'},
+    {name:'User guide creation',category:'Support',hours:16,priority:'Medium'},
+    {name:'Video tutorial production',category:'Support',hours:12,priority:'Medium'},
+    {name:'Community forum setup',category:'Support',hours:8,priority:'Low'},
+    {name:'Support metrics dashboard',category:'Support',hours:8,priority:'Medium'},
+    {name:'Incident response playbook',category:'Support',hours:10,priority:'High'},
+    {name:'Customer health scoring model',category:'Support',hours:8,priority:'Medium'},
+    {name:'Feedback collection process',category:'Support',hours:4,priority:'Medium'},
+    {name:'Support tool evaluation',category:'Support',hours:6,priority:'Low'},
+    // ── Operations (20) ──
+    {name:'Process mapping and documentation',category:'Operations',hours:12,priority:'Medium'},
+    {name:'OKR framework setup',category:'Operations',hours:8,priority:'High'},
+    {name:'Team retrospective facilitation',category:'Operations',hours:3,priority:'Medium'},
+    {name:'Budget planning and forecasting',category:'Operations',hours:12,priority:'High'},
+    {name:'Vendor evaluation and selection',category:'Operations',hours:10,priority:'Medium'},
+    {name:'Resource allocation planning',category:'Operations',hours:6,priority:'High'},
+    {name:'Onboarding program for new hires',category:'Operations',hours:16,priority:'Medium'},
+    {name:'Policy and procedure documentation',category:'Operations',hours:8,priority:'Medium'},
+    {name:'Risk assessment matrix',category:'Operations',hours:8,priority:'High'},
+    {name:'Change management plan',category:'Operations',hours:10,priority:'High'},
+    {name:'Project status report template',category:'Operations',hours:4,priority:'Low'},
+    {name:'Meeting cadence and agenda setup',category:'Operations',hours:3,priority:'Low'},
+    {name:'Tool stack evaluation',category:'Operations',hours:8,priority:'Medium'},
+    {name:'Data governance framework',category:'Operations',hours:12,priority:'Medium'},
+    {name:'Business continuity plan',category:'Operations',hours:16,priority:'High'},
+    {name:'Quarterly business review prep',category:'Operations',hours:8,priority:'Medium'},
+    {name:'Capacity planning exercise',category:'Operations',hours:6,priority:'Medium'},
+    {name:'Workflow automation setup',category:'Operations',hours:12,priority:'Medium'},
+    {name:'KPI definition and tracking',category:'Operations',hours:6,priority:'High'},
+    {name:'Cross-team dependency mapping',category:'Operations',hours:6,priority:'Medium'}
+  ];
+  tasks.forEach(function(t){
+    upsertTaskInLibrary({
+      name: t.name,
+      category: t.category,
+      hours: t.hours,
+      description: '',
+      defaultOwner: '',
+      source: 'seed'
+    });
+  });
+  _defaultTaskLibrarySeeded = true;
 }
 
 // Generic library picker modal — works for G2M, ToDo, or any caller that
@@ -14626,6 +15030,7 @@ function openPlans(){
   // _taskLibrarySeeded).
   if(!_taskLibrarySeeded){
     seedTaskLibraryFromCapacity();
+    seedDefaultTaskLibrary(); // v1.32.0 FIX 3: seed 200+ default tasks
     persistData();
   }
   renderPlansOverlay();
@@ -15988,7 +16393,7 @@ function renderAddTaskBody(){
     html += '<div class="plan-source-group" style="margin-bottom:14px">';
     html += '<div class="plan-source-group-title" style="display:flex;align-items:center;justify-content:space-between"><span>G2M checklists</span><span style="font-weight:500;text-transform:none;letter-spacing:0">'+g2mProducts.length+' available</span></div>';
     if(!g2mProducts.length){
-      html += '<div style="font-size:12px;color:var(--muted);padding:8px 0">No G2M checklists exist yet. Open the G2M Checklist module to create one.</div>';
+      html += '<div style="font-size:12px;color:var(--muted);padding:8px 0">No G2M checklists exist yet. Open the Checklist module to create one.</div>';
     } else {
       g2mProducts.forEach(function(prod){
         var items = g2mAllData[prod].items || [];
@@ -16055,7 +16460,7 @@ function renderAddTaskBody(){
       return g2mAllData[k] && g2mAllData[k].items && g2mAllData[k].items.length > 0;
     });
     if(!products.length){
-      body.innerHTML = '<div class="plan-empty"><h3>No G2M checklists yet</h3><p>Open the G2M Checklist module and create some checklists first.</p></div>';
+      body.innerHTML = '<div class="plan-empty"><h3>No G2M checklists yet</h3><p>Open the Checklist module and create some checklists first.</p></div>';
       return;
     }
     var html = '<div class="plan-source-list">';
@@ -17205,7 +17610,7 @@ function openPrioritization(){
   var ov = document.getElementById('prioritizationOverlay');
   if(!ov) return;
   ov.classList.add('open');
-  prioNav(_prioPage || 'score');
+  prioNav(_prioPage || 'top10');
   updateNavActive('');  // v1.25.0
 }
 function closePrioritization(){
@@ -17220,10 +17625,11 @@ function prioNav(page){
     if(isActive) el.setAttribute('aria-current','page');
     else el.removeAttribute('aria-current');
   });
-  var titles = { score: 'Score Initiatives', frameworks: 'Frameworks', matrix: 'Value vs Effort Matrix', okrs: 'Objectives & Key Results' };
+  var titles = { top10: 'Top 10 Priorities', score: 'Score Initiatives', frameworks: 'Frameworks', matrix: 'Value vs Effort Matrix', okrs: 'Objectives & Key Results' };
   document.getElementById('prioPageTitle').textContent = titles[page] || page;
   document.getElementById('prioTopActions').innerHTML = '';
-  if(page === 'score') renderPrioScoreTab();
+  if(page === 'top10') renderPrioTop10Tab();
+  else if(page === 'score') renderPrioScoreTab();
   else if(page === 'frameworks') renderPrioFrameworksTab();
   else if(page === 'matrix') renderPrioMatrixTab();
   else if(page === 'okrs') renderOkrsTab();
@@ -17939,7 +18345,7 @@ function populateKPIQuarters(){
       var val=label+'-Q'+q;
       var o=document.createElement('option');
       o.value=val;o.textContent=val;
-      o.style.cssText='background:#fff;color:var(--text)';
+      o.style.cssText='background:var(--white);color:var(--text)';
       if(val===current) o.selected=true;
       og.appendChild(o);
     }
@@ -19160,9 +19566,9 @@ function toggleSidebar(){
   if(!sb) return;
   var willOpen = sb.classList.contains('collapsed');
   sb.classList.toggle('collapsed');
+  // v1.32.0 FIX 16: save sidebar preference
+  try { localStorage.setItem('pmr_sidebar_collapsed', willOpen ? 'false' : 'true'); } catch(e){}
   if(willOpen){
-    // Wire click-outside-to-close. Use mousedown so it fires before any other
-    // click handlers and capture phase so it runs even if a child stops bubbling.
     setTimeout(function(){
       document.addEventListener('mousedown', _onSidebarOutsideClick, true);
     }, 0);
@@ -19196,6 +19602,15 @@ function _autoCollapseSidebarAfterClick(){
 document.addEventListener('DOMContentLoaded', function(){
   var sb = document.getElementById('appSidebar');
   if(!sb) return;
+  // v1.32.0 FIX 16: restore sidebar preference from localStorage
+  try {
+    var pref = localStorage.getItem('pmr_sidebar_collapsed');
+    if(pref === 'true'){
+      sb.classList.add('collapsed');
+    } else {
+      sb.classList.remove('collapsed');
+    }
+  } catch(e){}
   sb.addEventListener('click', function(e){
     var btn = e.target.closest('.sidebar-item');
     if(btn) setTimeout(_autoCollapseSidebarAfterClick, 50);
@@ -22078,6 +22493,7 @@ function renderTaskLibraryView(content, actions){
   // Always top up from CapacityIQ task types (idempotent — deduped by upsert)
   // so adding a task type in CapacityIQ shows up in the library next time.
   seedTaskLibraryFromCapacity();
+  seedDefaultTaskLibrary(); // v1.32.0 FIX 3: seed defaults on first view
   persistData();
 
   actions.innerHTML =
@@ -22146,14 +22562,14 @@ function renderTaskLibraryView(content, actions){
   html += '</tr></thead><tbody>';
   entries.forEach(function(e){
     html += '<tr>';
-    html += '<td><div style="font-weight:600;color:var(--text)">'+escHtml(e.name)+'</div>'+(e.description?'<div style="font-size:10px;color:var(--muted);margin-top:2px;line-height:1.3">'+escHtml(e.description.substring(0,80))+(e.description.length>80?'\u2026':'')+'</div>':'')+'</td>';
+    html += '<td><div contenteditable="true" data-lib-id="'+escHtml(e.id)+'" data-lib-field="name" style="font-weight:600;color:var(--text);outline:none;cursor:text;padding:2px 4px;border-radius:4px;min-width:60px" onblur="_inlineLibSave(this)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur()}">'+escHtml(e.name)+'</div>'+(e.description?'<div style="font-size:10px;color:var(--muted);margin-top:2px;line-height:1.3">'+escHtml(e.description.substring(0,80))+(e.description.length>80?'\u2026':'')+'</div>':'')+'</td>';
     html += '<td><span style="font-size:10px;background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:9999px;font-weight:600">'+escHtml(e.category || 'general')+'</span></td>';
-    html += '<td style="text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)">'+(e.hours || '\u2014')+'</td>';
+    html += '<td style="text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)"><div contenteditable="true" data-lib-id="'+escHtml(e.id)+'" data-lib-field="hours" style="outline:none;cursor:text;padding:2px 4px;border-radius:4px;min-width:30px;display:inline-block" onblur="_inlineLibSave(this)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur()}">'+(e.hours || '0')+'</div></td>';
     html += '<td style="color:var(--muted)">'+escHtml(e.defaultOwner || '\u2014')+'</td>';
     html += '<td style="text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)">'+(e.useCount || 0)+'</td>';
-    html += '<td style="text-align:right">'+
-      '<button class="prio-btn" style="padding:4px 10px;font-size:10px" onclick="openLibraryEditModal(\''+escHtml(e.id)+'\')">Edit</button>'+
-      '<button class="prio-btn danger" style="padding:4px 10px;font-size:10px;margin-left:4px" onclick="deleteLibraryEntry(\''+escHtml(e.id)+'\')">\u00D7</button>'+
+    html += '<td style="text-align:right;white-space:nowrap">'+
+      '<button class="prio-btn" style="padding:4px 10px;font-size:10px;display:inline-block;vertical-align:middle" onclick="openLibraryEditModal(\''+escHtml(e.id)+'\')">Edit</button>'+
+      '<button class="prio-btn danger" style="padding:4px 10px;font-size:10px;display:inline-block;vertical-align:middle;margin-left:4px" onclick="deleteLibraryEntry(\''+escHtml(e.id)+'\')">\u00D7</button>'+
       '</td>';
     html += '</tr>';
   });
@@ -22184,6 +22600,24 @@ function _wireLibMgmtEvents(){
       renderTaskLibraryView(c, a);
     });
   }
+}
+
+// v1.32.0 FIX 4: Inline editing auto-save on blur
+function _inlineLibSave(el){
+  var id = el.dataset.libId;
+  var field = el.dataset.libField;
+  var entry = taskLibrary.find(function(e){ return e.id === id; });
+  if(!entry) return;
+  var val = (el.textContent || '').trim();
+  if(field === 'name'){
+    if(!val) { el.textContent = entry.name; return; }
+    entry.name = val;
+    entry.normalizedName = _normalizeTaskName(val);
+  } else if(field === 'hours'){
+    entry.hours = parseFloat(val) || 0;
+    el.textContent = entry.hours;
+  }
+  persistData();
 }
 
 // Add modal
@@ -22456,6 +22890,35 @@ function _processLibraryWorkbook(wb){
   if(c && a) renderTaskLibraryView(c, a);
 }
 
+// v1.32.0 FIX 7: Auto-populate initiatives from roadmap rows
+function autoPopulateInitiativesFromRoadmap(){
+  if(!rows || !rows.length){ showToast('No roadmap rows to pull from','error'); return; }
+  var added = 0;
+  rows.forEach(function(row){
+    // Skip if already exists
+    var exists = capData.initiatives.some(function(i){ return i.roadmapLink === row.name || i.name.indexOf(row.name) >= 0; });
+    if(exists) return;
+    capData.initiatives.push({
+      id: 'init_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+      name: row.name,
+      description: (row.section || '') + ' - ' + (row.owner || 'Unassigned'),
+      templateId: null,
+      status: 'Planning',
+      priority: 'Medium',
+      roadmapLink: row.name,
+      createdAt: Date.now()
+    });
+    added++;
+  });
+  if(added > 0){
+    persistData();
+    capNav('initiatives');
+    showToast('Added ' + added + ' initiative' + (added !== 1 ? 's' : '') + ' from roadmap','success');
+  } else {
+    showToast('All roadmap rows already have initiatives','info');
+  }
+}
+
 function seedCapData(){
   if(capData.teams.length>0) return;
   var teamDefs=[
@@ -22609,12 +23072,21 @@ function renderCapTeams(content,actions){
     var members=capData.members.filter(function(m){return m.teamId===team.id;});
     var card=document.createElement('div');
     card.className='cap-card';
+    // v1.32.0 FIX 8: show description, member avatars, associated initiatives and plans
+    var teamInitiatives = rows.filter(function(r){ return r.team === team.name || r.owner === team.name; });
+    var memberAvatars = members.slice(0,5).map(function(m){
+      return '<span style="width:24px;height:24px;border-radius:50%;background:'+team.color+';color:#fff;font-size:9px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--white);margin-left:-6px">'+(m.name||'?')[0].toUpperCase()+'</span>';
+    }).join('');
+    if(members.length > 5) memberAvatars += '<span style="font-size:9px;color:var(--muted);margin-left:4px">+' + (members.length - 5) + '</span>';
     card.innerHTML='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'+
       '<span style="width:12px;height:12px;border-radius:3px;background:'+team.color+'"></span>'+
-      '<h3 style="margin:0">'+team.name+'</h3>'+
-      '<span style="font-size:10px;color:#64748b">'+members.length+' members</span>'+
+      '<h3 contenteditable="true" style="margin:0;outline:none;cursor:text" onblur="var t=capData.teams.find(function(x){return x.id===\''+team.id+'\'});if(t){t.name=this.textContent.trim();persistData()}">'+escHtml(team.name)+'</h3>'+
+      '<span style="font-size:10px;color:var(--muted)">'+members.length+' members</span>'+
+      '<div style="display:flex;align-items:center;margin-left:4px">'+memberAvatars+'</div>'+
       '<button class="cap-btn danger" onclick="removeCapTeam(\''+team.id+'\')" style="margin-left:auto;font-size:9px;padding:3px 8px">Remove</button>'+
-    '</div>';
+    '</div>'+
+    '<div contenteditable="true" style="font-size:11px;color:var(--muted);margin-bottom:8px;outline:none;min-height:16px;cursor:text" data-placeholder="Add team description..." onblur="var t=capData.teams.find(function(x){return x.id===\''+team.id+'\'});if(t){t.description=this.textContent.trim();persistData()}">'+(escHtml(team.description||''))+'</div>'+
+    (teamInitiatives.length ? '<div style="font-size:10px;color:var(--muted);margin-bottom:6px">Roadmap: '+teamInitiatives.slice(0,3).map(function(r){return '<span style="background:var(--surface-low);padding:1px 6px;border-radius:4px;margin-right:4px;font-weight:600">'+escHtml(r.name)+'</span>';}).join('')+(teamInitiatives.length>3?'<span>+' + (teamInitiatives.length-3) + ' more</span>':'')+'</div>' : '');
     if(members.length>0){
       var tbl='<table class="cap-table"><thead><tr><th>Name</th><th>Role</th><th>Hrs/Day</th><th>Productivity</th><th>Active</th><th></th></tr></thead><tbody>';
       members.forEach(function(m){
@@ -22623,7 +23095,7 @@ function renderCapTeams(content,actions){
       tbl+='</tbody></table>';
       card.innerHTML+=tbl;
     } else {
-      card.innerHTML+='<p style="color:#64748b;font-size:11px">No members yet. Click "+ Add Member" to add people to this team.</p>';
+      card.innerHTML+='<p style="color:var(--muted);font-size:11px">No members yet. Click "+ Add Member" to add people to this team.</p>';
     }
     content.appendChild(card);
   });
@@ -22662,10 +23134,10 @@ function addCapMember(){
   capData.teams.forEach(function(t){teamOpts+='<option value="'+t.id+'" style="background:#1e293b;color:#e2e8f0">'+t.name+'</option>';});
   form.innerHTML='<h3>Add Team Member</h3>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end">'+
-    '<div><label style="font-size:9px;color:#64748b;display:block;margin-bottom:3px">NAME</label><input id="capMemName" class="cap-input" placeholder="Full name" style="width:100%"></div>'+
-    '<div><label style="font-size:9px;color:#64748b;display:block;margin-bottom:3px">TEAM</label><select id="capMemTeam" class="cap-select" style="width:100%">'+teamOpts+'</select></div>'+
-    '<div><label style="font-size:9px;color:#64748b;display:block;margin-bottom:3px">ROLE</label><select id="capMemRole" class="cap-select" style="width:100%"><option style="background:#1e293b">Engineer</option><option style="background:#1e293b">Team Lead</option><option style="background:#1e293b">Manager</option><option style="background:#1e293b">QA</option><option style="background:#1e293b">Designer</option></select></div>'+
-    '<div><label style="font-size:9px;color:#64748b;display:block;margin-bottom:3px">HRS/DAY</label><input id="capMemHours" class="cap-input" type="number" value="8" min="1" max="12" style="width:100%"></div>'+
+    '<div><label style="font-size:9px;color:var(--muted);display:block;margin-bottom:3px">NAME</label><input id="capMemName" class="cap-input" placeholder="Full name" style="width:100%"></div>'+
+    '<div><label style="font-size:9px;color:var(--muted);display:block;margin-bottom:3px">TEAM</label><select id="capMemTeam" class="cap-select" style="width:100%">'+teamOpts+'</select></div>'+
+    '<div><label style="font-size:9px;color:var(--muted);display:block;margin-bottom:3px">ROLE</label><select id="capMemRole" class="cap-select" style="width:100%"><option style="background:#1e293b">Engineer</option><option style="background:#1e293b">Team Lead</option><option style="background:#1e293b">Manager</option><option style="background:#1e293b">QA</option><option style="background:#1e293b">Designer</option></select></div>'+
+    '<div><label style="font-size:9px;color:var(--muted);display:block;margin-bottom:3px">HRS/DAY</label><input id="capMemHours" class="cap-input" type="number" value="8" min="1" max="12" style="width:100%"></div>'+
     '<div style="display:flex;gap:4px"><button class="cap-btn primary" onclick="confirmAddCapMember()">Add</button><button class="cap-btn" onclick="document.getElementById(\'capMemberForm\').remove()">Cancel</button></div></div>';
   content.insertBefore(form,content.firstChild);
   document.getElementById('capMemName').focus();
@@ -22705,10 +23177,10 @@ function addCapSprint(){
   var content=document.getElementById('capContent');
   var form=document.createElement('div');form.className='cap-card';form.id='capSprintForm';
   form.innerHTML='<h3>Add Sprint</h3><div style="display:flex;gap:8px;align-items:end">'+
-    '<div><label style="font-size:9px;color:#64748b;display:block;margin-bottom:3px">NAME</label><input id="capSpName" class="cap-input" placeholder="Sprint name" style="width:160px"></div>'+
-    '<div><label style="font-size:9px;color:#64748b;display:block;margin-bottom:3px">START</label><input id="capSpStart" class="cap-input" type="date"></div>'+
-    '<div><label style="font-size:9px;color:#64748b;display:block;margin-bottom:3px">END</label><input id="capSpEnd" class="cap-input" type="date"></div>'+
-    '<div><label style="font-size:9px;color:#64748b;display:block;margin-bottom:3px">WORKING DAYS</label><input id="capSpDays" class="cap-input" type="number" value="10" style="width:60px"></div>'+
+    '<div><label style="font-size:9px;color:var(--muted);display:block;margin-bottom:3px">NAME</label><input id="capSpName" class="cap-input" placeholder="Sprint name" style="width:160px"></div>'+
+    '<div><label style="font-size:9px;color:var(--muted);display:block;margin-bottom:3px">START</label><input id="capSpStart" class="cap-input" type="date"></div>'+
+    '<div><label style="font-size:9px;color:var(--muted);display:block;margin-bottom:3px">END</label><input id="capSpEnd" class="cap-input" type="date"></div>'+
+    '<div><label style="font-size:9px;color:var(--muted);display:block;margin-bottom:3px">WORKING DAYS</label><input id="capSpDays" class="cap-input" type="number" value="10" style="width:60px"></div>'+
     '<button class="cap-btn primary" onclick="confirmAddCapSprint()">Add</button><button class="cap-btn" onclick="document.getElementById(\'capSprintForm\').remove()">Cancel</button></div>';
   content.insertBefore(form,content.firstChild);
 }
@@ -22722,9 +23194,10 @@ function removeCapSprint(id){capData.sprints=capData.sprints.filter(function(s){
 // Old renderCapTemplates removed — replaced by enhanced version below
 
 function renderCapInitiatives(content,actions){
-  actions.innerHTML='<button class="cap-btn primary" onclick="capNav(\'templates\')">+ New Initiative</button>';
+  actions.innerHTML='<button class="cap-btn primary" onclick="capNav(\'templates\')" style="white-space:nowrap">+ New Initiative</button>'+
+    '<button class="cap-btn" onclick="autoPopulateInitiativesFromRoadmap()" style="white-space:nowrap;margin-left:6px">Pull from Roadmap</button>';
   if(capData.initiatives.length===0){
-    content.innerHTML='<div class="cap-card"><h3>No initiatives yet</h3><p style="color:#64748b;font-size:12px">Click "+ New Initiative" to create one from a template.</p></div>';
+    content.innerHTML='<div class="cap-card"><h3>No initiatives yet</h3><p style="color:var(--muted);font-size:12px">Click "+ New Initiative" to create one, or "Pull from Roadmap" to auto-populate from your roadmap rows.</p></div>';
     return;
   }
   capData.initiatives.forEach(function(init){
@@ -22742,8 +23215,8 @@ function renderCapInitiatives(content,actions){
     card.style.cursor='pointer';
     card.onclick=function(){renderInitiativeDetail(init.id);};
     card.innerHTML='<div style="display:flex;align-items:center;gap:10px">'+
-      '<div style="flex:1"><div style="font-size:14px;font-weight:700;color:#e2e8f0">'+init.name+'</div>'+
-      '<div style="font-size:10px;color:#64748b;margin-top:2px">'+(init.description||'')+'</div></div>'+
+      '<div style="flex:1"><div style="font-size:14px;font-weight:700;color:var(--text)">'+init.name+'</div>'+
+      '<div style="font-size:10px;color:var(--muted);margin-top:2px">'+(init.description||'')+'</div></div>'+
       '<span style="padding:3px 10px;border-radius:4px;font-size:10px;font-weight:700;color:#fff;background:'+statusCol+'">'+init.status+'</span>'+
       '<div style="text-align:center"><div style="font-size:18px;font-weight:900;color:#0d9488;font-family:Barlow Condensed">'+pct+'%</div><div style="font-size:8px;color:#64748b">COMPLETE</div></div>'+
       '<div style="text-align:center"><div style="font-size:14px;font-weight:700;color:#e2e8f0">'+totalHrs+'h</div><div style="font-size:8px;color:#64748b">TOTAL</div></div>'+
@@ -22803,9 +23276,9 @@ function renderInitiativeDetail(initId){
     roadmapOpts+='<option value="'+r.name+'"'+(init.roadmapLink===r.name?' selected':'')+' style="background:#1e293b;color:#e2e8f0">'+r.name+(sec?' ('+sec.name+')':'')+'</option>';
   });
   descCard.innerHTML='<div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">'+
-    '<div><label style="font-size:9px;color:#64748b;display:block;margin-bottom:3px">DESCRIPTION</label>'+
+    '<div><label style="font-size:9px;color:var(--muted);display:block;margin-bottom:3px">DESCRIPTION</label>'+
     '<textarea class="cap-input" style="width:100%;height:60px;resize:vertical" onchange="setCapInitField(\''+initId+'\',\'description\',this.value)">'+(init.description||'')+'</textarea></div>'+
-    '<div><label style="font-size:9px;color:#64748b;display:block;margin-bottom:3px">LINKED ROADMAP INITIATIVE</label>'+
+    '<div><label style="font-size:9px;color:var(--muted);display:block;margin-bottom:3px">LINKED ROADMAP INITIATIVE</label>'+
     '<select class="cap-select" style="width:100%" onchange="setCapInitField(\''+initId+'\',\'roadmapLink\',this.value)">'+roadmapOpts+'</select>'+
     (init.roadmapLink?'<div style="margin-top:4px;font-size:10px;color:#0d9488;cursor:pointer" onclick="closeCapacity();setTimeout(function(){},200)">Link '+init.roadmapLink+'</div>':'')+
     '</div></div>';
@@ -22881,6 +23354,9 @@ function renderCapTaskTypes(content,actions){
 
 // ── EDIT MEMBERSHIPS (assign users to multiple teams) ──
 function editCapMemberships(){
+  // v1.32.0 FIX 5: prevent stacking modals — remove existing before creating new
+  var existing=document.getElementById('capEditMemberForm');
+  if(existing){existing.remove();return;} // toggle: second click closes it
   var content=document.getElementById('capContent');
   var form=document.createElement('div');form.className='cap-card';form.id='capEditMemberForm';
   var html='<h3>Edit Team Memberships</h3><p style="color:#64748b;font-size:11px;margin-bottom:10px">Assign members to teams. Members can belong to multiple teams.</p>';
@@ -22930,11 +23406,11 @@ function addCapCustomTask(initId){
   capData.sprints.forEach(function(s){sprintOpts+='<option value="'+s.id+'" style="background:#1e293b;color:#e2e8f0">'+s.name+'</option>';});
   form.innerHTML='<h3>Add Custom Task</h3>'+
     '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 80px auto;gap:8px;align-items:end">'+
-    '<div><label style="font-size:9px;color:#64748b;display:block;margin-bottom:3px">TASK NAME</label><input id="capCTName" class="cap-input" placeholder="Task name..." style="width:100%"></div>'+
-    '<div><label style="font-size:9px;color:#64748b;display:block;margin-bottom:3px">PHASE</label><select id="capCTPhase" class="cap-select" style="width:100%"><option style="background:#1e293b">Discovery</option><option style="background:#1e293b">Build</option><option style="background:#1e293b">Test</option><option style="background:#1e293b">Go-Live</option></select></div>'+
-    '<div><label style="font-size:9px;color:#64748b;display:block;margin-bottom:3px">TEAM</label><select id="capCTTeam" class="cap-select" style="width:100%">'+teamOpts+'</select></div>'+
-    '<div><label style="font-size:9px;color:#64748b;display:block;margin-bottom:3px">SPRINT</label><select id="capCTSprint" class="cap-select" style="width:100%">'+sprintOpts+'</select></div>'+
-    '<div><label style="font-size:9px;color:#64748b;display:block;margin-bottom:3px">HOURS</label><input id="capCTHours" class="cap-input" type="number" min="0" value="0" style="width:100%;text-align:center"></div>'+
+    '<div><label style="font-size:9px;color:var(--muted);display:block;margin-bottom:3px">TASK NAME</label><input id="capCTName" class="cap-input" placeholder="Task name..." style="width:100%"></div>'+
+    '<div><label style="font-size:9px;color:var(--muted);display:block;margin-bottom:3px">PHASE</label><select id="capCTPhase" class="cap-select" style="width:100%"><option style="background:#1e293b">Discovery</option><option style="background:#1e293b">Build</option><option style="background:#1e293b">Test</option><option style="background:#1e293b">Go-Live</option></select></div>'+
+    '<div><label style="font-size:9px;color:var(--muted);display:block;margin-bottom:3px">TEAM</label><select id="capCTTeam" class="cap-select" style="width:100%">'+teamOpts+'</select></div>'+
+    '<div><label style="font-size:9px;color:var(--muted);display:block;margin-bottom:3px">SPRINT</label><select id="capCTSprint" class="cap-select" style="width:100%">'+sprintOpts+'</select></div>'+
+    '<div><label style="font-size:9px;color:var(--muted);display:block;margin-bottom:3px">HOURS</label><input id="capCTHours" class="cap-input" type="number" min="0" value="0" style="width:100%;text-align:center"></div>'+
     '<div style="display:flex;gap:4px"><button class="cap-btn primary" onclick="confirmCapCustomTask(\''+initId+'\')">Add</button><button class="cap-btn" onclick="document.getElementById(\'capCustomTaskForm\').remove()">Cancel</button></div></div>';
   content.insertBefore(form,content.firstChild);
   document.getElementById('capCTName').focus();
@@ -22981,7 +23457,7 @@ function renderCapTemplates(content,actions){
     tasks.forEach(function(tt){var taskType=capData.taskTypes.find(function(t){return t.id===tt.taskTypeId;});totalHrs+=taskType?taskType.fixedHours:0;});
     var card=document.createElement('div');card.className='cap-template-card';
     card.innerHTML='<div class="icon" style="color:var(--accent)">'+svgIcon(tpl.icon||'clipboard',{size:24})+'</div><div class="name">'+escHtml(tpl.name)+'</div><div class="desc">'+escHtml(tpl.description)+'</div>'+
-      '<div style="margin-top:8px;font-size:10px;color:#94a3b8">'+tasks.length+' tasks · '+totalHrs+'h estimated</div>'+
+      '<div style="margin-top:8px;font-size:10px;color:var(--muted)">'+tasks.length+' tasks · '+totalHrs+'h estimated</div>'+
       '<div style="margin-top:8px;display:flex;gap:4px">'+
         '<button class="cap-btn primary" onclick="event.stopPropagation();createInitiativeFromTemplate(\''+tpl.id+'\')" style="font-size:9px;padding:3px 8px">Use Template</button>'+
         (tpl.custom?'<button class="cap-btn danger" onclick="event.stopPropagation();deleteCapTemplate(\''+tpl.id+'\')" style="font-size:9px;padding:3px 8px">Delete</button>':'')+
@@ -23009,9 +23485,9 @@ function showCreateTemplate(){
   var form=document.createElement('div');form.className='cap-card';form.id='capNewTplForm';
   var html='<h3>Create New Template</h3>';
   html+='<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:12px">'+
-    '<div><label style="font-size:9px;color:#64748b;display:block;margin-bottom:3px">TEMPLATE NAME</label><input id="capTplName" class="cap-input" placeholder="e.g. New IoT Device" style="width:100%"></div>'+
-    '<div><label style="font-size:9px;color:#64748b;display:block;margin-bottom:3px">DESCRIPTION</label><input id="capTplDesc" class="cap-input" placeholder="Description..." style="width:100%"></div>'+
-    '<div><label style="font-size:9px;color:#64748b;display:block;margin-bottom:3px">ICON</label><input id="capTplIcon" class="cap-input" value="clipboard" style="width:50px;text-align:center"></div></div>';
+    '<div><label style="font-size:9px;color:var(--muted);display:block;margin-bottom:3px">TEMPLATE NAME</label><input id="capTplName" class="cap-input" placeholder="e.g. New IoT Device" style="width:100%"></div>'+
+    '<div><label style="font-size:9px;color:var(--muted);display:block;margin-bottom:3px">DESCRIPTION</label><input id="capTplDesc" class="cap-input" placeholder="Description..." style="width:100%"></div>'+
+    '<div><label style="font-size:9px;color:var(--muted);display:block;margin-bottom:3px">ICON</label><input id="capTplIcon" class="cap-input" value="clipboard" style="width:50px;text-align:center"></div></div>';
   html+='<div style="font-size:10px;font-weight:700;color:#94a3b8;margin-bottom:6px;text-transform:uppercase">Select tasks to include:</div>';
   html+='<div style="max-height:300px;overflow-y:auto;border:1px solid #475569;border-radius:6px;padding:8px">';
   var lastCat='';
@@ -23149,6 +23625,53 @@ function renderTop10(){
   html += '</div>';
   body.innerHTML = html;
 }
+
+// v1.32.0 FIX 17: Top 10 rendered inside Prioritisation overlay
+function renderPrioTop10Tab(){
+  var content = document.getElementById('prioContent');
+  if(!content) return;
+  var scored = rows.map(function(r){ return {row:r, score:_top10Score(r)}; });
+  scored.sort(function(a,b){ return b.score - a.score; });
+  var top = scored.slice(0, 10);
+  if(top.length === 0){
+    content.innerHTML = '<div class="prio-empty"><h3>No initiatives yet</h3><p>Add some rows to your roadmap, then come back to see your top priorities.</p></div>';
+    return;
+  }
+  var rankColors = ['#7c3aed','#2563eb','#0891b2','#059669','#d97706','#dc2626','#7c3aed','#2563eb','#0891b2','#059669'];
+  var prioBg = {P1:'background:#fee2e2;color:#991b1b',P2:'background:#fef3c7;color:#92400e',P3:'background:#dbeafe;color:#1e40af'};
+  var statusBg = {'At Risk':'background:#fee2e2;color:#dc2626','Delayed':'background:#fef3c7;color:#d97706','In Progress':'background:#dbeafe;color:#2563eb','Complete':'background:#dcfce7;color:#16a34a','Not Started':'background:#f1f5f9;color:#64748b'};
+  var html = '<div style="max-width:720px;margin:0 auto;padding:24px">';
+  html += '<p style="color:var(--muted);font-size:13px;margin-bottom:20px;line-height:1.5">Your top initiatives ranked by priority level and status urgency. Derived automatically from your roadmap data.</p>';
+  top.forEach(function(item, idx){
+    var r = item.row;
+    var sec = sections.find(function(s){ return s.id === r.sec; });
+    var secName = sec ? sec.name : '';
+    var prio = r.priority || 'None';
+    var stat = r.status || 'Not Started';
+    html += '<div style="display:flex;gap:14px;align-items:flex-start;padding:14px;background:var(--white);border:1px solid var(--border);border-radius:12px;margin-bottom:10px">';
+    html += '<div style="width:32px;height:32px;border-radius:8px;background:'+rankColors[idx]+';color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+(idx+1)+'</div>';
+    html += '<div style="flex:1"><div style="font-weight:700;font-size:14px;color:var(--text)">'+escHtml(r.name)+'</div>';
+    if(r.sub) html += '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+escHtml(r.sub)+'</div>';
+    html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">';
+    if(prio !== 'None'){
+      var ps = prioBg[prio] || '';
+      html += '<span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:9999px;'+ps+'">'+escHtml(prio)+'</span>';
+    }
+    var ss = statusBg[stat] || '';
+    html += '<span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:9999px;'+ss+'">'+escHtml(stat)+'</span>';
+    if(secName) html += '<span style="font-size:9px;font-weight:600;padding:2px 8px;border-radius:9999px;background:var(--surface-low);color:var(--muted)">'+escHtml(secName)+'</span>';
+    html += '</div></div></div>';
+  });
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+// Also redirect openTop10 to open Prioritisation with top10 tab
+var _origOpenTop10 = openTop10;
+openTop10 = function(){
+  _prioPage = 'top10';
+  openPrioritization();
+};
 
 // ── ARTIFACTS / COLLATERAL ──────────────────────────────────────────────────
 
@@ -24186,7 +24709,7 @@ function openSettings(){
   overlay.id='settingsOverlay';
   overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px';
   var modal=document.createElement('div');
-  modal.style.cssText='background:#fff;border-radius:12px;width:600px;max-width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)';
+  modal.style.cssText='background:var(--white);border-radius:12px;width:600px;max-width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);color:var(--text)';
 
   var hasKey=userAIKey.key&&userAIKey.key.length>5;
   var hasBrand=brandGuideData.fileName||(brandGuideData.colors&&brandGuideData.colors.length)||brandGuideData.notes;
@@ -24285,6 +24808,10 @@ function openSettings(){
   });
   h+='</select></div>';
 
+  // v1.32.0 FIX 15: Re-run onboarding button
+  h+='<div style="margin-bottom:16px;padding-top:16px;border-top:1px solid #e8edf7">';
+  h+='<button onclick="document.getElementById(\'settingsOverlay\').remove();showOnboarding()" style="width:100%;padding:8px;background:var(--surface-low);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:8px">Re-run Onboarding Tour</button>';
+  h+='</div>';
   h+='<button onclick="document.getElementById(\'settingsOverlay\').remove()" style="width:100%;padding:10px;background:var(--navy);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">Done</button>';
   h+='</div>';
 
@@ -24696,7 +25223,7 @@ var TOUR_STEPS = [
   {title:'Roadmap View',desc:'This is your main roadmap timeline. Each row is a product initiative with timeline bars showing phases (blue=in progress, green=released, amber=at risk). Drag rows to reorder, click to edit.',target:'.table-wrap',pos:'bottom'},
   {title:'Content',desc:'Add new rows (initiatives) and sections to your roadmap. Each row can have multiple timeline bars, deliverables, links, and attachments.',target:'[onclick*="ddContent"]',pos:'bottom'},
   {title:'Data',desc:'Import your roadmap from Excel, export backups, or restore previous saves. Use the Excel template to bulk-import initiatives.',target:'[onclick*="ddData"]',pos:'bottom'},
-  {title:'G2M Checklist',desc:'Go-To-Market readiness checker. 126+ checklist items across 14 departments. Track Yes/No/N/A per product, get a readiness score, and export to Word.',target:'[onclick*="openG2M"]',pos:'bottom'},
+  {title:'Checklist',desc:'Go-To-Market readiness checker. 126+ checklist items across 14 departments. Track Yes/No/N/A per product, get a readiness score, and export to Word.',target:'[onclick*="openG2M"]',pos:'bottom'},
   {title:'ToDo List',desc:'Task management with Kanban board, due dates, status tracking (Open/In Progress/Done), KPI attributes, and hour estimates. Log actual hours for timesheet integration.',target:'[onclick*="openTodo"]',pos:'bottom'},
   {title:'KPIs & Timesheet',desc:'Track your 10 PM KPIs with quarterly scoring (0-4), manager evaluation, and evidence collection. Switch to Timesheet view to see weekly time allocation pulled from your ToDo tasks.',target:'[onclick*="openKPI"]',pos:'bottom'},
   {title:'UCR',desc:'User Change Requests -- formal change management with full form fields, systems impact checklist, approval workflow, and Word export for sign-off.',target:'[onclick*="openUCR"]',pos:'bottom'},
@@ -25093,8 +25620,9 @@ function openPasteFromSpreadsheet(){
 }
 
 function importFromExcel(file){
+  showLoading('Importing Excel file...');
   var statusEl = document.getElementById('saveStatus');
-  if(statusEl){ statusEl.textContent = '⏳ Importing…'; statusEl.className = 'saving'; }
+  if(statusEl){ statusEl.textContent = 'Importing...'; statusEl.className = 'saving'; }
 
   var reader = new FileReader();
   reader.onload = function(e){
@@ -25290,8 +25818,10 @@ function importFromExcel(file){
       if(addedSections) bits.push(addedSections+' section'+(addedSections!==1?'s':''));
       if(addedRows)     bits.push(addedRows+' row'+(addedRows!==1?'s':''));
       if(mergedRows)    bits.push(mergedRows+' row'+(mergedRows!==1?'s':'')+' updated');
+      hideLoading();
       showToast('Import complete \u2014 ' + (bits.join(', ') || 'no changes'),'success');
     } catch(err){
+      hideLoading();
       showToast('Import error: '+err.message,'error');
       if(statusEl){ statusEl.textContent = '● Error'; statusEl.className = 'error'; }
     }
@@ -25299,43 +25829,57 @@ function importFromExcel(file){
   reader.readAsArrayBuffer(file);
 }
 
+function _applyJsonBackupData(d){
+  // v1.28.0 Fix 16: Backwards-compatible restore — handles both v1 (sections+rows only) and v2 (full export)
+  if(d.sections) sections = d.sections;
+  if(d.rows) rows = d.rows;
+  if(d.quarters) quarters = d.quarters;
+  if(d.tabs_data) tabs_data = d.tabs_data;
+  if(d.activeTabId) activeTabId = d.activeTabId;
+  if(d.g2mData) g2mAllData = d.g2mData;
+  if(d.todoData) todoAllData = d.todoData;
+  if(d.kpiData) kpiAllData = d.kpiData;
+  if(d.timesheetData) timesheetData = d.timesheetData;
+  if(d.ucrData) ucrAllData = d.ucrData;
+  if(d.artifactsData) artifactsData = d.artifactsData;
+  if(d.brandGuideData) brandGuideData = d.brandGuideData;
+  if(d.artTemplates) artTemplates = d.artTemplates;
+  if(d.documentRepository) documentRepository = d.documentRepository;
+  if(d.taskLibrary) taskLibrary = d.taskLibrary;
+  if(d.capData) capData = d.capData;
+  if(d.prioritization && typeof prioritizationData !== 'undefined') prioritizationData = d.prioritization;
+  if(d.projectPlans && typeof projectPlans !== 'undefined') projectPlans = d.projectPlans;
+  if(d.planTemplates && typeof planTemplates !== 'undefined') planTemplates = d.planTemplates;
+  if(d.okrs && typeof okrsData !== 'undefined') okrsData = d.okrs;
+  if(d.taskLibrary && typeof taskLibrary !== 'undefined') taskLibrary = d.taskLibrary;
+  if(d.roadmapSortBy && typeof _roadmapSortBy !== 'undefined') _roadmapSortBy = d.roadmapSortBy;
+  if(d.roadmapView && typeof _roadmapView !== 'undefined') _roadmapView = d.roadmapView;
+  recomputeTimeline(); renderTableHeader(); renderTabs(); renderStackedTabs(); render(); persistData();
+}
+
 function restoreJsonBackup(){
-  if(!window.electronAPI) return;
   if(!confirm('Restore a JSON backup? This will replace all current data.')) return;
-  window.electronAPI.importBackup().then(function(res){
-    if(res && res.ok){
-      var d = res.data;
-      // v1.28.0 Fix 16: Backwards-compatible restore — handles both v1 (sections+rows only) and v2 (full export)
-      if(d.sections) sections = d.sections;
-      if(d.rows) rows = d.rows;
-      if(d.quarters) quarters = d.quarters;
-      if(d.tabs_data) tabs_data = d.tabs_data;
-      if(d.activeTabId) activeTabId = d.activeTabId;
-      if(d.g2mData) g2mAllData = d.g2mData;
-      if(d.todoData) todoAllData = d.todoData;
-      if(d.kpiData) kpiAllData = d.kpiData;
-      if(d.timesheetData) timesheetData = d.timesheetData;
-      if(d.ucrData) ucrAllData = d.ucrData;
-      if(d.artifactsData) artifactsData = d.artifactsData;
-      if(d.brandGuideData) brandGuideData = d.brandGuideData;
-      if(d.artTemplates) artTemplates = d.artTemplates;
-      if(d.documentRepository) documentRepository = d.documentRepository;
-      if(d.taskLibrary) taskLibrary = d.taskLibrary;
-      if(d.capData) capData = d.capData;
-      if(d.prioritization && typeof prioritizationData !== 'undefined') prioritizationData = d.prioritization;
-      if(d.projectPlans && typeof projectPlans !== 'undefined') projectPlans = d.projectPlans;
-      if(d.planTemplates && typeof planTemplates !== 'undefined') planTemplates = d.planTemplates;
-      if(d.okrs && typeof okrsData !== 'undefined') okrsData = d.okrs;
-      if(d.taskLibrary && typeof taskLibrary !== 'undefined') taskLibrary = d.taskLibrary;
-      if(d.roadmapSortBy && typeof _roadmapSortBy !== 'undefined') _roadmapSortBy = d.roadmapSortBy;
-      if(d.roadmapView && typeof _roadmapView !== 'undefined') _roadmapView = d.roadmapView;
-      recomputeTimeline(); renderTableHeader(); renderTabs(); renderStackedTabs(); render(); persistData();
-      var ver = d._backupVersion ? ' (v'+d._backupVersion+')' : '';
-      showToast('Backup restored'+ver,'success');
-    } else if(res && res.error){
-      showToast('Restore failed: '+res.error,'error');
-    }
-  });
+  showLoading('Restoring JSON backup...');
+  // v1.32.0: works on both Electron and web — use electronAPI.importBackup if available,
+  // otherwise fall back to a manual file picker + FileReader flow for web.
+  if(window.electronAPI && window.electronAPI.importBackup){
+    window.electronAPI.importBackup().then(function(res){
+      hideLoading();
+      if(res && res.ok && res.data){
+        _applyJsonBackupData(res.data);
+        var ver = res.data._backupVersion ? ' (v'+res.data._backupVersion+')' : '';
+        showToast('Backup restored'+ver,'success');
+      } else if(res && res.error){
+        showToast('Restore failed: '+res.error,'error');
+      }
+    }).catch(function(err){
+      hideLoading();
+      showToast('Restore failed: '+err.message,'error');
+    });
+  } else {
+    hideLoading();
+    showToast('Backup restore not available','error');
+  }
 }
 
 // ── TEMPLATE LIBRARY ─────────────────────────────────────────────────────────
@@ -25617,7 +26161,7 @@ function tplShowImportModal() {
 
   var targetOptions = '<option value="plans">Plans (Project Plan)</option>' +
     '<option value="todo">ToDo List</option>' +
-    '<option value="g2m">G2M Checklist</option>' +
+    '<option value="g2m">Checklist</option>' +
     '<option value="all">All modules (auto-route by task target)</option>';
 
   // Build initiative options from roadmap rows
@@ -25999,6 +26543,184 @@ async function init() {
   renderStackedTabs();
   loadSavedLogo();
   render();
+}
+
+// v1.32.0 FIX 15: New User Onboarding Flow
+var _onboardingSteps = [
+  {title:'Welcome to Roadmap OS', body:'Your all-in-one product roadmap tool. This quick tour will help you get started in under 2 minutes.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>'},
+  {title:'Create Your Roadmap', body:'Click "+ Add Row" in the main view to add initiatives. Drag bars on the timeline to set durations. Organize by sections like Engineering, Product, or Design.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h2M8 18h6"/></svg>'},
+  {title:'Set Up Your Team', body:'Open CapacityIQ from the sidebar to add teams and members. Track capacity, sprints, and initiatives in one place.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>'},
+  {title:'Import Tasks', body:'Use the Template Library to import pre-built project templates with 25+ tasks each. Or upload your own Excel/CSV files to populate tasks instantly.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>'},
+  {title:'Explore Features', body:'Plans for Gantt charts and project planning. Prioritisation for scoring and ranking. Checklist for go-to-market readiness. ToDo for daily task management. Insights for AI-powered analysis.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>'},
+  {title:'You\'re All Set', body:'Start building your roadmap. You can always re-run this tour from Settings. Happy planning!', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:#16a34a;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'}
+];
+
+function showOnboarding(){
+  var existing = document.getElementById('onboardingOverlay');
+  if(existing) existing.remove();
+  var step = 0;
+  var ov = document.createElement('div');
+  ov.id = 'onboardingOverlay';
+  ov.className = 'onboard-overlay';
+  function renderStep(){
+    var s = _onboardingSteps[step];
+    var dots = _onboardingSteps.map(function(_,i){
+      return '<span class="dot'+(i===step?' active':'')+'"></span>';
+    }).join('');
+    ov.innerHTML = '<div class="onboard-card"><div class="onboard-body">'+
+      s.icon +
+      '<h2>'+s.title+'</h2>'+
+      '<p>'+s.body+'</p>'+
+      '<div class="onboard-dots">'+dots+'</div>'+
+      '<div class="onboard-actions">'+
+        (step < _onboardingSteps.length - 1
+          ? '<button onclick="document.getElementById(\'onboardingOverlay\').remove();_completeOnboarding()">Skip</button><button class="primary" onclick="_nextOnboardStep()">Next</button>'
+          : '<button class="primary" onclick="document.getElementById(\'onboardingOverlay\').remove();_completeOnboarding()">Get Started</button>')+
+      '</div></div></div>';
+  }
+  window._nextOnboardStep = function(){
+    step++;
+    if(step >= _onboardingSteps.length) step = _onboardingSteps.length - 1;
+    renderStep();
+  };
+  renderStep();
+  document.body.appendChild(ov);
+}
+
+function _completeOnboarding(){
+  try {
+    var uid = _currentUser ? _currentUser.id : 'default';
+    localStorage.setItem('pmr_onboarding_'+uid, 'done');
+  } catch(e){}
+}
+
+function checkOnboarding(){
+  try {
+    var uid = _currentUser ? _currentUser.id : 'default';
+    var done = localStorage.getItem('pmr_onboarding_'+uid);
+    if(done) return;
+    // Only show if user has no data
+    if(rows && rows.length > 0) return;
+    setTimeout(showOnboarding, 500);
+  } catch(e){}
+}
+
+// v1.32.0 FIX 13: Upload Template from Excel/CSV
+function uploadTemplateFromExcel(){
+  var fileInp = document.createElement('input');
+  fileInp.type = 'file';
+  fileInp.accept = '.xlsx,.xls,.csv';
+  fileInp.onchange = function(){
+    var file = fileInp.files[0];
+    if(!file) return;
+    showLoading('Parsing template file...');
+    var reader = new FileReader();
+    reader.onload = function(e){
+      try {
+        var data = new Uint8Array(e.target.result);
+        var wb = XLSX.read(data, {type:'array'});
+        var ws = wb.Sheets[wb.SheetNames[0]];
+        var json = XLSX.utils.sheet_to_json(ws);
+        if(!json.length){ hideLoading(); showToast('No data found in file','error'); return; }
+        // Expect columns: Name/Task, Hours, Category/Workstream, Role, Description, Phase, Dependencies
+        var tasks = json.map(function(row){
+          return {
+            name: row.Name || row.Task || row.name || row.task || '',
+            hours_base: parseFloat(row.Hours || row.hours || row.hours_base || 0),
+            hours_low: parseFloat(row.HoursLow || row.hours_low || 0),
+            hours_high: parseFloat(row.HoursHigh || row.hours_high || 0),
+            workstream: row.Workstream || row.Category || row.workstream || row.category || '',
+            role: row.Role || row.Owner || row.role || '',
+            description: row.Description || row.description || '',
+            complexity: row.Complexity || row.complexity || 'Medium',
+            dependencies: row.Dependencies || row.dependencies || '',
+            target_module: row.Module || row.target_module || 'plans'
+          };
+        }).filter(function(t){ return t.name; });
+        if(!tasks.length){ hideLoading(); showToast('No valid tasks found','error'); return; }
+        // Prompt for template name
+        hideLoading();
+        var name = prompt('Template name:', file.name.replace(/\.(xlsx|xls|csv)$/i,''));
+        if(!name) return;
+        var cat = prompt('Category (e.g. Engineering, Marketing):', 'General') || 'General';
+        var phases = [];
+        tasks.forEach(function(t){ if(t.workstream && phases.indexOf(t.workstream)<0) phases.push(t.workstream); });
+        var totalHours = tasks.reduce(function(s,t){ return s+(t.hours_base||0); },0);
+        var newTpl = {
+          id: 'uploaded_' + Date.now(),
+          name: name,
+          description: 'Uploaded from ' + file.name,
+          category: cat,
+          tags: ['uploaded'],
+          icon: 'upload',
+          scope: 'organization',
+          tasks: tasks,
+          task_count: tasks.length,
+          total_hours: totalHours,
+          phases: phases,
+          estimated_duration_weeks: Math.ceil(totalHours / 40),
+          created_at: new Date().toISOString()
+        };
+        _tplCache.push(newTpl);
+        renderTemplateLibrary();
+        showToast('Template "'+name+'" created with '+tasks.length+' tasks','success');
+      } catch(err){
+        hideLoading();
+        showToast('Parse error: '+err.message,'error');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+  fileInp.click();
+}
+
+// v1.32.0 FIX 13: "Import from Template" picker modal for Plans and ToDo
+function openImportFromTemplateModal(target){
+  if(!_tplCacheLoaded || !_tplCache.length){
+    openTemplateLibrary(target || 'plans');
+    return;
+  }
+  var existing = document.getElementById('tplPickerModal');
+  if(existing) existing.remove();
+  var ov = document.createElement('div');
+  ov.id = 'tplPickerModal';
+  ov.className = 'modal-overlay';
+  ov.style.zIndex = '9000';
+  ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
+  var html = '<div class="modal" style="width:560px;max-height:80vh;overflow:auto">'+
+    '<div class="modal-hdr"><h2>Import from Template</h2><button class="close" onclick="document.getElementById(\'tplPickerModal\').remove()">&times;</button></div>'+
+    '<div class="modal-body" style="padding:16px">';
+  html += '<div style="font-size:12px;color:var(--muted);margin-bottom:12px">Select a template to import its tasks into '+(target==='todo'?'ToDo':'Plans')+'.</div>';
+  _tplCache.forEach(function(t){
+    var eid = (t.id||'').toString().replace(/'/g,"\\'");
+    html += '<div style="padding:10px 14px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer;transition:border-color .12s" onmouseover="this.style.borderColor=\'var(--accent)\'" onmouseout="this.style.borderColor=\'var(--border)\'" onclick="importTemplateTasks(\''+eid+'\',\''+target+'\');document.getElementById(\'tplPickerModal\').remove()">'+
+      '<div style="font-weight:700;font-size:13px;color:var(--text)">'+_escHtml(t.name)+'</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+(t.tasks||[]).length+' tasks - '+Math.round(t.total_hours||0)+'h total</div>'+
+    '</div>';
+  });
+  html += '</div></div>';
+  ov.innerHTML = html;
+  document.body.appendChild(ov);
+}
+
+function importTemplateTasks(templateId, target){
+  var t = _tplCache.find(function(tpl){ return (tpl.id||'').toString() === templateId; });
+  if(!t || !t.tasks) return;
+  showLoading('Importing template tasks...');
+  var count = 0;
+  t.tasks.forEach(function(task){
+    upsertTaskInLibrary({
+      name: task.name,
+      category: task.workstream || t.category || '',
+      hours: task.hours_base || 0,
+      description: task.description || '',
+      source: 'template'
+    });
+    count++;
+  });
+  persistData();
+  hideLoading();
+  showToast('Imported '+count+' tasks from "'+t.name+'"','success');
 }
 
 init();
