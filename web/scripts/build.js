@@ -109,8 +109,25 @@ if (fs.existsSync(staticDir)) {
   }
 }
 
+// 8. Copy data/ directory (template JSON files etc.) into public/data/.
+const dataSrc  = path.join(root, 'data');
+const dataDest = path.join(publicDir, 'data');
+let dataCount  = 0;
+if (fs.existsSync(dataSrc)) {
+  fs.mkdirSync(dataDest, { recursive: true });
+  for (const f of fs.readdirSync(dataSrc)) {
+    const fullSrc = path.join(dataSrc, f);
+    const stat = fs.statSync(fullSrc);
+    if (stat.isFile()) {
+      fs.copyFileSync(fullSrc, path.join(dataDest, f));
+      dataCount++;
+    }
+  }
+}
+
 console.log('[web build] OK — public/ written');
 console.log('[web build]   index.html: ' + (html.length / 1024).toFixed(1) + ' KB');
 console.log('[web build]   vendor/:    ' + fs.readdirSync(vendorDest).length + ' files');
 console.log('[web build]   shim/:      ' + fs.readdirSync(shimDest).length + ' files');
 console.log('[web build]   static/:    ' + staticCount + ' files');
+console.log('[web build]   data/:      ' + dataCount + ' files');
