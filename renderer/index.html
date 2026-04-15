@@ -913,7 +913,23 @@ body.dark-mode .tpl-task-table th{background:var(--bg)}
 .plans-sidebar-item .plan-actions button{background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:11px;padding:2px 4px}
 .plans-sidebar-item .plan-actions button:hover{color:#fff}
 .plans-main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
-.plans-topbar{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;min-height:52px;gap:14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.plans-topbar{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;min-height:64px;gap:14px;border-bottom:1px solid var(--border);flex-shrink:0}
+/* v1.34.0 Fix 6 — vertically center every toolbar child regardless of its
+   own internal layout, and neutralize stray top-margins that caused buttons
+   to sit higher than the plan name field. */
+.plans-topbar > *, .cap-topbar > *, .kpi-header > *, .art-header > *,
+.g2m-header > *, .todo-header > *, .prio-topbar > *, .ucr-header > *,
+.rpt-header > *, .tpl-header > *, .prio-header > *{
+  margin-top:0 !important;
+  margin-bottom:0 !important;
+  align-self:center;
+}
+.plans-topbar button, .plans-topbar input, .plans-topbar select,
+.cap-topbar button, .cap-topbar input, .cap-topbar select,
+.kpi-header button, .kpi-header input, .kpi-header select,
+.art-header button, .art-header input, .art-header select{
+  vertical-align:middle;
+}
 .plan-view-toggle{background:transparent;border:none;font-size:11px;font-weight:700;padding:6px 14px;border-radius:9999px;cursor:pointer;color:var(--muted);transition:all .15s}
 .plan-view-toggle.active{background:var(--white);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .plans-content{flex:1;overflow:auto;padding:20px 28px}
@@ -2518,7 +2534,7 @@ body.dark-mode .onboard-card{background:#1e293b}
             <button id="planViewKanbanBtn" class="plan-view-toggle" onclick="setPlanView('kanban')">Kanban</button>
           </div>
           <button id="planColorsToggleBtn" class="prio-btn" onclick="togglePlanStatusColors()" title="Toggle status row colours (done / due-soon / overdue)" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>Colours</button>
-          <button class="prio-btn" onclick="openTemplateLibrary('plans')" title="Browse and import from the Template Library" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>Templates</button>
+          <button class="prio-btn" onclick="openTemplateBuilder('plans',{planId:_activePlanId})" title="Browse templates and import tasks into this plan" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>Templates</button>
           <button class="prio-btn" onclick="openExcelImportPicker()" title="Import tasks from an Excel file (MS Project, MS Planner, Asana, Jira, ClickUp, etc.)" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M9 17v-2a4 4 0 014-4h4M9 17l3-3m-3 3l-3-3m12 6V7a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2h6"/></svg>Upload Excel</button>
           <button class="prio-btn" onclick="saveCurrentPlanAsTemplate()" title="Save this plan's structure as a reusable template" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M5 5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V5z M14 3v5h5 M9 13h6 M9 17h4"/></svg>Save as template</button>
           <button class="prio-btn primary" onclick="openAddTaskModal()">+ Add task</button>
@@ -24167,23 +24183,87 @@ function capTaskToTDL(taskId){
 
 // ── CREATE NEW TEMPLATE ──
 function renderCapTemplates(content,actions){
-  actions.innerHTML='<button class="cap-btn primary" onclick="showCreateTemplate()">+ Create Template</button>';
-  var grid=document.createElement('div');
-  grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:16px';
-  capData.templates.forEach(function(tpl){
-    var tasks=tpl.tasks||[];
-    var totalHrs=0;
-    tasks.forEach(function(tt){var taskType=capData.taskTypes.find(function(t){return t.id===tt.taskTypeId;});totalHrs+=taskType?taskType.fixedHours:0;});
-    var card=document.createElement('div');card.className='cap-template-card';
-    card.innerHTML='<div class="icon" style="color:var(--accent)">'+svgIcon(tpl.icon||'clipboard',{size:24})+'</div><div class="name">'+escHtml(tpl.name)+'</div><div class="desc">'+escHtml(tpl.description)+'</div>'+
-      '<div style="margin-top:8px;font-size:10px;color:var(--muted)">'+tasks.length+' tasks · '+totalHrs+'h estimated</div>'+
-      '<div style="margin-top:8px;display:flex;gap:4px">'+
-        '<button class="cap-btn primary" onclick="event.stopPropagation();createInitiativeFromTemplate(\''+tpl.id+'\')" style="font-size:9px;padding:3px 8px">Use Template</button>'+
-        (tpl.custom?'<button class="cap-btn danger" onclick="event.stopPropagation();deleteCapTemplate(\''+tpl.id+'\')" style="font-size:9px;padding:3px 8px">Delete</button>':'')+
-      '</div>';
-    grid.appendChild(card);
+  // v1.34.0 Fix 2: render from the unified getAllTemplates() source so the
+  // main Templates Library + platform templates + user customs all appear
+  // here alongside CapacityIQ-native templates. The "+ Build from Scratch"
+  // button now launches the Template Builder in capacityiq mode.
+  actions.innerHTML =
+    '<button class="cap-btn" onclick="openTemplateBuilder(\'capacityiq\')">+ Build New Template</button>' +
+    '<button class="cap-btn primary" onclick="showCreateTemplate()" style="margin-left:6px">+ Create (Advanced)</button>';
+
+  var all = (typeof getAllTemplates === 'function') ? getAllTemplates() : [];
+  // Fall back to the legacy CapacityIQ-only list if getAllTemplates isn't available yet.
+  if(!all.length && capData && capData.templates){
+    all = capData.templates.map(function(t){ return Object.assign({ source: t.custom ? 'custom' : 'capacityiq' }, t); });
+  }
+
+  // Group by source for section headers.
+  var bySource = {};
+  all.forEach(function(t){
+    var k = t.source || 'other';
+    if(!bySource[k]) bySource[k] = [];
+    bySource[k].push(t);
   });
-  content.appendChild(grid);
+  var order = ['capacityiq','platform','custom','other'];
+  var labels = { capacityiq:'CapacityIQ Templates', platform:'Platform Templates', custom:'Your Templates', other:'Other' };
+
+  var anyRendered = false;
+  order.forEach(function(src){
+    var group = bySource[src];
+    if(!group || !group.length) return;
+    anyRendered = true;
+
+    var hdr = document.createElement('div');
+    hdr.style.cssText = 'font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:14px 0 8px';
+    hdr.textContent = labels[src] + ' (' + group.length + ')';
+    content.appendChild(hdr);
+
+    var grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:16px';
+
+    group.forEach(function(tpl){
+      var tasks = tpl.tasks || [];
+      var totalHrs = 0;
+      if(src === 'capacityiq'){
+        // CapacityIQ templates use taskTypeId refs — resolve to task types.
+        (capData.templates || []).forEach(function(raw){
+          if(raw.id !== tpl.id) return;
+          (raw.tasks || []).forEach(function(tt){
+            var taskType = (capData.taskTypes || []).find(function(t){ return t.id === tt.taskTypeId; });
+            totalHrs += taskType ? (taskType.fixedHours || 0) : 0;
+          });
+        });
+      } else {
+        tasks.forEach(function(t){ totalHrs += parseFloat(t.hours) || 0; });
+      }
+
+      var card = document.createElement('div'); card.className = 'cap-template-card';
+      var actionRow = '';
+      if(src === 'capacityiq'){
+        actionRow =
+          '<button class="cap-btn primary" onclick="event.stopPropagation();createInitiativeFromTemplate(\''+tpl.id+'\')" style="font-size:9px;padding:3px 8px">Use Template</button>' +
+          (tpl.custom ? '<button class="cap-btn danger" onclick="event.stopPropagation();deleteCapTemplate(\''+tpl.id+'\')" style="font-size:9px;padding:3px 8px;margin-left:4px">Delete</button>' : '');
+      } else {
+        actionRow =
+          '<button class="cap-btn primary" onclick="event.stopPropagation();openTemplateBuilder(\'capacityiq\')" style="font-size:9px;padding:3px 8px">Open in Builder</button>';
+      }
+      card.innerHTML =
+        '<div class="icon" style="color:var(--accent)">'+svgIcon(tpl.icon||'clipboard',{size:24})+'</div>'+
+        '<div class="name">'+escHtml(tpl.name)+'</div>'+
+        '<div class="desc">'+escHtml(tpl.description||'')+'</div>'+
+        '<div style="margin-top:8px;font-size:10px;color:var(--muted)">'+tasks.length+' tasks'+(totalHrs?(' · '+totalHrs+'h estimated'):'')+'</div>'+
+        '<div style="margin-top:8px;display:flex;gap:4px">'+actionRow+'</div>';
+      grid.appendChild(card);
+    });
+    content.appendChild(grid);
+  });
+
+  if(!anyRendered){
+    var empty = document.createElement('div');
+    empty.style.cssText = 'font-size:13px;color:var(--muted);text-align:center;padding:40px 20px';
+    empty.textContent = 'No templates yet. Click "+ Build New Template" to create one.';
+    content.appendChild(empty);
+  }
 }
 
 function showCreateTemplate(){
@@ -24433,6 +24513,9 @@ function renderDocRepo(container){
       h += '</div>';
       if(tags) h += '<div style="margin-top:3px;display:flex;gap:3px;flex-wrap:wrap">'+tags+'</div>';
       h += '</div>';
+      if(doc.storagePath){
+        h += '<button onclick="downloadDocRepoEntry(\''+doc.id+'\')" title="Download '+escHtml(doc.fileName||doc.name)+(doc.fileSize?' ('+_formatFileSize(doc.fileSize)+')':'')+'" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:var(--accent);cursor:pointer;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px;margin-right:4px">'+svgIcon('download',{size:12})+' Download</button>';
+      }
       h += '<button onclick="deleteDocRepoEntry(\''+doc.id+'\')" style="background:none;border:none;color:var(--r1);cursor:pointer;opacity:.4;transition:opacity .15s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.4">'+svgIcon('trash',{size:14})+'</button>';
       h += '</div>';
     });
@@ -24447,12 +24530,76 @@ function renderDocRepo(container){
   div.innerHTML = h;
   container.appendChild(div);
 }
+// v1.34.0 Fix 4 — Document Repository with REAL file attachments.
+// Uploads to Supabase Storage bucket `attachments` under a per-user path
+// `<user.id>/docs/<timestamp>_<safe_name>`. The bucket must exist with
+// path-based RLS (`auth.uid()::text = (storage.foldername(name))[1]`).
+// See FIX_LOG_V4.md for the one-time SQL that creates it.
+var _docRepoPendingFile = null;
+
+function _formatFileSize(bytes){
+  if(bytes == null) return '';
+  if(bytes < 1024) return bytes + ' B';
+  if(bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/(1024*1024)).toFixed(1) + ' MB';
+}
+
+async function _uploadToAttachments(path, file){
+  // Direct REST call to Supabase Storage so it works identically in
+  // Electron and web. _accessToken is the current user's JWT.
+  if(!_accessToken) throw new Error('Not signed in');
+  var url = SUPABASE_URL + '/storage/v1/object/attachments/' + encodeURI(path);
+  var r = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + _accessToken,
+      'x-upsert': 'false',
+      'Content-Type': file.type || 'application/octet-stream'
+    },
+    body: file
+  });
+  if(!r.ok){
+    var msg = 'HTTP ' + r.status;
+    try { var j = await r.json(); msg = j.message || j.error || msg; } catch(_){}
+    throw new Error(msg);
+  }
+  return path;
+}
+
+async function downloadDocRepoEntry(docId){
+  var doc = documentRepository.find(function(d){ return d.id === docId; });
+  if(!doc){ showToast('Document not found','error'); return; }
+  if(!doc.storagePath){
+    showToast('No file attached to this document','warning');
+    return;
+  }
+  try {
+    showLoading('Downloading...');
+    var url = SUPABASE_URL + '/storage/v1/object/authenticated/attachments/' + encodeURI(doc.storagePath);
+    var r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + _accessToken } });
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    var blob = await r.blob();
+    var dlUrl = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = dlUrl;
+    a.download = doc.fileName || doc.name;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(dlUrl); a.remove(); }, 500);
+    hideLoading();
+  } catch(err){
+    hideLoading();
+    showToast('Download failed: ' + err.message, 'error');
+  }
+}
+
 function addDocRepoEntry(){
+  _docRepoPendingFile = null;
   var ex = document.getElementById('docRepoAddModal'); if(ex) ex.remove();
   var ov = document.createElement('div');
   ov.id = 'docRepoAddModal'; ov.className = 'modal-overlay';
   var modal = document.createElement('div');
-  modal.className = 'modal'; modal.style.width = '480px';
+  modal.className = 'modal'; modal.style.width = '520px';
   var hdr = document.createElement('div'); hdr.className = 'modal-hdr';
   hdr.innerHTML = '<h2>'+svgIcon('file',{size:18})+' Add Document</h2>';
   var cx = document.createElement('button'); cx.className = 'close'; cx.innerHTML = '✕';
@@ -24460,20 +24607,71 @@ function addDocRepoEntry(){
   var body = document.createElement('div'); body.className = 'modal-body';
   var initOpts = '<option value="">-- None --</option>';
   rows.forEach(function(r){ initOpts += '<option value="'+r.id+'">'+escHtml(r.name)+'</option>'; });
+
   body.innerHTML =
+    '<div class="form-row">' +
+      '<label>Attach File</label>' +
+      '<div id="docUploadZone" style="border:2px dashed var(--border);border-radius:12px;padding:28px 20px;text-align:center;cursor:pointer;background:var(--bg);transition:all .15s" ' +
+        'ondragover="event.preventDefault();this.style.borderColor=\'var(--accent)\';this.style.background=\'var(--light-blue-bg)\'" ' +
+        'ondragleave="this.style.borderColor=\'var(--border)\';this.style.background=\'var(--bg)\'" ' +
+        'ondrop="_docHandleDrop(event)">' +
+        '<div style="color:var(--accent);display:inline-block">'+svgIcon('upload',{size:28})+'</div>' +
+        '<div style="font-size:13px;font-weight:600;color:var(--text);margin-top:6px">Drag & drop or click to browse</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:3px">PDF, DOCX, XLSX, PPTX, images, ZIP — any file up to 50 MB</div>' +
+        '<input type="file" id="docFileInput" style="display:none" onchange="_docHandleFileSelect(event)">' +
+      '</div>' +
+      '<div id="docFilePreview" style="display:none;align-items:center;gap:10px;padding:10px 14px;background:var(--surface-low);border-radius:8px;border:1px solid var(--border);margin-top:8px">' +
+        '<span style="color:var(--accent)">'+svgIcon('file',{size:18})+'</span>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div id="docFileName" style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>' +
+          '<div id="docFileSize" style="font-size:10px;color:var(--muted)"></div>' +
+        '</div>' +
+        '<button onclick="_docRemoveFile()" type="button" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text);cursor:pointer">Remove</button>' +
+      '</div>' +
+    '</div>'+
     '<div class="form-row"><label>Document Name</label><input id="docRepoName" placeholder="e.g. Architecture Spec v2"></div>'+
     '<div class="form-row"><label>Folder</label><input id="docRepoFolder" placeholder="e.g. Technical, Marketing" value="General"></div>'+
     '<div class="form-row"><label>Linked Initiative</label><select id="docRepoInit" style="width:100%">'+initOpts+'</select></div>'+
     '<div class="form-row"><label>Tags <span style="font-weight:400;color:var(--muted)">(comma-separated)</span></label><input id="docRepoTags" placeholder="e.g. spec, review, final"></div>'+
-    '<div class="form-row"><label>Description</label><textarea id="docRepoDesc" style="height:50px;resize:vertical" placeholder="Brief description..."></textarea></div>'+
-    '<!-- TODO: File upload to Supabase Storage when backend supports -->';
+    '<div class="form-row"><label>Description</label><textarea id="docRepoDesc" style="height:50px;resize:vertical" placeholder="Brief description..."></textarea></div>';
+
   var footer = document.createElement('div'); footer.className = 'modal-footer';
   var cancelBtn = document.createElement('button'); cancelBtn.className = 'btn-cancel';
-  cancelBtn.textContent = 'Cancel'; cancelBtn.onclick = function(){ ov.remove(); };
+  cancelBtn.textContent = 'Cancel'; cancelBtn.onclick = function(){ _docRepoPendingFile=null; ov.remove(); };
   var saveBtn = document.createElement('button'); saveBtn.className = 'btn-save';
-  saveBtn.textContent = 'Save'; saveBtn.onclick = function(){
+  saveBtn.textContent = 'Save'; saveBtn.onclick = async function(){
     var name = document.getElementById('docRepoName').value.trim();
     if(!name){ showToast('Document name required','error'); return; }
+
+    var storagePath = null;
+    var fileName = null;
+    var fileSize = null;
+    var fileType = null;
+
+    if(_docRepoPendingFile){
+      var f = _docRepoPendingFile;
+      if(f.size > 50 * 1024 * 1024){
+        showToast('File too large (50 MB max)','error'); return;
+      }
+      if(!_currentUser || !_accessToken){
+        showToast('Please sign in before uploading files','error'); return;
+      }
+      saveBtn.disabled = true; saveBtn.textContent = 'Uploading...';
+      try {
+        var safe = f.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 120);
+        var path = _currentUser.id + '/docs/' + Date.now() + '_' + safe;
+        await _uploadToAttachments(path, f);
+        storagePath = path;
+        fileName = f.name;
+        fileSize = f.size;
+        fileType = (f.name.split('.').pop() || '').toLowerCase();
+      } catch(err){
+        saveBtn.disabled = false; saveBtn.textContent = 'Save';
+        showToast('Upload failed: ' + err.message, 'error');
+        return;
+      }
+    }
+
     documentRepository.push({
       id: 'doc_'+Date.now(),
       name: name,
@@ -24481,17 +24679,57 @@ function addDocRepoEntry(){
       initiativeId: document.getElementById('docRepoInit').value || null,
       tags: document.getElementById('docRepoTags').value.split(',').map(function(t){return t.trim();}).filter(Boolean),
       description: document.getElementById('docRepoDesc').value.trim(),
+      fileName: fileName,
+      fileSize: fileSize,
+      fileType: fileType,
+      storagePath: storagePath,
       createdAt: Date.now(),
       updatedAt: Date.now()
     });
+    _docRepoPendingFile = null;
     persistData(); ov.remove();
     renderArtifacts();
-    showToast('Document added to repository');
+    showToast(storagePath ? 'Document uploaded' : 'Document saved (metadata only)');
   };
-  footer.appendChild(cancelBtn); footer.appendChild(saveBtn);
+
+  // Wire click-to-browse on the upload zone
   modal.appendChild(hdr); modal.appendChild(body); modal.appendChild(footer);
+  footer.appendChild(cancelBtn); footer.appendChild(saveBtn);
   ov.appendChild(modal); document.body.appendChild(ov);
+  var zone = document.getElementById('docUploadZone');
+  zone.onclick = function(e){
+    if(e.target.tagName === 'INPUT') return;
+    document.getElementById('docFileInput').click();
+  };
   document.getElementById('docRepoName').focus();
+}
+
+function _docHandleFileSelect(ev){
+  var f = ev.target.files && ev.target.files[0];
+  if(f) _docSetPendingFile(f);
+}
+function _docHandleDrop(ev){
+  ev.preventDefault();
+  var zone = document.getElementById('docUploadZone');
+  if(zone){ zone.style.borderColor='var(--border)'; zone.style.background='var(--bg)'; }
+  var f = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0];
+  if(f) _docSetPendingFile(f);
+}
+function _docSetPendingFile(file){
+  _docRepoPendingFile = file;
+  document.getElementById('docFileName').textContent = file.name;
+  document.getElementById('docFileSize').textContent = _formatFileSize(file.size);
+  document.getElementById('docFilePreview').style.display = 'flex';
+  document.getElementById('docUploadZone').style.display = 'none';
+  var nameEl = document.getElementById('docRepoName');
+  if(nameEl && !nameEl.value) nameEl.value = file.name.replace(/\.[^.]+$/, '');
+}
+function _docRemoveFile(){
+  _docRepoPendingFile = null;
+  document.getElementById('docFilePreview').style.display = 'none';
+  document.getElementById('docUploadZone').style.display = 'block';
+  var inp = document.getElementById('docFileInput');
+  if(inp) inp.value = '';
 }
 function deleteDocRepoEntry(id){
   if(!confirm('Delete this document entry?')) return;
@@ -26596,29 +26834,70 @@ function _applyJsonBackupData(d){
   recomputeTimeline(); renderTableHeader(); renderTabs(); renderStackedTabs(); render(); persistData();
 }
 
+// v1.34.0 Fix 1: rebuilt to be web-safe. The prior implementation called
+// confirm() BEFORE opening the file picker, which broke the user-gesture
+// stack on Chromium/Safari and sometimes prevented the file picker from
+// opening at all. The new flow is: open the picker first (still a direct
+// user gesture), read+parse the file, THEN confirm, THEN apply + push to
+// cloud. Also no longer relies on the electronAPI.importBackup shim —
+// we use a direct <input type=file> so there's no focus-race heuristic
+// masking a silent failure.
 function restoreJsonBackup(){
-  if(!confirm('Restore a JSON backup? This will replace all current data.')) return;
-  showLoading('Restoring JSON backup...');
-  // v1.32.0: works on both Electron and web — use electronAPI.importBackup if available,
-  // otherwise fall back to a manual file picker + FileReader flow for web.
-  if(window.electronAPI && window.electronAPI.importBackup){
-    window.electronAPI.importBackup().then(function(res){
-      hideLoading();
-      if(res && res.ok && res.data){
-        _applyJsonBackupData(res.data);
-        var ver = res.data._backupVersion ? ' (v'+res.data._backupVersion+')' : '';
-        showToast('Backup restored'+ver,'success');
-      } else if(res && res.error){
-        showToast('Restore failed: '+res.error,'error');
+  var inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = '.json,application/json';
+  inp.style.display = 'none';
+  inp.onchange = function(){
+    var file = inp.files && inp.files[0];
+    try { document.body.removeChild(inp); } catch(_){}
+    if(!file){ return; }
+    var reader = new FileReader();
+    reader.onload = async function(e){
+      var data;
+      try { data = JSON.parse(e.target.result); }
+      catch(err){
+        showToast('Not a valid JSON file: '+err.message,'error');
+        return;
       }
-    }).catch(function(err){
-      hideLoading();
-      showToast('Restore failed: '+err.message,'error');
-    });
-  } else {
-    hideLoading();
-    showToast('Backup restore not available','error');
-  }
+      if(!data || typeof data !== 'object'){
+        showToast('Backup file is empty or malformed','error');
+        return;
+      }
+      // Confirm AFTER parsing so we only block the user once we know the
+      // file is valid — picker gesture is already spent.
+      var rowCount = (data.rows && data.rows.length) || 0;
+      var secCount = (data.sections && data.sections.length) || 0;
+      var msg = 'Restore this backup? It will REPLACE all current data.\n\n'
+              + 'Backup contains '+secCount+' sections and '+rowCount+' rows.';
+      if(!confirm(msg)) return;
+
+      showLoading('Restoring JSON backup...');
+      try {
+        _applyJsonBackupData(data);
+        // v1.34.0: after apply, push to cloud immediately so the restore
+        // is durable across devices instead of only living in local IDB.
+        try {
+          if(typeof pushCloudData === 'function') await pushCloudData();
+        } catch(pe){ console.warn('[restoreJsonBackup] cloud push failed:', pe && pe.message); }
+        hideLoading();
+        var ver = data._backupVersion ? ' (v'+data._backupVersion+')' : '';
+        showToast('Backup restored'+ver+' — '+rowCount+' rows','success');
+      } catch(applyErr){
+        hideLoading();
+        showToast('Restore failed: '+(applyErr.message||applyErr),'error');
+        console.error('[restoreJsonBackup]', applyErr);
+      }
+    };
+    reader.onerror = function(){
+      showToast('Could not read the file','error');
+    };
+    reader.readAsText(file);
+  };
+  // Some browsers (notably Safari on iOS) require the input to be in the DOM
+  // for .click() to open the picker. Append just before click and remove in
+  // the onchange handler above.
+  document.body.appendChild(inp);
+  inp.click();
 }
 
 // ── TEMPLATE LIBRARY ─────────────────────────────────────────────────────────
@@ -27285,10 +27564,13 @@ async function init() {
 }
 
 // v1.32.0 FIX 15: New User Onboarding Flow
+// v1.34.0 Fix 5: Added optional "Invite Teammates" step (kind:'invite')
+// with email rows + Google Contacts/Calendar stubs.
 var _onboardingSteps = [
   {title:'Welcome to Roadmap OS', body:'Your all-in-one product roadmap tool. This quick tour will help you get started in under 2 minutes.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>'},
   {title:'Create Your Roadmap', body:'Click "+ Add Row" in the main view to add initiatives. Drag bars on the timeline to set durations. Organize by sections like Engineering, Product, or Design.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h2M8 18h6"/></svg>'},
   {title:'Set Up Your Team', body:'Open CapacityIQ from the sidebar to add teams and members. Track capacity, sprints, and initiatives in one place.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>'},
+  {title:'Invite Your Teammates', kind:'invite', body:'Optional — collaborate with colleagues on the same roadmap. You can always invite people later from Settings.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>'},
   {title:'Import Tasks', body:'Use the Template Library to import pre-built project templates with 25+ tasks each. Or upload your own Excel/CSV files to populate tasks instantly.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>'},
   {title:'Explore Features', body:'Plans for Gantt charts and project planning. Prioritisation for scoring and ranking. Checklist for go-to-market readiness. ToDo for daily task management. Insights for AI-powered analysis.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>'},
   {title:'You\'re All Set', body:'Start building your roadmap. You can always re-run this tour from Settings. Happy planning!', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:#16a34a;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'}
@@ -27306,17 +27588,131 @@ function showOnboarding(){
     var dots = _onboardingSteps.map(function(_,i){
       return '<span class="dot'+(i===step?' active':'')+'"></span>';
     }).join('');
+
+    // v1.34.0 Fix 5 — special body for the "invite" step.
+    var customBody = '';
+    if(s.kind === 'invite'){
+      customBody =
+        '<div id="onbInviteList" style="display:flex;flex-direction:column;gap:6px;margin:10px 0 6px">' +
+          '<div class="onb-invite-row" style="display:flex;gap:6px">' +
+            '<input type="email" placeholder="teammate@company.com" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg);color:var(--text)">' +
+            '<button type="button" onclick="_onbAddInviteRow()" title="Add another" style="padding:6px 12px;border:1px solid var(--border);border-radius:8px;background:var(--white);color:var(--text);font-size:14px;cursor:pointer">+</button>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:8px;margin:10px 0 8px">' +
+          '<div style="flex:1;height:1px;background:var(--border)"></div>' +
+          '<span style="font-size:10px;color:var(--muted);text-transform:uppercase">or</span>' +
+          '<div style="flex:1;height:1px;background:var(--border)"></div>' +
+        '</div>' +
+        '<div style="display:flex;gap:6px;justify-content:center">' +
+          '<button type="button" onclick="_onbImportGoogleContacts()" style="padding:8px 14px;border:1px solid var(--border);border-radius:8px;background:var(--white);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">' +
+            '<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg>' +
+            'Google Contacts</button>' +
+          '<button type="button" onclick="_onbImportGoogleCalendar()" style="padding:8px 14px;border:1px solid var(--border);border-radius:8px;background:var(--white);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">' +
+            '<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>' +
+            'Google Calendar</button>' +
+        '</div>' +
+        '<div style="font-size:10px;color:var(--muted);text-align:center;margin-top:8px">We\'ll find teammates from your contacts and recent meetings</div>';
+    }
+
     ov.innerHTML = '<div class="onboard-card"><div class="onboard-body">'+
       s.icon +
       '<h2>'+s.title+'</h2>'+
       '<p>'+s.body+'</p>'+
+      customBody +
       '<div class="onboard-dots">'+dots+'</div>'+
       '<div class="onboard-actions">'+
         (step < _onboardingSteps.length - 1
-          ? '<button onclick="document.getElementById(\'onboardingOverlay\').remove();_completeOnboarding()">Skip</button><button class="primary" onclick="_nextOnboardStep()">Next</button>'
+          ? (s.kind === 'invite'
+             ? '<button onclick="_nextOnboardStep()">Skip for now</button><button class="primary" onclick="_onbSendInvites()">Send Invites</button>'
+             : '<button onclick="document.getElementById(\'onboardingOverlay\').remove();_completeOnboarding()">Skip</button><button class="primary" onclick="_nextOnboardStep()">Next</button>')
           : '<button class="primary" onclick="document.getElementById(\'onboardingOverlay\').remove();_completeOnboarding()">Get Started</button>')+
       '</div></div></div>';
   }
+
+  window._onbAddInviteRow = function(){
+    var list = document.getElementById('onbInviteList'); if(!list) return;
+    var row = document.createElement('div');
+    row.className = 'onb-invite-row';
+    row.style.cssText = 'display:flex;gap:6px';
+    row.innerHTML =
+      '<input type="email" placeholder="teammate@company.com" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg);color:var(--text)">' +
+      '<button type="button" onclick="this.parentElement.remove()" title="Remove" style="padding:6px 12px;border:1px solid var(--border);border-radius:8px;background:var(--white);color:var(--text);font-size:14px;cursor:pointer">x</button>';
+    list.appendChild(row);
+    var inp = row.querySelector('input'); if(inp) inp.focus();
+  };
+
+  window._onbSendInvites = async function(){
+    var inputs = document.querySelectorAll('#onbInviteList input');
+    var emails = Array.from(inputs).map(function(i){ return i.value.trim(); }).filter(function(e){ return e && e.indexOf('@') > 0; });
+    if(!emails.length){ showToast('Enter at least one email address','warning'); return; }
+    showLoading('Sending invites...');
+    var ok = 0, fail = 0;
+    for(var i = 0; i < emails.length; i++){
+      try {
+        // Use the existing send-invite edge function — already wired for
+        // auth, rate-limiting, and email formatting. Fall back silently
+        // if it isn't reachable (e.g. offline) so we don't block the user.
+        var r = await _dbReq('/functions/v1/send-invite','POST',{ email: emails[i] });
+        if(r && r.ok) ok++; else fail++;
+      } catch(e){ fail++; console.warn('[onb invite]', emails[i], e && e.message); }
+    }
+    hideLoading();
+    if(ok){ showToast(ok + ' invite'+(ok>1?'s':'')+' sent', 'success'); }
+    if(fail){ showToast(fail + ' invite'+(fail>1?'s':'')+' failed', 'error'); }
+    _nextOnboardStep();
+  };
+
+  window._onbImportGoogleContacts = function(){
+    // TODO: Full Google People API integration requires
+    //   scope https://www.googleapis.com/auth/contacts.readonly on the
+    //   Supabase Google provider. Once scope is granted, fetch
+    //   GET https://people.googleapis.com/v1/people/me/connections
+    //   ?personFields=emailAddresses,names&pageSize=200
+    //   with Authorization: Bearer <provider_token>, map emails into
+    //   the #onbInviteList, deduplicating against existing rows.
+    // See v1.33.0 calendar integration (connectGoogleCalendar) for the
+    // provider_token capture pattern — same shape applies here.
+    showToast('Google Contacts import requires an additional OAuth scope — see FIX_LOG_V4.md','info');
+  };
+
+  window._onbImportGoogleCalendar = function(){
+    // v1.34.0 Fix 5: If the user already has a connected Google Calendar
+    // via v1.33.0, we can synthesize teammates from meeting attendees in
+    // the last 30 days. Fall back to a stub if no connection.
+    try {
+      var g = appSettings && appSettings.integrations && appSettings.integrations.google;
+      if(g && g.connected && g.token && Date.now() < (g.expiresAt||0) - 30000){
+        var now = new Date();
+        var start = new Date(now.getTime() - 30*24*60*60*1000);
+        var url = 'https://www.googleapis.com/calendar/v3/calendars/primary/events' +
+                  '?timeMin=' + encodeURIComponent(start.toISOString()) +
+                  '&timeMax=' + encodeURIComponent(now.toISOString()) +
+                  '&singleEvents=true&maxResults=100';
+        fetch(url,{ headers:{ Authorization:'Bearer ' + g.token } }).then(function(r){ return r.json(); }).then(function(j){
+          var emails = {};
+          (j.items || []).forEach(function(ev){
+            (ev.attendees || []).forEach(function(a){
+              if(a.email && !a.self && a.email.indexOf('@') > 0) emails[a.email] = true;
+            });
+          });
+          var list = Object.keys(emails);
+          if(!list.length){ showToast('No recent meeting attendees found','info'); return; }
+          // Append each email as a new invite row
+          list.forEach(function(em){
+            _onbAddInviteRow();
+            var rows = document.querySelectorAll('#onbInviteList input');
+            var last = rows[rows.length - 1]; if(last) last.value = em;
+          });
+          showToast('Found ' + list.length + ' contacts from recent meetings','success');
+        }).catch(function(err){
+          showToast('Failed: ' + (err.message||err),'error');
+        });
+        return;
+      }
+    } catch(e){ /* fall through */ }
+    showToast('Connect Google Calendar first (Capacity → Connect Calendar), then try again','info');
+  };
   window._nextOnboardStep = function(){
     step++;
     if(step >= _onboardingSteps.length) step = _onboardingSteps.length - 1;
@@ -27461,6 +27857,679 @@ function importTemplateTasks(templateId, target){
   hideLoading();
   showToast('Imported '+count+' tasks from "'+t.name+'"','success');
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── v1.34.0 TEMPLATE BUILDER ─────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// Reusable, context-aware template browser + task picker. Any page that needs
+// "let me pull tasks out of a template" calls openTemplateBuilder(context,opts)
+// and the modal handles the rest. Selection accumulates across multiple
+// templates AND across the task library tab.
+//
+// Data sources unified by getAllTemplates():
+//   - capData.templates                        (CapacityIQ templates)
+//   - _tplCache  via loadTemplateLibrary()     (platform / initiative_templates)
+//   - _bundledPlatformTemplates                (bundled JSON fallback)
+//   - currentData-style customTemplates        (user-saved custom templates)
+//
+// Normalised template shape:
+//   { id, name, description, category, icon, source, tasks: [
+//       { id, name, description, hours, phase, role, workstream }
+//   ]}
+// ══════════════════════════════════════════════════════════════════════════════
+
+var _tbState = {
+  selectedTasks: [],          // accumulator across templates
+  sourceContext: null,        // 'plans' | 'todo' | 'checklist' | 'capacityiq' | 'savecustom'
+  activePlanId: null,         // for plans context
+  initiativeName: null,       // for todo/checklist context
+  currentTemplateId: null,    // which template is rendered in right pane
+  leftTab: 'templates',       // 'templates' | 'library'
+  searchQuery: ''
+};
+
+// Normalised merge of every template source the app knows about.
+function getAllTemplates(){
+  var out = [];
+
+  // 1. CapacityIQ templates — convert taskTypeId refs to flat task objects.
+  (capData && capData.templates || []).forEach(function(tpl){
+    var tasks = (tpl.tasks || []).map(function(t, i){
+      var tt = (capData.taskTypes || []).find(function(x){ return x.id === t.taskTypeId; });
+      return {
+        id:          tpl.id + '_t' + i,
+        name:        tt ? tt.name : 'Task ' + (i+1),
+        description: tt ? (tt.description || '') : '',
+        hours:       tt ? parseFloat(tt.fixedHours) || 0 : 0,
+        phase:       t.phase || (tt && tt.category) || '',
+        role:        (tt && tt.defaultTeam) || '',
+        workstream:  (tt && tt.category) || ''
+      };
+    });
+    out.push({
+      id:          tpl.id,
+      name:        tpl.name,
+      description: tpl.description || '',
+      category:    tpl.category || 'CapacityIQ',
+      icon:        tpl.icon || 'clipboard',
+      source:      tpl.custom ? 'custom' : 'capacityiq',
+      tasks:       tasks
+    });
+  });
+
+  // 2. Main Template Library (DB-backed `_tplCache` / bundled JSON).
+  var tplCache = (typeof _tplCache !== 'undefined' && _tplCache) || [];
+  var bundled  = (typeof _bundledPlatformTemplates !== 'undefined' && _bundledPlatformTemplates) || [];
+  var combined = tplCache.length ? tplCache : bundled;
+  combined.forEach(function(tpl, idx){
+    var rawTasks = tpl.tasks || [];
+    var tasks = rawTasks.map(function(t, i){
+      return {
+        id:          (tpl.id || 'plat_' + idx) + '_t' + i,
+        name:        t.name || t.title || 'Task ' + (i+1),
+        description: t.description || '',
+        hours:       parseFloat(t.hours_base) || parseFloat(t.hours) || 0,
+        phase:       t.workstream || t.phase || '',
+        role:        t.role || '',
+        workstream:  t.workstream || ''
+      };
+    });
+    out.push({
+      id:          tpl.id || ('plat_' + idx),
+      name:        tpl.name,
+      description: tpl.description || '',
+      category:    tpl.category || 'Platform',
+      icon:        tpl.icon || 'grid',
+      source:      'platform',
+      tasks:       tasks
+    });
+  });
+
+  // 3. User-saved custom templates from the Template Builder save flow.
+  if(typeof customTemplates !== 'undefined' && customTemplates && customTemplates.length){
+    customTemplates.forEach(function(tpl){
+      out.push({
+        id:          tpl.id,
+        name:        tpl.name,
+        description: tpl.description || '',
+        category:    'Custom',
+        icon:        tpl.icon || 'bookmark',
+        source:      'custom',
+        tasks:       tpl.tasks || []
+      });
+    });
+  }
+  return out;
+}
+
+// Global registry of user-saved custom templates built via the builder.
+// Persisted alongside the rest of the user blob.
+if(typeof customTemplates === 'undefined') var customTemplates = [];
+
+// Entry point — every caller uses this.
+async function openTemplateBuilder(sourceContext, options){
+  _tbState.selectedTasks  = [];
+  _tbState.sourceContext  = sourceContext || 'plans';
+  _tbState.activePlanId   = (options && options.planId) || _activePlanId || null;
+  _tbState.initiativeName = (options && options.initiativeName) || null;
+  _tbState.currentTemplateId = null;
+  _tbState.leftTab = 'templates';
+  _tbState.searchQuery = '';
+
+  // Eagerly load platform templates so the left panel isn't empty on first open.
+  if(typeof loadTemplateLibrary === 'function' && (!_tplCache || !_tplCache.length)){
+    try { await loadTemplateLibrary(); } catch(e){ console.warn('[tb] loadTemplateLibrary failed:', e && e.message); }
+  }
+
+  var ex = document.getElementById('tbModal'); if(ex) ex.remove();
+
+  var ov = document.createElement('div');
+  ov.id = 'tbModal';
+  ov.className = 'modal-overlay';
+  ov.style.cssText = 'z-index:9600;display:flex;align-items:center;justify-content:center';
+  ov.setAttribute('role','dialog');
+  ov.setAttribute('aria-label','Template Builder');
+
+  var modal = document.createElement('div');
+  modal.className = 'modal tb-modal';
+  modal.style.cssText = 'width:min(1100px,96vw);height:min(720px,92vh);display:flex;flex-direction:column;padding:0;background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden';
+
+  // ── Header ────────────────────────────────────────────────────────────────
+  var hdr = document.createElement('div');
+  hdr.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface-low)';
+  hdr.innerHTML =
+    '<h2 style="margin:0;font-size:16px;font-weight:700;color:var(--text);flex:1">Templates</h2>' +
+    '<input id="tbSearch" type="search" placeholder="Search templates & tasks..." ' +
+      'style="flex:0 1 260px;padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg);color:var(--text)">' +
+    '<span id="tbSelCount" style="font-size:12px;color:var(--muted);font-weight:600">0 selected</span>' +
+    '<button id="tbCloseBtn" title="Close" ' +
+      'style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 8px">x</button>';
+  modal.appendChild(hdr);
+
+  // ── Body (2-column) ───────────────────────────────────────────────────────
+  var bodyWrap = document.createElement('div');
+  bodyWrap.style.cssText = 'flex:1;display:flex;min-height:0';
+
+  var leftCol = document.createElement('div');
+  leftCol.id = 'tbLeft';
+  leftCol.style.cssText = 'width:300px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--surface-low)';
+
+  var leftTabs = document.createElement('div');
+  leftTabs.style.cssText = 'display:flex;border-bottom:1px solid var(--border)';
+  leftTabs.innerHTML =
+    '<button id="tbTabTemplates" class="tb-tab tb-tab-active" style="flex:1;padding:10px 12px;border:none;background:none;font-size:12px;font-weight:600;color:var(--accent);cursor:pointer;border-bottom:2px solid var(--accent)">Templates</button>' +
+    '<button id="tbTabLibrary" class="tb-tab" style="flex:1;padding:10px 12px;border:none;background:none;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent">Task Library</button>';
+  leftCol.appendChild(leftTabs);
+
+  var leftList = document.createElement('div');
+  leftList.id = 'tbLeftList';
+  leftList.style.cssText = 'flex:1;overflow-y:auto;padding:8px';
+  leftCol.appendChild(leftList);
+
+  var rightCol = document.createElement('div');
+  rightCol.id = 'tbRight';
+  rightCol.style.cssText = 'flex:1;display:flex;flex-direction:column;min-width:0';
+
+  var rightHead = document.createElement('div');
+  rightHead.id = 'tbRightHead';
+  rightHead.style.cssText = 'padding:16px 20px 8px;border-bottom:1px solid var(--border);background:var(--white)';
+  rightCol.appendChild(rightHead);
+
+  var rightBody = document.createElement('div');
+  rightBody.id = 'tbRightBody';
+  rightBody.style.cssText = 'flex:1;overflow-y:auto;padding:14px 20px;background:var(--white)';
+  rightCol.appendChild(rightBody);
+
+  bodyWrap.appendChild(leftCol);
+  bodyWrap.appendChild(rightCol);
+  modal.appendChild(bodyWrap);
+
+  // ── Footer ────────────────────────────────────────────────────────────────
+  var footer = document.createElement('div');
+  footer.style.cssText = 'display:flex;gap:8px;align-items:center;padding:12px 18px;border-top:1px solid var(--border);background:var(--surface-low)';
+  footer.innerHTML =
+    '<input id="tbSaveName" type="text" placeholder="New template name (for Save as Template)..." ' +
+      'style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg);color:var(--text)">' +
+    '<button id="tbSaveBtn" class="btn" ' +
+      'style="padding:8px 14px;border:1px solid var(--border);border-radius:8px;background:var(--white);color:var(--text);font-size:12px;font-weight:600;cursor:pointer">Save as Template</button>' +
+    '<button id="tbCancelBtn" class="btn" ' +
+      'style="padding:8px 14px;border:1px solid var(--border);border-radius:8px;background:var(--white);color:var(--text);font-size:12px;font-weight:600;cursor:pointer">Cancel</button>' +
+    '<button id="tbImportBtn" class="btn" ' +
+      'style="padding:8px 18px;border:1px solid var(--accent);border-radius:8px;background:var(--accent);color:#fff;font-size:12px;font-weight:700;cursor:pointer">Import Selected</button>';
+  modal.appendChild(footer);
+
+  ov.appendChild(modal);
+  document.body.appendChild(ov);
+
+  // Wire header buttons
+  document.getElementById('tbCloseBtn').onclick = closeTemplateBuilder;
+  document.getElementById('tbCancelBtn').onclick = closeTemplateBuilder;
+  document.getElementById('tbImportBtn').onclick = _tbImportSelected;
+  document.getElementById('tbSaveBtn').onclick = _tbSaveAsTemplate;
+  document.getElementById('tbTabTemplates').onclick = function(){ _tbSetLeftTab('templates'); };
+  document.getElementById('tbTabLibrary').onclick  = function(){ _tbSetLeftTab('library'); };
+  document.getElementById('tbSearch').oninput = function(e){
+    _tbState.searchQuery = e.target.value.trim().toLowerCase();
+    _tbRenderLeft();
+  };
+
+  // Initial render
+  _tbRenderLeft();
+  var all = getAllTemplates();
+  if(all.length){ _tbRenderTemplate(all[0]); }
+  else { document.getElementById('tbRightHead').innerHTML =
+    '<div style="font-size:14px;color:var(--muted)">No templates available yet.</div>'; }
+  _tbUpdateCount();
+}
+
+function closeTemplateBuilder(){
+  var ov = document.getElementById('tbModal'); if(ov) ov.remove();
+}
+
+function _tbSetLeftTab(tab){
+  _tbState.leftTab = tab;
+  var t1 = document.getElementById('tbTabTemplates');
+  var t2 = document.getElementById('tbTabLibrary');
+  if(tab === 'templates'){
+    t1.style.color='var(--accent)'; t1.style.borderBottom='2px solid var(--accent)';
+    t2.style.color='var(--muted)';  t2.style.borderBottom='2px solid transparent';
+  } else {
+    t1.style.color='var(--muted)';  t1.style.borderBottom='2px solid transparent';
+    t2.style.color='var(--accent)'; t2.style.borderBottom='2px solid var(--accent)';
+  }
+  _tbRenderLeft();
+}
+
+function _tbRenderLeft(){
+  var list = document.getElementById('tbLeftList');
+  if(!list) return;
+  list.innerHTML = '';
+  var q = _tbState.searchQuery;
+
+  if(_tbState.leftTab === 'templates'){
+    var all = getAllTemplates();
+    if(q) all = all.filter(function(t){
+      return (t.name||'').toLowerCase().indexOf(q) >= 0
+          || (t.description||'').toLowerCase().indexOf(q) >= 0
+          || (t.category||'').toLowerCase().indexOf(q) >= 0;
+    });
+    if(!all.length){
+      list.innerHTML = '<div style="padding:16px;font-size:12px;color:var(--muted);text-align:center">No templates found.</div>';
+      return;
+    }
+    // Group by source for clearer scanability
+    var bySource = {};
+    all.forEach(function(t){
+      var k = t.source || 'other';
+      if(!bySource[k]) bySource[k]=[];
+      bySource[k].push(t);
+    });
+    var order = ['platform','capacityiq','custom','other'];
+    var labels = { platform:'Platform Templates', capacityiq:'CapacityIQ Templates', custom:'Your Templates', other:'Other' };
+    order.forEach(function(src){
+      var group = bySource[src];
+      if(!group || !group.length) return;
+      var hdr = document.createElement('div');
+      hdr.style.cssText = 'font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:8px 6px 4px';
+      hdr.textContent = labels[src] + ' (' + group.length + ')';
+      list.appendChild(hdr);
+      group.forEach(function(tpl){
+        var item = document.createElement('button');
+        var active = tpl.id === _tbState.currentTemplateId;
+        item.className = 'tb-left-item';
+        item.style.cssText = 'display:block;width:100%;text-align:left;padding:10px 12px;border:1px solid ' +
+          (active ? 'var(--accent)' : 'var(--border)') +
+          ';border-radius:8px;background:' + (active ? 'var(--light-blue-bg)' : 'var(--white)') +
+          ';color:var(--text);font-size:12px;font-weight:600;cursor:pointer;margin-bottom:6px;transition:all .12s';
+        item.innerHTML =
+          '<div style="display:flex;align-items:center;gap:6px">' +
+            '<span style="color:var(--accent);flex-shrink:0">' + (typeof svgIcon==='function' ? svgIcon(tpl.icon || 'grid',{size:14}) : '') + '</span>' +
+            '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(tpl.name) + '</span>' +
+          '</div>' +
+          '<div style="font-size:10px;color:var(--muted);font-weight:500;margin-top:2px">' + (tpl.tasks || []).length + ' tasks</div>';
+        item.onclick = function(){ _tbRenderTemplate(tpl); };
+        list.appendChild(item);
+      });
+    });
+  } else {
+    // Task Library tab
+    var lib = (typeof taskLibrary !== 'undefined' && taskLibrary) || [];
+    if(q) lib = lib.filter(function(t){
+      return (t.name||'').toLowerCase().indexOf(q) >= 0
+          || (t.category||'').toLowerCase().indexOf(q) >= 0
+          || (t.source||'').toLowerCase().indexOf(q) >= 0;
+    });
+    if(!lib.length){
+      list.innerHTML = '<div style="padding:16px;font-size:12px;color:var(--muted);text-align:center">Task library is empty. Add tasks anywhere in the app and they\'ll appear here.</div>';
+      return;
+    }
+    // Render the library tasks directly as checkbox rows — no "template"
+    // concept, just a long scroll of pickable tasks.
+    document.getElementById('tbRightHead').innerHTML =
+      '<div style="font-size:16px;font-weight:700;color:var(--text)">Task Library</div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-top:4px">' + lib.length + ' reusable tasks. Check any you want to pull into ' + escHtml(_tbState.sourceContext) + '.</div>';
+    var body = document.getElementById('tbRightBody');
+    body.innerHTML = '';
+    lib.forEach(function(t, i){
+      var norm = {
+        id: 'lib_' + (t.id || i),
+        name: t.name || t.text || 'Task ' + (i+1),
+        description: t.description || '',
+        hours: parseFloat(t.hours) || parseFloat(t.estimate) || 0,
+        phase: t.category || '',
+        role: t.owner || '',
+        workstream: t.source || 'Library'
+      };
+      body.appendChild(_tbMakeTaskRow(norm));
+    });
+  }
+}
+
+function _tbRenderTemplate(tpl){
+  _tbState.currentTemplateId = tpl.id;
+  _tbRenderLeft(); // refresh active highlight
+
+  var head = document.getElementById('tbRightHead');
+  var body = document.getElementById('tbRightBody');
+  if(!head || !body) return;
+
+  var totalHours = (tpl.tasks || []).reduce(function(a,b){ return a + (parseFloat(b.hours)||0); }, 0);
+  head.innerHTML =
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">' +
+      '<span style="color:var(--accent)">' + (typeof svgIcon==='function' ? svgIcon(tpl.icon || 'grid',{size:18}) : '') + '</span>' +
+      '<div style="flex:1">' +
+        '<div style="font-size:15px;font-weight:700;color:var(--text)">' + escHtml(tpl.name) + '</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + (tpl.tasks||[]).length + ' tasks · ' + totalHours + 'h estimated · ' + escHtml(tpl.category||'') + '</div>' +
+      '</div>' +
+      '<button id="tbSelectAllT" class="btn" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--white);color:var(--text);font-size:11px;font-weight:600;cursor:pointer">Select All</button>' +
+      '<button id="tbDeselectAllT" class="btn" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--white);color:var(--text);font-size:11px;font-weight:600;cursor:pointer">Clear</button>' +
+    '</div>' +
+    (tpl.description ? '<div style="font-size:12px;color:var(--muted);line-height:1.5;margin-top:6px">' + escHtml(tpl.description) + '</div>' : '');
+
+  // Group tasks by phase / workstream
+  var byPhase = {};
+  var phaseOrder = [];
+  (tpl.tasks || []).forEach(function(t){
+    var p = t.phase || 'Tasks';
+    if(!byPhase[p]){ byPhase[p] = []; phaseOrder.push(p); }
+    byPhase[p].push(t);
+  });
+
+  body.innerHTML = '';
+  if(!phaseOrder.length){
+    body.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:32px">This template has no tasks.</div>';
+  }
+  phaseOrder.forEach(function(phase){
+    var hdr = document.createElement('div');
+    hdr.style.cssText = 'font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--border)';
+    hdr.textContent = phase + ' (' + byPhase[phase].length + ')';
+    body.appendChild(hdr);
+    byPhase[phase].forEach(function(t){
+      body.appendChild(_tbMakeTaskRow(t));
+    });
+  });
+
+  // Wire the select all / clear buttons
+  document.getElementById('tbSelectAllT').onclick = function(){
+    (tpl.tasks || []).forEach(function(t){ _tbAddTask(t); });
+    _tbRefreshCheckboxes();
+  };
+  document.getElementById('tbDeselectAllT').onclick = function(){
+    var ids = (tpl.tasks || []).map(function(t){ return t.id; });
+    _tbState.selectedTasks = _tbState.selectedTasks.filter(function(x){ return ids.indexOf(x.id) < 0; });
+    _tbRefreshCheckboxes();
+    _tbUpdateCount();
+  };
+}
+
+function _tbMakeTaskRow(t){
+  var row = document.createElement('label');
+  row.className = 'tb-task-row';
+  row.setAttribute('data-tb-task-id', t.id);
+  var checked = _tbState.selectedTasks.some(function(x){ return x.id === t.id; });
+  row.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;background:var(--white);transition:background .12s';
+  row.innerHTML =
+    '<input type="checkbox" ' + (checked ? 'checked' : '') + ' style="margin-top:2px;accent-color:var(--accent);cursor:pointer">' +
+    '<div style="flex:1;min-width:0">' +
+      '<div style="font-size:13px;font-weight:600;color:var(--text)">' + escHtml(t.name || 'Untitled task') + '</div>' +
+      (t.description ? '<div style="font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4">' + escHtml(t.description) + '</div>' : '') +
+      '<div style="display:flex;gap:10px;margin-top:4px;font-size:10px;color:var(--muted)">' +
+        (t.hours ? '<span><b style="color:var(--text)">' + t.hours + 'h</b> est</span>' : '') +
+        (t.role ? '<span>' + escHtml(t.role) + '</span>' : '') +
+      '</div>' +
+    '</div>';
+  var cb = row.querySelector('input');
+  cb.onclick = function(ev){
+    ev.stopPropagation();
+    if(cb.checked) _tbAddTask(t);
+    else _tbRemoveTask(t.id);
+    _tbUpdateCount();
+  };
+  row.onclick = function(ev){
+    if(ev.target === cb) return;
+    cb.checked = !cb.checked;
+    if(cb.checked) _tbAddTask(t); else _tbRemoveTask(t.id);
+    _tbUpdateCount();
+  };
+  return row;
+}
+
+function _tbAddTask(t){
+  if(_tbState.selectedTasks.some(function(x){ return x.id === t.id; })) return;
+  _tbState.selectedTasks.push(t);
+}
+function _tbRemoveTask(id){
+  _tbState.selectedTasks = _tbState.selectedTasks.filter(function(x){ return x.id !== id; });
+}
+function _tbRefreshCheckboxes(){
+  document.querySelectorAll('.tb-task-row').forEach(function(row){
+    var id = row.getAttribute('data-tb-task-id');
+    var cb = row.querySelector('input[type=checkbox]');
+    if(cb) cb.checked = _tbState.selectedTasks.some(function(x){ return x.id === id; });
+  });
+  _tbUpdateCount();
+}
+function _tbUpdateCount(){
+  var el = document.getElementById('tbSelCount');
+  if(el) el.textContent = _tbState.selectedTasks.length + ' selected';
+}
+
+function _tbImportSelected(){
+  var tasks = _tbState.selectedTasks;
+  if(!tasks.length){ showToast('No tasks selected','warning'); return; }
+  var ctx = _tbState.sourceContext;
+  try {
+    if(ctx === 'plans')          _tbImportToPlans(tasks);
+    else if(ctx === 'todo')      _tbImportToTodo(tasks);
+    else if(ctx === 'checklist') _tbImportToTodo(tasks);
+    else if(ctx === 'capacityiq')_tbImportToCapacityIQ(tasks);
+    else _tbImportToPlans(tasks);
+    persistData();
+    closeTemplateBuilder();
+    showToast(tasks.length + ' tasks imported into ' + ctx, 'success');
+  } catch(err){
+    console.error('[tb] import failed:', err);
+    showToast('Import failed: ' + (err.message||err), 'error');
+  }
+}
+
+function _tbImportToPlans(tasks){
+  var plan = (typeof getCurrentPlan === 'function') ? getCurrentPlan() : null;
+  if(!plan){
+    if(projectPlans && projectPlans.length) plan = projectPlans[0];
+  }
+  if(!plan){ throw new Error('No active plan — create one first'); }
+  tasks.forEach(function(t, i){
+    plan.tasks.push(_newTask({
+      name: t.name,
+      notes: t.description || '',
+      durationDays: Math.max(1, Math.ceil((parseFloat(t.hours)||0) / 8)),
+      source: 'template',
+      sourceRefId: t.id,
+      sortIndex: (plan.tasks ? plan.tasks.length : 0) + i
+    }));
+  });
+  if(typeof renderPlansView === 'function') renderPlansView();
+  else if(typeof render === 'function') render();
+}
+
+function _tbImportToTodo(tasks){
+  var initName = _tbState.initiativeName || 'Template Imports';
+  if(!todoAllData[initName]) todoAllData[initName] = [];
+  tasks.forEach(function(t, i){
+    todoAllData[initName].push({
+      id: 'td_' + Date.now() + '_' + i,
+      text: t.name,
+      status: 'open',
+      due: '',
+      estimate: String(t.hours || 0),
+      kpiId: '',
+      comments: t.description || '',
+      actualHours: '',
+      links: [],
+      createdAt: Date.now(),
+      importedFrom: 'Template Builder'
+    });
+  });
+  if(typeof renderTodo === 'function') renderTodo();
+}
+
+function _tbImportToCapacityIQ(tasks){
+  // Add each task as a task type + return their ids so caller can wire them.
+  if(!capData.taskTypes) capData.taskTypes = [];
+  var created = tasks.map(function(t, i){
+    var id = 'tt_tb_' + Date.now() + '_' + i;
+    capData.taskTypes.push({
+      id:           id,
+      category:     t.workstream || t.phase || 'Imported',
+      name:         t.name,
+      description:  t.description || '',
+      fixedHours:   parseFloat(t.hours) || 0,
+      defaultTeam:  t.role || '',
+      sortOrder:    capData.taskTypes.length
+    });
+    return id;
+  });
+  // Build an ad-hoc template from them so the user can re-use.
+  if(!capData.templates) capData.templates = [];
+  capData.templates.push({
+    id:          'tpl_tb_' + Date.now(),
+    name:        'Imported ' + new Date().toLocaleDateString(),
+    description: 'Created via Template Builder',
+    category:    'Custom',
+    icon:        'bookmark',
+    custom:      true,
+    tasks: created.map(function(id, i){ return { taskTypeId: id, sortOrder: i, phase: 'Imported', isRequired: true }; })
+  });
+  if(typeof capNav === 'function') capNav('templates');
+}
+
+function _tbSaveAsTemplate(){
+  var tasks = _tbState.selectedTasks;
+  if(!tasks.length){ showToast('No tasks selected','warning'); return; }
+  var nameEl = document.getElementById('tbSaveName');
+  var name = (nameEl && nameEl.value || '').trim();
+  if(!name){ showToast('Enter a template name','warning'); if(nameEl) nameEl.focus(); return; }
+  customTemplates.push({
+    id:          'ctpl_' + Date.now(),
+    name:        name,
+    description: 'Built from selected tasks',
+    icon:        'bookmark',
+    tasks:       tasks.map(function(t){ return Object.assign({}, t); }),
+    createdAt:   new Date().toISOString()
+  });
+  persistData();
+  if(nameEl) nameEl.value = '';
+  _tbRenderLeft();
+  showToast('Template "' + name + '" saved with ' + tasks.length + ' tasks', 'success');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── v1.34.0 BROWSER HISTORY INTEGRATION (Fix 8) ──────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// The renderer opens every feature via its own openX() function that toggles a
+// `.open` class on an overlay div. We monkey-patch pushState/popstate on top:
+//   - Every openX() call pushes a history entry with { view: 'xxx' }.
+//   - Every closeX() doesn't pop (popstate would double-fire); instead back
+//     navigation is what triggers the close, and popstate closes overlays.
+//   - On initial load we replaceState so the first back press doesn't drop
+//     to the pre-login screen.
+
+var _pmrHistoryEnabled   = true;
+var _pmrHistoryPopping   = false;   // re-entrancy guard
+
+var _PMR_OVERLAY_MAP = {
+  dashboard:    { open:null, close:null, id:'dashboardPage' },
+  roadmap:      { open:null, close:null, id:null },
+  todo:         { open:'openTodo',         close:'closeTodo',         id:'todoOverlay' },
+  kpi:          { open:'openKPI',          close:'closeKPI',          id:'kpiOverlay' },
+  capacity:     { open:'openCapacity',     close:'closeCapacity',     id:'capOverlay' },
+  g2m:          { open:'openG2M',          close:'closeG2M',          id:'g2mOverlay' },
+  plans:        { open:'openPlans',        close:'closePlans',        id:'plansOverlay' },
+  artifacts:    { open:'openArtifacts',    close:'closeArtifacts',    id:'artOverlay' },
+  reports:      { open:'openReports',      close:'closeReports',      id:'reportsOverlay' },
+  insights:     { open:'openInsights',     close:'closeInsights',     id:'insightsOverlay' },
+  ucr:          { open:'openUCR',          close:'closeUCR',          id:'ucrOverlay' },
+  prioritization:{ open:'openPrioritization', close:'closePrioritization', id:'prioritizationOverlay' },
+  templates:    { open:'openTemplateLibrary', close:'closeTemplateLibrary', id:'templateLibraryOverlay' },
+  feedback:     { open:'openFeedback',     close:'closeFeedback',     id:'feedbackOverlay' },
+  top10:        { open:'openTop10',        close:'closeTop10',        id:'top10Overlay' },
+  admin:        { open:'openAdmin',        close:'closeAdmin',        id:'adminOverlay' },
+  platformAdmin:{ open:'openPlatformAdmin',close:'closePlatformAdmin',id:'platformAdminOverlay' }
+};
+
+function _pmrPushView(view){
+  if(!_pmrHistoryEnabled || _pmrHistoryPopping) return;
+  try {
+    var state = { pmrView: view };
+    history.pushState(state, '', '#' + view);
+  } catch(e){ /* file:// may disallow; that's fine — Electron doesn't need back */ }
+}
+
+function _pmrReplaceView(view){
+  if(!_pmrHistoryEnabled) return;
+  try { history.replaceState({ pmrView: view }, '', '#' + view); } catch(e){}
+}
+
+function _pmrCloseAnyOpenOverlay(){
+  // Close any currently-open overlay (class=open) without pushing state.
+  var closed = false;
+  Object.keys(_PMR_OVERLAY_MAP).forEach(function(key){
+    var entry = _PMR_OVERLAY_MAP[key];
+    if(!entry.id) return;
+    var el = document.getElementById(entry.id);
+    if(el && el.classList.contains('open')){
+      // Prefer the app's own close function so it runs cleanup.
+      var fn = entry.close && window[entry.close];
+      if(typeof fn === 'function'){ try { fn(); } catch(_){} }
+      else { el.classList.remove('open'); }
+      closed = true;
+    }
+  });
+  return closed;
+}
+
+// Wrap openX functions so they push history state automatically.
+function _pmrWireHistory(){
+  Object.keys(_PMR_OVERLAY_MAP).forEach(function(key){
+    var entry = _PMR_OVERLAY_MAP[key];
+    if(!entry.open) return;
+    var orig = window[entry.open];
+    if(typeof orig !== 'function' || orig._pmrWrapped) return;
+    var wrapped = function(){
+      var r = orig.apply(this, arguments);
+      _pmrPushView(key);
+      return r;
+    };
+    wrapped._pmrWrapped = true;
+    window[entry.open] = wrapped;
+  });
+
+  window.addEventListener('popstate', function(ev){
+    _pmrHistoryPopping = true;
+    try {
+      // If a generic modal (not a tracked overlay) is open, close it instead of navigating.
+      var openModal = document.querySelector('.modal-overlay');
+      if(openModal){
+        openModal.remove();
+        // Re-push the current view so the next back still works.
+        var cur = (ev.state && ev.state.pmrView) || 'dashboard';
+        try { history.pushState({ pmrView: cur }, '', '#' + cur); } catch(_){}
+        return;
+      }
+      // Otherwise: close any open full-screen overlay, falling back to dashboard.
+      var target = (ev.state && ev.state.pmrView) || 'dashboard';
+      _pmrCloseAnyOpenOverlay();
+      if(target === 'dashboard'){
+        if(typeof showDashboard === 'function') showDashboard();
+      } else {
+        var entry = _PMR_OVERLAY_MAP[target];
+        if(entry && entry.open && typeof window[entry.open] === 'function'){
+          // Call the ORIGINAL (underlying) function — not the wrapped one —
+          // so we don't re-push state during a popstate-driven navigation.
+          // Since orig is captured in closure above, we unwrap by calling
+          // the wrapped fn with the popping guard set.
+          window[entry.open]();
+        }
+      }
+    } finally {
+      _pmrHistoryPopping = false;
+    }
+  });
+
+  // Seed the initial history entry so the first Back doesn't exit the SPA.
+  _pmrReplaceView('dashboard');
+
+  // Respect an initial hash (e.g. direct-link to #plans)
+  var initialHash = (window.location.hash || '').replace(/^#/, '');
+  if(initialHash && _PMR_OVERLAY_MAP[initialHash] && typeof window[_PMR_OVERLAY_MAP[initialHash].open] === 'function'){
+    setTimeout(function(){ window[_PMR_OVERLAY_MAP[initialHash].open](); }, 500);
+  }
+}
+
+// Wire history once the initial DOM is ready AND the renderer has defined
+// its open* functions (they're defined in the top-level script above us).
+setTimeout(_pmrWireHistory, 0);
 
 init();
 </script>
