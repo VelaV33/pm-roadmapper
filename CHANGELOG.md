@@ -1,5 +1,22 @@
 # Roadmap OS — Changelog
 
+## v1.34.0 — v4 fix batch: import, Template Builder, docs, invites, back nav
+
+See `FIX_LOG_V4.md` for full per-fix detail. Highlights:
+
+- **Fix 1:** `restoreJsonBackup` rewritten with inline file input; confirm happens after parse; `pushCloudData` after apply. Fixes silent no-op on web.
+- **Fix 2:** CapacityIQ templates page now renders a unified view pulling from `capData.templates`, the main template library (`_tplCache`), bundled platform templates, and user customs via a new `getAllTemplates()` helper.
+- **Fix 3:** New reusable **Template Builder** modal (~480 lines). Two-column layout with Templates / Task Library tabs, cross-template task selection accumulator, context-aware import handlers for plans / todo / checklist / capacityiq, and Save as custom template. Used by Plans, To-Do, Checklist, and Capacity IQ.
+- **Fix 4:** Document Repository now uploads real files to Supabase Storage (`attachments` bucket) via direct REST — drag+drop, 50 MB ceiling, download button per item. See `FIX_LOG_V4.md` for the one-time bucket SQL.
+- **Fix 5:** New "Invite Your Teammates" onboarding step — email rows, Send Invites wires the existing `send-invite` edge function, Google Calendar harvester pulls last-30-days meeting attendees when the v1.33.0 Google Calendar connection is present.
+- **Fix 6:** Global toolbar centering fix — every page toolbar now vertically centres its children.
+- **Fix 7:** Plans → Templates button opens the Template Builder in `plans` context instead of the old Template Library overlay.
+- **Fix 8:** Browser back navigation wired. `history.pushState` on every `openX` overlay, `popstate` handler closes modals first then navigates, `replaceState` on boot so the first Back press doesn't drop to the pre-login screen. Hash routing supported.
+
+### Required backend actions (Vela)
+- Create Supabase Storage `attachments` bucket + path-scoped RLS (SQL in `FIX_LOG_V4.md`).
+- For Google Contacts integration: add `contacts.readonly` scope to the Supabase Google provider.
+
 ## v1.33.0 — Capacity Settings + Live Calendar Integration
 
 **Highlights**
