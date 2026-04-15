@@ -52,6 +52,35 @@ body.dark-mode {
 - **Edge functions:** Follow `_shared/auth.ts` pattern
 
 ## Testing
-- Web build: `cd web && npm run build` — must succeed
+- `npm test` — runs both test files:
+  - `tests/capacity.test.js` — pure helpers (getCapHours, _getTodosForWeek, event normalizers)
+  - `tests/renderer.parse.test.js` — V8 parse-check of the full inline renderer JS, catches hand-editing syntax errors
+- Web build: `npm run build:web` (alias for `cd web && node scripts/build.js`) — must succeed
 - Dark mode: toggle and check EVERY new element
 - Zero emoji: `grep -Pc '[\x{1F300}-\x{1FAFF}]' renderer/index.html` should be 0
+
+## v1.33.0 — Capacity + Calendar integration shapes
+Two sub-objects on `appSettings` are part of the public data contract and
+round-trip through both localStorage and the cloud JSONB blob:
+
+```js
+appSettings.capacity = {
+  hoursPerWeek: 40,   // user-configurable; drives capacity view + timesheet target
+  hoursPerDay:  8,
+  workDays:     5     // Mon–Fri
+};
+appSettings.integrations = {
+  google:    { connected, token, refreshToken, expiresAt, email },
+  microsoft: { connected, token, refreshToken, expiresAt, email }
+};
+```
+
+Always read capacity values through `getCapHours()` — never reach into
+`appSettings.capacity` directly. The legacy `_capacityHoursPerWeek` global
+is a live getter, so existing callsites keep working but new code should
+prefer `getCapHours().hpw`.
+
+Calendar tokens are captured in `_processOAuthFragment` from the
+`provider_token` URL fragment and only when
+`sessionStorage.pmr_oauth_intent === 'calendar:<provider>'`. Never stash
+provider tokens outside that flow.
