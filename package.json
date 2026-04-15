@@ -1,13 +1,17 @@
 {
   "name": "netstar-roadmap",
-  "version": "1.32.0",
+  "version": "1.33.0",
   "description": "Roadmap OS — Product Strategy & Roadmap Tool",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "build:win": "electron-builder --win",
     "build:mac": "electron-builder --mac",
-    "build:linux": "electron-builder --linux"
+    "build:linux": "electron-builder --linux",
+    "test": "node tests/capacity.test.js && node tests/renderer.parse.test.js",
+    "test:capacity": "node tests/capacity.test.js",
+    "test:parse": "node tests/renderer.parse.test.js",
+    "build:web": "cd web && node scripts/build.js"
   },
   "build": {
     "appId": "com.pmroadmapper.app",

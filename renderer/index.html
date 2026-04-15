@@ -5817,8 +5817,15 @@ _supabase = {
                        (isElectron
                           ? 'https://app.pmroadmapper.com/?to=desktop'
                           : (window.location.origin + window.location.pathname));
+      // v1.33.0: honour opts.options.scopes so calendar integrations can
+      // request read-only Google Calendar / MS Graph scopes on top of the
+      // base sign-in. Supabase forwards them to the provider and returns
+      // provider_token in the URL fragment.
       var url = SUPABASE_URL+'/auth/v1/authorize?provider='+opts.provider+
                 '&redirect_to='+encodeURIComponent(redirectTo);
+      if(opts.options && opts.options.scopes){
+        url += '&scopes=' + encodeURIComponent(opts.options.scopes);
+      }
       if(isElectron){
         // Open in user's default browser via main.js setWindowOpenHandler.
         try{ window.open(url, '_blank'); }catch(e){ window.location.href = url; }
@@ -5899,10 +5906,17 @@ async function _processOAuthFragment(fragment){
   if(fragment[0] === '#') fragment = fragment.substring(1);
   try {
     var params = new URLSearchParams(fragment);
-    var access_token  = params.get('access_token');
-    var refresh_token = params.get('refresh_token');
-    var expires_in    = parseInt(params.get('expires_in') || '3600', 10);
-    var oauth_error   = params.get('error_description') || params.get('error');
+    var access_token    = params.get('access_token');
+    var refresh_token   = params.get('refresh_token');
+    var expires_in      = parseInt(params.get('expires_in') || '3600', 10);
+    var provider_token  = params.get('provider_token');
+    var provider_refresh= params.get('provider_refresh_token');
+    var oauth_error     = params.get('error_description') || params.get('error');
+    // v1.33.0: if this oauth round-trip was launched by a calendar connect
+    // flow, stash the provider token into appSettings. We handle this AFTER
+    // the normal session save so persistData() sees the right user.
+    var _calendarIntent = '';
+    try { _calendarIntent = sessionStorage.getItem('pmr_oauth_intent') || ''; } catch(_){}
     if(oauth_error){
       console.warn('[oauth] provider error:', oauth_error);
       try { showAuthError('Sign-in cancelled or failed: ' + oauth_error); } catch(_){}
@@ -5925,6 +5939,27 @@ async function _processOAuthFragment(fragment){
     _accessToken  = access_token;
     _refreshToken = refresh_token;
     _currentUser  = r.data;
+
+    // v1.33.0: calendar provider-token capture
+    if(provider_token && _calendarIntent && _calendarIntent.indexOf('calendar:')===0){
+      try {
+        var which = _calendarIntent.split(':')[1];
+        if(which==='google' || which==='microsoft'){
+          if(!appSettings.integrations) appSettings.integrations={google:{},microsoft:{}};
+          appSettings.integrations[which] = {
+            connected: true,
+            token: provider_token,
+            refreshToken: provider_refresh || '',
+            expiresAt: Date.now() + (expires_in*1000),
+            email: (r.data && r.data.email) || ''
+          };
+          // Leave a breadcrumb so onAuthSuccess can pop the user back to
+          // the capacity view instead of the default roadmap landing.
+          try { sessionStorage.setItem('pmr_post_auth_goto','capacity'); } catch(_){}
+          sessionStorage.removeItem('pmr_oauth_intent');
+        }
+      } catch(e){ console.warn('[oauth] calendar token capture failed:', e && e.message); }
+    }
     return true;
   } catch(e){
     console.warn('[oauth] _processOAuthFragment failed:', e && e.message);
@@ -6334,7 +6369,7 @@ async function onAuthSuccess(user){
   _lastCloudTs=0;
   _viewingSharedRoadmap=null;
   _myDataBackup=null;
-  appSettings={fyStartMonth:'MAR',exportFormat:'excel',dateFormat:'DD/MM',theme:'light'};
+  appSettings={fyStartMonth:'MAR',exportFormat:'excel',dateFormat:'DD/MM',theme:'light',capacity:{hoursPerWeek:40,hoursPerDay:8,workDays:5},integrations:{google:{connected:false,token:'',refreshToken:'',expiresAt:0,email:''},microsoft:{connected:false,token:'',refreshToken:'',expiresAt:0,email:''},slack:{connected:false,configured:true,workspaces:[]}}};
   if(typeof userAIKey!=='undefined') userAIKey={provider:'gemini',key:'',model:''};
   window._logoDataUrl=null;
   var oldBanner=document.getElementById('sharedBanner'); if(oldBanner) oldBanner.remove();
@@ -6436,8 +6471,20 @@ async function onAuthSuccess(user){
   setTimeout(checkShowTour, 2500);
   setTimeout(checkOnboarding, 1500); // v1.32.0 FIX 15: trigger onboarding for new users
   console.log('Signed in successfully');  // v1.25.0: PII removed from log
-  // Show dashboard as default view on login
-  setTimeout(showDashboard, 500);
+  // v1.33.0 — if the user just returned from a "Connect Calendar" OAuth
+  // round-trip, jump them straight back to Capacity instead of the default
+  // dashboard. Uses a sessionStorage breadcrumb set by _processOAuthFragment.
+  var _postAuthGoto = '';
+  try { _postAuthGoto = sessionStorage.getItem('pmr_post_auth_goto') || ''; sessionStorage.removeItem('pmr_post_auth_goto'); } catch(_){}
+  if(_postAuthGoto === 'capacity' && typeof openKPI === 'function'){
+    setTimeout(function(){
+      openKPI();
+      setTimeout(function(){ setKPIView('capacity'); showToast('Calendar connected — click Sync Now to import events','success'); }, 120);
+    }, 400);
+  } else {
+    // Show dashboard as default view on login
+    setTimeout(showDashboard, 500);
+  }
   // Check if user is super admin (shows admin sidebar item if true)
   setTimeout(checkSuperAdmin, 1000);
   // Pre-load the system user list for the owner combobox (super-admins only;
@@ -6447,6 +6494,14 @@ async function onAuthSuccess(user){
   setTimeout(refreshContactsCache, 1700);
   // Notifications: load and start polling every 30 seconds
   setTimeout(function(){ loadNotifications(); _startNotificationPolling(); }, 1900);
+  // v1.33.1 — handle Slack OAuth redirect-back (if ?slack_oauth=1 is on the URL)
+  // and then warm the Slack connection cache so the Settings modal can render
+  // instantly without a round trip.
+  setTimeout(function(){
+    _handleSlackOAuthCallback().then(function(handled){
+      if(!handled) refreshSlackStatus().catch(function(){});
+    }).catch(function(){});
+  }, 2100);
   // Auto-detect organization from email domain
   setTimeout(async function(){
     try{
@@ -6526,7 +6581,7 @@ async function signOut(){
   _currentUser=null;
   _accessToken=null;
   _refreshToken=null;
-  appSettings={fyStartMonth:'MAR',exportFormat:'excel',dateFormat:'DD/MM',theme:'light'};
+  appSettings={fyStartMonth:'MAR',exportFormat:'excel',dateFormat:'DD/MM',theme:'light',capacity:{hoursPerWeek:40,hoursPerDay:8,workDays:5},integrations:{google:{connected:false,token:'',refreshToken:'',expiresAt:0,email:''},microsoft:{connected:false,token:'',refreshToken:'',expiresAt:0,email:''},slack:{connected:false,configured:true,workspaces:[]}}};
   if(typeof userAIKey!=='undefined') userAIKey={provider:'gemini',key:'',model:''};
   window._logoDataUrl=null;
 
@@ -6630,11 +6685,41 @@ function applyDataPayload(d){
   }
   if(Array.isArray(d.planTemplates)) planTemplates = d.planTemplates;
   if(d._usageStats && typeof d._usageStats==='object') _usageStats=d._usageStats;
+  // v1.33.0: sync capacity + calendar integration settings across devices.
+  // We intentionally sync ONLY these two sub-objects — never personal profile
+  // fields, which stay in per-user localStorage.
+  if(d.settings && typeof d.settings==='object'){
+    if(d.settings.capacity && typeof d.settings.capacity==='object'){
+      if(!appSettings.capacity) appSettings.capacity={};
+      appSettings.capacity.hoursPerWeek = parseFloat(d.settings.capacity.hoursPerWeek)||40;
+      appSettings.capacity.hoursPerDay  = parseFloat(d.settings.capacity.hoursPerDay)||8;
+      appSettings.capacity.workDays     = parseInt(d.settings.capacity.workDays,10)||5;
+    }
+    if(d.settings.integrations && typeof d.settings.integrations==='object'){
+      if(!appSettings.integrations) appSettings.integrations={google:{},microsoft:{}};
+      ['google','microsoft'].forEach(function(k){
+        var src=d.settings.integrations[k]; if(!src || typeof src!=='object') return;
+        appSettings.integrations[k] = {
+          connected:    !!src.connected,
+          token:        src.token || '',
+          refreshToken: src.refreshToken || '',
+          expiresAt:    parseInt(src.expiresAt,10)||0,
+          email:        src.email || ''
+        };
+      });
+    }
+  }
   var aTab=tabs_data.find(function(t){return t.id===activeTabId&&!t.stacked;});
   if(aTab&&aTab.sections){sections=aTab.sections;rows=aTab.rows;if(aTab.quarters)quarters=aTab.quarters;}
 }
 function buildDataPayload(){
-  return {sections:sections,rows:rows,quarters:quarters,tabs_data:tabs_data,activeTabId:activeTabId,g2mData:g2mAllData,todoData:todoAllData,kpiData:kpiAllData,timesheetData:timesheetData,ucrData:ucrAllData,artifactsData:artifactsData,brandGuideData:brandGuideData,artTemplates:artTemplates,capData:capData,prioritization:prioritizationData,roadmapSortBy:_roadmapSortBy,projectPlans:projectPlans,planTemplates:planTemplates,okrs:okrsData,roadmapView:_roadmapView,taskLibrary:taskLibrary,taskLibrarySeeded:_taskLibrarySeeded,_usageStats:_usageStats};
+  return {sections:sections,rows:rows,quarters:quarters,tabs_data:tabs_data,activeTabId:activeTabId,g2mData:g2mAllData,todoData:todoAllData,kpiData:kpiAllData,timesheetData:timesheetData,ucrData:ucrAllData,artifactsData:artifactsData,brandGuideData:brandGuideData,artTemplates:artTemplates,capData:capData,prioritization:prioritizationData,roadmapSortBy:_roadmapSortBy,projectPlans:projectPlans,planTemplates:planTemplates,okrs:okrsData,roadmapView:_roadmapView,taskLibrary:taskLibrary,taskLibrarySeeded:_taskLibrarySeeded,_usageStats:_usageStats,
+    // v1.33.0 — sync capacity + integrations across devices.
+    settings:{
+      capacity: (appSettings&&appSettings.capacity) || {hoursPerWeek:40,hoursPerDay:8,workDays:5},
+      integrations: (appSettings&&appSettings.integrations) || {google:{},microsoft:{}}
+    }
+  };
 }
 
 // ── CLOUD SYNC ────────────────────────────────────────────────────────────────
@@ -6866,8 +6951,29 @@ var appSettings = {
   fyStartMonth: 'MAR',
   exportFormat: 'excel',
   dateFormat: 'DD/MM',
-  theme: 'light'
+  theme: 'light',
+  capacity: {
+    hoursPerWeek: 40,
+    hoursPerDay: 8,
+    workDays: 5          // Mon–Fri
+  },
+  integrations: {
+    google:    { connected:false, token:'', refreshToken:'', expiresAt:0, email:'' },
+    microsoft: { connected:false, token:'', refreshToken:'', expiresAt:0, email:'' }
+  }
 };
+
+// v1.33.0 — capacity helper: single source of truth for hours/week/day/workdays.
+// Always read through this — the raw `_capacityHoursPerWeek` legacy var is
+// kept in sync as a fallback for any third-party code still poking at it.
+function getCapHours(){
+  var c = (appSettings && appSettings.capacity) || {};
+  return {
+    hpw:  parseFloat(c.hoursPerWeek)  || 40,
+    hpd:  parseFloat(c.hoursPerDay)   ||  8,
+    days: parseInt(c.workDays, 10)    ||  5
+  };
+}
 
 // Helper to scope localStorage keys by user ID
 function _lsKey(base){
@@ -6892,7 +6998,28 @@ function loadProfileSettings(userId){
     } else {
       userProfile={name:'',title:'',org:'',email:'',avatarUrl:''};
     }
-    if(s) appSettings = Object.assign({fyStartMonth:'MAR',exportFormat:'excel',dateFormat:'DD/MM',theme:'light'}, JSON.parse(s));
+    if(s){
+      var _defaults={fyStartMonth:'MAR',exportFormat:'excel',dateFormat:'DD/MM',theme:'light',
+        capacity:{hoursPerWeek:40,hoursPerDay:8,workDays:5},
+        integrations:{google:{connected:false,token:'',refreshToken:'',expiresAt:0,email:''},microsoft:{connected:false,token:'',refreshToken:'',expiresAt:0,email:''},slack:{connected:false,configured:true,workspaces:[]}}};
+      var _parsed=JSON.parse(s);
+      // v1.33.0 — preserve any cloud-seeded capacity/integrations that
+      // applyDataPayload() may have already set during STEP 4 of login.
+      var _cloudCap = appSettings && appSettings.capacity;
+      var _cloudIntg= appSettings && appSettings.integrations;
+      appSettings=Object.assign({}, _defaults, _parsed);
+      if(_cloudCap)  appSettings.capacity     = _cloudCap;
+      if(_cloudIntg) appSettings.integrations = _cloudIntg;
+      // Deep-merge nested keys that may be missing from legacy settings blobs
+      if(!appSettings.capacity || typeof appSettings.capacity!=='object') appSettings.capacity=_defaults.capacity;
+      else appSettings.capacity=Object.assign({}, _defaults.capacity, appSettings.capacity);
+      if(!appSettings.integrations || typeof appSettings.integrations!=='object') appSettings.integrations=_defaults.integrations;
+      else {
+        appSettings.integrations.google    = Object.assign({}, _defaults.integrations.google,    appSettings.integrations.google    || {});
+        appSettings.integrations.microsoft = Object.assign({}, _defaults.integrations.microsoft, appSettings.integrations.microsoft || {});
+        appSettings.integrations.slack     = Object.assign({}, _defaults.integrations.slack,     appSettings.integrations.slack     || {});
+      }
+    }
     if(r) _userRole = r;
   } catch(e){
     userProfile={name:'',title:'',org:'',email:'',avatarUrl:''};
@@ -19312,6 +19439,9 @@ function renderTimesheet(){
     totalLogged+=hrs;
     if(e.todo.kpiId) kpiHours[e.todo.kpiId]=(kpiHours[e.todo.kpiId]||0)+hrs;
   });
+  // v1.33.0: weekly target is sourced from appSettings.capacity instead of
+  // being hardcoded. Users who haven't set it see the default 40h/week.
+  totalTarget = getCapHours().hpw;
   var pct=totalTarget>0?Math.round(totalLogged/totalTarget*100):0;
   var barCol=pct>=90?'#16a34a':pct>=60?'#f59e0b':'#dc2626';
 
@@ -22188,8 +22318,538 @@ function _importCalendarMeetings(){
   showToast(added+' meeting(s) added to ToDo','success');
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// ── REAL CALENDAR INTEGRATION (Google Calendar + Microsoft Graph) ────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// v1.33.0 — Live OAuth integration, replacing the screenshot-only workaround.
+//
+// Flow:
+//   1. User clicks Connect → connectGoogleCalendar() / connectOutlookCalendar()
+//   2. We set sessionStorage.pmr_oauth_intent='calendar:<provider>' and call
+//      _supabase.auth.signInWithOAuth with the needed read-only scope.
+//   3. Supabase redirects back with a URL fragment containing BOTH access_token
+//      (our Supabase session) and provider_token (the Google / MS access
+//      token). _processOAuthFragment hands any provider_token through to
+//      _handleCalendarProviderToken which stashes it into appSettings.
+//   4. Renderer flips the capacity-view UI to "Sync Now" and persists.
+//
+// Tokens are short-lived (~1h). We intentionally do NOT stash refresh tokens
+// client-side — a reconnect is a single click and avoids a whole server-side
+// refresh-flow surface. This trades one click every hour for zero secret
+// handling. Enterprises that need offline sync can point a future edge
+// function at appSettings.integrations.<p>.refreshToken.
+
+var _CAL_SCOPE_GOOGLE     = 'openid email profile https://www.googleapis.com/auth/calendar.readonly';
+var _CAL_SCOPE_MICROSOFT  = 'openid email profile offline_access Calendars.Read';
+
+function connectGoogleCalendar(){
+  try { sessionStorage.setItem('pmr_oauth_intent','calendar:google'); } catch(_){}
+  _supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { scopes: _CAL_SCOPE_GOOGLE }
+  });
+}
+function connectOutlookCalendar(){
+  try { sessionStorage.setItem('pmr_oauth_intent','calendar:microsoft'); } catch(_){}
+  _supabase.auth.signInWithOAuth({
+    provider: 'azure',
+    options: { scopes: _CAL_SCOPE_MICROSOFT }
+  });
+}
+function disconnectCalendar(which){
+  if(!appSettings.integrations) return;
+  if(appSettings.integrations[which]){
+    appSettings.integrations[which]={connected:false,token:'',refreshToken:'',expiresAt:0,email:''};
+    persistData();
+    showToast((which==='google'?'Google':'Outlook')+' calendar disconnected','info');
+    if(_kpiView==='capacity') renderCapacityView();
+  }
+}
+
+function _calendarTokenValid(which){
+  var ig = appSettings.integrations && appSettings.integrations[which];
+  if(!ig || !ig.connected || !ig.token) return false;
+  return Date.now() < (ig.expiresAt || 0) - 30000; // 30s safety margin
+}
+
+async function fetchGoogleCalendarEvents(startISO, endISO){
+  var tok = appSettings.integrations.google.token;
+  var url = 'https://www.googleapis.com/calendar/v3/calendars/primary/events'+
+            '?timeMin='+encodeURIComponent(startISO)+
+            '&timeMax='+encodeURIComponent(endISO)+
+            '&singleEvents=true&orderBy=startTime&maxResults=250';
+  var r = await fetch(url,{ headers:{ Authorization:'Bearer '+tok } });
+  if(r.status===401){ appSettings.integrations.google.connected=false; persistData(); throw new Error('Google token expired — please reconnect'); }
+  if(!r.ok) throw new Error('Google Calendar API '+r.status);
+  var j = await r.json();
+  return (j.items||[]).map(_normalizeGoogleEvent).filter(Boolean);
+}
+function _normalizeGoogleEvent(ev){
+  if(!ev || (ev.status==='cancelled')) return null;
+  var start = ev.start && (ev.start.dateTime || ev.start.date);
+  var end   = ev.end   && (ev.end.dateTime   || ev.end.date);
+  if(!start) return null;
+  var s = new Date(start), e = end ? new Date(end) : new Date(s.getTime()+60*60*1000);
+  var durHrs = Math.max(0.25, Math.round(((e-s)/3600000)*4)/4); // quarter-hour steps
+  return {
+    name: ev.summary || '(no title)',
+    date: s.toISOString().slice(0,10),
+    startTime: s.toTimeString().slice(0,5),
+    endTime:   e.toTimeString().slice(0,5),
+    duration:  durHrs,
+    source:    'google',
+    extId:     ev.id
+  };
+}
+
+async function fetchOutlookCalendarEvents(startISO, endISO){
+  var tok = appSettings.integrations.microsoft.token;
+  var url = 'https://graph.microsoft.com/v1.0/me/calendarview'+
+            '?startDateTime='+encodeURIComponent(startISO)+
+            '&endDateTime='+encodeURIComponent(endISO)+
+            '&$top=250&$orderby=start/dateTime';
+  var r = await fetch(url,{ headers:{ Authorization:'Bearer '+tok, Prefer:'outlook.timezone="UTC"' } });
+  if(r.status===401){ appSettings.integrations.microsoft.connected=false; persistData(); throw new Error('Microsoft token expired — please reconnect'); }
+  if(!r.ok) throw new Error('Microsoft Graph '+r.status);
+  var j = await r.json();
+  return (j.value||[]).map(_normalizeGraphEvent).filter(Boolean);
+}
+function _normalizeGraphEvent(ev){
+  if(!ev || ev.isCancelled) return null;
+  var s = new Date(ev.start.dateTime + 'Z');
+  var e = new Date(ev.end.dateTime   + 'Z');
+  var durHrs = Math.max(0.25, Math.round(((e-s)/3600000)*4)/4);
+  return {
+    name: ev.subject || '(no title)',
+    date: s.toISOString().slice(0,10),
+    startTime: s.toTimeString().slice(0,5),
+    endTime:   e.toTimeString().slice(0,5),
+    duration:  durHrs,
+    source:    'microsoft',
+    extId:     ev.id
+  };
+}
+
+function _weekRangeISO(){
+  // Default sync window: start of current ISO week → end of NEXT week
+  var d = _weekDates(_tsCurrentWeek)[0];
+  var start = new Date(d); start.setHours(0,0,0,0);
+  var end   = new Date(start); end.setDate(end.getDate()+14); end.setHours(23,59,59,999);
+  return { startISO: start.toISOString(), endISO: end.toISOString() };
+}
+
+async function syncConnectedCalendarsNow(){
+  var range = _weekRangeISO();
+  var allEvents = [];
+  var errors = [];
+  if(_calendarTokenValid('google')){
+    try { allEvents = allEvents.concat(await fetchGoogleCalendarEvents(range.startISO, range.endISO)); }
+    catch(e){ errors.push('Google: '+e.message); }
+  }
+  if(_calendarTokenValid('microsoft')){
+    try { allEvents = allEvents.concat(await fetchOutlookCalendarEvents(range.startISO, range.endISO)); }
+    catch(e){ errors.push('Outlook: '+e.message); }
+  }
+  if(!allEvents.length && !errors.length){
+    showToast('No events found in the next 2 weeks','info');
+    return;
+  }
+  if(errors.length && !allEvents.length){
+    showToast('Sync failed: '+errors.join(' | '),'error');
+    return;
+  }
+  window._calendarMeetings = allEvents;
+  _showCalendarPreviewModal(allEvents, errors);
+}
+
+function _showCalendarPreviewModal(events, errors){
+  var ex=document.getElementById('calPreviewModal'); if(ex) ex.remove();
+  var ov=document.createElement('div');
+  ov.id='calPreviewModal'; ov.className='modal-overlay'; ov.style.zIndex='9500';
+  var modal=document.createElement('div'); modal.className='modal'; modal.style.width='760px';
+
+  var hdr=document.createElement('div'); hdr.className='modal-hdr';
+  hdr.innerHTML='<h2>Calendar Events — Preview & Import</h2>';
+  var cx=document.createElement('button'); cx.className='close'; cx.textContent='x';
+  cx.onclick=function(){ ov.remove(); }; hdr.appendChild(cx);
+  modal.appendChild(hdr);
+
+  var body=document.createElement('div'); body.className='modal-body';
+  if(errors && errors.length){
+    var warn=document.createElement('div');
+    warn.style.cssText='background:#fef3c7;border:1px solid #fde68a;color:#92400e;padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:12px';
+    warn.textContent='Partial sync: '+errors.join(' | ');
+    body.appendChild(warn);
+  }
+  var info=document.createElement('div');
+  info.style.cssText='font-size:12px;color:var(--muted);margin-bottom:12px';
+  info.textContent=events.length+' events found. Uncheck any you don\'t want to track. They\'ll land in the "Calendar Meetings" initiative.';
+  body.appendChild(info);
+
+  var tbl=document.createElement('table');
+  tbl.style.cssText='width:100%;border-collapse:collapse;font-size:13px';
+  var html='<thead><tr style="border-bottom:2px solid var(--border)">'+
+    '<th style="text-align:left;padding:8px;font-size:10px;color:var(--muted)"><input type="checkbox" checked id="calSelectAll" onchange="document.querySelectorAll(\'.cal-import-check\').forEach(function(c){c.checked=document.getElementById(\'calSelectAll\').checked})"></th>'+
+    '<th style="text-align:left;padding:8px;font-size:10px;color:var(--muted)">MEETING</th>'+
+    '<th style="text-align:left;padding:8px;font-size:10px;color:var(--muted)">DATE</th>'+
+    '<th style="text-align:left;padding:8px;font-size:10px;color:var(--muted)">TIME</th>'+
+    '<th style="text-align:right;padding:8px;font-size:10px;color:var(--muted)">HRS</th>'+
+    '<th style="text-align:left;padding:8px;font-size:10px;color:var(--muted)">SOURCE</th>'+
+    '</tr></thead><tbody>';
+  events.forEach(function(m,i){
+    html+='<tr style="border-bottom:1px solid var(--border)">'+
+      '<td style="padding:8px"><input type="checkbox" checked class="cal-import-check" data-idx="'+i+'"></td>'+
+      '<td style="padding:8px;font-weight:500;color:var(--text)">'+escHtml(m.name)+'</td>'+
+      '<td style="padding:8px;color:var(--muted)">'+(m.date||'')+'</td>'+
+      '<td style="padding:8px;color:var(--muted)">'+(m.startTime||'')+' - '+(m.endTime||'')+'</td>'+
+      '<td style="padding:8px;text-align:right;font-weight:600;color:var(--text)">'+(m.duration||0)+'h</td>'+
+      '<td style="padding:8px;font-size:10px;color:var(--muted);text-transform:uppercase">'+(m.source||'')+'</td>'+
+      '</tr>';
+  });
+  html+='</tbody>';
+  tbl.innerHTML=html;
+  body.appendChild(tbl);
+  modal.appendChild(body);
+
+  var footer=document.createElement('div'); footer.className='modal-footer';
+  var cancel=document.createElement('button'); cancel.className='btn-cancel'; cancel.textContent='Cancel';
+  cancel.onclick=function(){ ov.remove(); };
+  var importB=document.createElement('button'); importB.className='btn-save'; importB.textContent='Import Selected';
+  importB.onclick=function(){ _importCalendarMeetings(); ov.remove(); };
+  footer.appendChild(cancel); footer.appendChild(importB);
+  modal.appendChild(footer);
+  ov.appendChild(modal); document.body.appendChild(ov);
+}
+
+function openCalendarIntegrationModal(){
+  var ex=document.getElementById('calIntegModal'); if(ex) ex.remove();
+  var ov=document.createElement('div');
+  ov.id='calIntegModal'; ov.className='modal-overlay'; ov.style.zIndex='9500';
+  var modal=document.createElement('div'); modal.className='modal'; modal.style.width='560px';
+
+  var hdr=document.createElement('div'); hdr.className='modal-hdr';
+  hdr.innerHTML='<h2>Calendar Integrations</h2>';
+  var cx=document.createElement('button'); cx.className='close'; cx.textContent='x';
+  cx.onclick=function(){ ov.remove(); }; hdr.appendChild(cx);
+  modal.appendChild(hdr);
+
+  var body=document.createElement('div'); body.className='modal-body';
+  body.innerHTML='<p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px">Connect a calendar to auto-import meetings into your ToDo list and capacity view. Tokens are stored in your account data only — never shared.</p>';
+
+  function _providerRow(which, label){
+    var ig=(appSettings.integrations&&appSettings.integrations[which])||{connected:false};
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;background:var(--white)';
+    var left=document.createElement('div');
+    left.innerHTML='<div style="font-weight:700;color:var(--text);font-size:14px">'+label+'</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+
+      (ig.connected?('Connected'+(ig.email?' as '+escHtml(ig.email):'')):'Not connected')+
+      '</div>';
+    row.appendChild(left);
+    var btn=document.createElement('button');
+    btn.style.cssText='padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--accent);background:'+(ig.connected?'var(--white)':'var(--accent)')+';color:'+(ig.connected?'var(--accent)':'#fff');
+    btn.textContent=ig.connected?'Disconnect':'Connect';
+    btn.onclick=function(){
+      if(ig.connected) disconnectCalendar(which);
+      else if(which==='google') connectGoogleCalendar();
+      else connectOutlookCalendar();
+    };
+    row.appendChild(btn);
+    return row;
+  }
+  body.appendChild(_providerRow('google','Google Calendar'));
+  body.appendChild(_providerRow('microsoft','Microsoft Outlook'));
+
+  var note=document.createElement('div');
+  note.style.cssText='margin-top:8px;padding:10px 12px;background:var(--bg);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.5';
+  note.innerHTML='Read-only access. PM Roadmapper never writes to your calendar. Tokens expire in ~1h; click Connect again to refresh.';
+  body.appendChild(note);
+
+  modal.appendChild(body);
+  var footer=document.createElement('div'); footer.className='modal-footer';
+  var close=document.createElement('button'); close.className='btn-cancel'; close.textContent='Close';
+  close.onclick=function(){ ov.remove(); };
+  footer.appendChild(close);
+  modal.appendChild(footer);
+  ov.appendChild(modal); document.body.appendChild(ov);
+}
+
+// ═════════════════════════════════════════════════════════════════════════
+// v1.33.1 — Slack integration (Pass 1)
+//
+// Unlike Google / Microsoft Calendar (which ride on Supabase Auth's
+// provider_token), Slack is its own OAuth 2.0 flow that we have to run
+// through a dedicated edge function. The server holds the bot token; the
+// renderer only ever sees "connected: true" + workspace name + a public
+// client_id so it can build the authorize URL.
+//
+// Flow:
+//   1. User clicks Connect → we read client_id from the server's status
+//      response and redirect to slack.com/oauth/v2/authorize.
+//   2. Slack redirects back to https://app.pmroadmapper.com/?slack_oauth=1&code=...
+//   3. On page load (inside onAuthSuccess), _handleSlackOAuthCallback()
+//      detects the query params, POSTs the code to the slack-api edge
+//      function for exchange, and refreshes the local status cache.
+//   4. UI renders the connected workspace. Tokens never leave the server.
+// ═════════════════════════════════════════════════════════════════════════
+
+function _slackRedirectUri(){
+  // Slack requires an exact-match redirect URI registered in the app config.
+  // Use origin + pathname (no hash, no query). On production this is
+  // https://app.pmroadmapper.com/. Whoever registers the Slack app at
+  // api.slack.com must add this exact string to "Redirect URLs".
+  return window.location.origin + window.location.pathname;
+}
+
+async function _slackApi(action, body){
+  body = body || {};
+  body.action = action;
+  if(!window.electronAPI || !window.electronAPI.supaRequest){
+    throw new Error('Supabase request helper unavailable');
+  }
+  var res = await window.electronAPI.supaRequest({
+    path:   '/functions/v1/slack-api',
+    method: 'POST',
+    body:   body,
+    token:  _accessToken || null
+  });
+  if(!res || !res.ok){
+    var msg = (res && res.data && res.data.error) || 'Slack API call failed';
+    throw new Error(msg);
+  }
+  if(res.data && res.data.error){ throw new Error(res.data.error); }
+  return res.data || {};
+}
+
+async function refreshSlackStatus(){
+  if(!appSettings.integrations) appSettings.integrations = {google:{},microsoft:{},slack:{}};
+  try {
+    var d = await _slackApi('status');
+    appSettings.integrations.slack = {
+      connected:  !!d.connected,
+      configured: !!d.configured,
+      client_id:  d.client_id || '',
+      workspaces: d.workspaces || []
+    };
+  } catch(e){
+    console.warn('[slack] status failed:', e && e.message);
+    appSettings.integrations.slack = {
+      connected:false, configured:false, client_id:'', workspaces:[],
+      error: (e && e.message) || ''
+    };
+  }
+  return appSettings.integrations.slack;
+}
+
+function connectSlack(){
+  var ig = (appSettings.integrations && appSettings.integrations.slack) || {};
+  if(!ig.configured){
+    showToast('Slack is not configured on the server yet. Ask the admin to set SLACK_CLIENT_ID and SLACK_CLIENT_SECRET.', 'error');
+    return;
+  }
+  if(!ig.client_id){
+    showToast('Slack client id missing from server response','error');
+    return;
+  }
+  // CSRF state — random token stashed in sessionStorage, verified on return.
+  var state = '';
+  try {
+    var arr = new Uint8Array(16);
+    (window.crypto || window.msCrypto).getRandomValues(arr);
+    for(var i=0;i<arr.length;i++){
+      var h = arr[i].toString(16); if(h.length<2) h = '0'+h;
+      state += h;
+    }
+  } catch(_){ state = String(Date.now()) + Math.random().toString(16).slice(2); }
+  try { sessionStorage.setItem('pmr_slack_oauth_state', state); } catch(_){}
+
+  var scopes = [
+    'chat:write',
+    'chat:write.public',
+    'channels:read',
+    'groups:read',
+    'team:read'
+  ].join(',');
+
+  var url = 'https://slack.com/oauth/v2/authorize'
+          + '?client_id='    + encodeURIComponent(ig.client_id)
+          + '&scope='        + encodeURIComponent(scopes)
+          + '&redirect_uri=' + encodeURIComponent(_slackRedirectUri())
+          + '&state='        + encodeURIComponent(state);
+
+  // Full-page redirect — simpler than a popup and avoids postMessage/CORS
+  // headaches. The SPA picks the code back up on next load inside
+  // _handleSlackOAuthCallback().
+  window.location.href = url;
+}
+
+async function disconnectSlack(teamId){
+  try {
+    await _slackApi('disconnect', { external_account_id: teamId });
+    showToast('Slack disconnected','success');
+    await openSlackIntegrations();  // re-render with fresh status
+  } catch(e){
+    showToast('Disconnect failed: ' + ((e && e.message) || ''), 'error');
+  }
+}
+
+async function sendSlackTestMessage(teamId){
+  var channel = prompt('Channel to post to (e.g. #general, or a channel ID):', '#general');
+  if(!channel) return;
+  try {
+    await _slackApi('post', {
+      external_account_id: teamId,
+      channel: channel.trim(),
+      text:    'Test message from Roadmap OS — your Slack connection is working.'
+    });
+    showToast('Sent to ' + channel, 'success');
+  } catch(e){
+    showToast('Send failed: ' + ((e && e.message) || ''), 'error');
+  }
+}
+
+async function _handleSlackOAuthCallback(){
+  try {
+    var qs = new URLSearchParams(window.location.search);
+    if(qs.get('slack_oauth') !== '1') return false;
+    var code     = qs.get('code');
+    var state    = qs.get('state');
+    var slackErr = qs.get('error');
+    // Strip the query params immediately — never leave the code in the URL.
+    try { history.replaceState(null, '', window.location.pathname); } catch(_){}
+
+    if(slackErr){
+      showToast('Slack denied the request: ' + slackErr, 'error');
+      return false;
+    }
+    if(!code){
+      showToast('Slack callback was missing a code', 'error');
+      return false;
+    }
+    var expectedState = '';
+    try { expectedState = sessionStorage.getItem('pmr_slack_oauth_state') || ''; } catch(_){}
+    try { sessionStorage.removeItem('pmr_slack_oauth_state'); } catch(_){}
+    if(expectedState && state !== expectedState){
+      showToast('Slack callback state mismatch — refusing for safety','error');
+      return false;
+    }
+    if(!_accessToken){
+      console.warn('[slack] callback received before sign-in, ignoring');
+      return false;
+    }
+    var d = await _slackApi('oauth_exchange', {
+      code: code,
+      redirect_uri: _slackRedirectUri()
+    });
+    await refreshSlackStatus();
+    var teamName = (d && d.team && d.team.name) || 'Slack';
+    showToast('Connected to ' + teamName, 'success');
+    return true;
+  } catch(e){
+    showToast('Slack connect failed: ' + ((e && e.message) || ''), 'error');
+    return false;
+  }
+}
+
+async function openSlackIntegrations(){
+  // Entry point — refreshes status then opens the modal.
+  await refreshSlackStatus();
+  openSlackIntegrationModal();
+}
+
+function openSlackIntegrationModal(){
+  var ex = document.getElementById('slackIntegModal');
+  if(ex) ex.remove();
+  var ov = document.createElement('div');
+  ov.id = 'slackIntegModal'; ov.className = 'modal-overlay'; ov.style.zIndex = '9500';
+  var modal = document.createElement('div'); modal.className = 'modal'; modal.style.width = '560px';
+
+  var hdr = document.createElement('div'); hdr.className = 'modal-hdr';
+  hdr.innerHTML = '<h2>Slack Integration</h2>';
+  var cx = document.createElement('button'); cx.className = 'close'; cx.textContent = 'x';
+  cx.onclick = function(){ ov.remove(); }; hdr.appendChild(cx);
+  modal.appendChild(hdr);
+
+  var body = document.createElement('div'); body.className = 'modal-body';
+  body.innerHTML = '<p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px">Connect a Slack workspace to share roadmap updates and initiative changes into a channel. Bot tokens are held on the server — your browser never sees them.</p>';
+
+  var ig = (appSettings.integrations && appSettings.integrations.slack) || { connected:false, configured:false, workspaces:[] };
+
+  if(ig.configured === false){
+    var warn = document.createElement('div');
+    warn.style.cssText = 'padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--muted);font-size:12px;margin-bottom:12px;line-height:1.5';
+    warn.textContent = 'Slack integration is not yet configured on this server. The administrator needs to create a Slack app at api.slack.com and set SLACK_CLIENT_ID and SLACK_CLIENT_SECRET in the Supabase project secrets.';
+    body.appendChild(warn);
+  }
+
+  if(ig.connected && ig.workspaces && ig.workspaces.length){
+    ig.workspaces.forEach(function(w){
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;background:var(--white)';
+      var left = document.createElement('div');
+      left.innerHTML = '<div style="font-weight:700;color:var(--text);font-size:14px">' + escHtml(w.name || w.team_id) + '</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px">Connected ' + (w.connected_at ? new Date(w.connected_at).toLocaleDateString() : '') + '</div>';
+      row.appendChild(left);
+      var btns = document.createElement('div');
+      btns.style.cssText = 'display:flex;gap:6px';
+      var testB = document.createElement('button');
+      testB.style.cssText = 'padding:7px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--text)';
+      testB.textContent = 'Test';
+      testB.onclick = function(){ sendSlackTestMessage(w.team_id); };
+      btns.appendChild(testB);
+      var disB = document.createElement('button');
+      disB.style.cssText = 'padding:7px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--white);color:#dc2626';
+      disB.textContent = 'Disconnect';
+      disB.onclick = function(){ disconnectSlack(w.team_id); };
+      btns.appendChild(disB);
+      row.appendChild(btns);
+      body.appendChild(row);
+    });
+    var addRow = document.createElement('button');
+    addRow.style.cssText = 'width:100%;padding:10px;border:1px dashed var(--border);border-radius:10px;background:var(--bg);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;margin-top:4px';
+    addRow.textContent = 'Connect another Slack workspace';
+    addRow.onclick = connectSlack;
+    body.appendChild(addRow);
+  } else {
+    var connectRow = document.createElement('div');
+    connectRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;background:var(--white)';
+    connectRow.innerHTML = '<div><div style="font-weight:700;color:var(--text);font-size:14px">Slack</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Not connected</div></div>';
+    var btn = document.createElement('button');
+    btn.style.cssText = 'padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:#fff';
+    if(ig.configured === false){
+      btn.style.background = 'var(--border)';
+      btn.style.borderColor = 'var(--border)';
+      btn.style.cursor = 'not-allowed';
+      btn.disabled = true;
+    }
+    btn.textContent = 'Connect Slack';
+    btn.onclick = connectSlack;
+    connectRow.appendChild(btn);
+    body.appendChild(connectRow);
+  }
+
+  var note = document.createElement('div');
+  note.style.cssText = 'margin-top:8px;padding:10px 12px;background:var(--bg);border-radius:8px;font-size:11px;color:var(--muted);line-height:1.5';
+  note.textContent = 'Roadmap OS requests chat:write and channels:read scopes. The bot can post messages to channels you invite it into — it cannot read message history.';
+  body.appendChild(note);
+
+  modal.appendChild(body);
+  var footer = document.createElement('div'); footer.className = 'modal-footer';
+  var close = document.createElement('button'); close.className = 'btn-cancel'; close.textContent = 'Close';
+  close.onclick = function(){ ov.remove(); };
+  footer.appendChild(close);
+  modal.appendChild(footer);
+  ov.appendChild(modal); document.body.appendChild(ov);
+}
+
 // ── MY CAPACITY VIEW ─────────────────────────────────────────────────────────
-var _capacityHoursPerWeek = 40;
+// v1.33.0: `_capacityHoursPerWeek` is now a legacy alias. All new code reads
+// from getCapHours() which is driven by appSettings.capacity. This var is
+// kept as a live getter for any older callsites that still reference it.
+Object.defineProperty(window, '_capacityHoursPerWeek', {
+  get: function(){ return getCapHours().hpw; },
+  configurable: true
+});
 var _capacityDrilldown = 'weekly'; // 'weekly' | 'monthly' | 'yearly'
 
 function renderCapacityView(){
@@ -22216,13 +22876,70 @@ function renderCapacityView(){
   });
   topRow.appendChild(drillRow);
 
-  var importBtn=document.createElement('button');
-  importBtn.style.cssText='padding:7px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--accent);background:var(--light-blue-bg);color:var(--accent);display:flex;align-items:center;gap:6px;transition:all .15s';
-  importBtn.innerHTML='<svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:-1px"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> Import from Calendar Screenshot';
-  importBtn.onmouseover=function(){importBtn.style.background='var(--accent)';importBtn.style.color='#fff';};
-  importBtn.onmouseout=function(){importBtn.style.background='var(--light-blue-bg)';importBtn.style.color='var(--accent)';};
-  importBtn.onclick=openCalendarScreenshotImport;
-  topRow.appendChild(importBtn);
+  // v1.33.0 — action cluster: settings + calendar integrations + screenshot
+  var actionCluster=document.createElement('div');
+  actionCluster.style.cssText='display:flex;gap:8px;align-items:center;flex-wrap:wrap';
+
+  function _mkBtn(label, iconPath, onClick, opts){
+    opts = opts || {};
+    var b=document.createElement('button');
+    var bg = opts.primary ? 'var(--accent)' : 'var(--white)';
+    var fg = opts.primary ? '#fff' : 'var(--text)';
+    var bd = opts.primary ? 'var(--accent)' : 'var(--border)';
+    b.style.cssText='padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid '+bd+';background:'+bg+';color:'+fg+';display:flex;align-items:center;gap:6px;transition:all .15s';
+    b.innerHTML='<svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round">'+iconPath+'</svg> '+label;
+    b.onclick=onClick;
+    return b;
+  }
+
+  // Hours-per-week setting — inline editable
+  var cap=getCapHours();
+  var settingsWrap=document.createElement('div');
+  settingsWrap.style.cssText='display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--border);border-radius:8px;background:var(--white);font-size:11px;color:var(--muted)';
+  settingsWrap.innerHTML='<svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>';
+  var hpwInput=document.createElement('input');
+  hpwInput.type='number'; hpwInput.min='1'; hpwInput.max='168'; hpwInput.step='0.5';
+  hpwInput.value=cap.hpw; hpwInput.title='Available hours per week';
+  hpwInput.style.cssText='width:52px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-weight:600;color:var(--text);background:var(--bg);text-align:center';
+  hpwInput.onchange=function(){
+    var v=parseFloat(hpwInput.value)||40;
+    if(!appSettings.capacity) appSettings.capacity={hoursPerWeek:40,hoursPerDay:8,workDays:5};
+    appSettings.capacity.hoursPerWeek=v;
+    appSettings.capacity.hoursPerDay=Math.round((v/(appSettings.capacity.workDays||5))*100)/100;
+    persistData(); renderCapacityView();
+    showToast('Capacity updated: '+v+'h/week','success');
+  };
+  settingsWrap.appendChild(hpwInput);
+  var hpwLbl=document.createElement('span'); hpwLbl.textContent='h / week'; hpwLbl.style.cssText='font-weight:600;color:var(--text);font-size:11px';
+  settingsWrap.appendChild(hpwLbl);
+  actionCluster.appendChild(settingsWrap);
+
+  // Calendar integration badge
+  var gConnected = !!(appSettings.integrations && appSettings.integrations.google && appSettings.integrations.google.connected);
+  var mConnected = !!(appSettings.integrations && appSettings.integrations.microsoft && appSettings.integrations.microsoft.connected);
+
+  var calBtn = _mkBtn(
+    (gConnected||mConnected) ? 'Sync Calendar' : 'Connect Calendar',
+    '<path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>',
+    openCalendarIntegrationModal,
+    { primary: !(gConnected||mConnected) }
+  );
+  actionCluster.appendChild(calBtn);
+
+  // Sync now (only if a provider is connected + token still valid)
+  if(gConnected||mConnected){
+    actionCluster.appendChild(_mkBtn('Sync Now',
+      '<path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>',
+      syncConnectedCalendarsNow,
+      { primary: true }));
+  }
+
+  // Screenshot fallback (existing)
+  actionCluster.appendChild(_mkBtn('Screenshot Import',
+    '<path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>',
+    openCalendarScreenshotImport));
+
+  topRow.appendChild(actionCluster);
   body.appendChild(topRow);
 
   if(_capacityDrilldown==='weekly') renderCapacityWeekly(body, weekStart);
@@ -22358,12 +23075,13 @@ function renderCapacityMonthly(body, weekStart){
   var year=weekStart.getFullYear();
   var month=weekStart.getMonth();
   var monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var cap=getCapHours();
 
   // Calculate working days in month (exclude weekends)
   var workingDays=0;
   var d=new Date(year,month,1);
   while(d.getMonth()===month){ if(d.getDay()!==0&&d.getDay()!==6) workingDays++; d.setDate(d.getDate()+1); }
-  var monthlyAvailable=workingDays*8;
+  var monthlyAvailable=workingDays*cap.hpd;
 
   var todos=_getTodosForMonth(year, month);
   var totalAllocated=0;
@@ -22440,13 +23158,14 @@ function renderCapacityYearly(body){
   secHdr.textContent='Monthly Breakdown';
   body.appendChild(secHdr);
 
+  var _yCap=getCapHours();
   for(var mi=0;mi<12;mi++){
     var mTodos=_getTodosForMonth(year,mi);
     var mAlloc=0; mTodos.forEach(function(t){mAlloc+=t.hours;});
     var workDays=0;
     var dd=new Date(year,mi,1);
     while(dd.getMonth()===mi){if(dd.getDay()!==0&&dd.getDay()!==6)workDays++;dd.setDate(dd.getDate()+1);}
-    body.appendChild(_capBar(mAlloc, workDays*8, monthNames[mi]+' '+year));
+    body.appendChild(_capBar(mAlloc, workDays*_yCap.hpd, monthNames[mi]+' '+year));
   }
 }
 
@@ -24808,6 +25527,20 @@ function openSettings(){
   });
   h+='</select></div>';
 
+  // v1.33.1: Integrations section — Slack OAuth management.
+  // Calendar integrations live on the Capacity view toolbar; Slack lives
+  // here in Settings because it's not capacity-specific.
+  h+='<div style="margin-bottom:16px;padding-top:16px;border-top:1px solid #e8edf7">';
+  h+='<div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:8px">Integrations</div>';
+  var _slk=(appSettings.integrations&&appSettings.integrations.slack)||{connected:false,configured:false,workspaces:[]};
+  var _slkCount=(_slk.workspaces||[]).length;
+  var _slkLabel=_slk.connected?(_slkCount+' Slack workspace'+(_slkCount===1?'':'s')+' connected'):(_slk.configured===false?'Not configured on server':'Not connected');
+  h+='<button onclick="document.getElementById(\'settingsOverlay\').remove();openSlackIntegrations()" style="width:100%;padding:10px 12px;background:var(--white);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px">';
+  h+='<span style="display:flex;align-items:center;gap:8px"><svg viewBox="0 0 20 20" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><path d="M6 10a2 2 0 110-4 2 2 0 010 4zm8 4a2 2 0 110-4 2 2 0 010 4zM10 6a2 2 0 110-4 2 2 0 010 4zm0 12a2 2 0 110-4 2 2 0 010 4z"/><path d="M6 10h8M10 6v8"/></svg> Slack</span>';
+  h+='<span style="font-size:10px;color:var(--muted);font-weight:600">'+_slkLabel+'</span>';
+  h+='</button>';
+  h+='</div>';
+
   // v1.32.0 FIX 15: Re-run onboarding button
   h+='<div style="margin-bottom:16px;padding-top:16px;border-top:1px solid #e8edf7">';
   h+='<button onclick="document.getElementById(\'settingsOverlay\').remove();showOnboarding()" style="width:100%;padding:8px;background:var(--surface-low);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:8px">Re-run Onboarding Tour</button>';
@@ -25334,7 +26067,13 @@ function persistData() {
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(function() {
     var customKPIs=[];KPI_TEMPLATE.forEach(function(g){g.items.forEach(function(k){if(k.custom) customKPIs.push({group:g.group,color:g.color,item:k});});});
-    window.electronAPI.saveData({ sections: sections, rows: rows, quarters: quarters, tabs_data: tabs_data, activeTabId: activeTabId, g2mData: g2mAllData, todoData: todoAllData, kpiData: kpiAllData, kpiCustomKPIs: customKPIs, ucrData: ucrAllData, timesheetData: timesheetData, capData: capData, artifactsData: artifactsData, brandGuideData: brandGuideData, artTemplates: artTemplates, documentRepository: documentRepository, taskLibrary: taskLibrary }).then(function(res) {
+    window.electronAPI.saveData({ sections: sections, rows: rows, quarters: quarters, tabs_data: tabs_data, activeTabId: activeTabId, g2mData: g2mAllData, todoData: todoAllData, kpiData: kpiAllData, kpiCustomKPIs: customKPIs, ucrData: ucrAllData, timesheetData: timesheetData, capData: capData, artifactsData: artifactsData, brandGuideData: brandGuideData, artTemplates: artTemplates, documentRepository: documentRepository, taskLibrary: taskLibrary,
+      // v1.33.0 — cross-device capacity + calendar integration sync.
+      settings: {
+        capacity:     (appSettings && appSettings.capacity)     || { hoursPerWeek:40, hoursPerDay:8, workDays:5 },
+        integrations: (appSettings && appSettings.integrations) || { google:{}, microsoft:{} }
+      }
+    }).then(function(res) {
       if (!el) return;
       if (res && res.ok) {
         el.textContent = '● Saved'; el.className = 'saved';
