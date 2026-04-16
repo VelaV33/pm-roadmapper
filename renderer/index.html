@@ -258,9 +258,19 @@ h1,h2,h3,h4{font-weight:700;letter-spacing:-0.02em;line-height:1.2;color:var(--t
 
 /* ── TOOLBAR (glassmorphic top bar) ── */
 .toolbar{background:rgba(249,249,250,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);position:fixed;top:0;left:0;right:0;z-index:5000;border-bottom:1px solid var(--border)}
-.toolbar-spacer{height:52px}
+.toolbar-spacer{height:56px}
+/* v1.35.0 Fix 2 — definitive global toolbar/header centering.
+   Reusable .page-toolbar class kept for new pages; legacy overlay headers
+   already get the same treatment via the existing .plans-topbar/.tpl-header
+   rules at line ~925. The 56px clearance ensures overlay headers never sit
+   behind the global toolbar (which is ~53px tall when the avatar is shown). */
+.page-toolbar{display:flex;align-items:center;justify-content:space-between;min-height:56px;padding:8px 20px;gap:10px;flex-wrap:wrap;box-sizing:border-box;border-bottom:1px solid var(--border)}
+.page-toolbar .toolbar-title{font-size:16px;font-weight:600;color:var(--text);white-space:nowrap;margin:0;padding:0;line-height:1}
+.page-toolbar .toolbar-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.page-toolbar > *{align-self:center;margin-top:0;margin-bottom:0}
+.page-toolbar button,.page-toolbar input,.page-toolbar select{margin:0;vertical-align:middle;padding:8px 14px;border-radius:8px;font-size:13px;line-height:1;box-sizing:border-box}
 /* ── LEFT SIDEBAR ── */
-.app-sidebar{position:fixed;top:52px;left:0;bottom:0;width:220px;background:var(--white);border-right:1px solid var(--border);z-index:4500;display:flex;flex-direction:column;overflow-y:auto;transition:transform .2s ease,width .2s ease;padding:16px 0;box-shadow:2px 0 16px rgba(15,27,61,.1)}
+.app-sidebar{position:fixed;top:56px;left:0;bottom:0;width:220px;background:var(--white);border-right:1px solid var(--border);z-index:4500;display:flex;flex-direction:column;overflow-y:auto;transition:transform .2s ease,width .2s ease;padding:16px 0;box-shadow:2px 0 16px rgba(15,27,61,.1)}
 .app-sidebar.collapsed{transform:translateX(-220px)}
 .app-sidebar .sidebar-logo{padding:0 16px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);margin-bottom:8px}
 .app-sidebar .sidebar-logo svg{flex-shrink:0}
@@ -512,7 +522,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 #previewFrame{width:100%;max-width:1200px;flex:1;border:none;border-radius:12px;background:#fff;min-height:0}
 
 /* ── G2M CHECKLIST ── */
-#g2mOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:4000;display:none;flex-direction:column;overflow:hidden}
+#g2mOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:4000;display:none;flex-direction:column;overflow:hidden}
 #g2mOverlay.open{display:flex}
 .g2m-header{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;border-bottom:1px solid var(--border)}
 .g2m-header h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
@@ -554,7 +564,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .g2m-links-row{display:flex;flex-wrap:wrap;align-items:center;gap:2px;min-height:0}
 
 /* ── TODO OVERLAY ── */
-#todoOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
+#todoOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
 #todoOverlay.open{display:flex}
 .todo-header{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;border-bottom:1px solid var(--border)}
 .todo-header h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
@@ -562,7 +572,11 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .todo-body{flex:1;overflow-y:auto;padding:28px 32px 60px;background:var(--bg)}
 .todo-item{display:flex;align-items:flex-start;gap:12px;padding:14px 18px;background:var(--white);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;transition:all .15s;box-shadow:var(--shadow-card)}
 .todo-item:hover{box-shadow:0 4px 12px rgba(0,0,0,.06);border-color:var(--accent)}
-.todo-item.done{opacity:.55;background:var(--surface-low)}
+/* v1.35.0 Fix 10 — opacity .55 made checked-task text invisible in light mode.
+   Use .75 + a stronger muted foreground so the strikethrough is still legible. */
+.todo-item.done{opacity:.75;background:var(--surface-low)}
+.todo-item.done .todo-text{color:#475569}
+body.dark-mode .todo-item.done .todo-text{color:#94a3b8}
 .todo-item .todo-check{width:20px;height:20px;border-radius:6px;border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-size:12px;color:transparent;transition:all .15s}
 .todo-item.done .todo-check{background:var(--g1);border-color:var(--g1);color:#fff}
 .todo-item .todo-text{flex:1;font-size:13px;color:var(--text);line-height:1.5}
@@ -616,7 +630,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .modal-todo-outstanding .todo-out-item{font-size:11px;color:#991b1b;padding:2px 0;display:flex;align-items:center;gap:4px}
 
 /* ── KPI OVERLAY ── */
-#kpiOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
+#kpiOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
 #kpiOverlay.open{display:flex}
 .kpi-header{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;gap:16px;flex-shrink:0;flex-wrap:wrap;border-bottom:1px solid var(--border)}
 .kpi-header h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
@@ -630,7 +644,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .kpi-score-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(45,107,244,.1)}
 
 /* ── UCR OVERLAY ── */
-#ucrOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
+#ucrOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
 #ucrOverlay.open{display:flex}
 .ucr-header{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;border-bottom:1px solid var(--border)}
 .ucr-header h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
@@ -683,9 +697,9 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .ts-kpi-sel{font-family:inherit}
 
 /* CapacityIQ */
-#adminOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
+#adminOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
 #adminOverlay.open{display:flex}
-#platformAdminOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
+#platformAdminOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
 #platformAdminOverlay.open{display:flex}
 .pa-tab-bar{display:flex;background:#f1f5f9;border-radius:9999px;padding:4px;margin-bottom:18px;width:fit-content}
 .pa-tab{background:transparent;color:var(--muted);border:none;font-size:12px;font-weight:700;padding:7px 18px;border-radius:9999px;cursor:pointer;transition:all .15s}
@@ -744,9 +758,9 @@ body.dark-mode .pa-org-filter{background:var(--surface-low);border-color:var(--b
 .auth-btn.microsoft{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:none;margin-top:8px}
 .auth-btn.microsoft:hover{background:rgba(255,255,255,.15)}
 .auth-btn.microsoft svg{width:18px;height:18px;flex-shrink:0}
-#insightsOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
+#insightsOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
 #insightsOverlay.open{display:flex}
-#reportsOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
+#reportsOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
 #reportsOverlay.open{display:flex}
 .rpt-header{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);color:var(--text);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:1px solid var(--border)}
 .rpt-header h2{font-weight:800;font-size:20px;letter-spacing:-0.03em;color:var(--text)}
@@ -761,7 +775,7 @@ body.dark-mode .pa-org-filter{background:var(--surface-low);border-color:var(--b
 .rpt-stat{display:flex;flex-direction:column;align-items:center;padding:16px;text-align:center}
 .rpt-stat-value{font-size:28px;font-weight:700;letter-spacing:-0.02em}
 .rpt-stat-label{font-size:11px;font-weight:500;color:var(--muted);margin-top:2px}
-#capOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
+#capOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
 #capOverlay.open{display:flex}
 .cap-sidebar{width:220px;background:var(--navy);border-right:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
 .cap-sidebar-item{padding:10px 16px;font-size:13px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .15s;border-left:3px solid transparent}
@@ -771,7 +785,7 @@ body.dark-mode .pa-org-filter{background:var(--surface-low);border-color:var(--b
 .cap-sidebar-item:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;color:rgba(255,255,255,.95)}
 
 /* ── Top 10 Priorities overlay ──────────────────────────────────────── */
-#top10Overlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
+#top10Overlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
 #top10Overlay.open{display:flex}
 .top10-header{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .top10-body{flex:1;overflow-y:auto;padding:28px 32px}
@@ -788,7 +802,7 @@ body.dark-mode .top10-card{background:var(--white);border-color:var(--border)}
 body.dark-mode .top10-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.3)}
 
 /* ── Template Library overlay ───────────────────────────────────────── */
-#templateLibraryOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3600;display:none;flex-direction:column;overflow:hidden}
+#templateLibraryOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:4600;display:none;flex-direction:column;overflow:hidden}
 #templateLibraryOverlay.open{display:flex}
 .tpl-header{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .tpl-header h2{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.03em;display:flex;align-items:center;gap:10px;margin:0}
@@ -842,7 +856,7 @@ body.dark-mode .tpl-import-box{background:var(--bg);border-color:var(--border)}
 body.dark-mode .tpl-task-table th{background:var(--bg)}
 
 /* ── Prioritization overlay ──────────────────────────────────────────── */
-#prioritizationOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
+#prioritizationOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
 #prioritizationOverlay.open{display:flex}
 .prio-sidebar{width:220px;background:var(--navy);border-right:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
 .prio-sidebar-item{padding:10px 16px;font-size:13px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .15s;border-left:3px solid transparent}
@@ -899,7 +913,7 @@ body.dark-mode .tpl-task-table th{background:var(--bg)}
 .prio-empty h3{color:var(--text);margin-bottom:6px;font-weight:700}
 
 /* ── Plans (Project Planner) overlay ────────────────────────────────────── */
-#plansOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
+#plansOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
 #plansOverlay.open{display:flex}
 .plans-sidebar{width:240px;background:var(--navy);border-right:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
 .plans-sidebar-item{padding:12px 16px;font-size:13px;color:rgba(255,255,255,.7);cursor:pointer;border-left:3px solid transparent;transition:all .15s;display:flex;flex-direction:column;gap:2px}
@@ -914,20 +928,48 @@ body.dark-mode .tpl-task-table th{background:var(--bg)}
 .plans-sidebar-item .plan-actions button:hover{color:#fff}
 .plans-main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
 .plans-topbar{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;min-height:64px;gap:14px;border-bottom:1px solid var(--border);flex-shrink:0}
-/* v1.34.0 Fix 6 — vertically center every toolbar child regardless of its
-   own internal layout, and neutralize stray top-margins that caused buttons
-   to sit higher than the plan name field. */
+/* v1.34.0 Fix 6 (revised) — bulletproof vertical centering in ALL page
+   header / toolbar bars. Three root causes were making buttons ride high:
+     a) h2 browser-default margins (~0.83em each) inflating the flex line
+     b) h2 line-height creating an asymmetric line box when it holds an SVG
+     c) SVGs inside h2 using vertical-align hacks instead of flex centering
+   Fix: zero margins, tighten line-height, make h2 a flex row so its icon
+   and text participate in the same cross-axis, and force every direct child
+   of every header bar to align-self:center. */
 .plans-topbar > *, .cap-topbar > *, .kpi-header > *, .art-header > *,
 .g2m-header > *, .todo-header > *, .prio-topbar > *, .ucr-header > *,
-.rpt-header > *, .tpl-header > *, .prio-header > *{
+.rpt-header > *, .tpl-header > *, .prio-header > *,
+.todo-toolbar > *, .g2m-toolbar > *, .art-toolbar > *, .tpl-toolbar > *,
+.ucr-toolbar > *, .tpl-task-editor-header > *{
   margin-top:0 !important;
   margin-bottom:0 !important;
   align-self:center;
 }
+.plans-topbar h2, .cap-topbar h2, .kpi-header h2, .art-header h2,
+.g2m-header h2, .todo-header h2, .prio-topbar h2, .ucr-header h2,
+.rpt-header h2, .tpl-header h2, .prio-header h2{
+  margin:0 !important;
+  display:flex;
+  align-items:center;
+  line-height:1.15;
+}
+.plans-topbar h2 svg, .cap-topbar h2 svg, .kpi-header h2 svg,
+.art-header h2 svg, .g2m-header h2 svg, .todo-header h2 svg,
+.prio-topbar h2 svg, .ucr-header h2 svg, .rpt-header h2 svg,
+.tpl-header h2 svg, .prio-header h2 svg{
+  flex-shrink:0;
+  vertical-align:middle;
+}
 .plans-topbar button, .plans-topbar input, .plans-topbar select,
 .cap-topbar button, .cap-topbar input, .cap-topbar select,
 .kpi-header button, .kpi-header input, .kpi-header select,
-.art-header button, .art-header input, .art-header select{
+.art-header button, .art-header input, .art-header select,
+.todo-header button, .todo-header input, .todo-header select,
+.g2m-header button, .g2m-header input, .g2m-header select,
+.prio-topbar button, .prio-topbar input, .prio-topbar select,
+.ucr-header button, .ucr-header input, .ucr-header select,
+.rpt-header button, .rpt-header input, .rpt-header select,
+.tpl-header button, .tpl-header input, .tpl-header select{
   vertical-align:middle;
 }
 .plan-view-toggle{background:transparent;border:none;font-size:11px;font-weight:700;padding:6px 14px;border-radius:9999px;cursor:pointer;color:var(--muted);transition:all .15s}
@@ -1122,7 +1164,7 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
 .excel-col-row.mapped select.excel-mapping{border-color:var(--accent);color:var(--accent)}
 
 /* Feedback Inbox overlay */
-#feedbackOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
+#feedbackOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
 #feedbackOverlay.open{display:flex}
 .fb-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:18px 22px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.04);transition:all .15s}
 .fb-card:hover{box-shadow:0 4px 14px rgba(15,27,61,.06)}
@@ -1221,7 +1263,7 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
 .role-manage-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
 
 /* ── ARTIFACTS OVERLAY ── */
-#artOverlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
+#artOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
 #artOverlay.open{display:flex}
 .art-header{background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;border-bottom:1px solid var(--border)}
 .art-header h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
@@ -1754,8 +1796,6 @@ body.dark-mode .onboard-card{background:#1e293b}
       <!-- Cloud sync status (click to force sync) -->
       <span id="cloudSyncStatusHeader" title="Click to sync now"
             style="display:none;font-size:11px;font-weight:600;padding:6px 12px;border-radius:9999px;border:1px solid transparent;cursor:pointer;user-select:none">&#9729;</span>
-      <!-- v1.32.0 FIX 10: Roadmap owner + collaborators -->
-      <span id="roadmapOwnerBadge" style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px"></span>
       <!-- Collaboration -->
       <button onclick="openShare()" aria-label="Share roadmap" title="Share" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg></span> Share</button>
       <button onclick="openNotifications()" id="notifBtn" aria-label="Notifications" title="Notifications" style="background:var(--white);border:1px solid var(--outline-var);color:var(--muted);border-radius:9999px;padding:8px;font-size:12px;cursor:pointer;transition:all .15s;position:relative;display:flex;align-items:center" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg></span><span id="notifBadge" style="display:none;position:absolute;top:-2px;right:-2px;background:#ef4444;color:#fff;font-size:8px;font-weight:700;min-width:16px;height:16px;border-radius:9999px;align-items:center;justify-content:center;padding:0 3px"></span></button>
@@ -1814,10 +1854,6 @@ body.dark-mode .onboard-card{background:#1e293b}
   <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openPrioritization()">
     <svg viewBox="0 0 24 24"><path d="M3 4h18M3 12h12M3 20h6"/></svg>
     Prioritization
-  </button>
-  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openTop10()">
-    <svg viewBox="0 0 24 24"><path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-    Top 10 Priorities
   </button>
   <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openPlans()">
     <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h.01M9 12h.01M15 12h.01m-6 4h6"/></svg>
@@ -2392,8 +2428,8 @@ body.dark-mode .onboard-card{background:#1e293b}
 <!-- ADMIN OVERLAY -->
 <div id="adminOverlay">
   <div style="background:rgba(249,249,250,.9);backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0">
-    <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.03em;color:var(--text)">User Management</h2>
-    <button onclick="closeAdmin()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">&times;</button>
+    <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.03em;color:var(--text);margin:0">User Management</h2>
+    <button onclick="closeAdmin()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;align-self:center">&times;</button>
   </div>
   <div id="adminBody" style="flex:1;overflow-y:auto;padding:28px 32px"></div>
 </div>
@@ -2401,8 +2437,8 @@ body.dark-mode .onboard-card{background:#1e293b}
 <!-- PLATFORM ADMIN OVERLAY -->
 <div id="platformAdminOverlay">
   <div style="background:rgba(249,249,250,.9);backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0">
-    <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.03em;color:var(--text)">Platform Admin</h2>
-    <button onclick="closePlatformAdmin()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">&times;</button>
+    <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.03em;color:var(--text);margin:0">Platform Admin</h2>
+    <button onclick="closePlatformAdmin()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;align-self:center">&times;</button>
   </div>
   <div id="platformAdminBody" style="flex:1;overflow-y:auto;padding:28px 32px"></div>
 </div>
@@ -2410,8 +2446,8 @@ body.dark-mode .onboard-card{background:#1e293b}
 <!-- INSIGHTS OVERLAY -->
 <div id="insightsOverlay">
   <div style="background:rgba(249,249,250,.9);backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0">
-    <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.03em;color:var(--text)">Insights</h2>
-    <button onclick="closeInsights()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">&times;</button>
+    <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.03em;color:var(--text);margin:0">Insights</h2>
+    <button onclick="closeInsights()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;align-self:center">&times;</button>
   </div>
   <div id="insightsBody" style="flex:1;overflow-y:auto;padding:28px 32px"></div>
 </div>
@@ -2546,18 +2582,7 @@ body.dark-mode .onboard-card{background:#1e293b}
 </div>
 
 <!-- ── TOP 10 PRIORITIES OVERLAY ──────────────────────────────────────────── -->
-<div id="top10Overlay">
-  <div class="top10-header">
-    <h2 style="color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em;display:flex;align-items:center;gap:10px">
-      <svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
-      Top 10 Priorities
-    </h2>
-    <div style="margin-left:auto;display:flex;gap:8px">
-      <button onclick="closeTop10()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;transition:color .12s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">&times;</button>
-    </div>
-  </div>
-  <div class="top10-body" id="top10Body"></div>
-</div>
+<!-- v1.35.0 Fix 8 — standalone Top 10 overlay removed; content lives in Prioritisation. -->
 
 <!-- ── TEMPLATE LIBRARY OVERLAY ──────────────────────────────────────────── -->
 <div id="templateLibraryOverlay">
@@ -2574,6 +2599,11 @@ body.dark-mode .onboard-card{background:#1e293b}
   </div>
   <div class="tpl-toolbar">
     <input type="text" class="tpl-search" id="tplSearchInput" placeholder="Search templates by name, category, or tags..." oninput="renderTemplateLibrary()">
+    <select id="tplScopeFilter" onchange="renderTemplateLibrary()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--text);font-size:13px;font-weight:500;font-family:inherit">
+      <option value="">All Templates</option>
+      <option value="platform">Platform</option>
+      <option value="organization">My Organisation</option>
+    </select>
     <select id="tplCategoryFilter" onchange="renderTemplateLibrary()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--text);font-size:13px;font-weight:500;font-family:inherit">
       <option value="">All Categories</option>
     </select>
@@ -9214,7 +9244,7 @@ function showSubscriptionBanner(status){
   if(existing) existing.remove();
   var banner=document.createElement('div');
   banner.id='subscriptionBanner';
-  banner.style.cssText='position:fixed;top:52px;left:0;right:0;z-index:9000;padding:10px 20px;text-align:center;font-size:13px;font-weight:600;';
+  banner.style.cssText='position:fixed;top:56px;left:0;right:0;z-index:9000;padding:10px 20px;text-align:center;font-size:13px;font-weight:600;';
   if(status==='past_due'){
     banner.style.background='#fef3c7';
     banner.style.color='#92400e';
@@ -9288,7 +9318,18 @@ function showPremiumGate(container){
 
 // ── COMPETITIVE ANALYSIS ─────────────────────────────────────────────────────
 var _compTimer=null;
-var _compPreset='fleet'; // default industry preset
+// v1.35.0 Fix 6 — research areas are per-user. Built-in 'fleet' preset stays
+// available for users who want it (e.g. Netstar, fleet operators), but new
+// users default to 'generic' so the page doesn't surface industry-specific
+// areas they didn't ask for. Custom presets are already stored per-user via
+// localStorage('pmr_custom_presets').
+var _compPreset = (function(){
+  try {
+    var saved = localStorage.getItem('pmr_default_preset');
+    if (saved) return saved;
+  } catch(_){}
+  return 'generic';
+})();
 var _customPresetAreas=null; // when a custom preset is active, holds its areas
 
 var FLEET_RESEARCH_AREAS=[
@@ -9748,7 +9789,9 @@ function buildNewAnalysisView(container){
   if(_compPreset==='fleet') activeAreas=FLEET_RESEARCH_AREAS;
   else if(_compPreset==='generic') activeAreas=GENERIC_RESEARCH_AREAS;
   else if(_customPresetAreas) activeAreas=_customPresetAreas;
-  else activeAreas=FLEET_RESEARCH_AREAS;
+  else activeAreas=GENERIC_RESEARCH_AREAS;
+  // v1.35.0 Fix 6 — remember the user's preset choice for next session
+  try { localStorage.setItem('pmr_default_preset', _compPreset); } catch(_){}
   activeAreas.forEach(function(area){
     var lbl=document.createElement('label');
     var cb=document.createElement('input');cb.type='checkbox';cb.value=area.key;cb.checked=true;
@@ -15497,15 +15540,25 @@ async function unlinkFeedbackFromRow(itemId){
 
 function openFeedbackShareLinkModal(){
   if(!_currentUser){ showToast('Sign in first','error'); return; }
-  // The static feedback page is hosted in the public/ folder of the repo.
-  // Since the user can host it on GitHub Pages, Netlify, or anywhere, we
-  // give them the URL pattern to use AND the raw query-string params they
-  // need so they can paste it into any host.
+  // v1.35.0 Fix 9 — feedback.html is now bundled into the Vercel build via
+  // web/static/feedback.html, so when the app runs in a browser we can build
+  // a same-origin link that just works (no GitHub Pages required). When the
+  // app runs in Electron (file://), we fall back to the deployed Vercel URL.
   var ownerId = _currentUser.id;
   var supabaseUrl = SUPABASE_URL;
   var qs = '?supabase=' + encodeURIComponent(supabaseUrl) + '&owner=' + encodeURIComponent(ownerId);
-  var ghPagesUrl = 'https://velav33.github.io/pm-roadmapper/feedback.html' + qs;
-  var rawUrl = 'feedback.html' + qs;
+
+  var origin = '';
+  try {
+    if (window.location && window.location.protocol && window.location.protocol.indexOf('http') === 0) {
+      origin = window.location.origin;
+    }
+  } catch(_){}
+  // Default to a placeholder Vercel domain when we can't infer one — user can
+  // edit the field directly before sharing.
+  var fallbackOrigin = 'https://app.pmroadmapper.com';
+  var publicUrl = (origin || fallbackOrigin) + '/feedback.html' + qs;
+  var isSameOrigin = !!origin;
 
   var html = '<div class="plan-modal-backdrop" onclick="if(event.target===this) closeFeedbackShareLinkModal()">'+
     '<div class="plan-modal" style="width:560px">'+
@@ -15513,11 +15566,12 @@ function openFeedbackShareLinkModal(){
       '<div class="plan-modal-body">'+
         '<div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5">Paste this link anywhere &mdash; email signature, Slack, intranet, customer portal &mdash; and submissions will land directly in your Feedback Inbox.</div>'+
         '<label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Public submission URL</label>'+
-        '<input type="text" id="fbShareUrlInp" readonly value="'+escHtml(ghPagesUrl)+'" onclick="this.select()" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9999px;font-size:12px;font-family:Courier New,monospace;color:var(--text);outline:none;background:#f8fafc">'+
+        '<input type="text" id="fbShareUrlInp" value="'+escHtml(publicUrl)+'" onclick="this.select()" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9999px;font-size:12px;font-family:Courier New,monospace;color:var(--text);outline:none;background:#f8fafc">'+
         '<button class="prio-btn primary" style="width:100%;margin-top:10px" onclick="copyFeedbackShareUrl()">Copy link</button>'+
-        '<div style="margin-top:18px;padding:12px 14px;background:#fef3c7;border:1px solid #fde68a;border-radius:10px;font-size:11px;color:#92400e;line-height:1.5">'+
-          '<strong>Setup note:</strong> the link above assumes you\'ve hosted the static <code>public/feedback.html</code> file from the repo on GitHub Pages. If you haven\'t set that up yet, host it on Netlify, Vercel, or any static host and replace the domain in the URL.'+
-        '</div>'+
+        (isSameOrigin
+          ? '<div style="margin-top:18px;padding:12px 14px;background:#dcfce7;border:1px solid #86efac;border-radius:10px;font-size:11px;color:#166534;line-height:1.5"><strong>Ready to share.</strong> This link is served from the same domain as the app, so it works out of the box.</div>'
+          : '<div style="margin-top:18px;padding:12px 14px;background:#fef3c7;border:1px solid #fde68a;border-radius:10px;font-size:11px;color:#92400e;line-height:1.5"><strong>Edit the domain</strong> above to match your deployed app URL. The page itself ships with the web build at <code>/feedback.html</code>.</div>'
+        )+
       '</div>'+
       '<div class="plan-modal-footer">'+
         '<button class="prio-btn primary" onclick="closeFeedbackShareLinkModal()">Done</button>'+
@@ -19764,7 +19818,7 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 
 function closeAllOverlays(){
-  ['g2mOverlay','todoOverlay','kpiOverlay','ucrOverlay','capOverlay','artOverlay','previewOverlay','reportsOverlay','insightsOverlay','adminOverlay','platformAdminOverlay','prioritizationOverlay','plansOverlay','feedbackOverlay','top10Overlay','templateLibraryOverlay'].forEach(function(id){
+  ['g2mOverlay','todoOverlay','kpiOverlay','ucrOverlay','capOverlay','artOverlay','previewOverlay','reportsOverlay','insightsOverlay','adminOverlay','platformAdminOverlay','prioritizationOverlay','plansOverlay','feedbackOverlay','templateLibraryOverlay'].forEach(function(id){
     var el=document.getElementById(id);
     if(el) el.classList.remove('open');
   });
@@ -24281,21 +24335,60 @@ function showCreateTemplate(){
     });
   });
 
+  // v1.35.0 Fix 10 — pull tasks from EVERY template source, not just CapacityIQ
+  // task types and G2M. Adds an "All Templates" group spanning platform +
+  // organisation templates so the picker is consistent with the rest of the
+  // app. Also widens the source set with the central task library.
+  try {
+    if (typeof getAllTemplates === 'function') {
+      var seenAllNames = {};
+      allTasks.forEach(function(t){ seenAllNames[(t.name||'').toLowerCase()] = 1; });
+      getAllTemplates().forEach(function(tpl){
+        (tpl.tasks || []).forEach(function(tk){
+          var nm = (tk.name || '').toLowerCase();
+          if (!nm || seenAllNames[nm]) return;
+          seenAllNames[nm] = 1;
+          allTasks.push({
+            id: 'tpl_' + tpl.id + '_' + nm.replace(/[^a-z0-9]/g, '_').slice(0, 40),
+            name: tk.name,
+            cat: tpl.name,
+            source: tpl.source === 'platform' ? 'Platform' : 'Organisation',
+            hours: tk.hours || 0
+          });
+        });
+      });
+    }
+    if (typeof taskLibrary !== 'undefined' && Array.isArray(taskLibrary)) {
+      taskLibrary.forEach(function(e){
+        var nm = (e.name || '').toLowerCase();
+        if (!nm) return;
+        allTasks.push({
+          id: 'lib_' + (e.id || nm.replace(/[^a-z0-9]/g, '_').slice(0, 40)),
+          name: e.name,
+          cat: e.category || 'Task Library',
+          source: 'Library',
+          hours: e.hours || 0
+        });
+      });
+    }
+  } catch(_){}
+
   var form=document.createElement('div');form.className='cap-card';form.id='capNewTplForm';
   var html='<h3>Create New Template</h3>';
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:12px">'+
+  // v1.35.0 Fix 10 — icon field removed per spec; the schema still carries
+  // an `icon` property defaulting to 'clipboard' inside confirmCreateTemplate.
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'+
     '<div><label style="font-size:9px;color:var(--muted);display:block;margin-bottom:3px">TEMPLATE NAME</label><input id="capTplName" class="cap-input" placeholder="e.g. New IoT Device" style="width:100%"></div>'+
-    '<div><label style="font-size:9px;color:var(--muted);display:block;margin-bottom:3px">DESCRIPTION</label><input id="capTplDesc" class="cap-input" placeholder="Description..." style="width:100%"></div>'+
-    '<div><label style="font-size:9px;color:var(--muted);display:block;margin-bottom:3px">ICON</label><input id="capTplIcon" class="cap-input" value="clipboard" style="width:50px;text-align:center"></div></div>';
-  html+='<div style="font-size:10px;font-weight:700;color:#94a3b8;margin-bottom:6px;text-transform:uppercase">Select tasks to include:</div>';
-  html+='<div style="max-height:300px;overflow-y:auto;border:1px solid #475569;border-radius:6px;padding:8px">';
+    '<div><label style="font-size:9px;color:var(--muted);display:block;margin-bottom:3px">DESCRIPTION</label><input id="capTplDesc" class="cap-input" placeholder="Description..." style="width:100%"></div></div>';
+  html+='<div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase">Select tasks to include:</div>';
+  html+='<div style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--white)">';
   var lastCat='';
   allTasks.forEach(function(t,i){
     if(t.cat!==lastCat){
       lastCat=t.cat;
-      html+='<div style="font-size:9px;font-weight:700;color:#0d9488;text-transform:uppercase;margin:8px 0 4px;padding-top:4px;border-top:1px solid #334155">'+t.cat+(t.source==='G2M'?' (G2M)':'')+'</div>';
+      html+='<div style="font-size:9px;font-weight:700;color:var(--accent);text-transform:uppercase;margin:8px 0 4px;padding-top:4px;border-top:1px solid var(--border)">'+escHtml(t.cat)+(t.source && t.source!=='Task Type'?' \u00B7 '+escHtml(t.source):'')+'</div>';
     }
-    html+='<label style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:11px;color:#e2e8f0;cursor:pointer"><input type="checkbox" data-tpl-task="'+t.id+'"> '+t.name+(t.hours?' <span style="color:#64748b">('+t.hours+'h)</span>':'')+'</label>';
+    html+='<label style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:12px;color:var(--text);cursor:pointer"><input type="checkbox" data-tpl-task="'+escHtml(t.id)+'"> '+escHtml(t.name)+(t.hours?' <span style="color:var(--muted)">('+t.hours+'h)</span>':'')+'</label>';
   });
   html+='</div>';
   html+='<div style="margin-top:10px;display:flex;gap:8px"><button class="cap-btn primary" onclick="confirmCreateTemplate()">Create Template</button><button class="cap-btn" onclick="document.getElementById(\'capNewTplForm\').remove()">Cancel</button></div>';
@@ -24306,7 +24399,8 @@ function confirmCreateTemplate(){
   var name=document.getElementById('capTplName').value.trim();
   if(!name) return;
   var desc=document.getElementById('capTplDesc').value.trim();
-  var icon=document.getElementById('capTplIcon').value||'clipboard';
+  // v1.35.0 Fix 10 — icon field removed from UI; schema keeps a default
+  var icon='clipboard';
   var selectedIds=[];
   document.querySelectorAll('[data-tpl-task]:checked').forEach(function(cb){selectedIds.push(cb.dataset.tplTask);});
   if(selectedIds.length===0) return;
@@ -24359,16 +24453,18 @@ function capExportDashboard(){
 
 // ══════════════════════════════════════════════════════════════════════════════
 // ── TOP 10 PRIORITIES ──────────────────────────────────────────────────────
-// Derives the top 10 highest-priority initiatives from the `rows` array.
-// Scoring: priority weight (P1=30, P2=20, P3=10) + status weight (At Risk=15, Delayed=10, In Progress=5).
+// v1.35.0 Fix 8 — standalone Top 10 page removed. Content lives in
+// Prioritisation overlay (renderPrioTop10Tab). openTop10/closeTop10 kept as
+// thin redirects so any saved deeplink (#top10) or third-party caller still
+// resolves to the right place.
 function openTop10(){
-  document.getElementById('top10Overlay').classList.add('open');
-  updateNavActive('');
-  renderTop10();
+  _prioPage = 'top10';
+  if (typeof openPrioritization === 'function') openPrioritization();
 }
 function closeTop10(){
-  document.getElementById('top10Overlay').classList.remove('open');
+  if (typeof closePrioritization === 'function') closePrioritization();
 }
+function _top10ScoreLegacy(){ /* superseded by _top10Score */ }
 function _top10Score(row){
   var prioW = {P1:30,P2:20,P3:10};
   var statW = {'At Risk':15,'Delayed':10,'In Progress':5,'Not Started':3,'Complete':1};
@@ -24465,12 +24561,8 @@ function renderPrioTop10Tab(){
   content.innerHTML = html;
 }
 
-// Also redirect openTop10 to open Prioritisation with top10 tab
-var _origOpenTop10 = openTop10;
-openTop10 = function(){
-  _prioPage = 'top10';
-  openPrioritization();
-};
+// v1.35.0 Fix 8 — standalone Top 10 overlay removed. openTop10 already
+// redirects to openPrioritization at definition site (see above).
 
 // ── ARTIFACTS / COLLATERAL ──────────────────────────────────────────────────
 
@@ -26997,6 +27089,8 @@ function renderTemplateLibrary() {
 
   var search = (document.getElementById('tplSearchInput').value || '').toLowerCase();
   var catFilter = document.getElementById('tplCategoryFilter').value;
+  var scopeFilterEl = document.getElementById('tplScopeFilter');
+  var scopeFilter = scopeFilterEl ? scopeFilterEl.value : '';
 
   // Populate category dropdown
   var catSel = document.getElementById('tplCategoryFilter');
@@ -27016,6 +27110,12 @@ function renderTemplateLibrary() {
   // Filter templates
   var filtered = _tplCache.filter(function(t) {
     if (catFilter && t.category !== catFilter) return false;
+    if (scopeFilter) {
+      // Treat 'team' as part of 'organization' for the simplified filter,
+      // and any non-platform scope (incl. local_ saved templates) as 'organization'.
+      var effectiveScope = (t.scope === 'platform') ? 'platform' : 'organization';
+      if (effectiveScope !== scopeFilter) return false;
+    }
     if (search) {
       var hay = (t.name + ' ' + t.category + ' ' + (t.tags || []).join(' ') + ' ' + (t.description || '')).toLowerCase();
       if (hay.indexOf(search) < 0) return false;
@@ -27075,10 +27175,20 @@ function _tplCardHtml(t) {
   var iconSvg = '<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:' + catColor + ';fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>';
 
   var escapedId = (t.id || '').toString().replace(/'/g, "\\'");
+  var isPlatform = (t.scope === 'platform');
+  var typeBadge = isPlatform
+    ? '<span class="tpl-badge" style="background:#64748b22;color:#475569;border:1px solid #cbd5e1">Platform</span>'
+    : '<span class="tpl-badge" style="background:#6366f122;color:#4f46e5;border:1px solid #c7d2fe">My Organisation</span>';
+  var sourceLabel = '';
+  if (t.source_template_name) {
+    sourceLabel = '<div class="tpl-card-desc" style="font-size:10px;color:var(--muted);margin-top:-4px">Customised from: ' + _escHtml(t.source_template_name) + '</div>';
+  }
   return '<div class="tpl-card" onclick="tplPreview(\'' + escapedId + '\')">' +
     '<div class="tpl-card-name">' + iconSvg + _escHtml(t.name) + '</div>' +
     '<div class="tpl-card-desc">' + _escHtml(t.description || '') + '</div>' +
+    sourceLabel +
     '<div class="tpl-card-meta">' +
+      typeBadge +
       '<span class="tpl-badge" style="background:' + catColor + '22;color:' + catColor + '">' + _escHtml(t.category) + '</span>' +
       '<span class="tpl-stat">' + (t.task_count || (t.tasks || []).length) + ' tasks</span>' +
       '<span class="tpl-stat">' + Math.round(t.total_hours || 0) + 'h total</span>' +
@@ -27100,24 +27210,55 @@ function tplPreview(templateId) {
   renderTemplateLibrary();
 }
 
+// v1.35.0 Fix 3 — interactive editor state for the template preview.
+// Each entry: { name, hours_base, workstream, role, complexity, target_module,
+//               description, checked, source: 'template'|'custom'|'library' }
+var _tplEditorWorking = [];
+
 function renderTemplatePreview(body) {
   var t = _tplPreviewData;
   if (!t) return;
-  var tasks = t.tasks || [];
-  var taskCount = tasks.length;
-  var totalHours = tasks.reduce(function(s, tk) { return s + (tk.hours_base || 0); }, 0);
+
+  // Initialise the working set from the template's tasks (only on first render
+  // for this template). Subsequent renders preserve user edits.
+  if (!_tplEditorWorking.length || _tplEditorWorking._sourceTemplateId !== (t.id || t.name)) {
+    _tplEditorWorking = (t.tasks || []).map(function(tk){
+      return {
+        name: tk.name || '',
+        hours_base: tk.hours_base || 0,
+        workstream: tk.workstream || '',
+        role: tk.role || '',
+        complexity: tk.complexity || '',
+        target_module: tk.target_module || 'plans',
+        description: tk.description || '',
+        checked: true,
+        source: 'template'
+      };
+    });
+    _tplEditorWorking._sourceTemplateId = t.id || t.name;
+  }
+
   var phases = t.phases || [];
+  var isPlatform = (t.scope === 'platform');
 
   var html = '<div class="tpl-preview">';
   html += '<div class="tpl-preview-header">';
   html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">' +
     '<button onclick="tplBackToBrowse()" style="background:none;border:none;color:var(--accent,#6366f1);font-size:13px;font-weight:600;cursor:pointer;padding:0">&larr; Back to templates</button>' +
     '</div>';
-  html += '<h3>' + _escHtml(t.name) + '</h3>';
+  html += '<h3 style="display:flex;align-items:center;gap:10px">' + _escHtml(t.name);
+  html += isPlatform
+    ? '<span class="tpl-badge" style="background:#64748b22;color:#475569;border:1px solid #cbd5e1;font-size:10px">Platform Template</span>'
+    : '<span class="tpl-badge" style="background:#6366f122;color:#4f46e5;border:1px solid #c7d2fe;font-size:10px">My Organisation</span>';
+  html += '</h3>';
   html += '<p>' + _escHtml(t.description || '') + '</p>';
+
+  // Stats reflect SELECTED tasks
+  var selected = _tplEditorWorking.filter(function(x){ return x.checked; });
+  var selectedHours = selected.reduce(function(s, tk){ return s + (tk.hours_base || 0); }, 0);
   html += '<div class="tpl-preview-stats">';
-  html += '<div class="tpl-preview-stat"><div class="num">' + taskCount + '</div><div class="lbl">Tasks</div></div>';
-  html += '<div class="tpl-preview-stat"><div class="num">' + Math.round(totalHours) + '</div><div class="lbl">Total Hours</div></div>';
+  html += '<div class="tpl-preview-stat"><div class="num" id="tplEditorSelCount">' + selected.length + '</div><div class="lbl">Selected</div></div>';
+  html += '<div class="tpl-preview-stat"><div class="num" id="tplEditorSelHours">' + Math.round(selectedHours) + '</div><div class="lbl">Hours</div></div>';
   if (t.estimated_duration_weeks) {
     html += '<div class="tpl-preview-stat"><div class="num">' + t.estimated_duration_weeks + '</div><div class="lbl">Est. Weeks</div></div>';
   }
@@ -27132,38 +27273,231 @@ function renderTemplatePreview(body) {
     });
     html += '</div>';
   }
-  html += '<div style="margin-top:14px">';
-  html += '<button class="prio-btn primary" onclick="tplShowImportModal()" style="font-size:13px;padding:10px 24px">Import ' + taskCount + ' tasks</button>';
+  html += '<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">';
+  html += '<button class="prio-btn" onclick="tplEditorAddCustom()">+ Add Custom Task</button>';
+  html += '<button class="prio-btn" onclick="tplEditorPullFromLibrary()">+ Pull from Task Library</button>';
+  html += '<button class="prio-btn" onclick="tplEditorToggleAll(true)" style="font-size:11px">Check all</button>';
+  html += '<button class="prio-btn" onclick="tplEditorToggleAll(false)" style="font-size:11px">Uncheck all</button>';
   html += '</div>';
   html += '</div>'; // end header
 
-  // Task table
-  html += '<div class="tpl-preview-body">';
-  if (tasks.length > 0) {
-    html += '<table class="tpl-task-table"><thead><tr>';
-    html += '<th>Task Name</th><th>Workstream</th><th>Hours</th><th>Complexity</th><th>Role</th><th>Target</th>';
-    html += '</tr></thead><tbody>';
-    tasks.forEach(function(tk) {
-      html += '<tr>';
-      html += '<td style="font-weight:600">' + _escHtml(tk.name) + '</td>';
-      html += '<td>' + _escHtml(tk.workstream || '') + '</td>';
-      html += '<td style="text-align:right">' + (tk.hours_base || 0) + '</td>';
-      html += '<td>' + _escHtml(tk.complexity || '') + '</td>';
-      html += '<td>' + _escHtml(tk.role || '') + '</td>';
-      html += '<td>' + _escHtml(tk.target_module || 'plans') + '</td>';
-      html += '</tr>';
-    });
-    html += '</tbody></table>';
-  }
-  html += '</div>'; // end body
+  // Task table with checkboxes
+  html += '<div class="tpl-preview-body" id="tplEditorBody">';
+  html += _tplEditorTableHtml();
+  html += '</div>';
+
+  // Save/import footer
+  html += '<div style="border-top:1px solid var(--border);padding:14px 20px;background:var(--surface-low);display:flex;flex-wrap:wrap;gap:12px;align-items:center">';
+  html += '<label style="font-size:12px;font-weight:600;color:var(--text)">Save as Organisation Template:</label>';
+  html += '<input type="text" id="tplEditorSaveName" placeholder="My Custom Plan" value="' + _escHtml(t.name + ' (Custom)') + '" style="flex:1;min-width:200px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--white);color:var(--text)">';
+  html += '<button class="prio-btn" onclick="tplEditorSaveAsOrg()">Save Template</button>';
+  html += '<button class="prio-btn primary" onclick="tplEditorImportToPlan()">Import into Current Plan</button>';
+  html += '</div>';
+
   html += '</div>'; // end preview
 
   body.innerHTML = html;
 }
 
+function _tplEditorTableHtml(){
+  var tasks = _tplEditorWorking;
+  if (!tasks.length) {
+    return '<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px">No tasks yet. Add a custom task or pull from the task library.</div>';
+  }
+  var html = '<table class="tpl-task-table"><thead><tr>';
+  html += '<th style="width:32px"></th><th>Task Name</th><th>Workstream</th><th>Hours</th><th>Role</th><th>Source</th><th style="width:32px"></th>';
+  html += '</tr></thead><tbody>';
+  tasks.forEach(function(tk, i) {
+    var srcLabel = tk.source === 'custom' ? '<span class="tpl-badge" style="background:#fef3c7;color:#92400e;font-size:9px">Custom</span>'
+                : tk.source === 'library' ? '<span class="tpl-badge" style="background:#dbeafe;color:#1e40af;font-size:9px">Library</span>'
+                : '<span class="tpl-badge" style="background:#f1f5f9;color:#475569;font-size:9px">Template</span>';
+    html += '<tr>';
+    html += '<td><input type="checkbox" ' + (tk.checked ? 'checked' : '') + ' onchange="_tplEditorWorking[' + i + '].checked=this.checked;_tplEditorRefreshStats()"></td>';
+    html += '<td style="font-weight:600">' + _escHtml(tk.name) + '</td>';
+    html += '<td>' + _escHtml(tk.workstream || '') + '</td>';
+    html += '<td style="text-align:right">' + (tk.hours_base || 0) + '</td>';
+    html += '<td>' + _escHtml(tk.role || '') + '</td>';
+    html += '<td>' + srcLabel + '</td>';
+    html += '<td><button onclick="_tplEditorWorking.splice(' + i + ',1);_tplEditorRerender()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:14px;padding:2px 6px" title="Remove">&times;</button></td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  return html;
+}
+
+function _tplEditorRerender(){
+  var body = document.getElementById('tplEditorBody');
+  if (body) body.innerHTML = _tplEditorTableHtml();
+  _tplEditorRefreshStats();
+}
+
+function _tplEditorRefreshStats(){
+  var sel = _tplEditorWorking.filter(function(x){ return x.checked; });
+  var c = document.getElementById('tplEditorSelCount');
+  var h = document.getElementById('tplEditorSelHours');
+  if (c) c.textContent = sel.length;
+  if (h) h.textContent = Math.round(sel.reduce(function(s, tk){ return s + (tk.hours_base || 0); }, 0));
+}
+
+function tplEditorToggleAll(state){
+  _tplEditorWorking.forEach(function(t){ t.checked = !!state; });
+  _tplEditorRerender();
+}
+
+function tplEditorAddCustom(){
+  var name = prompt('Task name:');
+  if (!name || !name.trim()) return;
+  var hours = parseFloat(prompt('Hours (default 4):', '4')) || 4;
+  var workstream = prompt('Workstream / category (optional):', '') || '';
+  _tplEditorWorking.push({
+    name: name.trim(),
+    hours_base: hours,
+    workstream: workstream,
+    role: '',
+    complexity: 'Small',
+    target_module: 'plans',
+    description: '',
+    checked: true,
+    source: 'custom'
+  });
+  _tplEditorRerender();
+}
+
+function tplEditorPullFromLibrary(){
+  var lib = (typeof taskLibrary !== 'undefined' && Array.isArray(taskLibrary)) ? taskLibrary : [];
+  if (!lib.length){
+    showToast('Task library is empty — add tasks via Plans/ToDo first', 'info');
+    return;
+  }
+  // Build a checkbox modal with all library tasks
+  var modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px';
+  var rows = lib.map(function(e, i){
+    return '<label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;background:var(--white)">' +
+      '<input type="checkbox" data-libidx="' + i + '">' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-weight:600;font-size:13px;color:var(--text)">' + _escHtml(e.name) + '</div>' +
+        '<div style="font-size:10px;color:var(--muted)">' + _escHtml(e.category || 'No category') + ' \u00B7 ' + (e.hours || 0) + 'h</div>' +
+      '</div>' +
+    '</label>';
+  }).join('');
+  modal.innerHTML = '<div style="background:var(--white);border-radius:14px;max-width:560px;width:100%;max-height:80vh;display:flex;flex-direction:column;border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,.3)">' +
+    '<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">' +
+      '<h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text);flex:1">Pull from Task Library</h3>' +
+      '<button onclick="this.closest(\'.modal-overlay\').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);padding:0;line-height:1">&times;</button>' +
+    '</div>' +
+    '<div style="padding:14px 20px;overflow-y:auto;flex:1">' + rows + '</div>' +
+    '<div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px">' +
+      '<button class="prio-btn" onclick="this.closest(\'.modal-overlay\').remove()">Cancel</button>' +
+      '<button class="prio-btn primary" onclick="_tplEditorAddSelectedLibrary(this)">Add Selected</button>' +
+    '</div>' +
+  '</div>';
+  document.body.appendChild(modal);
+}
+
+function _tplEditorAddSelectedLibrary(btn){
+  var modal = btn.closest('.modal-overlay');
+  if (!modal) return;
+  var lib = (typeof taskLibrary !== 'undefined' && Array.isArray(taskLibrary)) ? taskLibrary : [];
+  var checks = modal.querySelectorAll('input[type=checkbox][data-libidx]:checked');
+  var added = 0;
+  checks.forEach(function(cb){
+    var i = parseInt(cb.getAttribute('data-libidx'), 10);
+    var e = lib[i];
+    if (!e) return;
+    _tplEditorWorking.push({
+      name: e.name,
+      hours_base: e.hours || 0,
+      workstream: e.category || '',
+      role: e.defaultOwner || '',
+      complexity: '',
+      target_module: 'plans',
+      description: e.description || '',
+      checked: true,
+      source: 'library'
+    });
+    added++;
+  });
+  modal.remove();
+  if (added) {
+    _tplEditorRerender();
+    showToast('Added ' + added + ' task(s) from library', 'success');
+  }
+}
+
+async function tplEditorSaveAsOrg(){
+  var nameEl = document.getElementById('tplEditorSaveName');
+  var name = (nameEl && nameEl.value || '').trim();
+  if (!name) { showToast('Enter a template name', 'error'); return; }
+  var checked = _tplEditorWorking.filter(function(x){ return x.checked; });
+  if (!checked.length) { showToast('Select at least one task', 'error'); return; }
+
+  var src = _tplPreviewData || {};
+  var workstreams = {};
+  checked.forEach(function(tk){ if (tk.workstream) workstreams[tk.workstream] = 1; });
+  var totalHours = checked.reduce(function(s, tk){ return s + (tk.hours_base || 0); }, 0);
+
+  var payload = {
+    name: name,
+    description: (src.description || '') + (src.name ? ' (customised from ' + src.name + ')' : ''),
+    category: src.category || 'Custom',
+    scope: 'organization',
+    tags: (src.tags || []).slice(),
+    tasks: checked.map(function(tk){
+      return {
+        name: tk.name,
+        hours_base: tk.hours_base || 0,
+        workstream: tk.workstream || '',
+        role: tk.role || '',
+        complexity: tk.complexity || '',
+        target_module: tk.target_module || 'plans',
+        description: tk.description || ''
+      };
+    }),
+    task_count: checked.length,
+    total_hours: totalHours,
+    phases: Object.keys(workstreams),
+    estimated_duration_weeks: src.estimated_duration_weeks || null,
+    source_template_id: src.id || null,
+    source_template_name: src.name || null
+  };
+
+  // Try saving to Supabase (will succeed if user is admin), otherwise local cache
+  try {
+    var res = await _dbReq('/rest/v1/initiative_templates', 'POST', payload);
+    if (res.ok) {
+      showToast('Saved "' + name + '" as Organisation template', 'success');
+      _tplCacheLoaded = false;
+      tplBackToBrowse();
+      loadTemplateLibrary();
+      return;
+    }
+  } catch(e) { /* fall through */ }
+
+  // Local fallback so non-admins can still customise
+  payload.id = 'local_' + Date.now();
+  payload.created_at = new Date().toISOString();
+  _tplCache.push(payload);
+  showToast('Saved "' + name + '" locally', 'success');
+  tplBackToBrowse();
+  renderTemplateLibrary();
+}
+
+function tplEditorImportToPlan(){
+  var checked = _tplEditorWorking.filter(function(x){ return x.checked; });
+  if (!checked.length) { showToast('Select at least one task', 'error'); return; }
+  checked.forEach(function(tk){ _importTaskToPlan(tk, ''); });
+  persistData();
+  showToast('Imported ' + checked.length + ' task(s) into Plans', 'success');
+  closeTemplateLibrary();
+  if (typeof openPlans === 'function') openPlans();
+}
+
 function tplBackToBrowse() {
   _tplCurrentView = 'browse';
   _tplPreviewData = null;
+  _tplEditorWorking = [];
   renderTemplateLibrary();
 }
 
@@ -27386,7 +27720,11 @@ function renderTemplateCreateForm(body) {
   html += '<div class="tpl-task-editor">';
   html += '<div class="tpl-task-editor-header">';
   html += '<span style="font-size:12px;font-weight:700;color:var(--text)">Tasks (<span id="tplCreateTaskCount">0</span>)</span>';
+  html += '<div style="display:flex;gap:6px;flex-wrap:wrap">';
   html += '<button class="prio-btn" onclick="tplAddCreateTask()" style="font-size:11px;padding:4px 12px">+ Add Task</button>';
+  html += '<button class="prio-btn" onclick="tplCreatePullFromLibrary()" style="font-size:11px;padding:4px 12px">+ Pull from Task Library</button>';
+  html += '<button class="prio-btn" onclick="tplCreateImportFromTemplate()" style="font-size:11px;padding:4px 12px">+ Import from Template</button>';
+  html += '</div>';
   html += '</div>';
   html += '<div class="tpl-task-editor-body" id="tplCreateTasksBody"></div>';
   html += '</div>';
@@ -27408,6 +27746,148 @@ function tplAddCreateTask() {
     name: '', workstream: '', hours_base: 8, complexity: 'Small', role: '', target_module: 'plans'
   });
   _renderCreateTasks();
+}
+
+// v1.35.0 Fix 4 — pull tasks from the central library into the create form.
+function tplCreatePullFromLibrary(){
+  var lib = (typeof taskLibrary !== 'undefined' && Array.isArray(taskLibrary)) ? taskLibrary : [];
+  if (!lib.length){
+    showToast('Task library is empty — add tasks via Plans/ToDo first', 'info');
+    return;
+  }
+  var modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px';
+  var rows = lib.map(function(e, i){
+    return '<label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;background:var(--white)">' +
+      '<input type="checkbox" data-libidx="' + i + '">' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-weight:600;font-size:13px;color:var(--text)">' + _escHtml(e.name) + '</div>' +
+        '<div style="font-size:10px;color:var(--muted)">' + _escHtml(e.category || 'No category') + ' \u00B7 ' + (e.hours || 0) + 'h</div>' +
+      '</div>' +
+    '</label>';
+  }).join('');
+  modal.innerHTML = '<div style="background:var(--white);border-radius:14px;max-width:560px;width:100%;max-height:80vh;display:flex;flex-direction:column;border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,.3)">' +
+    '<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">' +
+      '<h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text);flex:1">Pull from Task Library</h3>' +
+      '<button onclick="this.closest(\'.modal-overlay\').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);padding:0;line-height:1">&times;</button>' +
+    '</div>' +
+    '<div style="padding:14px 20px;overflow-y:auto;flex:1">' + rows + '</div>' +
+    '<div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px">' +
+      '<button class="prio-btn" onclick="this.closest(\'.modal-overlay\').remove()">Cancel</button>' +
+      '<button class="prio-btn primary" onclick="_tplCreateAddSelectedLibrary(this)">Add Selected</button>' +
+    '</div>' +
+  '</div>';
+  document.body.appendChild(modal);
+}
+
+function _tplCreateAddSelectedLibrary(btn){
+  var modal = btn.closest('.modal-overlay');
+  if (!modal) return;
+  var lib = (typeof taskLibrary !== 'undefined' && Array.isArray(taskLibrary)) ? taskLibrary : [];
+  var checks = modal.querySelectorAll('input[type=checkbox][data-libidx]:checked');
+  var added = 0;
+  checks.forEach(function(cb){
+    var i = parseInt(cb.getAttribute('data-libidx'), 10);
+    var e = lib[i];
+    if (!e) return;
+    _tplCreateTasks.push({
+      name: e.name,
+      workstream: e.category || '',
+      hours_base: e.hours || 0,
+      complexity: 'Small',
+      role: e.defaultOwner || '',
+      target_module: 'plans'
+    });
+    added++;
+  });
+  modal.remove();
+  if (added) {
+    _renderCreateTasks();
+    showToast('Added ' + added + ' task(s) from library', 'success');
+  }
+}
+
+// v1.35.0 Fix 4 — import tasks from an existing template into the create form.
+function tplCreateImportFromTemplate(){
+  var sources = (_tplCache || []).filter(function(t){ return t && t.tasks && t.tasks.length; });
+  if (!sources.length){
+    showToast('No templates available to import from', 'info');
+    return;
+  }
+  var modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px';
+  var rows = sources.map(function(t, i){
+    var scopeLbl = (t.scope === 'platform') ? 'Platform' : 'Organisation';
+    return '<button data-tplidx="' + i + '" onclick="_tplCreateShowTplTasks(this)" style="text-align:left;width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;background:var(--white);font-family:inherit">' +
+      '<div style="font-weight:600;font-size:13px;color:var(--text)">' + _escHtml(t.name) + '</div>' +
+      '<div style="font-size:10px;color:var(--muted)">' + scopeLbl + ' \u00B7 ' + (t.tasks || []).length + ' tasks \u00B7 ' + _escHtml(t.category || '') + '</div>' +
+    '</button>';
+  }).join('');
+  modal.innerHTML = '<div style="background:var(--white);border-radius:14px;max-width:600px;width:100%;max-height:80vh;display:flex;flex-direction:column;border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,.3)">' +
+    '<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">' +
+      '<h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text);flex:1" id="tplImportFromHeader">Import from Existing Template</h3>' +
+      '<button onclick="this.closest(\'.modal-overlay\').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);padding:0;line-height:1">&times;</button>' +
+    '</div>' +
+    '<div style="padding:14px 20px;overflow-y:auto;flex:1" id="tplImportFromBody">' + rows + '</div>' +
+  '</div>';
+  document.body.appendChild(modal);
+}
+
+function _tplCreateShowTplTasks(btn){
+  var modal = btn.closest('.modal-overlay');
+  var idx = parseInt(btn.getAttribute('data-tplidx'), 10);
+  var sources = (_tplCache || []).filter(function(t){ return t && t.tasks && t.tasks.length; });
+  var t = sources[idx];
+  if (!t) return;
+  var hdr = modal.querySelector('#tplImportFromHeader');
+  if (hdr) hdr.textContent = t.name + ' \u2014 pick tasks';
+  var body = modal.querySelector('#tplImportFromBody');
+  var rows = (t.tasks || []).map(function(tk, i){
+    return '<label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;background:var(--white)">' +
+      '<input type="checkbox" data-tkidx="' + i + '" checked>' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-weight:600;font-size:13px;color:var(--text)">' + _escHtml(tk.name) + '</div>' +
+        '<div style="font-size:10px;color:var(--muted)">' + _escHtml(tk.workstream || '') + ' \u00B7 ' + (tk.hours_base || 0) + 'h</div>' +
+      '</div>' +
+    '</label>';
+  }).join('');
+  body.setAttribute('data-tplidx', String(idx));
+  body.innerHTML = rows + '<div style="margin-top:10px;display:flex;justify-content:flex-end;gap:8px">' +
+    '<button class="prio-btn" onclick="this.closest(\'.modal-overlay\').remove()">Cancel</button>' +
+    '<button class="prio-btn primary" onclick="_tplCreateAddSelectedTplTasks(this)">Add Selected</button>' +
+  '</div>';
+}
+
+function _tplCreateAddSelectedTplTasks(btn){
+  var modal = btn.closest('.modal-overlay');
+  var body = modal.querySelector('#tplImportFromBody');
+  var idx = parseInt(body.getAttribute('data-tplidx'), 10);
+  var sources = (_tplCache || []).filter(function(t){ return t && t.tasks && t.tasks.length; });
+  var t = sources[idx];
+  if (!t) return;
+  var checks = body.querySelectorAll('input[type=checkbox][data-tkidx]:checked');
+  var added = 0;
+  checks.forEach(function(cb){
+    var i = parseInt(cb.getAttribute('data-tkidx'), 10);
+    var tk = (t.tasks || [])[i];
+    if (!tk) return;
+    _tplCreateTasks.push({
+      name: tk.name || '',
+      workstream: tk.workstream || '',
+      hours_base: tk.hours_base || 0,
+      complexity: tk.complexity || 'Small',
+      role: tk.role || '',
+      target_module: tk.target_module || 'plans'
+    });
+    added++;
+  });
+  modal.remove();
+  if (added) {
+    _renderCreateTasks();
+    showToast('Added ' + added + ' task(s) from "' + t.name + '"', 'success');
+  }
 }
 
 function _renderCreateTasks() {
@@ -28419,23 +28899,22 @@ var _pmrHistoryEnabled   = true;
 var _pmrHistoryPopping   = false;   // re-entrancy guard
 
 var _PMR_OVERLAY_MAP = {
-  dashboard:    { open:null, close:null, id:'dashboardPage' },
-  roadmap:      { open:null, close:null, id:null },
-  todo:         { open:'openTodo',         close:'closeTodo',         id:'todoOverlay' },
-  kpi:          { open:'openKPI',          close:'closeKPI',          id:'kpiOverlay' },
-  capacity:     { open:'openCapacity',     close:'closeCapacity',     id:'capOverlay' },
-  g2m:          { open:'openG2M',          close:'closeG2M',          id:'g2mOverlay' },
-  plans:        { open:'openPlans',        close:'closePlans',        id:'plansOverlay' },
-  artifacts:    { open:'openArtifacts',    close:'closeArtifacts',    id:'artOverlay' },
-  reports:      { open:'openReports',      close:'closeReports',      id:'reportsOverlay' },
-  insights:     { open:'openInsights',     close:'closeInsights',     id:'insightsOverlay' },
-  ucr:          { open:'openUCR',          close:'closeUCR',          id:'ucrOverlay' },
-  prioritization:{ open:'openPrioritization', close:'closePrioritization', id:'prioritizationOverlay' },
-  templates:    { open:'openTemplateLibrary', close:'closeTemplateLibrary', id:'templateLibraryOverlay' },
-  feedback:     { open:'openFeedback',     close:'closeFeedback',     id:'feedbackOverlay' },
-  top10:        { open:'openTop10',        close:'closeTop10',        id:'top10Overlay' },
-  admin:        { open:'openAdmin',        close:'closeAdmin',        id:'adminOverlay' },
-  platformAdmin:{ open:'openPlatformAdmin',close:'closePlatformAdmin',id:'platformAdminOverlay' }
+  dashboard:    { open:null, close:null, id:'dashboardPage', nav:'' },
+  roadmap:      { open:null, close:null, id:null, nav:'Roadmap' },
+  todo:         { open:'openTodo',         close:'closeTodo',         id:'todoOverlay',         nav:'To-Do' },
+  kpi:          { open:'openKPI',          close:'closeKPI',          id:'kpiOverlay',          nav:'' },
+  capacity:     { open:'openCapacity',     close:'closeCapacity',     id:'capOverlay',          nav:'' },
+  g2m:          { open:'openG2M',          close:'closeG2M',          id:'g2mOverlay',          nav:'Checklist' },
+  plans:        { open:'openPlans',        close:'closePlans',        id:'plansOverlay',        nav:'Plans' },
+  artifacts:    { open:'openArtifacts',    close:'closeArtifacts',    id:'artOverlay',          nav:'' },
+  reports:      { open:'openReports',      close:'closeReports',      id:'reportsOverlay',      nav:'Strategy' },
+  insights:     { open:'openInsights',     close:'closeInsights',     id:'insightsOverlay',     nav:'Insights' },
+  ucr:          { open:'openUCR',          close:'closeUCR',          id:'ucrOverlay',          nav:'' },
+  prioritization:{ open:'openPrioritization', close:'closePrioritization', id:'prioritizationOverlay', nav:'' },
+  templates:    { open:'openTemplateLibrary', close:'closeTemplateLibrary', id:'templateLibraryOverlay', nav:'' },
+  feedback:     { open:'openFeedback',     close:'closeFeedback',     id:'feedbackOverlay',     nav:'' },
+  admin:        { open:'openAdmin',        close:'closeAdmin',        id:'adminOverlay',        nav:'' },
+  platformAdmin:{ open:'openPlatformAdmin',close:'closePlatformAdmin',id:'platformAdminOverlay',nav:'' }
 };
 
 function _pmrPushView(view){
@@ -28469,7 +28948,9 @@ function _pmrCloseAnyOpenOverlay(){
   return closed;
 }
 
-// Wrap openX functions so they push history state automatically.
+// Wrap openX functions so they push history state automatically AND keep the
+// top-nav highlight in sync with the active overlay (Fix 7 v1.35.0). Without
+// this, browser back/forward leaves the previous tab highlighted.
 function _pmrWireHistory(){
   Object.keys(_PMR_OVERLAY_MAP).forEach(function(key){
     var entry = _PMR_OVERLAY_MAP[key];
@@ -28479,6 +28960,10 @@ function _pmrWireHistory(){
     var wrapped = function(){
       var r = orig.apply(this, arguments);
       _pmrPushView(key);
+      // Keep the top nav in sync — explicitly set or clear the active tab.
+      if (typeof updateNavActive === 'function') {
+        try { updateNavActive(entry.nav || ''); } catch(_){}
+      }
       return r;
     };
     wrapped._pmrWrapped = true;

@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Submit Feedback</title>
+<style>
+  :root{
+    --bg:#f9f9fa; --card:#ffffff; --text:#0F1B3D; --muted:#7b8db0;
+    --border:#e5e7eb; --accent:#005bb1; --green:#16a34a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;background:var(--bg);color:var(--text)}
+  .wrap{max-width:560px;margin:0 auto;padding:32px 18px}
+  h1{font-size:24px;font-weight:800;letter-spacing:-0.02em;margin:0 0 6px}
+  .sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:0 1px 3px rgba(15,27,61,.06)}
+  label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:14px 0 6px}
+  input[type=text],input[type=email],textarea{
+    width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;
+    font-size:14px;font-family:inherit;color:var(--text);outline:none;
+    transition:border-color .15s
+  }
+  input:focus,textarea:focus{border-color:var(--accent)}
+  textarea{min-height:120px;resize:vertical;line-height:1.5}
+  .btn{
+    display:inline-block;padding:12px 28px;border-radius:9999px;
+    background:var(--accent);color:#fff;border:none;font-size:14px;
+    font-weight:700;cursor:pointer;margin-top:18px;width:100%;
+    transition:filter .15s
+  }
+  .btn:hover{filter:brightness(.92)}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .msg{padding:12px 14px;border-radius:10px;font-size:13px;margin-top:14px;display:none}
+  .msg.success{background:rgba(22,163,74,.08);border:1px solid rgba(22,163,74,.3);color:var(--green);display:block}
+  .msg.error{background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.3);color:#dc2626;display:block}
+  .footer{text-align:center;font-size:11px;color:var(--muted);margin-top:24px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Share your feedback</h1>
+    <p class="sub">Tell us what you'd like to see, what's not working, or any idea you have. Your feedback goes straight to the product team.</p>
+
+    <div class="card">
+      <form id="fb-form">
+        <label for="title">Title <span style="color:#dc2626">*</span></label>
+        <input type="text" id="title" required maxlength="200" placeholder="Short summary of your feedback">
+
+        <label for="description">Details</label>
+        <textarea id="description" maxlength="5000" placeholder="What problem are you trying to solve? What would help?"></textarea>
+
+        <label for="name">Your name (optional)</label>
+        <input type="text" id="name" maxlength="100" placeholder="So we can follow up">
+
+        <label for="email">Your email (optional)</label>
+        <input type="email" id="email" maxlength="200" placeholder="you@example.com">
+
+        <button type="submit" class="btn" id="submit-btn">Submit feedback</button>
+      </form>
+
+      <div id="msg" class="msg"></div>
+    </div>
+
+    <p class="footer">Powered by Roadmap OS</p>
+  </div>
+
+<script>
+// ── Configuration ──
+// The Supabase URL and the owner user id are passed in via query string:
+//   feedback.html?supabase=https://nigusoyssktoebzscbwe.supabase.co&owner=UUID
+// This way the same static page works for any Roadmap OS user.
+
+(function(){
+  var qs = new URLSearchParams(window.location.search);
+  var SUPA_URL = qs.get('supabase') || 'https://nigusoyssktoebzscbwe.supabase.co';
+  var OWNER_ID = qs.get('owner') || '';
+
+  var form = document.getElementById('fb-form');
+  var msg = document.getElementById('msg');
+  var btn = document.getElementById('submit-btn');
+
+  if(!OWNER_ID){
+    msg.className = 'msg error';
+    msg.textContent = 'This feedback link is missing the recipient — please ask the person who shared it to send a complete URL.';
+    btn.disabled = true;
+    return;
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    msg.className = 'msg';
+    msg.textContent = '';
+
+    var title = document.getElementById('title').value.trim();
+    var description = document.getElementById('description').value.trim();
+    var name = document.getElementById('name').value.trim();
+    var email = document.getElementById('email').value.trim();
+
+    if(!title){
+      msg.className = 'msg error';
+      msg.textContent = 'Please enter a title.';
+      return;
+    }
+    if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      msg.className = 'msg error';
+      msg.textContent = 'That email address looks invalid.';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+
+    fetch(SUPA_URL + '/functions/v1/feedback-submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        owner_user_id: OWNER_ID,
+        title: title,
+        description: description || null,
+        submitter_email: email || null,
+        submitter_name: name || null
+      })
+    })
+    .then(function(r){ return r.json().then(function(d){ return { ok: r.ok, data: d }; }); })
+    .then(function(res){
+      btn.disabled = false;
+      btn.textContent = 'Submit feedback';
+      if(res.ok && res.data && res.data.ok){
+        msg.className = 'msg success';
+        msg.textContent = res.data.message || 'Thanks! Your feedback has been received.';
+        form.reset();
+      } else {
+        msg.className = 'msg error';
+        msg.textContent = (res.data && res.data.error) || 'Something went wrong. Please try again.';
+      }
+    })
+    .catch(function(err){
+      btn.disabled = false;
+      btn.textContent = 'Submit feedback';
+      msg.className = 'msg error';
+      msg.textContent = 'Network error. Please check your connection and try again.';
+      console.error(err);
+    });
+  });
+})();
+</script>
+</body>
+</html>
