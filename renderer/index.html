@@ -1762,7 +1762,11 @@ body.dark-mode .onboard-card{background:#1e293b}
     </div>
   </div>
   </div><!-- /.auth-right -->
-  <div class="auth-version">v1.27.1</div>
+  <div class="auth-version" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center">
+    <span>v1.34.0</span>
+    <a href="https://app.pmroadmapper.com/privacy.html" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;opacity:.7;transition:opacity .15s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">Privacy Policy</a>
+    <a href="https://app.pmroadmapper.com/terms.html" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;opacity:.7;transition:opacity .15s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">Terms of Service</a>
+  </div>
 </div>
 
 <!-- TOOLBAR -->
@@ -1910,6 +1914,11 @@ body.dark-mode .onboard-card{background:#1e293b}
   <button class="sidebar-item" onclick="closeDds();importBackup()">
     <svg viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
     Import Data
+  </button>
+  <div class="sidebar-divider"></div>
+  <button class="sidebar-item" onclick="closeDds();openSettings()">
+    <svg viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    Settings
   </button>
   <div class="sidebar-divider" id="adminSidebarDivider" style="display:none"></div>
   <button class="sidebar-item" id="adminSidebarBtn" style="display:none" onclick="closeDds();closeAllOverlays();openAdmin()">
@@ -7233,6 +7242,26 @@ function openSettings(){
   };
   body.appendChild(clearBtn);
 
+  // v1.33.1: Integrations section
+  body.appendChild(sectionHdr('Integrations'));
+  var slackBtn = document.createElement('button');
+  var _slk = (appSettings.integrations && appSettings.integrations.slack) || {connected:false, configured:false, workspaces:[]};
+  var _slkCount = (_slk.workspaces || []).length;
+  var _slkLabel = _slk.connected ? (_slkCount + ' workspace' + (_slkCount === 1 ? '' : 's') + ' connected') : 'Not connected';
+  slackBtn.innerHTML = svgIcon('link',{size:14}) + ' Slack <span style="font-size:10px;color:var(--muted);margin-left:auto;font-weight:600">' + _slkLabel + '</span>';
+  slackBtn.style.cssText = 'padding:10px 16px;background:var(--white);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;gap:8px;margin-bottom:8px';
+  slackBtn.onclick = function(){ ov.remove(); openSlackIntegrations(); };
+  body.appendChild(slackBtn);
+
+  var calBtn = document.createElement('button');
+  var gC = !!(appSettings.integrations && appSettings.integrations.google && appSettings.integrations.google.connected);
+  var mC = !!(appSettings.integrations && appSettings.integrations.microsoft && appSettings.integrations.microsoft.connected);
+  var calLabel = (gC || mC) ? 'Connected' : 'Not connected';
+  calBtn.innerHTML = svgIcon('calendar',{size:14}) + ' Calendar <span style="font-size:10px;color:var(--muted);margin-left:auto;font-weight:600">' + calLabel + '</span>';
+  calBtn.style.cssText = 'padding:10px 16px;background:var(--white);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;gap:8px;margin-bottom:8px';
+  calBtn.onclick = function(){ ov.remove(); openCalendarIntegrationModal(); };
+  body.appendChild(calBtn);
+
   // v1.29.0 FIX 13: Help & Tour section
   body.appendChild(sectionHdr('Help & Support'));
   var helpBtn = document.createElement('button');
@@ -7524,6 +7553,48 @@ function openProfile(){
     }
   };
   foot.appendChild(privacyLink);
+
+  var sep=document.createElement('span');
+  sep.style.cssText='font-size:11px;color:var(--muted);margin:0 6px';
+  sep.textContent='·';
+  foot.appendChild(sep);
+
+  var tosLink=document.createElement('a');
+  tosLink.href='https://app.pmroadmapper.com/terms.html';
+  tosLink.target='_blank';
+  tosLink.rel='noopener noreferrer';
+  tosLink.style.cssText='font-size:11px;color:var(--muted);text-decoration:none;';
+  tosLink.onmouseover=function(){ tosLink.style.color='var(--accent)'; };
+  tosLink.onmouseout=function(){ tosLink.style.color='var(--muted)'; };
+  tosLink.textContent='Terms of Service';
+  tosLink.onclick=function(e){
+    if(window.location.protocol === 'file:' && window.electronAPI && window.electronAPI.openExternal){
+      e.preventDefault();
+      window.electronAPI.openExternal(tosLink.href);
+    }
+  };
+  foot.appendChild(tosLink);
+
+  var sep2=document.createElement('span');
+  sep2.style.cssText='font-size:11px;color:var(--muted);margin:0 6px';
+  sep2.textContent='·';
+  foot.appendChild(sep2);
+
+  var refundLink=document.createElement('a');
+  refundLink.href='https://app.pmroadmapper.com/refund-policy.html';
+  refundLink.target='_blank';
+  refundLink.rel='noopener noreferrer';
+  refundLink.style.cssText='font-size:11px;color:var(--muted);text-decoration:none;';
+  refundLink.onmouseover=function(){ refundLink.style.color='var(--accent)'; };
+  refundLink.onmouseout=function(){ refundLink.style.color='var(--muted)'; };
+  refundLink.textContent='Refund Policy';
+  refundLink.onclick=function(e){
+    if(window.location.protocol === 'file:' && window.electronAPI && window.electronAPI.openExternal){
+      e.preventDefault();
+      window.electronAPI.openExternal(refundLink.href);
+    }
+  };
+  foot.appendChild(refundLink);
 
   var rightBtns=document.createElement('div'); rightBtns.style.cssText='display:flex;gap:8px;align-items:center';
 
