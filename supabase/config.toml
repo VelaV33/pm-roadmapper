@@ -416,6 +416,10 @@ verify_jwt = false
 # still catches anonymous calls.
 [functions.feedback-list]
 verify_jwt = false
+# slack-api does its own JWT verification inside the function via verifyRequest,
+# same rationale as admin-api / contacts-api.
+[functions.slack-api]
+verify_jwt = false
 
 [analytics]
 enabled = true

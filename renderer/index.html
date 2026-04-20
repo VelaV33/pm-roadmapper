@@ -22736,10 +22736,11 @@ function openCalendarIntegrationModal(){
 
 function _slackRedirectUri(){
   // Slack requires an exact-match redirect URI registered in the app config.
-  // Use origin + pathname (no hash, no query). On production this is
-  // https://app.pmroadmapper.com/. Whoever registers the Slack app at
-  // api.slack.com must add this exact string to "Redirect URLs".
-  return window.location.origin + window.location.pathname;
+  // Always use the web app URL — even from Electron. The OAuth callback
+  // needs a real HTTPS origin that Slack will accept. On Electron the flow
+  // opens in the user's default browser, completes there, and the token
+  // is stored server-side where both platforms can read it.
+  return 'https://app.pmroadmapper.com/';
 }
 
 async function _slackApi(action, body){
@@ -22818,9 +22819,15 @@ function connectSlack(){
           + '&redirect_uri=' + encodeURIComponent(_slackRedirectUri())
           + '&state='        + encodeURIComponent(state);
 
-  // Full-page redirect — simpler than a popup and avoids postMessage/CORS
-  // headaches. The SPA picks the code back up on next load inside
-  // _handleSlackOAuthCallback().
+  // Electron: open in the user's default browser. The OAuth callback lands
+  // on app.pmroadmapper.com, exchanges the code there, and stores the token
+  // server-side. The Electron app picks it up via refreshSlackStatus().
+  // Web: full-page redirect — the SPA picks the code back up on next load.
+  if(window.location.protocol === 'file:' && window.electronAPI && window.electronAPI.openExternal){
+    window.electronAPI.openExternal(url);
+    showToast('Opening Slack in your browser — approve, then come back here and re-open this modal to see the connection.', 'success');
+    return;
+  }
   window.location.href = url;
 }
 
