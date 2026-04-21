@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Contact Us — Roadmap OS</title>
+<meta name="description" content="Get in touch with the Roadmap OS team.">
+<style>
+  :root{
+    --bg:#f9f9fa; --card:#ffffff; --text:#0F1B3D; --muted:#7b8db0;
+    --border:#e5e7eb; --accent:#005bb1; --green:#16a34a; --danger:#dc2626;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;background:var(--bg);color:var(--text)}
+  .wrap{max-width:560px;margin:0 auto;padding:32px 18px}
+  h1{font-size:24px;font-weight:800;letter-spacing:-0.02em;margin:0 0 6px}
+  .sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:0 1px 3px rgba(15,27,61,.06)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:480px){ .row{grid-template-columns:1fr} }
+  label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:14px 0 6px}
+  input[type=text],input[type=email],textarea{
+    width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;
+    font-size:14px;font-family:inherit;color:var(--text);outline:none;background:#fff;
+    transition:border-color .15s
+  }
+  input:focus,textarea:focus{border-color:var(--accent)}
+  textarea{min-height:140px;resize:vertical;line-height:1.5}
+  .btn{
+    display:inline-block;padding:12px 28px;border-radius:9999px;
+    background:var(--accent);color:#fff;border:none;font-size:14px;
+    font-weight:700;cursor:pointer;margin-top:18px;width:100%;
+    transition:filter .15s
+  }
+  .btn:hover{filter:brightness(.92)}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .msg{padding:12px 14px;border-radius:10px;font-size:13px;margin-top:14px;display:none}
+  .msg.success{background:rgba(22,163,74,.08);border:1px solid rgba(22,163,74,.3);color:var(--green);display:block}
+  .msg.error{background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.3);color:var(--danger);display:block}
+  .footer{text-align:center;font-size:11px;color:var(--muted);margin-top:24px}
+  .footer a{color:var(--muted);text-decoration:none;margin:0 6px}
+  .footer a:hover{color:var(--accent)}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Contact us</h1>
+    <p class="sub">Questions, feedback, partnership ideas — drop us a note and we'll get back to you. You can also email <a href="mailto:velasabelo.com@gmail.com" style="color:var(--accent);text-decoration:none">velasabelo.com@gmail.com</a>.</p>
+
+    <div class="card">
+      <form id="contact-form" autocomplete="on" novalidate>
+        <div class="row">
+          <div>
+            <label for="name">First name <span style="color:var(--danger)">*</span></label>
+            <input type="text" id="name" name="given-name" autocomplete="given-name" required maxlength="100">
+          </div>
+          <div>
+            <label for="surname">Surname <span style="color:var(--danger)">*</span></label>
+            <input type="text" id="surname" name="family-name" autocomplete="family-name" required maxlength="100">
+          </div>
+        </div>
+
+        <label for="company">Company name</label>
+        <input type="text" id="company" name="organization" autocomplete="organization" maxlength="200" placeholder="Optional">
+
+        <label for="email">Email <span style="color:var(--danger)">*</span></label>
+        <input type="email" id="email" name="email" autocomplete="email" required maxlength="200" placeholder="you@example.com">
+
+        <label for="message">Message <span style="color:var(--danger)">*</span></label>
+        <textarea id="message" required maxlength="5000" placeholder="How can we help?"></textarea>
+
+        <button type="submit" class="btn" id="submit-btn">Send message</button>
+      </form>
+
+      <div id="msg" class="msg"></div>
+    </div>
+
+    <p class="footer">
+      <a href="/privacy.html">Privacy</a>·<a href="/terms.html">Terms</a>
+    </p>
+  </div>
+
+<script>
+(function(){
+  // The form posts to our public Supabase edge function. The SUPA_URL can be
+  // overridden via ?supabase=... for non-prod projects; otherwise it defaults
+  // to the production instance used by the Electron + web builds.
+  var qs = new URLSearchParams(window.location.search);
+  var SUPA_URL = qs.get('supabase') || 'https://nigusoyssktoebzscbwe.supabase.co';
+  var SOURCE   = qs.get('source') || 'contact_form';
+
+  var form = document.getElementById('contact-form');
+  var msg  = document.getElementById('msg');
+  var btn  = document.getElementById('submit-btn');
+
+  function showErr(text){ msg.className='msg error'; msg.textContent=text; }
+  function showOk(text){  msg.className='msg success'; msg.textContent=text; }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    msg.className='msg'; msg.textContent='';
+
+    var name    = document.getElementById('name').value.trim();
+    var surname = document.getElementById('surname').value.trim();
+    var company = document.getElementById('company').value.trim();
+    var email   = document.getElementById('email').value.trim();
+    var message = document.getElementById('message').value.trim();
+
+    if(!name)    { showErr('Please enter your first name.'); return; }
+    if(!surname) { showErr('Please enter your surname.'); return; }
+    if(!email)   { showErr('Please enter your email.'); return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('That email address looks invalid.'); return; }
+    if(!message) { showErr('Please enter a message.'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    fetch(SUPA_URL + '/functions/v1/contact-submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: name, surname: surname, company: company,
+        email: email, message: message, source: SOURCE
+      })
+    })
+    .then(function(r){ return r.json().then(function(d){ return { ok:r.ok, data:d }; }); })
+    .then(function(res){
+      btn.disabled = false;
+      btn.textContent = 'Send message';
+      if(res.ok && res.data && res.data.ok){
+        showOk(res.data.message || 'Thanks! We received your message.');
+        form.reset();
+      } else {
+        showErr((res.data && res.data.error) || 'Something went wrong. Please try again.');
+      }
+    })
+    .catch(function(err){
+      btn.disabled = false;
+      btn.textContent = 'Send message';
+      showErr('Network error. Please check your connection and try again.');
+      console.error(err);
+    });
+  });
+})();
+</script>
+</body>
+</html>

@@ -371,5 +371,68 @@ serve(handle(async (req) => {
     return jsonResponse({ ok: true });
   }
 
+  // ── LEADS (Contact Us submissions) ─────────────────────────────────────
+  // ACTION: count-new-leads — cheap badge query, returns just the count of
+  // leads with status='new'. Safe to call on every admin sign-in.
+  if (action === "count-new-leads") {
+    const { count, error } = await supabase
+      .from("leads")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "new");
+    if (error) {
+      console.error("[admin-api count-new-leads] error:", error.message);
+      return errorResponse("Failed to count leads", 500);
+    }
+    return jsonResponse({ ok: true, count: count || 0 });
+  }
+
+  // ACTION: list-leads — platform admin only. Returns all leads newest first.
+  if (action === "list-leads") {
+    const { data, error } = await supabase
+      .from("leads")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(500);
+    if (error) {
+      console.error("[admin-api list-leads] error:", error.message);
+      return errorResponse("Failed to list leads", 500);
+    }
+    return jsonResponse({ ok: true, leads: data || [] });
+  }
+
+  // ACTION: update-lead — change status or admin_notes
+  if (action === "update-lead") {
+    const { id, status: newStatus, admin_notes } = body;
+    if (!id) return errorResponse("id required", 400);
+    const ALLOWED_STATUS = ["new", "contacted", "qualified", "converted", "archived"];
+    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (newStatus != null) {
+      if (!ALLOWED_STATUS.includes(newStatus)) return errorResponse("Invalid status", 400);
+      updates.status = newStatus;
+    }
+    if (admin_notes != null) updates.admin_notes = String(admin_notes);
+    const { error } = await supabase
+      .from("leads")
+      .update(updates)
+      .eq("id", id);
+    if (error) {
+      console.error("[admin-api update-lead] error:", error.message);
+      return errorResponse("Failed to update lead", 500);
+    }
+    return jsonResponse({ ok: true });
+  }
+
+  // ACTION: delete-lead
+  if (action === "delete-lead") {
+    const { id } = body;
+    if (!id) return errorResponse("id required", 400);
+    const { error } = await supabase.from("leads").delete().eq("id", id);
+    if (error) {
+      console.error("[admin-api delete-lead] error:", error.message);
+      return errorResponse("Failed to delete lead", 500);
+    }
+    return jsonResponse({ ok: true });
+  }
+
   return errorResponse("Unknown action", 400);
 }));

@@ -1811,7 +1811,7 @@ body.dark-mode .onboard-card{background:#1e293b}
   </div>
   </div><!-- /.auth-right -->
   <div class="auth-version" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center">
-    <span>v1.35.2</span>
+    <span>v1.36.1</span>
     <a href="https://app.pmroadmapper.com/contact.html?source=login" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;opacity:.7;transition:opacity .15s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">Contact Us</a>
     <a href="https://app.pmroadmapper.com/privacy.html" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;opacity:.7;transition:opacity .15s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">Privacy Policy</a>
     <a href="https://app.pmroadmapper.com/terms.html" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;opacity:.7;transition:opacity .15s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">Terms of Service</a>
@@ -7705,27 +7705,6 @@ function openProfile(){
   sep2.style.cssText='font-size:11px;color:var(--muted);margin:0 6px';
   sep2.textContent='·';
   foot.appendChild(sep2);
-
-  var refundLink=document.createElement('a');
-  refundLink.href='https://app.pmroadmapper.com/refund-policy.html';
-  refundLink.target='_blank';
-  refundLink.rel='noopener noreferrer';
-  refundLink.style.cssText='font-size:11px;color:var(--muted);text-decoration:none;';
-  refundLink.onmouseover=function(){ refundLink.style.color='var(--accent)'; };
-  refundLink.onmouseout=function(){ refundLink.style.color='var(--muted)'; };
-  refundLink.textContent='Refund Policy';
-  refundLink.onclick=function(e){
-    if(window.location.protocol === 'file:' && window.electronAPI && window.electronAPI.openExternal){
-      e.preventDefault();
-      window.electronAPI.openExternal(refundLink.href);
-    }
-  };
-  foot.appendChild(refundLink);
-
-  var sep3=document.createElement('span');
-  sep3.style.cssText='font-size:11px;color:var(--muted);margin:0 6px';
-  sep3.textContent='·';
-  foot.appendChild(sep3);
 
   var contactLink=document.createElement('a');
   contactLink.href='https://app.pmroadmapper.com/contact.html?source=contact_form';
