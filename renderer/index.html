@@ -106,6 +106,25 @@ body.dark-mode .premium-gate h3{color:var(--text)}
 body.dark-mode .premium-gate p{color:var(--muted)}
 body.dark-mode .sidebar-item{color:var(--text)}
 body.dark-mode .sidebar-item:hover{background:#0f172a}
+/* Comments (dark mode) */
+body.dark-mode .comment-item{background:var(--surface-low);border-color:var(--border)}
+body.dark-mode .comment-item.resolved{background:#0f172a;border-color:var(--border)}
+body.dark-mode .comment-reply{background:var(--surface-high);border-left-color:var(--accent)}
+body.dark-mode .comment-author{color:var(--text)}
+body.dark-mode .comment-time{color:var(--muted)}
+body.dark-mode .comment-body{color:var(--text)}
+body.dark-mode .comment-acts button{color:var(--muted)}
+body.dark-mode .comment-acts .c-reply{color:#60a5fa}
+body.dark-mode .comment-acts .c-reply:hover{background:rgba(96,165,250,.15)}
+body.dark-mode .comment-acts .c-resolve{color:#4ade80}
+body.dark-mode .comment-acts .c-resolve:hover{background:rgba(74,222,128,.12)}
+body.dark-mode .comment-acts .c-unresolve{color:#fbbf24}
+body.dark-mode .comment-acts .c-unresolve:hover{background:rgba(251,191,36,.12)}
+body.dark-mode .comment-acts .c-del{color:#f87171}
+body.dark-mode .comment-acts .c-del:hover{background:rgba(248,113,113,.18)}
+body.dark-mode .comment-input-wrap textarea{background:var(--surface-low);color:var(--text);border-color:var(--border)}
+body.dark-mode .reply-input-wrap{background:var(--surface-high)}
+body.dark-mode .reply-input-wrap textarea{background:var(--surface-low);color:var(--text);border-color:var(--border)}
 /* v1.26.0: catch-all dark mode overrides for inline hardcoded colours that
  * we can't easily replace at every call site. Lower-case selectors are scoped
  * to common modal/card patterns so we don't accidentally darken intentional
@@ -125,6 +144,35 @@ body.dark-mode [style*="border:1px solid #e2e2e3"],
 body.dark-mode [style*="border:1px solid #e5e7eb"],
 body.dark-mode [style*="border:1px solid #f1f5f9"],
 body.dark-mode [style*="border-bottom:1px solid #f1f5f9"]{border-color:var(--border)!important}
+/* --navy flips to light in dark mode — any inline `background:var(--navy)` paired
+ * with white text becomes invisible. Force back to --accent which stays dark blue. */
+body.dark-mode [style*="background:var(--navy)"],
+body.dark-mode [style*="background: var(--navy)"]{background:var(--accent)!important}
+/* v1.36.0: legend dropdown menus (Roadmap + Data) */
+.legend-dd-menu button.legend-dd-item{display:block;width:100%;text-align:left;padding:10px 14px;border:none;background:none;color:var(--text);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit}
+.legend-dd-menu button.legend-dd-item:hover{background:var(--light-blue-bg);color:var(--accent)}
+body.dark-mode .legend-dd-menu{background:var(--white)!important;border-color:var(--border)!important}
+body.dark-mode .legend-dd-menu button.legend-dd-item{color:var(--text)}
+body.dark-mode .legend-dd-menu button.legend-dd-item:hover{background:rgba(45,107,244,.15);color:var(--accent)}
+/* v1.36.0: remaining dark-mode gaps from Fix 7 audit */
+body.dark-mode .prio-btn.danger{color:#f87171;border-color:rgba(248,113,113,.35)}
+body.dark-mode .prio-btn.danger:hover{background:rgba(248,113,113,.15)}
+body.dark-mode .plan-status-pill.not-started{background:#0f172a;color:#94a3b8}
+body.dark-mode .plan-status-pill.in-progress{background:rgba(96,165,250,.18);color:#93c5fd}
+body.dark-mode .plan-status-pill.done{background:rgba(74,222,128,.15);color:#6ee7b7}
+body.dark-mode .plan-status-pill.blocked{background:rgba(248,113,113,.15);color:#fca5a5}
+body.dark-mode .kanban-col-count{background:#0f172a!important;color:#94a3b8}
+body.dark-mode #todoCrossTabs{background:#0f172a}
+body.dark-mode #todoCrossTabs .ts-view-btn:not(.active){color:#94a3b8}
+/* Components with class-level light backgrounds that lacked dark-mode rules */
+body.dark-mode .add-sec-form{background:rgba(45,107,244,.12);border-color:var(--accent)}
+body.dark-mode .add-sec-form select,body.dark-mode .add-sec-form input{background:var(--surface-low);color:var(--text);border-color:var(--border)}
+body.dark-mode .modal-todo-outstanding{background:rgba(127,29,29,.25);border-color:#991b1b}
+body.dark-mode .modal-todo-outstanding .todo-out-item{color:#fca5a5}
+body.dark-mode .ts-bar{background:#0f172a}
+body.dark-mode .share-chip{background:var(--surface-low);border-color:var(--border)}
+body.dark-mode .share-chip .chip-revoke:hover{background:rgba(248,113,113,.18)}
+body.dark-mode .comp-card-hdr,body.dark-mode .comp-tab.active,body.dark-mode .tour-tooltip .tour-btn-next,body.dark-mode .subscription-gate-plans .plan-standard{background:var(--accent);color:#fff}
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * v1.29.0 FIX 1 — Global Dark Mode Overhaul
@@ -1763,7 +1811,8 @@ body.dark-mode .onboard-card{background:#1e293b}
   </div>
   </div><!-- /.auth-right -->
   <div class="auth-version" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center">
-    <span>v1.34.0</span>
+    <span>v1.35.2</span>
+    <a href="https://app.pmroadmapper.com/contact.html?source=login" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;opacity:.7;transition:opacity .15s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">Contact Us</a>
     <a href="https://app.pmroadmapper.com/privacy.html" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;opacity:.7;transition:opacity .15s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">Privacy Policy</a>
     <a href="https://app.pmroadmapper.com/terms.html" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;opacity:.7;transition:opacity .15s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">Terms of Service</a>
   </div>
@@ -1879,42 +1928,9 @@ body.dark-mode .onboard-card{background:#1e293b}
     <svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
     Insights
   </button>
-  <div class="sidebar-divider"></div>
-  <div class="sidebar-section">Roadmap</div>
-  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openAddRowModal(null)">
-    <svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
-    Add Row
-  </button>
-  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();toggleAddSection()">
-    <svg viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-    Add Section
-  </button>
-  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openPasteFromSpreadsheet()">
-    <svg viewBox="0 0 24 24"><path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
-    Paste from Spreadsheet
-  </button>
-  <div class="sidebar-divider"></div>
-  <div class="sidebar-section">Data</div>
-  <button class="sidebar-item" onclick="closeDds();var sb=document.getElementById('appSidebar');if(sb)sb.classList.add('collapsed');openEditQuarters()">
-    <svg viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-    Edit Timeline
-  </button>
-  <button class="sidebar-item" onclick="closeDds();exportExcel()">
-    <svg viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-    Export Excel
-  </button>
-  <button class="sidebar-item" onclick="closeDds();exportPDF()">
-    <svg viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-    Export PDF
-  </button>
-  <button class="sidebar-item" onclick="closeDds();exportBackup()">
-    <svg viewBox="0 0 24 24"><path d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-    Save Backup
-  </button>
-  <button class="sidebar-item" onclick="closeDds();importBackup()">
-    <svg viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-    Import Data
-  </button>
+  <!-- v1.36.0: Roadmap actions (Add Row / Section / Paste / Quarters) and Data actions
+       (Edit Timeline / Exports / Backup) moved into the Roadmap+Data dropdowns in
+       the legend area. Sidebar now only holds navigation + admin items. -->
   <div class="sidebar-divider"></div>
   <button class="sidebar-item" onclick="closeDds();openSettings()">
     <svg viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -1928,6 +1944,7 @@ body.dark-mode .onboard-card{background:#1e293b}
   <button class="sidebar-item" id="platformAdminSidebarBtn" style="display:none" onclick="closeDds();closeAllOverlays();openPlatformAdmin()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.09 6.26L20 9.27l-4.91 3.82L16.18 20 12 16.77 7.82 20l1.09-6.91L4 9.27l5.91-1.01L12 2z"/></svg>
     Platform Admin
+    <span id="newLeadsSidebarBadge" style="display:none;margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:9999px;min-width:18px;text-align:center" title="New leads awaiting review">0</span>
   </button>
 </nav>
 
@@ -2068,6 +2085,30 @@ body.dark-mode .onboard-card{background:#1e293b}
       <option value="startMonth">Start month</option>
       <option value="endMonth">End month</option>
     </select>
+  </span>
+  <!-- v1.36.0: Roadmap + Data dropdowns (moved from sidebar, plus new FY controls) -->
+  <span class="legend-dd" style="display:flex;align-items:center;gap:6px;margin-left:10px;position:relative">
+    <button onclick="toggleLegendMenu('lmRoadmap',event)" class="rmap-view-toggle" style="font-size:11px;font-weight:600;border:1px solid var(--border);border-radius:9999px;padding:4px 12px;background:var(--white);color:var(--text);cursor:pointer">Roadmap &#9662;</button>
+    <div id="lmRoadmap" class="legend-dd-menu" role="menu" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;min-width:220px;background:var(--white);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:6000;padding:4px 0">
+      <button class="legend-dd-item" onclick="closeLegendMenus();openAddRowModal(null)">+ Add Row</button>
+      <button class="legend-dd-item" onclick="closeLegendMenus();toggleAddSection()">+ Add Section</button>
+      <button class="legend-dd-item" onclick="closeLegendMenus();openPasteFromSpreadsheet()">Paste from Spreadsheet</button>
+      <div style="height:1px;background:var(--border);margin:4px 0"></div>
+      <button class="legend-dd-item" onclick="closeLegendMenus();addQuarter()">+ Add Quarter</button>
+      <button class="legend-dd-item" onclick="closeLegendMenus();addFinancialYear()">+ Add Financial Year</button>
+      <button class="legend-dd-item" onclick="closeLegendMenus();configureFYStart()">Configure FY start month&hellip;</button>
+      <button class="legend-dd-item" onclick="closeLegendMenus();removeLastQuarter()" style="color:#dc2626">Remove last quarter</button>
+    </div>
+  </span>
+  <span class="legend-dd" style="display:flex;align-items:center;gap:6px;margin-left:6px;position:relative">
+    <button onclick="toggleLegendMenu('lmData',event)" class="rmap-view-toggle" style="font-size:11px;font-weight:600;border:1px solid var(--border);border-radius:9999px;padding:4px 12px;background:var(--white);color:var(--text);cursor:pointer">Data &#9662;</button>
+    <div id="lmData" class="legend-dd-menu" role="menu" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;min-width:200px;background:var(--white);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:6000;padding:4px 0">
+      <button class="legend-dd-item" onclick="closeLegendMenus();openEditQuarters()">Edit Timeline</button>
+      <button class="legend-dd-item" onclick="closeLegendMenus();exportExcel()">Export Excel</button>
+      <button class="legend-dd-item" onclick="closeLegendMenus();exportPDF()">Export PDF</button>
+      <button class="legend-dd-item" onclick="closeLegendMenus();exportBackup()">Save Backup</button>
+      <button class="legend-dd-item" onclick="closeLegendMenus();importBackup()">Import Data</button>
+    </div>
   </span>
 </div>
 
@@ -2308,9 +2349,16 @@ body.dark-mode .onboard-card{background:#1e293b}
       <div class="todo-stat" style="color:#f59e0b"><span id="todoStatProg">0</span> In Progress</div>
       <div class="todo-stat" style="color:#22c55e"><span id="todoStatDone">0</span> Done</div>
     </div>
-    <div style="display:flex;gap:8px">
+    <div style="display:flex;gap:8px;align-items:center">
+      <!-- v1.36.0: cross-page tabs — quick jump to Timesheet + My Capacity inside KPI Scorecard -->
+      <div style="display:flex;background:#f1f5f9;border-radius:9999px;padding:3px;margin-right:4px" id="todoCrossTabs">
+        <button class="ts-view-btn active" data-todo-tab="todo" onclick="switchTodoTab('todo')">To-Do</button>
+        <button class="ts-view-btn" data-todo-tab="timesheet" onclick="switchTodoTab('timesheet')">Timesheet</button>
+        <button class="ts-view-btn" data-todo-tab="my-capacity" onclick="switchTodoTab('my-capacity')">My Capacity</button>
+      </div>
       <button class="btn green" onclick="addTodoItem()">+ Add Task</button>
-      <button class="btn" onclick="openTemplateLibrary('todo')" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:-2px;margin-right:4px"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>Templates</button>
+      <button class="btn" onclick="openTemplateBuilder('todo',{initiativeName:(document.getElementById('todoFilterSelect')&&document.getElementById('todoFilterSelect').value)||'Template Imports'})" title="Multi-select tasks from templates and the task library" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:-2px;margin-right:4px"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>From Library</button>
+      <button class="btn" onclick="openTemplateLibrary('todo')" title="Browse saved templates" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:-2px;margin-right:4px"><path d="M4 4h16v16H4V4zM4 10h16M10 4v16"/></svg>Templates</button>
       <button class="btn" onclick="toggleTodoView()" id="todoViewToggle" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:-2px;margin-right:4px"><path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Kanban</button>
       <button class="btn" id="todoBackBtn" onclick="closeTodo()" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)">← Back to Roadmap</button>
     </div>
@@ -2379,7 +2427,7 @@ body.dark-mode .onboard-card{background:#1e293b}
     <div class="ts-view-toggle">
       <button class="ts-view-btn active" id="kpiViewScorecard" onclick="setKPIView('scorecard')">Scorecard</button>
       <button class="ts-view-btn" id="kpiViewTimesheet" onclick="setKPIView('timesheet')">Timesheet</button>
-      <button class="ts-view-btn" id="kpiViewCapacity" onclick="setKPIView('capacity')">Capacity</button>
+      <button class="ts-view-btn" id="kpiViewCapacity" onclick="setKPIView('capacity')">My Capacity</button>
     </div>
     <div id="kpiOverallScore" style="margin-left:auto;margin-right:8px"></div>
     <select id="kpiQuarterSelect" onchange="renderKPI()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--text);font-size:13px;font-weight:500;font-family:inherit;min-width:100px">
@@ -2578,7 +2626,6 @@ body.dark-mode .onboard-card{background:#1e293b}
             <button id="planViewGanttBtn" class="plan-view-toggle" onclick="setPlanView('gantt')">Gantt</button>
             <button id="planViewKanbanBtn" class="plan-view-toggle" onclick="setPlanView('kanban')">Kanban</button>
           </div>
-          <button id="planColorsToggleBtn" class="prio-btn" onclick="togglePlanStatusColors()" title="Toggle status row colours (done / due-soon / overdue)" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>Colours</button>
           <button class="prio-btn" onclick="openTemplateBuilder('plans',{planId:_activePlanId})" title="Browse templates and import tasks into this plan" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>Templates</button>
           <button class="prio-btn" onclick="openExcelImportPicker()" title="Import tasks from an Excel file (MS Project, MS Planner, Asana, Jira, ClickUp, etc.)" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M9 17v-2a4 4 0 014-4h4M9 17l3-3m-3 3l-3-3m12 6V7a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2h6"/></svg>Upload Excel</button>
           <button class="prio-btn" onclick="saveCurrentPlanAsTemplate()" title="Save this plan's structure as a reusable template" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M5 5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V5z M14 3v5h5 M9 13h6 M9 17h4"/></svg>Save as template</button>
@@ -2919,7 +2966,29 @@ var GRADIENTS={g:"linear-gradient(90deg,#16a34a,#22c55e)",b:"linear-gradient(90d
 // Each quarter: {label, year, q, months:[str,...], qBg}
 var Q_BG=["#0F1B3D","#162244","#1a3060","#1e3f7c"];
 var ALL_MONTHS=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-var Q_MONTH_MAP={1:["MAR","APR","MAY"],2:["JUN","JUL","AUG"],3:["SEP","OCT","NOV"],4:["DEC","JAN","FEB"]};
+// v1.36.0: FY start month is configurable via configureFYStart(). Default
+// is March (month 3) — the historical hard-coded start. Q_MONTH_MAP is
+// rebuilt from this at load time and whenever the user changes it.
+var _fyStartMonth = 3; // 1=Jan, 12=Dec
+var Q_MONTH_MAP = {};
+function _rebuildQMonthMap(){
+  Q_MONTH_MAP = {};
+  var start = Math.max(1, Math.min(12, _fyStartMonth || 3));
+  for(var q = 1; q <= 4; q++){
+    var mths = [];
+    for(var i = 0; i < 3; i++){
+      var mi = ((start - 1) + (q - 1) * 3 + i) % 12;
+      mths.push(ALL_MONTHS[mi]);
+    }
+    Q_MONTH_MAP[q] = mths;
+  }
+}
+_rebuildQMonthMap();
+// Hydrate saved setting if data already loaded (called again from applyDataPayload).
+try {
+  var _savedFyStart = localStorage.getItem('pmr_fy_start_month');
+  if(_savedFyStart){ _fyStartMonth = parseInt(_savedFyStart,10) || 3; _rebuildQMonthMap(); }
+} catch(e){}
 
 var quarters=[
   {label:"Q1 · FY26",year:2025,q:1,months:["MAR","APR","MAY"]},
@@ -3007,6 +3076,63 @@ function removeLastQuarter(){
   renderTableHeader();
   render();
   persistData();
+}
+
+// v1.36.0: Legend dropdown helpers (Roadmap + Data menus)
+function toggleLegendMenu(id, evt){
+  if(evt){ evt.stopPropagation(); }
+  var m = document.getElementById(id);
+  if(!m) return;
+  var open = m.style.display === 'block';
+  closeLegendMenus();
+  if(!open) m.style.display = 'block';
+}
+function closeLegendMenus(){
+  document.querySelectorAll('.legend-dd-menu').forEach(function(el){ el.style.display = 'none'; });
+}
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.legend-dd')) closeLegendMenus();
+});
+
+// v1.36.0: Configure financial year start month. Existing bar data stays
+// anchored to the current MONTHS index layout — this only changes how future
+// quarters are labelled and which months their Q_MONTH_MAP produces.
+function configureFYStart(){
+  var ex = document.getElementById('fyConfigModal'); if(ex) ex.remove();
+  var ov = document.createElement('div');
+  ov.id = 'fyConfigModal'; ov.className = 'modal-overlay';
+  ov.onclick = function(e){ if(e.target === ov) ov.remove(); };
+  var modal = document.createElement('div'); modal.className = 'modal';
+  modal.style.cssText = 'width:min(420px,92vw);display:flex;flex-direction:column';
+  var hdr = document.createElement('div'); hdr.className = 'modal-hdr';
+  hdr.innerHTML = '<h2>Configure Financial Year</h2>' +
+    '<button class="close" onclick="document.getElementById(\'fyConfigModal\').remove()">\u2715</button>';
+  modal.appendChild(hdr);
+  var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var opts = monthNames.map(function(n,i){ var v = i+1; return '<option value="'+v+'"'+(v===_fyStartMonth?' selected':'')+'>'+n+'</option>'; }).join('');
+  var body = document.createElement('div');
+  body.style.cssText = 'padding:18px 22px;display:flex;flex-direction:column;gap:12px';
+  body.innerHTML =
+    '<div style="font-size:12px;color:var(--muted);line-height:1.5">Pick the month your financial year starts. Future Add Quarter / Add FY clicks will build quarters from this month forward.</div>' +
+    '<label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">FY starts in<select id="fyStartSelect" style="width:100%;margin-top:4px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--white)">'+opts+'</select></label>';
+  modal.appendChild(body);
+  var footer = document.createElement('div');
+  footer.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;padding:12px 22px;border-top:1px solid var(--border)';
+  footer.innerHTML =
+    '<button class="prio-btn" onclick="document.getElementById(\'fyConfigModal\').remove()">Cancel</button>' +
+    '<button class="prio-btn primary" onclick="_saveFYStart()">Save</button>';
+  modal.appendChild(footer);
+  ov.appendChild(modal); document.body.appendChild(ov);
+}
+function _saveFYStart(){
+  var v = parseInt(document.getElementById('fyStartSelect').value, 10);
+  if(isNaN(v) || v < 1 || v > 12){ showToast('Invalid month','error'); return; }
+  _fyStartMonth = v;
+  try { localStorage.setItem('pmr_fy_start_month', String(v)); } catch(e){}
+  _rebuildQMonthMap();
+  persistData();
+  var ov = document.getElementById('fyConfigModal'); if(ov) ov.remove();
+  showToast('FY start month saved. Use Add Quarter / Add FY to populate the new layout.', 'success');
 }
 
 // ── DYNAMIC TABLE HEADER ──────────────────────────────────────
@@ -7596,6 +7722,27 @@ function openProfile(){
   };
   foot.appendChild(refundLink);
 
+  var sep3=document.createElement('span');
+  sep3.style.cssText='font-size:11px;color:var(--muted);margin:0 6px';
+  sep3.textContent='·';
+  foot.appendChild(sep3);
+
+  var contactLink=document.createElement('a');
+  contactLink.href='https://app.pmroadmapper.com/contact.html?source=contact_form';
+  contactLink.target='_blank';
+  contactLink.rel='noopener noreferrer';
+  contactLink.style.cssText='font-size:11px;color:var(--muted);text-decoration:none;';
+  contactLink.onmouseover=function(){ contactLink.style.color='var(--accent)'; };
+  contactLink.onmouseout=function(){ contactLink.style.color='var(--muted)'; };
+  contactLink.textContent='Contact Us';
+  contactLink.onclick=function(e){
+    if(window.location.protocol === 'file:' && window.electronAPI && window.electronAPI.openExternal){
+      e.preventDefault();
+      window.electronAPI.openExternal(contactLink.href);
+    }
+  };
+  foot.appendChild(contactLink);
+
   var rightBtns=document.createElement('div'); rightBtns.style.cssText='display:flex;gap:8px;align-items:center';
 
   var signOutBtn=document.createElement('button');
@@ -7865,7 +8012,7 @@ function openComments(evt, rowId){
 
   // New comment input
   var inputSection=document.createElement('div');
-  inputSection.style.cssText='padding:14px 20px;border-top:1px solid var(--border);background:#fafbff;flex-shrink:0';
+  inputSection.style.cssText='padding:14px 20px;border-top:1px solid var(--border);background:var(--surface-low);flex-shrink:0';
 
   var inputHdr=document.createElement('div');
   inputHdr.style.cssText='font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px';
@@ -8006,7 +8153,7 @@ function showReplyInput(parentId, rowId, triggerEl, replyBtn, container){
   var wrap=document.createElement('div'); wrap.className='reply-input-wrap'; wrap.id='replyInput_'+parentId;
   var ta=document.createElement('textarea'); ta.placeholder='Write a reply…';
   var btn=document.createElement('button');
-  btn.style.cssText='margin-top:6px;padding:5px 14px;background:var(--navy);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer';
+  btn.style.cssText='margin-top:6px;padding:5px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer';
   btn.textContent='Post reply';
   btn.onclick=async function(){
     var txt=ta.value.trim(); if(!txt) return;
@@ -12541,6 +12688,7 @@ function buildTodoItem(entry){
     _formatDue(t.due)+
     kpiSelHtml+
     '<span class="todo-tag" onclick="document.getElementById(\'todoFilterSelect\').value=\''+escapedInit+'\';renderTodo()">'+escHtml(entry.initiative)+'</span>'+
+    '<button class="todo-comment-btn" onclick="openEditTodoModal(\''+escapedInit+'\',\''+escapedId+'\')" title="Edit task">'+svgIcon('edit',{size:12})+'</button>'+
     '<button class="todo-comment-btn" onclick="addTodoLink(\''+escapedInit+'\',\''+escapedId+'\')" title="Add link">'+svgIcon('link',{size:12})+'</button>'+
     '<button class="todo-comment-btn" onclick="editTodoComment(\''+escapedInit+'\',\''+escapedId+'\')" title="Add/Edit comment">'+svgIcon('chat',{size:12})+'</button>'+
     '<button class="todo-comment-btn" onclick="editTodoDue(\''+escapedInit+'\',\''+escapedId+'\')" title="Set due date">'+svgIcon('calendar',{size:12})+'</button>'+
@@ -12738,7 +12886,13 @@ function setTodoStatus(initiative,todoId,status){
   if(!canEdit('todo')) return;
   var list=todoAllData[initiative]||[];
   var t=list.find(function(i){return i.id===todoId;});
-  if(t) t.status=status;
+  if(t){
+    t.status=status;
+    // v1.36.0: bidirectional — push back to plan task if this was auto-pulled
+    if(t.sourcePlanTaskId){
+      try { _syncTodoStatusToPlan(t); } catch(e){ console.warn('[todo] sync status to plan failed:', e); }
+    }
+  }
   persistData();
   renderTodo();
 }
@@ -12881,6 +13035,206 @@ function deleteTodoItem(initiative,todoId){
   if(todoAllData[initiative].length===0) delete todoAllData[initiative];
   persistData();
   renderTodo();
+}
+
+// v1.36.0: To-Do page cross-tabs — jump to Timesheet / My Capacity views
+// which are rendered by the existing KPI Scorecard overlay. The overlay
+// surfaces via setKPIView and we close the To-Do page first. On KPI close
+// the user lands back on the roadmap; the tabs aren't persistent state —
+// they're just a launcher. If the user is already inside KPI (timesheet or
+// capacity) this is a no-op.
+function switchTodoTab(tab){
+  var btns = document.querySelectorAll('#todoCrossTabs [data-todo-tab]');
+  btns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-todo-tab') === tab); });
+  if(tab === 'todo') return; // already here
+  // Close the todo overlay, open KPI in the right view
+  try { if(typeof closeTodo === 'function') closeTodo(); } catch(e){}
+  if(typeof openKPI !== 'function'){ showToast('KPI Scorecard unavailable','error'); return; }
+  openKPI();
+  // Run after the overlay paints so setKPIView wires up
+  setTimeout(function(){
+    if(typeof setKPIView === 'function'){
+      setKPIView(tab === 'my-capacity' ? 'capacity' : 'timesheet');
+    }
+  }, 30);
+}
+
+// v1.36.0: Is `owner` (a display-name-or-email string) the current user?
+function _todoOwnerIsMe(owner){
+  if(!owner || !_currentUser) return false;
+  var cand = [];
+  if(_currentUser.email) cand.push(String(_currentUser.email).toLowerCase());
+  var meta = _currentUser.user_metadata || {};
+  if(meta.display_name) cand.push(String(meta.display_name).toLowerCase());
+  if(meta.full_name)    cand.push(String(meta.full_name).toLowerCase());
+  if(typeof userProfile !== 'undefined' && userProfile){
+    if(userProfile.email) cand.push(String(userProfile.email).toLowerCase());
+    if(userProfile.name)  cand.push(String(userProfile.name).toLowerCase());
+  }
+  return cand.indexOf(String(owner).toLowerCase()) >= 0;
+}
+
+// v1.36.0: When a plan task is assigned/unassigned, mirror it in the
+// owner's To-Do list. Idempotent — `sourcePlanTaskId` guards duplicates.
+function _syncPlanOwnerToTodo(t, plan, prevOwner, newOwner){
+  if(!t || !plan) return;
+  var planName = plan.name || 'Plan';
+  // Remove any stale todo linked to this plan task from the PREVIOUS owner
+  // (whether or not it was us — the task simply no longer belongs there).
+  if(prevOwner && prevOwner !== newOwner){
+    Object.keys(todoAllData).forEach(function(init){
+      var arr = todoAllData[init] || [];
+      var before = arr.length;
+      todoAllData[init] = arr.filter(function(x){ return x.sourcePlanTaskId !== t.id; });
+      if(todoAllData[init].length !== before && todoAllData[init].length === 0) delete todoAllData[init];
+    });
+  }
+  // Only auto-create when the NEW owner is the current user. Other users'
+  // todos sync through their own sessions — we don't write to other accounts.
+  if(!_todoOwnerIsMe(newOwner)) return;
+  var initName = planName;
+  if(!todoAllData[initName]) todoAllData[initName] = [];
+  // Idempotency: skip if we already have a todo for this plan task
+  var exists = todoAllData[initName].some(function(x){ return x.sourcePlanTaskId === t.id; });
+  if(exists) return;
+  var hours = parseFloat(t.hours) || (parseInt(t.durationDays,10) ? parseInt(t.durationDays,10) * 8 : 0);
+  todoAllData[initName].push({
+    id: 'td_pln_' + Date.now() + '_' + Math.floor(Math.random()*1000),
+    text: t.name || 'Task',
+    status: t.status === 'done' ? 'done' : (t.status === 'in-progress' ? 'progress' : 'open'),
+    due: t.endDate || '',
+    estimate: hours ? String(hours) : '',
+    kpiId: '',
+    comments: t.notes || '',
+    actualHours: '',
+    links: [],
+    createdAt: Date.now(),
+    importedFrom: 'Plan: ' + planName,
+    sourcePlanTaskId: t.id,
+    sourcePlanId: plan.id,
+    autoCreated: true
+  });
+}
+
+// v1.36.0: Push a todo status change back to the plan task it came from.
+function _syncTodoStatusToPlan(todo){
+  if(!todo || !todo.sourcePlanTaskId) return;
+  var plan = (projectPlans || []).find(function(p){ return p.id === todo.sourcePlanId; });
+  if(!plan) return;
+  var task = (plan.tasks || []).find(function(x){ return x.id === todo.sourcePlanTaskId; });
+  if(!task) return;
+  var next = todo.status === 'done' ? 'done' : (todo.status === 'progress' ? 'in-progress' : 'not-started');
+  if(task.status !== next){
+    task.status = next;
+    if(next === 'done') task.percentComplete = 100;
+    else if(next === 'in-progress' && (task.percentComplete||0) === 0) task.percentComplete = 10;
+    else if(next === 'not-started') task.percentComplete = 0;
+    plan.updatedAt = Date.now();
+  }
+}
+
+// v1.36.0: Unified edit-todo modal — one place to update every editable field.
+function openEditTodoModal(initiative, todoId){
+  var list = todoAllData[initiative] || [];
+  var t = list.find(function(x){ return x.id === todoId; });
+  if(!t) return;
+  var ex = document.getElementById('editTodoModal'); if(ex) ex.remove();
+
+  var ov = document.createElement('div');
+  ov.id = 'editTodoModal';
+  ov.className = 'modal-overlay';
+  ov.onclick = function(e){ if(e.target === ov) ov.remove(); };
+
+  var modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.cssText = 'width:min(480px,94vw);max-height:90vh;display:flex;flex-direction:column';
+
+  var hdr = document.createElement('div'); hdr.className = 'modal-hdr';
+  hdr.innerHTML = '<h2>'+svgIcon('edit',{size:18})+' Edit task</h2>' +
+    '<button class="close" onclick="document.getElementById(\'editTodoModal\').remove()">\u2715</button>';
+  modal.appendChild(hdr);
+
+  var initOpts = Object.keys(todoAllData).concat(initiative).filter(function(v,i,a){return a.indexOf(v)===i;});
+  var kpiOpts = '<option value="">— none —</option>';
+  KPI_TEMPLATE.forEach(function(g){ g.items.forEach(function(k){
+    kpiOpts += '<option value="'+escHtml(k.id)+'"'+(t.kpiId===k.id?' selected':'')+'>'+escHtml(k.name)+'</option>';
+  });});
+  var statusCur = _todoStatus(t);
+
+  var body = document.createElement('div');
+  body.style.cssText = 'padding:18px 22px;overflow-y:auto;display:flex;flex-direction:column;gap:12px';
+  body.innerHTML =
+    '<label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Task<textarea id="edTodoText" rows="2" style="width:100%;margin-top:4px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);background:var(--white);resize:vertical">'+escHtml(t.text||'')+'</textarea></label>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+      '<label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Status<select id="edTodoStatus" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text);background:var(--white)">' +
+        '<option value="open"'+(statusCur==='open'?' selected':'')+'>Open</option>' +
+        '<option value="progress"'+(statusCur==='progress'?' selected':'')+'>In progress</option>' +
+        '<option value="done"'+(statusCur==='done'?' selected':'')+'>Done</option>' +
+      '</select></label>' +
+      '<label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Due date<input id="edTodoDue" type="date" value="'+escHtml(t.due||'')+'" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text);background:var(--white)"></label>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+      '<label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Estimate (hrs)<input id="edTodoEst" type="number" min="0" step="0.5" value="'+escHtml(String(t.estimate||''))+'" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text);background:var(--white)"></label>' +
+      '<label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Actual (hrs)<input id="edTodoAct" type="number" min="0" step="0.5" value="'+escHtml(String(t.actualHours||''))+'" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text);background:var(--white)"></label>' +
+    '</div>' +
+    '<label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Initiative<select id="edTodoInit" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text);background:var(--white)">' +
+      initOpts.map(function(name){ return '<option value="'+escHtml(name)+'"'+(name===initiative?' selected':'')+'>'+escHtml(name)+'</option>'; }).join('') +
+    '</select></label>' +
+    '<label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Linked KPI<select id="edTodoKpi" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text);background:var(--white)">'+kpiOpts+'</select></label>' +
+    '<label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Notes<textarea id="edTodoNotes" rows="3" style="width:100%;margin-top:4px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;color:var(--text);background:var(--white);resize:vertical">'+escHtml(t.comments||'')+'</textarea></label>';
+  modal.appendChild(body);
+
+  var footer = document.createElement('div');
+  footer.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;padding:12px 22px;border-top:1px solid var(--border)';
+  footer.innerHTML =
+    '<button class="prio-btn" onclick="document.getElementById(\'editTodoModal\').remove()">Cancel</button>' +
+    '<button class="prio-btn primary" onclick="_saveEditTodo(\''+initiative.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\',\''+todoId+'\')">Save</button>';
+  modal.appendChild(footer);
+
+  ov.appendChild(modal);
+  document.body.appendChild(ov);
+}
+
+function _saveEditTodo(initiative, todoId){
+  var list = todoAllData[initiative] || [];
+  var t = list.find(function(x){ return x.id === todoId; });
+  if(!t){ return; }
+  var newText   = (document.getElementById('edTodoText').value  || '').trim();
+  var newStatus = document.getElementById('edTodoStatus').value;
+  var newDue    = document.getElementById('edTodoDue').value;
+  var newEst    = document.getElementById('edTodoEst').value;
+  var newAct    = document.getElementById('edTodoAct').value;
+  var newInit   = document.getElementById('edTodoInit').value;
+  var newKpi    = document.getElementById('edTodoKpi').value;
+  var newNotes  = document.getElementById('edTodoNotes').value;
+
+  if(!newText){ showToast('Task name cannot be empty','warning'); return; }
+
+  t.text = newText;
+  t.status = newStatus;
+  t.due = newDue || '';
+  t.estimate = newEst || '';
+  t.actualHours = newAct || '';
+  t.kpiId = newKpi || '';
+  t.comments = newNotes || '';
+
+  // Handle initiative change — move between arrays.
+  if(newInit && newInit !== initiative){
+    todoAllData[initiative] = (todoAllData[initiative] || []).filter(function(x){ return x.id !== todoId; });
+    if(todoAllData[initiative].length === 0) delete todoAllData[initiative];
+    if(!todoAllData[newInit]) todoAllData[newInit] = [];
+    todoAllData[newInit].push(t);
+  }
+
+  // Bidirectional sync back to plan task if this todo was auto-pulled.
+  if(t.sourcePlanTaskId && typeof _syncTodoStatusToPlan === 'function'){
+    try { _syncTodoStatusToPlan(t); } catch(e){ console.warn('[todo] sync back to plan failed:', e); }
+  }
+
+  persistData();
+  var ov = document.getElementById('editTodoModal'); if(ov) ov.remove();
+  renderTodo();
+  showToast('Task updated','success');
 }
 
 function getTodoCountForInitiative(name){
@@ -15684,7 +16038,7 @@ function renderPlansList(){
   var list = document.getElementById('plansList');
   if(!list) return;
   if(!projectPlans.length){
-    list.innerHTML = '<div style="padding:20px 16px;font-size:11px;color:rgba(255,255,255,.4);text-align:center">No plans yet.<br>Click <strong style="color:#a78bfa">+ New plan</strong> to start.</div>';
+    list.innerHTML = '<div style="padding:20px 16px;font-size:12px;color:rgba(255,255,255,.75);text-align:center;line-height:1.5">No plans yet.<br>Click <strong style="color:#c4b5fd">+ New plan</strong> to start.</div>';
     return;
   }
   list.innerHTML = projectPlans.map(function(p){
@@ -15948,7 +16302,6 @@ function renderPlanListView(plan){
     // gold diamond per row when this task is a milestone. (v1.23.1)
     html += '<td><div class="wbs-name-cell" style="padding-left:'+indentPx+'px">'+
       expandTri+
-      '<span class="plan-source-icon '+escHtml(t.source||'custom')+'" title="Source: '+escHtml(t.source||'custom')+' \u2014 where this task came from">'+escHtml(t.source||'custom')+'</span>'+
       syncBadge+
       '<input type="text" class="'+nameInputCls+'" value="'+escHtml(t.name||'')+'" data-field="name" data-task-id="'+escHtml(t.id)+'"'+(isSummary?' title="Summary task \u2014 name editable, dates roll up from children"':' title="Click to edit task name. Tab indents it under the previous task. Shift+Tab promotes it back."')+'>'+
     '</div></td>';
@@ -16225,6 +16578,11 @@ function onTaskFieldChange(taskId, field, value){
       'plan:' + p.id
     );
   }
+  // v1.36.0: Auto-pull into the assignee's To-Do list when the task is
+  // assigned to the current user. Idempotent via sourcePlanTaskId.
+  if(field === 'owner'){
+    try { _syncPlanOwnerToTodo(t, p, prevOwner, value); } catch(e){ console.warn('[todo] auto-pull failed:', e); }
+  }
   // Plan ↔ G2M sync: if status or percent changed AND this task came from
   // a G2M checklist, propagate the done state back to the source item.
   if((field === 'status' || field === 'percentComplete') && t.source === 'g2m'){
@@ -16474,12 +16832,9 @@ function openAddTaskModal(){
       '<div class="plan-modal-header"><h3>Add tasks to plan</h3><button class="plan-modal-close" onclick="closeAddTaskModal()">\u00D7</button></div>'+
       '<div class="plan-modal-tabs">'+
         '<button class="plan-modal-tab active" data-add-tab="custom" onclick="setAddTaskTab(\'custom\')">Custom</button>'+
-        '<button class="plan-modal-tab" data-add-tab="library" onclick="setAddTaskTab(\'library\')">From Library</button>'+
-        '<button class="plan-modal-tab" data-add-tab="excel" onclick="setAddTaskTab(\'excel\')">From Excel</button>'+
-        '<button class="plan-modal-tab" data-add-tab="templates" onclick="setAddTaskTab(\'templates\')">Import template</button>'+
-        '<button class="plan-modal-tab" data-add-tab="todo" onclick="setAddTaskTab(\'todo\')">From ToDo</button>'+
+        '<button class="plan-modal-tab" data-add-tab="library" onclick="setAddTaskTab(\'library\')">From Task Library</button>'+
+        '<button class="plan-modal-tab" data-add-tab="todo" onclick="setAddTaskTab(\'todo\')">From To-Do</button>'+
         '<button class="plan-modal-tab" data-add-tab="g2m" onclick="setAddTaskTab(\'g2m\')">From G2M</button>'+
-        '<button class="plan-modal-tab" data-add-tab="capacity" onclick="setAddTaskTab(\'capacity\')">From CapacityIQ</button>'+
       '</div>'+
       '<div class="plan-modal-body" id="addTaskBody"></div>'+
       '<div class="plan-modal-footer">'+
@@ -20080,6 +20435,8 @@ async function checkSuperAdmin(){
       if(div2) div2.style.display='';
     }
   } catch(e){ console.warn('Super admin check failed:',e.message); }
+  // Now that we know admin status, fetch new-leads count for the sidebar badge.
+  if(_isPlatformAdmin || _isSuperAdmin) refreshNewLeadsBadge();
 }
 
 function openAdmin(){
@@ -20123,11 +20480,14 @@ async function renderPlatformAdmin(){
   // Tab bar
   var tabBar=document.createElement('div');
   tabBar.className='pa-tab-bar';
-  var tabDefs=[{key:'users',label:'User Directory'},{key:'stats',label:'System Stats'},{key:'teams',label:'Team Management'},{key:'orgs',label:'Organizations'}];
+  var tabDefs=[{key:'users',label:'User Directory'},{key:'stats',label:'System Stats'},{key:'teams',label:'Team Management'},{key:'orgs',label:'Organizations'},{key:'leads',label:'Leads'}];
   tabDefs.forEach(function(td){
     var btn=document.createElement('button');
-    btn.textContent=td.label;
+    var label=td.label;
+    if(td.key==='leads' && _newLeadsCount>0) label='Leads ('+_newLeadsCount+')';
+    btn.textContent=label;
     btn.className='pa-tab'+(td.key===_paTab?' active':'');
+    btn.dataset.tabKey=td.key;
     btn.onclick=function(){ _paTab=td.key; renderPlatformAdmin(); };
     tabBar.appendChild(btn);
   });
@@ -20141,6 +20501,7 @@ async function renderPlatformAdmin(){
   else if(_paTab==='stats') await renderPAStats(content);
   else if(_paTab==='teams') await renderPATeams(content);
   else if(_paTab==='orgs') await renderPAOrgs(content);
+  else if(_paTab==='leads') await renderPALeads(content);
 }
 
 async function _paFetchUsers(){
@@ -20576,6 +20937,218 @@ async function renderPAOrgs(container){
       unaffWrap.appendChild(chip);
     });
   }
+}
+
+// ── LEADS (Contact Us submissions) ──────────────────────────────────────
+var _paLeads=[];
+var _paLeadsFilter='all'; // 'all' | status values
+var _newLeadsCount=0;
+
+async function refreshNewLeadsBadge(){
+  if(!_isPlatformAdmin && !_isSuperAdmin) return;
+  try{
+    var r=await window.electronAPI.supaRequest({
+      path:'/functions/v1/admin-api',method:'POST',
+      body:{action:'count-new-leads'},token:_accessToken||null
+    });
+    if(r.ok&&r.data&&typeof r.data.count==='number'){
+      _newLeadsCount=r.data.count;
+      var badge=document.getElementById('newLeadsSidebarBadge');
+      if(badge){
+        badge.textContent=_newLeadsCount>99?'99+':String(_newLeadsCount);
+        badge.style.display=_newLeadsCount>0?'inline-block':'none';
+      }
+      // If Platform Admin is open on the Leads tab, refresh its header too.
+      var tabBtns=document.querySelectorAll('.pa-tab');
+      tabBtns.forEach(function(b){
+        if(b.dataset&&b.dataset.tabKey==='leads'){
+          b.textContent=_newLeadsCount>0?('Leads ('+_newLeadsCount+')'):'Leads';
+        }
+      });
+    }
+  }catch(e){ console.warn('[refreshNewLeadsBadge]',e.message); }
+}
+
+async function _paFetchLeads(force){
+  if(!force && _paLeads.length>0) return _paLeads;
+  try{
+    var r=await window.electronAPI.supaRequest({
+      path:'/functions/v1/admin-api',method:'POST',
+      body:{action:'list-leads'},token:_accessToken||null
+    });
+    if(r.ok&&r.data&&r.data.leads) _paLeads=r.data.leads;
+  }catch(e){showToast('Failed to load leads: '+e.message,'error');}
+  return _paLeads;
+}
+
+function _paLeadStatusBadge(status){
+  var s=status||'new';
+  var colors={
+    'new':       {bg:'rgba(59,130,246,.12)', fg:'#3b82f6'},
+    'contacted': {bg:'rgba(245,158,11,.12)', fg:'#f59e0b'},
+    'qualified': {bg:'rgba(139,92,246,.12)', fg:'#8b5cf6'},
+    'converted': {bg:'rgba(16,185,129,.12)', fg:'#10b981'},
+    'archived':  {bg:'rgba(100,116,139,.12)', fg:'#64748b'}
+  };
+  var c=colors[s]||colors['new'];
+  return '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:9999px;background:'+c.bg+';color:'+c.fg+';text-transform:capitalize">'+escHtml(s)+'</span>';
+}
+
+async function renderPALeads(container){
+  container.innerHTML='<p style="color:var(--muted);font-size:13px">Loading leads...</p>';
+  var leads=await _paFetchLeads(true);
+  container.innerHTML='';
+
+  // Toolbar: filter + refresh + counts
+  var counts={all:leads.length,new:0,contacted:0,qualified:0,converted:0,archived:0};
+  leads.forEach(function(l){ if(counts[l.status]!=null) counts[l.status]++; });
+
+  var toolbar=document.createElement('div');
+  toolbar.style.cssText='display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap';
+  var filterOpts=['all','new','contacted','qualified','converted','archived'];
+  var selHtml='<select class="pa-org-filter" id="paLeadsFilter">';
+  filterOpts.forEach(function(k){
+    selHtml+='<option value="'+k+'"'+(k===_paLeadsFilter?' selected':'')+'>'+k.charAt(0).toUpperCase()+k.slice(1)+' ('+counts[k]+')</option>';
+  });
+  selHtml+='</select>';
+  toolbar.innerHTML=selHtml+
+    '<button class="pa-org-btn-primary" id="paLeadsRefresh" style="padding:6px 14px;font-size:12px">Refresh</button>'+
+    '<span style="font-size:12px;color:var(--muted);font-weight:600">'+leads.length+' total leads</span>';
+  container.appendChild(toolbar);
+  document.getElementById('paLeadsFilter').onchange=function(){ _paLeadsFilter=this.value; renderPALeadsTable(container); };
+  document.getElementById('paLeadsRefresh').onclick=async function(){ _paLeads=[]; await renderPALeads(container); };
+
+  var tblWrap=document.createElement('div');
+  tblWrap.id='paLeadsTableWrap';
+  tblWrap.style.cssText='overflow-x:auto';
+  container.appendChild(tblWrap);
+  renderPALeadsTable(container);
+}
+
+function renderPALeadsTable(container){
+  var wrap=document.getElementById('paLeadsTableWrap');
+  if(!wrap) return;
+  var filtered=_paLeadsFilter==='all'
+    ? _paLeads.slice()
+    : _paLeads.filter(function(l){ return l.status===_paLeadsFilter; });
+
+  if(filtered.length===0){
+    wrap.innerHTML='<p style="text-align:center;color:var(--muted);padding:32px;font-size:13px">No leads '+(_paLeadsFilter==='all'?'yet':'with status "'+_paLeadsFilter+'"')+'.</p>';
+    return;
+  }
+
+  var html='<table class="pa-table"><thead><tr><th>Received</th><th>Name</th><th>Company</th><th>Email</th><th>Source</th><th>Status</th><th>Set Status</th><th></th></tr></thead><tbody>';
+  filtered.forEach(function(l){
+    var when=l.created_at?new Date(l.created_at).toLocaleString():'—';
+    var fullName=escHtml((l.name||'')+' '+(l.surname||'')).trim();
+    html+='<tr class="clickable" onclick="showPALeadDetail(\''+l.id+'\')">';
+    html+='<td style="font-size:11px;color:var(--muted);white-space:nowrap">'+when+'</td>';
+    html+='<td style="font-weight:600;font-size:12px">'+(fullName||'<span style="color:var(--muted)">—</span>')+'</td>';
+    html+='<td style="font-size:12px">'+(l.company?escHtml(l.company):'<span style="color:var(--muted)">—</span>')+'</td>';
+    html+='<td style="font-size:12px"><a href="mailto:'+escHtml(l.email)+'" onclick="event.stopPropagation()" style="color:var(--accent);text-decoration:none">'+escHtml(l.email)+'</a></td>';
+    html+='<td style="font-size:11px;color:var(--muted)">'+escHtml(l.source||'—')+'</td>';
+    html+='<td>'+_paLeadStatusBadge(l.status)+'</td>';
+    html+='<td onclick="event.stopPropagation()"><select class="pa-role-sel" onchange="paSetLeadStatus(\''+l.id+'\',this.value)">';
+    ['new','contacted','qualified','converted','archived'].forEach(function(s){
+      html+='<option value="'+s+'"'+(l.status===s?' selected':'')+'>'+s+'</option>';
+    });
+    html+='</select></td>';
+    html+='<td onclick="event.stopPropagation()"><button onclick="paDeleteLead(\''+l.id+'\')" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px" title="Delete">'+
+      '<svg viewBox="0 0 20 20" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5"><path d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"/></svg>'+
+    '</button></td>';
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  wrap.innerHTML=html;
+}
+
+function showPALeadDetail(leadId){
+  var l=_paLeads.find(function(x){return x.id===leadId;});
+  if(!l) return;
+  var existing=document.getElementById('paLeadDetail');
+  if(existing) existing.remove();
+  var detail=document.createElement('div');
+  detail.id='paLeadDetail';
+  detail.className='pa-detail-card';
+  detail.style.cssText='margin-top:16px;animation:fadeIn .15s';
+  var when=l.created_at?new Date(l.created_at).toLocaleString():'—';
+  var lbl='<span style="color:var(--muted);font-size:10px;font-weight:600;text-transform:uppercase;display:block;margin-bottom:2px">';
+  detail.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'+
+    '<h3 style="margin:0">Lead Details</h3>'+
+    '<button onclick="this.parentElement.parentElement.remove()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer">&times;</button></div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:13px;margin-bottom:14px">'+
+    '<div>'+lbl+'Name</span>'+escHtml((l.name||'')+' '+(l.surname||'')).trim()+'</div>'+
+    '<div>'+lbl+'Email</span><a href="mailto:'+escHtml(l.email)+'" style="color:var(--accent);text-decoration:none">'+escHtml(l.email)+'</a></div>'+
+    '<div>'+lbl+'Company</span>'+escHtml(l.company||'—')+'</div>'+
+    '<div>'+lbl+'Received</span>'+when+'</div>'+
+    '<div>'+lbl+'Source</span>'+escHtml(l.source||'—')+'</div>'+
+    '<div>'+lbl+'Status</span>'+_paLeadStatusBadge(l.status)+'</div>'+
+    '<div style="grid-column:span 2">'+lbl+'IP</span><span style="font-family:monospace;font-size:11px">'+escHtml(l.ip||'—')+'</span></div>'+
+    '<div>'+lbl+'User-Agent</span><span style="font-size:11px;color:var(--muted);word-break:break-all">'+escHtml((l.user_agent||'—').slice(0,80))+'</span></div>'+
+    '</div>'+
+    '<div>'+lbl+'Message</span><div style="white-space:pre-wrap;font-size:13px;line-height:1.5;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">'+escHtml(l.message||'')+'</div></div>'+
+    '<div style="margin-top:14px">'+lbl+'Admin Notes</span>'+
+      '<textarea id="paLeadNotes_'+l.id+'" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;min-height:70px;background:var(--white);color:var(--text)" placeholder="Private notes visible only to platform admins">'+escHtml(l.admin_notes||'')+'</textarea>'+
+      '<button class="pa-org-btn-primary" onclick="paSaveLeadNotes(\''+l.id+'\')" style="margin-top:8px;padding:6px 14px;font-size:12px">Save notes</button>'+
+    '</div>';
+  var wrap=document.getElementById('paLeadsTableWrap');
+  if(wrap) wrap.parentElement.appendChild(detail);
+}
+
+async function paSetLeadStatus(leadId,status){
+  try{
+    var r=await window.electronAPI.supaRequest({
+      path:'/functions/v1/admin-api',method:'POST',
+      body:{action:'update-lead',id:leadId,status:status},token:_accessToken||null
+    });
+    if(r.ok&&r.data&&r.data.ok){
+      showToast('Lead marked '+status,'success');
+      var l=_paLeads.find(function(x){return x.id===leadId;});
+      if(l) l.status=status;
+      renderPALeadsTable(document.getElementById('paTabContent'));
+      refreshNewLeadsBadge();
+    } else {
+      showToast('Failed: '+(r.data&&r.data.error||'Unknown error'),'error');
+    }
+  }catch(e){showToast('Error: '+e.message,'error');}
+}
+
+async function paSaveLeadNotes(leadId){
+  var ta=document.getElementById('paLeadNotes_'+leadId);
+  if(!ta) return;
+  try{
+    var r=await window.electronAPI.supaRequest({
+      path:'/functions/v1/admin-api',method:'POST',
+      body:{action:'update-lead',id:leadId,admin_notes:ta.value},token:_accessToken||null
+    });
+    if(r.ok&&r.data&&r.data.ok){
+      showToast('Notes saved','success');
+      var l=_paLeads.find(function(x){return x.id===leadId;});
+      if(l) l.admin_notes=ta.value;
+    } else {
+      showToast('Failed: '+(r.data&&r.data.error||'Unknown error'),'error');
+    }
+  }catch(e){showToast('Error: '+e.message,'error');}
+}
+
+async function paDeleteLead(leadId){
+  if(!confirm('Delete this lead? This cannot be undone.')) return;
+  try{
+    var r=await window.electronAPI.supaRequest({
+      path:'/functions/v1/admin-api',method:'POST',
+      body:{action:'delete-lead',id:leadId},token:_accessToken||null
+    });
+    if(r.ok&&r.data&&r.data.ok){
+      showToast('Lead deleted','success');
+      _paLeads=_paLeads.filter(function(x){return x.id!==leadId;});
+      var detail=document.getElementById('paLeadDetail');
+      if(detail) detail.remove();
+      renderPALeadsTable(document.getElementById('paTabContent'));
+      refreshNewLeadsBadge();
+    } else {
+      showToast('Failed: '+(r.data&&r.data.error||'Unknown error'),'error');
+    }
+  }catch(e){showToast('Error: '+e.message,'error');}
 }
 
 async function paCreateOrg(){
@@ -28700,11 +29273,13 @@ function _tbRenderLeft(){
           ';border-radius:8px;background:' + (active ? 'var(--light-blue-bg)' : 'var(--white)') +
           ';color:var(--text);font-size:12px;font-weight:600;cursor:pointer;margin-bottom:6px;transition:all .12s';
         item.innerHTML =
-          '<div style="display:flex;align-items:center;gap:6px">' +
-            '<span style="color:var(--accent);flex-shrink:0">' + (typeof svgIcon==='function' ? svgIcon(tpl.icon || 'grid',{size:14}) : '') + '</span>' +
-            '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(tpl.name) + '</span>' +
-          '</div>' +
-          '<div style="font-size:10px;color:var(--muted);font-weight:500;margin-top:2px">' + (tpl.tasks || []).length + ' tasks</div>';
+          '<div style="display:flex;align-items:flex-start;gap:8px">' +
+            '<span style="color:var(--accent);flex-shrink:0;display:flex;align-items:center;height:16px">' + (typeof svgIcon==='function' ? svgIcon(tpl.icon || 'grid',{size:14}) : '') + '</span>' +
+            '<div style="flex:1;min-width:0">' +
+              '<div style="font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:16px">' + escHtml(tpl.name) + '</div>' +
+              '<div style="font-size:10px;color:var(--muted);font-weight:500;margin-top:3px;line-height:1.2">' + (tpl.tasks || []).length + ' tasks</div>' +
+            '</div>' +
+          '</div>';
         item.onclick = function(){ _tbRenderTemplate(tpl); };
         list.appendChild(item);
       });
@@ -28721,24 +29296,69 @@ function _tbRenderLeft(){
       list.innerHTML = '<div style="padding:16px;font-size:12px;color:var(--muted);text-align:center">Task library is empty. Add tasks anywhere in the app and they\'ll appear here.</div>';
       return;
     }
-    // Render the library tasks directly as checkbox rows — no "template"
-    // concept, just a long scroll of pickable tasks.
+    // Render the library tasks grouped by category with per-category Select
+    // All, plus a global Select All / Clear header. Previous version was a
+    // flat list with no multi-select controls — 173+ tasks one-by-one.
     document.getElementById('tbRightHead').innerHTML =
-      '<div style="font-size:16px;font-weight:700;color:var(--text)">Task Library</div>' +
-      '<div style="font-size:11px;color:var(--muted);margin-top:4px">' + lib.length + ' reusable tasks. Check any you want to pull into ' + escHtml(_tbState.sourceContext) + '.</div>';
-    var body = document.getElementById('tbRightBody');
-    body.innerHTML = '';
-    lib.forEach(function(t, i){
-      var norm = {
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">' +
+        '<div style="flex:1">' +
+          '<div style="font-size:16px;font-weight:700;color:var(--text)">Task Library</div>' +
+          '<div style="font-size:11px;color:var(--muted);margin-top:4px">' + lib.length + ' reusable tasks. Check any you want to pull into ' + escHtml(_tbState.sourceContext) + '.</div>' +
+        '</div>' +
+        '<button id="tbLibSelectAll" class="btn" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--white);color:var(--text);font-size:11px;font-weight:600;cursor:pointer">Select All</button>' +
+        '<button id="tbLibClear" class="btn" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--white);color:var(--text);font-size:11px;font-weight:600;cursor:pointer">Clear</button>' +
+      '</div>';
+    // Normalise + group by category
+    var normLib = lib.map(function(t, i){
+      return {
         id: 'lib_' + (t.id || i),
         name: t.name || t.text || 'Task ' + (i+1),
         description: t.description || '',
         hours: parseFloat(t.hours) || parseFloat(t.estimate) || 0,
-        phase: t.category || '',
+        phase: t.category || 'Uncategorized',
         role: t.owner || '',
         workstream: t.source || 'Library'
       };
-      body.appendChild(_tbMakeTaskRow(norm));
+    });
+    var byCat = {};
+    var catOrder = [];
+    normLib.forEach(function(n){
+      var c = n.phase || 'Uncategorized';
+      if(!byCat[c]){ byCat[c] = []; catOrder.push(c); }
+      byCat[c].push(n);
+    });
+    catOrder.sort();
+    var body = document.getElementById('tbRightBody');
+    body.innerHTML = '';
+    catOrder.forEach(function(cat){
+      var catTasks = byCat[cat];
+      var hdr = document.createElement('div');
+      hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--border)';
+      hdr.innerHTML =
+        '<div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.04em">' +
+          escHtml(cat) + ' (' + catTasks.length + ')' +
+        '</div>' +
+        '<button data-tb-cat-sel="'+escHtml(cat)+'" class="btn" style="padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:var(--white);color:var(--text);font-size:10px;font-weight:600;cursor:pointer">Select category</button>';
+      body.appendChild(hdr);
+      catTasks.forEach(function(n){ body.appendChild(_tbMakeTaskRow(n)); });
+    });
+    // Wire the global + per-category buttons
+    document.getElementById('tbLibSelectAll').onclick = function(){
+      normLib.forEach(function(n){ _tbAddTask(n); });
+      _tbRefreshCheckboxes();
+    };
+    document.getElementById('tbLibClear').onclick = function(){
+      var ids = normLib.map(function(n){ return n.id; });
+      _tbState.selectedTasks = _tbState.selectedTasks.filter(function(x){ return ids.indexOf(x.id) < 0; });
+      _tbRefreshCheckboxes();
+      _tbUpdateCount();
+    };
+    body.parentElement.querySelectorAll('[data-tb-cat-sel]').forEach(function(btn){
+      btn.onclick = function(){
+        var c = btn.getAttribute('data-tb-cat-sel');
+        (byCat[c] || []).forEach(function(n){ _tbAddTask(n); });
+        _tbRefreshCheckboxes();
+      };
     });
   }
 }
@@ -28872,11 +29492,17 @@ function _tbImportSelected(){
 }
 
 function _tbImportToPlans(tasks){
-  var plan = (typeof getCurrentPlan === 'function') ? getCurrentPlan() : null;
-  if(!plan){
-    if(projectPlans && projectPlans.length) plan = projectPlans[0];
+  // Prefer the plan captured when the builder was opened, then the currently
+  // active plan, then the first plan. This matches how openTemplateBuilder
+  // remembers context via _tbState.activePlanId.
+  var plan = null;
+  if(_tbState && _tbState.activePlanId){
+    plan = (projectPlans || []).find(function(p){ return p.id === _tbState.activePlanId; }) || null;
   }
+  if(!plan && typeof getActivePlan === 'function') plan = getActivePlan();
+  if(!plan && projectPlans && projectPlans.length) plan = projectPlans[0];
   if(!plan){ throw new Error('No active plan — create one first'); }
+  if(!plan.tasks) plan.tasks = [];
   tasks.forEach(function(t, i){
     plan.tasks.push(_newTask({
       name: t.name,
@@ -28884,11 +29510,13 @@ function _tbImportToPlans(tasks){
       durationDays: Math.max(1, Math.ceil((parseFloat(t.hours)||0) / 8)),
       source: 'template',
       sourceRefId: t.id,
-      sortIndex: (plan.tasks ? plan.tasks.length : 0) + i
+      sortIndex: plan.tasks.length + i
     }));
   });
-  if(typeof renderPlansView === 'function') renderPlansView();
-  else if(typeof render === 'function') render();
+  // renderPlanMain is the real renderer; renderPlansView was a fictional name
+  // that silently no-op'd before, leaving the UI stale after import.
+  if(typeof renderPlanMain === 'function') renderPlanMain();
+  if(typeof renderPlansList === 'function') renderPlansList();
 }
 
 function _tbImportToTodo(tasks){
