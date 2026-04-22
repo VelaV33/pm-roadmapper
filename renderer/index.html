@@ -20021,9 +20021,12 @@ function setKPIView(view){
   document.getElementById('tsWeekNav').style.display=(view==='timesheet'||view==='capacity')?'flex':'none';
   var addBtn=document.getElementById('kpiAddBtn');
   if(addBtn){
-    if(view==='capacity'){ addBtn.style.display='none'; }
-    else { addBtn.style.display=''; addBtn.textContent=view==='timesheet'?'+ Add Task':'+ Add KPI';
-      addBtn.setAttribute('onclick',view==='timesheet'?'_todoReturnTo="timesheet";closeKPI();openTodo();addTodoItem()':'showAddCustomKPI()'); }
+    // v1.36.4: Timesheet no longer has "+ Add Task" — timesheet entries are
+    // derived from ToDo / G2M / Plans tasks assigned to the user. Adding a
+    // task here would bypass those systems and produce orphans.
+    if(view==='capacity' || view==='timesheet'){ addBtn.style.display='none'; }
+    else { addBtn.style.display=''; addBtn.textContent='+ Add KPI';
+      addBtn.setAttribute('onclick','showAddCustomKPI()'); }
   }
   if(view==='timesheet'){
     document.getElementById('tsWeekLabel').textContent=_weekLabel(_tsCurrentWeek);
@@ -20191,7 +20194,10 @@ function renderTimesheet(){
         });
 
         var card=document.createElement('div');
-        card.style.cssText='background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:6px;border-left:3px solid '+grp.color;
+        // v1.36.4: use var(--white) (light in light mode, dark surface in
+        // dark mode). Previously #fff relied on the catch-all which left
+        // the cards visibly white in some dark-mode cache states.
+        card.style.cssText='background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:6px;border-left:3px solid '+grp.color;
         card.innerHTML=
           '<div style="display:flex;align-items:flex-start;gap:10px">'+
             '<div style="flex-shrink:0;text-align:center;min-width:48px">'+
@@ -20216,9 +20222,11 @@ function renderTimesheet(){
   }
 
   // Total bar
+  // v1.36.4: use CSS vars so dark mode looks right without relying on
+  // the inline-style catch-all.
   var totalBar=document.createElement('div');
-  totalBar.style.cssText='background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-top:12px;display:flex;align-items:center;justify-content:space-between';
-  totalBar.innerHTML='<span style="font-size:13px;font-weight:800;color:var(--navy)">TOTAL THIS WEEK</span><span style="font-size:22px;font-weight:900;color:'+barCol+';font-family:Barlow Condensed,sans-serif">'+totalLogged.toFixed(1)+'h / '+totalTarget+'h</span>';
+  totalBar.style.cssText='background:var(--white);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-top:12px;display:flex;align-items:center;justify-content:space-between';
+  totalBar.innerHTML='<span style="font-size:13px;font-weight:800;color:var(--text)">TOTAL THIS WEEK</span><span style="font-size:22px;font-weight:900;color:'+barCol+';font-family:Barlow Condensed,sans-serif">'+totalLogged.toFixed(1)+'h / '+totalTarget+'h</span>';
   body.appendChild(totalBar);
 }
 
