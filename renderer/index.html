@@ -225,7 +225,7 @@ body.dark-mode select option{background:var(--white);color:var(--text)}
 body.dark-mode .g2m-header,body.dark-mode .todo-header,body.dark-mode .art-header,body.dark-mode .cap-topbar,body.dark-mode .plans-topbar,body.dark-mode .prio-topbar{background:rgba(15,23,42,.92)!important;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom-color:var(--border)!important}
 body.dark-mode .g2m-header h2,body.dark-mode .todo-header h2,body.dark-mode .art-header h2,body.dark-mode .cap-topbar h2{color:var(--text)}
 body.dark-mode .g2m-toolbar,body.dark-mode .todo-toolbar,body.dark-mode .art-toolbar{background:var(--white);border-bottom-color:var(--border)}
-body.dark-mode #platformAdminOverlay>div:first-child,body.dark-mode #adminOverlay>div:first-child{background:rgba(15,23,42,.92)!important;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom-color:var(--border)!important}
+body.dark-mode #platformAdminOverlay>div:first-child,body.dark-mode #adminOverlay>div:first-child,body.dark-mode #insightsOverlay>div:first-child{background:rgba(15,23,42,.92)!important;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom-color:var(--border)!important}
 
 /* ── Edit Row Modal specifics ── */
 body.dark-mode #rowModal .modal{background:var(--white)}
@@ -894,14 +894,19 @@ body.dark-mode .top10-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.3)}
 .tpl-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:9999px;text-transform:uppercase;letter-spacing:.04em;background:rgba(99,102,241,.12);color:#818cf8}
 .tpl-stat{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px}
 .tpl-preview{display:flex;flex-direction:column;height:100%}
-.tpl-preview-header{padding:20px 28px;border-bottom:1px solid var(--border)}
-.tpl-preview-header h3{font-size:22px;font-weight:800;color:var(--text);margin:0 0 6px}
-.tpl-preview-header p{font-size:13px;color:var(--muted);margin:0;line-height:1.5}
-.tpl-preview-stats{display:flex;gap:20px;margin-top:14px;flex-wrap:wrap}
+.tpl-preview-header{padding:12px 28px 10px;border-bottom:1px solid var(--border)}
+.tpl-preview-header h3{font-size:20px;font-weight:800;color:var(--text);margin:0 0 4px}
+.tpl-preview-header p{font-size:13px;color:var(--muted);margin:0;line-height:1.45}
+.tpl-preview-head-main{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+.tpl-preview-head-left{flex:1 1 340px;min-width:0}
+.tpl-preview-head-right{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:8px;margin-left:auto}
+.tpl-preview-stats{display:flex;gap:18px;flex-wrap:wrap;justify-content:flex-end}
 .tpl-preview-stat{text-align:center}
-.tpl-preview-stat .num{font-size:22px;font-weight:800;color:var(--text)}
+.tpl-preview-stat .num{font-size:18px;font-weight:800;color:var(--text);line-height:1.1}
 .tpl-preview-stat .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-.tpl-preview-body{flex:1;overflow-y:auto;padding:20px 28px}
+.tpl-preview-phase-row{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.tpl-preview-actions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+.tpl-preview-body{flex:1;overflow-y:auto;padding:14px 28px}
 .tpl-task-table{width:100%;border-collapse:collapse;font-size:12px}
 .tpl-task-table th{text-align:left;padding:8px 10px;color:var(--muted);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.04em;border-bottom:2px solid var(--border);position:sticky;top:0;background:var(--bg)}
 .tpl-task-table td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text)}
@@ -7133,6 +7138,16 @@ async function pullCloudData(){
       recomputeTimeline(); renderTableHeader(); renderTabs(); renderStackedTabs(); render();
       _lastCloudTs = cloudTs;
       showSyncBadge('synced');
+      // v1.36.5 — bootstrap profile push: cloud may be NEWER but predates
+      // v1.36.x's userProfile sync, so cloud lacks profile data. If local
+      // has a profile (avatar or display name) and cloud doesn't, push
+      // immediately so OTHER devices on next pull get our profile.
+      var _cloudHasProfile = !!(localData && localData.userProfile && (localData.userProfile.avatarUrl || localData.userProfile.name));
+      var _localHasProfile = !!(userProfile && (userProfile.avatarUrl || userProfile.name));
+      if(_localHasProfile && !_cloudHasProfile){
+        console.log('Local profile present, cloud profile missing — bootstrap push');
+        schedulePushToCloud(true);
+      }
     } else {
       // Local is newer — push to cloud (content guard in pushCloudData prevents blank pushes)
       schedulePushToCloud(true);
@@ -27256,6 +27271,17 @@ function persistData() {
       settings: {
         capacity:     (appSettings && appSettings.capacity)     || { hoursPerWeek:40, hoursPerDay:8, workDays:5 },
         integrations: (appSettings && appSettings.integrations) || { google:{}, microsoft:{} }
+      },
+      // v1.36.5 — userProfile must be in the local save payload too.
+      // Previously only buildDataPayload() / pushCloudData() included it,
+      // so local-only saves dropped the profile and a fresh app launch
+      // had no profile to push to cloud until the next user edit.
+      userProfile: {
+        name:      (userProfile && userProfile.name)      || '',
+        title:     (userProfile && userProfile.title)     || '',
+        org:       (userProfile && userProfile.org)       || '',
+        email:     (userProfile && userProfile.email)     || '',
+        avatarUrl: (userProfile && userProfile.avatarUrl) || ''
       }
     }).then(function(res) {
       if (!el) return;
@@ -28097,19 +28123,25 @@ function renderTemplatePreview(body) {
 
   var html = '<div class="tpl-preview">';
   html += '<div class="tpl-preview-header">';
-  html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">' +
+  html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">' +
     '<button onclick="tplBackToBrowse()" style="background:none;border:none;color:var(--accent,#6366f1);font-size:13px;font-weight:600;cursor:pointer;padding:0">&larr; Back to templates</button>' +
     '</div>';
-  html += '<h3 style="display:flex;align-items:center;gap:10px">' + _escHtml(t.name);
+
+  // Two-column header row: title+description on the left, stats+phases on the right
+  html += '<div class="tpl-preview-head-main">';
+  html += '<div class="tpl-preview-head-left">';
+  html += '<h3 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">' + _escHtml(t.name);
   html += isPlatform
     ? '<span class="tpl-badge" style="background:#64748b22;color:#475569;border:1px solid #cbd5e1;font-size:10px">Platform Template</span>'
     : '<span class="tpl-badge" style="background:#6366f122;color:#4f46e5;border:1px solid #c7d2fe;font-size:10px">My Organisation</span>';
   html += '</h3>';
   html += '<p>' + _escHtml(t.description || '') + '</p>';
+  html += '</div>';
 
   // Stats reflect SELECTED tasks
   var selected = _tplEditorWorking.filter(function(x){ return x.checked; });
   var selectedHours = selected.reduce(function(s, tk){ return s + (tk.hours_base || 0); }, 0);
+  html += '<div class="tpl-preview-head-right">';
   html += '<div class="tpl-preview-stats">';
   html += '<div class="tpl-preview-stat"><div class="num" id="tplEditorSelCount">' + selected.length + '</div><div class="lbl">Selected</div></div>';
   html += '<div class="tpl-preview-stat"><div class="num" id="tplEditorSelHours">' + Math.round(selectedHours) + '</div><div class="lbl">Hours</div></div>';
@@ -28121,13 +28153,16 @@ function renderTemplatePreview(body) {
   }
   html += '</div>';
   if (phases.length) {
-    html += '<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">';
+    html += '<div class="tpl-preview-phase-row">';
     phases.forEach(function(ph) {
       html += '<span class="tpl-badge">' + _escHtml(ph) + '</span>';
     });
     html += '</div>';
   }
-  html += '<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">';
+  html += '</div>'; // end head-right
+  html += '</div>'; // end head-main
+
+  html += '<div class="tpl-preview-actions">';
   html += '<button class="prio-btn" onclick="tplEditorAddCustom()">+ Add Custom Task</button>';
   html += '<button class="prio-btn" onclick="tplEditorPullFromLibrary()">+ Pull from Task Library</button>';
   html += '<button class="prio-btn" onclick="tplEditorToggleAll(true)" style="font-size:11px">Check all</button>';
@@ -29366,12 +29401,12 @@ async function openTemplateBuilder(sourceContext, options){
 
   var rightHead = document.createElement('div');
   rightHead.id = 'tbRightHead';
-  rightHead.style.cssText = 'padding:16px 20px 8px;border-bottom:1px solid var(--border);background:var(--white)';
+  rightHead.style.cssText = 'padding:10px 20px 8px;border-bottom:1px solid var(--border);background:var(--white)';
   rightCol.appendChild(rightHead);
 
   var rightBody = document.createElement('div');
   rightBody.id = 'tbRightBody';
-  rightBody.style.cssText = 'flex:1;overflow-y:auto;padding:14px 20px;background:var(--white)';
+  rightBody.style.cssText = 'flex:1;overflow-y:auto;padding:10px 20px;background:var(--white)';
   rightCol.appendChild(rightBody);
 
   bodyWrap.appendChild(leftCol);
@@ -29600,9 +29635,9 @@ function _tbRenderTemplate(tpl){
   if(!phaseOrder.length){
     body.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:32px">This template has no tasks.</div>';
   }
-  phaseOrder.forEach(function(phase){
+  phaseOrder.forEach(function(phase, pi){
     var hdr = document.createElement('div');
-    hdr.style.cssText = 'font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--border)';
+    hdr.style.cssText = 'font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;margin:' + (pi === 0 ? '0' : '10px') + ' 0 6px;padding-bottom:4px;border-bottom:1px solid var(--border)';
     hdr.textContent = phase + ' (' + byPhase[phase].length + ')';
     body.appendChild(hdr);
     byPhase[phase].forEach(function(t){
@@ -29628,7 +29663,7 @@ function _tbMakeTaskRow(t){
   row.className = 'tb-task-row';
   row.setAttribute('data-tb-task-id', t.id);
   var checked = _tbState.selectedTasks.some(function(x){ return x.id === t.id; });
-  row.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;background:var(--white);transition:background .12s';
+  row.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:7px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:4px;cursor:pointer;background:var(--white);transition:background .12s';
   row.innerHTML =
     '<input type="checkbox" ' + (checked ? 'checked' : '') + ' style="margin-top:2px;accent-color:var(--accent);cursor:pointer">' +
     '<div style="flex:1;min-width:0">' +
