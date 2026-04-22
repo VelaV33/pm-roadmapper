@@ -2205,8 +2205,8 @@ body.dark-mode .onboard-card{background:#1e293b}
       <input id="fName" placeholder="e.g. VBU850">
     </div>
     <div class="form-row">
-      <label>Row Description <span style="font-weight:400;color:#b0bbd0">(optional)</span></label>
-      <textarea id="fSub" placeholder="Optional context about this row…" style="height:50px;resize:vertical"></textarea>
+      <label>Row Description <span style="font-weight:400;color:var(--muted);opacity:.7">(optional)</span></label>
+      <textarea id="fSub" placeholder="Optional context about this row…" style="width:100%;min-height:80px;resize:vertical;box-sizing:border-box"></textarea>
     </div>
     <div class="form-row">
       <label>Section</label>
@@ -3834,6 +3834,34 @@ function openAddRowModal(secId){
 
 function closeModal(){ document.getElementById('rowModal').classList.add('hidden'); }
 
+// v1.36.x: Save the current row edit (if any) before navigating to an
+// integration page (G2M / Project plan / ToDo). Previous onclicks called
+// closeModal() directly, dropping every unsaved change. saveRow handles
+// closing + render + persist on its own, so we just delegate when it's
+// safe; otherwise we close without saving.
+function _saveEditingRowThen(fn){
+  try {
+    var nameEl = document.getElementById('fName');
+    var name = nameEl && nameEl.value ? nameEl.value.trim() : '';
+    var isEditing = !!editingRowId && rows.some(function(r){ return r.id === editingRowId; });
+    if(isEditing && name){
+      // saveRow already closes the modal, re-renders, and persists.
+      saveRow();
+    } else {
+      // New row with no name, or nothing to save — just close.
+      closeModal();
+    }
+  } catch(e){
+    console.warn('[row] save-before-nav failed:', e);
+    closeModal();
+  }
+  if(typeof fn === 'function'){
+    // Defer navigation by one tick so the modal close animation + render
+    // have a chance to settle before the next overlay opens.
+    setTimeout(fn, 0);
+  }
+}
+
 // Track the last valid section id so we can revert if user cancels
 var _lastValidSecId = null;
 
@@ -3929,7 +3957,11 @@ function renderBarsForm(bars){
 function barFormRow(bar,i){
   var wrap=document.createElement('div');
   wrap.className='form-row';
-  wrap.style.cssText='background:#f8faff;border:1px solid #e8edf7;border-radius:8px;padding:12px;margin-bottom:10px';
+  // v1.36.x: use CSS variables so dark mode works without per-element overrides.
+  // --surface-low is #f3f3f4 in light mode, #1e293b in dark — matches the card
+  // feel in light mode (slight contrast with white modal bg) and stays legible
+  // in dark mode (no more light card on dark modal).
+  wrap.style.cssText='background:var(--surface-low);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px';
 
   // ── Remove button (top-right of card) ──
   var removeBtn=document.createElement('button');
@@ -3941,7 +3973,7 @@ function barFormRow(bar,i){
 
   // ── Initiative Name (mandatory) ──
   var nameLabel=document.createElement('label');
-  nameLabel.style.cssText='display:block;font-size:10px;font-weight:700;color:#7b8db0;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;clear:both';
+  nameLabel.style.cssText='display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;clear:both';
   nameLabel.innerHTML='Initiative Name <span style="color:#ef4444">*</span>';
   wrap.appendChild(nameLabel);
 
@@ -3950,7 +3982,7 @@ function barFormRow(bar,i){
   nameInp.placeholder='e.g. EV Integration';
   nameInp.setAttribute('data-bi',i);
   nameInp.setAttribute('data-field','t');
-  nameInp.style.cssText='display:block;width:100%;padding:8px 10px;border:2px solid '+(bar.t?'var(--border)':'#ef4444')+';border-radius:6px;font-size:13px;color:var(--text);background:#fff;box-sizing:border-box;margin-bottom:10px';
+  nameInp.style.cssText='display:block;width:100%;padding:8px 10px;border:2px solid '+(bar.t?'var(--border)':'#ef4444')+';border-radius:6px;font-size:13px;color:var(--text);background:var(--white);box-sizing:border-box;margin-bottom:10px';
   nameInp.addEventListener('input',function(){
     this.style.borderColor=this.value.trim()?'var(--border)':'#ef4444';
   });
@@ -3958,14 +3990,14 @@ function barFormRow(bar,i){
 
   // ── Status ──
   var statusLabel=document.createElement('label');
-  statusLabel.style.cssText='display:block;font-size:10px;font-weight:700;color:#7b8db0;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px';
+  statusLabel.style.cssText='display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px';
   statusLabel.textContent='Status';
   wrap.appendChild(statusLabel);
 
   var statusSel=document.createElement('select');
   statusSel.setAttribute('data-bi',i);
   statusSel.setAttribute('data-field','c');
-  statusSel.style.cssText='display:block;width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:#fff;color:var(--text);box-sizing:border-box;margin-bottom:10px';
+  statusSel.style.cssText='display:block;width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--white);color:var(--text);box-sizing:border-box;margin-bottom:10px';
   Object.keys(BAR_COLORS).forEach(function(k){
     var o=document.createElement('option');
     o.value=k; o.textContent=BAR_COLORS[k];
@@ -3979,15 +4011,15 @@ function barFormRow(bar,i){
   row2.style.cssText='margin-bottom:8px';
 
   var descLabel=document.createElement('label');
-  descLabel.style.cssText='display:block;font-size:10px;font-weight:700;color:#7b8db0;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px';
-  descLabel.innerHTML='Description <span style="font-weight:400;color:#b0bbd0;text-transform:none;letter-spacing:0">(optional)</span>';
+  descLabel.style.cssText='display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px';
+  descLabel.innerHTML='Description <span style="font-weight:400;color:var(--muted);opacity:.7;text-transform:none;letter-spacing:0">(optional)</span>';
 
   var descTa=document.createElement('textarea');
   descTa.value=bar.desc||'';
   descTa.placeholder='Add more detail about this initiative…';
   descTa.setAttribute('data-bi',i);
   descTa.setAttribute('data-field','desc');
-  descTa.style.cssText='width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:5px;font-size:12px;height:52px;resize:vertical;box-sizing:border-box;color:#374151;background:#fff;font-family:inherit';
+  descTa.style.cssText='width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:5px;font-size:12px;height:52px;resize:vertical;box-sizing:border-box;color:var(--text);background:var(--white);font-family:inherit';
 
   row2.appendChild(descLabel);
   row2.appendChild(descTa);
@@ -4002,13 +4034,13 @@ function barFormRow(bar,i){
     var grp=document.createElement('div'); grp.style.cssText='flex:1';
 
     var lbl=document.createElement('label');
-    lbl.style.cssText='display:block;font-size:10px;font-weight:700;color:#7b8db0;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px';
+    lbl.style.cssText='display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px';
     lbl.textContent=labelTxt;
     grp.appendChild(lbl);
 
     var mSel=document.createElement('select');
     mSel.setAttribute('data-bi',i); mSel.setAttribute('data-field',mField);
-    mSel.style.cssText='width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:5px;font-size:11px;background:#fff;color:var(--text);margin-bottom:4px';
+    mSel.style.cssText='width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:5px;font-size:11px;background:var(--white);color:var(--text);margin-bottom:4px';
     MONTHS.forEach(function(m,mi){
       var o=document.createElement('option'); o.value=mi; o.textContent=getMonthLabel(mi);
       if(mi===md.mi) o.selected=true; mSel.appendChild(o);
@@ -4017,7 +4049,7 @@ function barFormRow(bar,i){
 
     var dSel=document.createElement('select');
     dSel.setAttribute('data-bi',i); dSel.setAttribute('data-field',dField);
-    dSel.style.cssText='width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:5px;font-size:11px;background:#fff;color:var(--text)';
+    dSel.style.cssText='width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:5px;font-size:11px;background:var(--white);color:var(--text)';
     dSel.appendChild(buildDayOptions(md.mname, md.day));
 
     mSel.addEventListener('change',function(){
@@ -13296,7 +13328,7 @@ function renderModalIntegration(rowName, rowId){
         var done=(p.tasks||[]).filter(function(t){ return t.status === 'done' || t.percentComplete === 100; }).length;
         var pct=taskTotal ? Math.round(done/taskTotal*100) : 0;
         var bc=pct>=80?'#16a34a':pct>=50?'#f59e0b':'#dc2626';
-        html += '<div class="modal-integration-card" onclick="closeModal();openPlanFromRow(\''+p.id.replace(/\'/g,"\\'")+'\')">'+
+        html += '<div class="modal-integration-card" onclick="_saveEditingRowThen(function(){openPlanFromRow(\''+p.id.replace(/\'/g,"\\'")+'\')})">'+
           '<svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:var(--accent);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>'+
           '<div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--navy)">'+escHtml(p.name||'Untitled plan')+'</div><div style="font-size:10px;color:var(--muted)">'+done+'/'+taskTotal+' tasks done \u00B7 click to open project plan</div></div>'+
           '<span style="font-size:18px;font-weight:900;color:'+bc+'">'+pct+'%</span>'+
@@ -13305,7 +13337,7 @@ function renderModalIntegration(rowName, rowId){
       plansDiv.innerHTML = html;
     } else {
       // Empty state with a "create plan and link this row" CTA
-      plansDiv.innerHTML = '<div class="modal-integration-card" onclick="closeModal();_createPlanForRow(\''+(rowId||'').replace(/\'/g,"\\'")+'\',\''+escapedName+'\')">'+
+      plansDiv.innerHTML = '<div class="modal-integration-card" onclick="_saveEditingRowThen(function(){_createPlanForRow(\''+(rowId||'').replace(/\'/g,"\\'")+'\',\''+escapedName+'\')})">'+
         '<svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:var(--accent);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>'+
         '<div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--navy)">Project plan</div><div style="font-size:10px;color:var(--muted)">No plan linked yet \u2014 click to create one</div></div>'+
         '<span style="font-size:11px;color:var(--accent);font-weight:700">Create &rarr;</span>'+
@@ -13318,13 +13350,13 @@ function renderModalIntegration(rowName, rowId){
   var g2mInfo=getG2MReadinessForRow(rowName);
   if(g2mInfo){
     var bc=g2mInfo.pct>=80?'#16a34a':g2mInfo.pct>=50?'#f59e0b':'#dc2626';
-    g2mDiv.innerHTML='<div class="modal-integration-card" onclick="closeModal();openG2MForProduct(\''+escapedName+'\')">'+
+    g2mDiv.innerHTML='<div class="modal-integration-card" onclick="_saveEditingRowThen(function(){openG2MForProduct(\''+escapedName+'\')})">'+
       '<span style="color:var(--accent)">'+svgIcon('rocket',{size:20})+'</span>'+
       '<div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--navy)">G2M Readiness</div><div style="font-size:10px;color:var(--muted)">'+g2mInfo.yesCount+'/'+g2mInfo.applicable+' items completed</div></div>'+
       '<span style="font-size:22px;font-weight:900;color:'+bc+'">'+g2mInfo.pct+'%</span>'+
     '</div>';
   } else {
-    g2mDiv.innerHTML='<div class="modal-integration-card" onclick="closeModal();openG2MForProduct(\''+escapedName+'\')">'+
+    g2mDiv.innerHTML='<div class="modal-integration-card" onclick="_saveEditingRowThen(function(){openG2MForProduct(\''+escapedName+'\')})">'+
       '<span style="color:var(--accent)">'+svgIcon('rocket',{size:20})+'</span>'+
       '<div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--navy)">G2M Readiness</div><div style="font-size:10px;color:var(--muted)">Not started — click to begin checklist</div></div>'+
       '<span style="font-size:11px;color:var(--accent);font-weight:700">Start &rarr;</span>'+
@@ -13334,7 +13366,7 @@ function renderModalIntegration(rowName, rowId){
   // ToDo
   var todoDiv=document.getElementById('modalTodoLink');
   var todoInfo=getTodoCountForInitiative(rowName);
-  todoDiv.innerHTML='<div class="modal-integration-card" onclick="closeModal();openTodoForInitiative(\''+escapedName+'\')">'+
+  todoDiv.innerHTML='<div class="modal-integration-card" onclick="_saveEditingRowThen(function(){openTodoForInitiative(\''+escapedName+'\')})">'+
     '<span style="color:var(--accent)">'+svgIcon('clipboard',{size:20})+'</span>'+
     '<div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--navy)">ToDo Items</div><div style="font-size:10px;color:var(--muted)">'+todoInfo.outstanding+' outstanding of '+todoInfo.total+' total</div></div>'+
     '<span style="font-size:22px;font-weight:900;color:'+(todoInfo.outstanding>0?'#d97706':'#16a34a')+'">'+todoInfo.outstanding+'</span>'+
