@@ -6717,6 +6717,9 @@ async function onAuthSuccess(user){
 
   // ── STEP 4: CLOUD-FIRST — load THIS USER's data from Supabase ──
   var cloudLoaded=false;
+  // v1.36.7: refresh token if it's about to expire so the edge-function
+  // auth doesn't silently 401 and force a fallback to stale local data.
+  try { if(typeof _refreshAccessTokenIfNeeded === 'function') await _refreshAccessTokenIfNeeded(false); } catch(e){}
   try {
     // Use get-shared-roadmap edge function with this user's ID to load their own data
     // (bypasses RLS, uses service role)
@@ -6802,6 +6805,16 @@ async function onAuthSuccess(user){
     // New user, no data anywhere — that's fine
     showSyncBadge('synced');
   }
+  // v1.36.7: ALSO call pullCloudData() right after enableSync, even if the
+  // login-time get-shared-roadmap edge function succeeded. Reason: that edge
+  // function uses the same _shared/auth.ts as sync-roadmap which silently
+  // rejects ES256 JWTs ("UNSUPPORTED_TOKEN_ALGORITHM"). pullCloudData uses
+  // the REST endpoint via the Supabase JS client which DOES accept ES256,
+  // and it now auto-refreshes the token first. This ensures fresh data is
+  // pulled on every page load even when the edge-function path is broken.
+  setTimeout(function(){
+    if(typeof pullCloudData === 'function') pullCloudData();
+  }, 200);
 
   setTimeout(function(){ loadAllCommentBadges(); loadSharedToMe(); loadUserTier(); }, 800);
   setTimeout(checkShowTour, 2500);
