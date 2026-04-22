@@ -7108,8 +7108,63 @@ function enableSync(){
   },5*60*1000);
 }
 
+// v1.36.6: Manually refresh the access token via Supabase REST when the
+// JWT is close to expiring. The custom Supabase shim doesn't expose
+// `auth.refreshSession()`, so we hit `/auth/v1/token?grant_type=refresh_token`
+// directly. Sets `_accessToken` + `_refreshToken` in place so subsequent
+// supaRequest / _dbReq calls use the fresh token.
+//
+// Background: pre-v1.36.6, expired tokens caused EVERY push and pull to
+// silently 401 while the sync badge still said "synced", so users saw
+// stale data on cross-device with no visible error.
+async function _refreshAccessTokenIfNeeded(force){
+  try {
+    if(!_refreshToken) return false;
+    // Decode payload exp claim (no signature verify — we trust the issuer
+    // and only use exp for "should we proactively refresh" decisions).
+    var needsRefresh = !!force;
+    if(!needsRefresh && _accessToken){
+      try {
+        var parts = _accessToken.split('.');
+        if(parts.length === 3){
+          var pad = parts[1] + '==='.slice(0, (4 - parts[1].length % 4) % 4);
+          var claims = JSON.parse(atob(pad.replace(/-/g,'+').replace(/_/g,'/')));
+          // Refresh if the token expires within the next 5 minutes
+          if(claims && claims.exp && claims.exp * 1000 < Date.now() + 5*60*1000) needsRefresh = true;
+        }
+      } catch(e){ needsRefresh = true; }
+    }
+    if(!needsRefresh) return false;
+    var r = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=refresh_token', {
+      method:'POST',
+      headers:{ apikey: SUPABASE_ANON, 'Content-Type':'application/json' },
+      body: JSON.stringify({ refresh_token: _refreshToken })
+    });
+    var data = await r.json();
+    if(!r.ok || !data.access_token){
+      console.warn('[token-refresh] failed:', data && (data.error_description || data.message));
+      // Visible signal — sync isn't working. User must re-auth.
+      try { showSyncBadge('error'); } catch(e){}
+      try { showToast('Session expired — please sign out and sign in again','error'); } catch(e){}
+      return false;
+    }
+    _accessToken = data.access_token;
+    if(data.refresh_token) _refreshToken = data.refresh_token;
+    // Persist so the next session boot sees the rotated tokens.
+    try { _saveSession({ access_token: _accessToken, refresh_token: _refreshToken, user: _currentUser }); } catch(e){}
+    console.log('[token-refresh] ok, expires in', data.expires_in, 's');
+    return true;
+  } catch(e){
+    console.warn('[token-refresh] exception:', e && e.message);
+    return false;
+  }
+}
+
 async function pullCloudData(){
   if(!_supabase || !_currentUser || !_syncEnabled) return;
+  // v1.36.6: refresh token before any cloud op so a 5-min auto-sync that
+  // happens after the JWT's 1-hour TTL doesn't silently fail.
+  await _refreshAccessTokenIfNeeded(false);
   try {
     var r = await _supabase
       .from('roadmap_data')
@@ -7171,6 +7226,9 @@ async function pushCloudData(){
   }
   // Nothing to push if data is blank — this is not an error
   if(rows.length===0 && sections.length<=2) { showSyncBadge('synced'); return {ok:true, reason:'empty', rows:0}; }
+  // v1.36.6: refresh token before push so a 5-min auto-sync after the JWT's
+  // 1-hour TTL doesn't silently 401.
+  await _refreshAccessTokenIfNeeded(false);
   showSyncBadge('syncing');
   try {
     var payload = {
@@ -24102,6 +24160,8 @@ function openCapacity(){
   trackPageView('CapacityIQ');
   document.getElementById('capOverlay').classList.add('open');
   if(capData.teams.length===0) seedCapData();
+  // Backfill CapacityIQ from bundled TMP platform templates (idempotent).
+  _ensureTmpCapIQTemplates();
   capNav(_capPage);
   updateNavActive('');  // v1.25.0
 }
@@ -24645,6 +24705,92 @@ function seedCapData(){
   persistData();
 }
 
+// Backfill CapacityIQ from bundled TMP platform templates. Each flagged
+// template becomes a capData.templates entry; its tasks become capData.taskTypes
+// deduped by task_ref so the same underlying task shared across templates
+// points at one taskType. Idempotent — existing cap-template names are skipped.
+async function _ensureTmpCapIQTemplates(){
+  if(!capData) return;
+  if(!Array.isArray(capData.taskTypes)) capData.taskTypes = [];
+  if(!Array.isArray(capData.templates)) capData.templates = [];
+
+  // Lazy-load the bundled JSON if the template library hasn't been opened yet.
+  if(!_bundledPlatformTemplates || !_bundledPlatformTemplates.length){
+    try {
+      var jsonUrl = (window.location.protocol === 'file:') ? 'data/platform-templates.json' : '/data/platform-templates.json';
+      var resp = await fetch(jsonUrl);
+      if(resp.ok) _bundledPlatformTemplates = await resp.json();
+    } catch(e){ console.warn('[capIQ] bundled template fetch failed:', e.message); }
+  }
+  var src = _bundledPlatformTemplates || [];
+  if(!src.length) return;
+
+  var existingTplNames = {};
+  capData.templates.forEach(function(t){ existingTplNames[t.name] = true; });
+
+  var taskTypeByRef = {};
+  capData.taskTypes.forEach(function(tt){
+    if(tt.sourceRef) taskTypeByRef[tt.sourceRef] = tt.id;
+  });
+
+  var added = 0;
+  src.forEach(function(tpl){
+    if(!tpl.seedToCapacityIQ) return;
+    if(existingTplNames[tpl.name]) return;
+
+    var baseKey = (tpl.source_ref || tpl.name).toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    var tplId = 'tpl_tmp_' + baseKey;
+    var tasks = [];
+
+    (tpl.tasks || []).forEach(function(tk, i){
+      var ref = tk.task_ref || (baseKey + '__' + i);
+      var ttId = taskTypeByRef[ref];
+      if(!ttId){
+        ttId = 'tt_tmp_' + ref.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+        var category = ((tk.workstream || '').split(' — ')[0] || 'General').trim();
+        capData.taskTypes.push({
+          id:          ttId,
+          category:    category,
+          name:        tk.name || 'Task',
+          fixedHours:  parseFloat(tk.hours_base) || 0,
+          defaultTeam: '',
+          sortOrder:   capData.taskTypes.length,
+          description: tk.description || '',
+          role:        tk.role || '',
+          sourceRef:   ref
+        });
+        taskTypeByRef[ref] = ttId;
+      }
+      tasks.push({
+        taskTypeId: ttId,
+        sortOrder:  i,
+        phase:      tk.phase || '',
+        isRequired: true
+      });
+    });
+
+    capData.templates.push({
+      id:          tplId,
+      name:        tpl.name,
+      description: tpl.description || '',
+      category:    tpl.category || 'Platform',
+      icon:        tpl.icon || 'clipboard',
+      tasks:       tasks
+    });
+    existingTplNames[tpl.name] = true;
+    added++;
+  });
+
+  if(added > 0){
+    if(typeof persistData === 'function') persistData();
+    if(typeof showToast === 'function') showToast('CapacityIQ: added ' + added + ' platform template' + (added === 1 ? '' : 's'), 'success');
+    // Re-render the current CapacityIQ page if visible so the new templates show up immediately.
+    if(typeof capNav === 'function' && document.getElementById('capOverlay') && document.getElementById('capOverlay').classList.contains('open')){
+      capNav(_capPage);
+    }
+  }
+}
+
 function renderCapDashboard(content,actions){
   actions.innerHTML='<button class="cap-btn primary" onclick="capExportDashboard()">Doc Export</button>';
   var totalTeams=capData.teams.length;
@@ -25107,6 +25253,13 @@ function renderCapTemplates(content,actions){
   if(!all.length && capData && capData.templates){
     all = capData.templates.map(function(t){ return Object.assign({ source: t.custom ? 'custom' : 'capacityiq' }, t); });
   }
+
+  // Dedupe: if a template exists as both CapacityIQ and Platform (because
+  // platform TMP templates get seeded into capData.templates), prefer the
+  // CapacityIQ entry — it has real taskType refs for sprint scheduling.
+  var capNames = {};
+  all.forEach(function(t){ if(t.source === 'capacityiq') capNames[t.name] = true; });
+  all = all.filter(function(t){ return !(t.source === 'platform' && capNames[t.name]); });
 
   // Group by source for section headers.
   var bySource = {};
