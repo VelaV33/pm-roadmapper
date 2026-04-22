@@ -173,6 +173,23 @@ body.dark-mode .ts-bar{background:#0f172a}
 body.dark-mode .share-chip{background:var(--surface-low);border-color:var(--border)}
 body.dark-mode .share-chip .chip-revoke:hover{background:rgba(248,113,113,.18)}
 body.dark-mode .comp-card-hdr,body.dark-mode .comp-tab.active,body.dark-mode .tour-tooltip .tour-btn-next,body.dark-mode .subscription-gate-plans .plan-standard{background:var(--accent);color:#fff}
+/* v1.36.2 — second-pass dark-mode gaps picked up by the explore audit */
+body.dark-mode [style*="background:#f0f5ff"],
+body.dark-mode [style*="background: #f0f5ff"]{background:rgba(45,107,244,.12)!important}
+body.dark-mode [style*="background:#f0f3f8"]{background:var(--border)!important}
+body.dark-mode [style*="background:#f8f8f8"]{background:var(--surface-low)!important}
+body.dark-mode .comp-checkbox-grid label:hover{background:rgba(45,107,244,.15)}
+body.dark-mode .comp-history-item:hover{background:var(--surface-high)}
+body.dark-mode .row-btns button.comment-btn:hover{background:rgba(45,107,244,.15);color:#60a5fa;border-color:rgba(96,165,250,.35)}
+body.dark-mode .modal-integration-card:hover{background:var(--surface-high)}
+body.dark-mode .comment-acts .c-reply:hover{background:rgba(96,165,250,.15)}
+body.dark-mode .comment-acts .c-unresolve:hover{background:rgba(251,191,36,.15)}
+body.dark-mode .ts-custom-row td{background:rgba(251,191,36,.12)}
+body.dark-mode .ts-tdl-row td{background:rgba(74,222,128,.1)}
+body.dark-mode .tb-dd-divider{background:var(--border)}
+body.dark-mode .tour-tooltip{background:var(--white);color:var(--text);border-color:var(--border)}
+body.dark-mode .tour-tooltip .tour-btn-prev{background:var(--surface-high);color:var(--text);border-color:var(--border)}
+body.dark-mode tr.data-row td{border-color:var(--border)}
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * v1.29.0 FIX 1 — Global Dark Mode Overhaul
