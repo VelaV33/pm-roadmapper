@@ -11,7 +11,9 @@
     "test": "node tests/capacity.test.js && node tests/renderer.parse.test.js",
     "test:capacity": "node tests/capacity.test.js",
     "test:parse": "node tests/renderer.parse.test.js",
-    "build:web": "cd web && node scripts/build.js"
+    "build:web": "cd web && node scripts/build.js",
+    "deploy": "npx -y vercel@latest --prod --yes",
+    "deploy:preview": "npx -y vercel@latest --yes"
   },
   "build": {
     "appId": "com.pmroadmapper.app",
