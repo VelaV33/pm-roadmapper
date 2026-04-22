@@ -1954,14 +1954,9 @@ body.dark-mode .onboard-card{background:#1e293b}
     <svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
     Insights
   </button>
-  <!-- v1.36.0: Roadmap actions (Add Row / Section / Paste / Quarters) and Data actions
-       (Edit Timeline / Exports / Backup) moved into the Roadmap+Data dropdowns in
-       the legend area. Sidebar now only holds navigation + admin items. -->
+  <!-- v1.36.0: Roadmap + Data actions moved to legend dropdowns.
+       v1.36.3: Settings moved from sidebar into the Account/profile panel. -->
   <div class="sidebar-divider"></div>
-  <button class="sidebar-item" onclick="closeDds();openSettings()">
-    <svg viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-    Settings
-  </button>
   <div class="sidebar-divider" id="adminSidebarDivider" style="display:none"></div>
   <button class="sidebar-item" id="adminSidebarBtn" style="display:none" onclick="closeDds();closeAllOverlays();openAdmin()">
     <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
@@ -2116,7 +2111,7 @@ body.dark-mode .onboard-card{background:#1e293b}
   <span class="legend-dd" style="display:flex;align-items:center;gap:6px;margin-left:10px;position:relative">
     <button onclick="toggleLegendMenu('lmRoadmap',event)" class="rmap-view-toggle" style="font-size:11px;font-weight:600;border:1px solid var(--border);border-radius:9999px;padding:4px 12px;background:var(--white);color:var(--text);cursor:pointer">Roadmap &#9662;</button>
     <div id="lmRoadmap" class="legend-dd-menu" role="menu" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;min-width:220px;background:var(--white);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:6000;padding:4px 0">
-      <button class="legend-dd-item" onclick="closeLegendMenus();openAddRowModal(null)">+ Add Row</button>
+      <button class="legend-dd-item" onclick="closeLegendMenus();openAddRowModal(null)">+ Add Product</button>
       <button class="legend-dd-item" onclick="closeLegendMenus();toggleAddSection()">+ Add Section</button>
       <button class="legend-dd-item" onclick="closeLegendMenus();openPasteFromSpreadsheet()">Paste from Spreadsheet</button>
       <div style="height:1px;background:var(--border);margin:4px 0"></div>
@@ -2222,16 +2217,16 @@ body.dark-mode .onboard-card{background:#1e293b}
 <div class="modal-overlay hidden" id="rowModal">
 <div class="modal">
   <div class="modal-hdr">
-    <h2 id="modalTitle">Edit Row</h2>
+    <h2 id="modalTitle">Edit Product</h2>
     <button class="close" onclick="closeModal()">✕</button>
   </div>
   <div class="modal-body">
     <div class="form-row">
-      <label>Row Label</label>
+      <label>Product Label</label>
       <input id="fName" placeholder="e.g. VBU850">
     </div>
     <div class="form-row">
-      <label>Row Description <span style="font-weight:400;color:var(--muted);opacity:.7">(optional)</span></label>
+      <label>Product Description <span style="font-weight:400;color:var(--muted);opacity:.7">(optional)</span></label>
       <textarea id="fSub" placeholder="Optional context about this row…" style="width:100%;min-height:80px;resize:vertical;box-sizing:border-box"></textarea>
     </div>
     <div class="form-row">
@@ -2257,7 +2252,7 @@ body.dark-mode .onboard-card{background:#1e293b}
     </div>
 
     <div class="form-row">
-      <label>Parent row <span style="font-weight:400;color:#b0bbd0">(optional &mdash; for hierarchy / epics)</span></label>
+      <label>Parent product <span style="font-weight:400;color:var(--muted);opacity:.7">(optional &mdash; for hierarchy / epics)</span></label>
       <select id="fParentRow" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--text)">
         <option value="">— No parent (top level) —</option>
       </select>
@@ -3378,7 +3373,11 @@ function openRowKebab(event, rowId){
   menu.innerHTML =
     '<button onclick="closeRowKebab();openEditModal(\''+escHtml(rowId)+'\')">'+
       '<svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>'+
-      'Edit row'+
+      'Edit product'+
+    '</button>'+
+    '<button onclick="closeRowKebab();addInitiativeToRow(\''+escHtml(rowId)+'\')">'+
+      '<svg viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>'+
+      'Add Initiative'+
     '</button>'+
     '<button onclick="closeRowKebab();openComments({stopPropagation:function(){}},\''+escHtml(rowId)+'\')">'+
       '<svg viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>'+
@@ -3387,7 +3386,7 @@ function openRowKebab(event, rowId){
     '</button>'+
     '<button class="danger" onclick="closeRowKebab();deleteRow(\''+escHtml(rowId)+'\')">'+
       '<svg viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>'+
-      'Delete row'+
+      'Delete product'+
     '</button>';
   document.body.appendChild(menu);
   // Close on outside click
@@ -3399,6 +3398,68 @@ function _onRowKebabOutside(e){
   var menu = document.getElementById('rowKebabMenu');
   if(menu && !menu.contains(e.target)) closeRowKebab();
 }
+// v1.36.3: Quick-add initiative (timeline bar) to an existing product
+// without opening the full Edit Product modal. Used from the row kebab.
+function addInitiativeToRow(rowId){
+  if(!canEdit('roadmap')){ showToast("Read-only — can't add initiatives",'error'); return; }
+  var row = rows.find(function(r){ return r.id === rowId; });
+  if(!row){ showToast('Product not found','error'); return; }
+
+  var ex = document.getElementById('quickInitModal'); if(ex) ex.remove();
+  var ov = document.createElement('div');
+  ov.id = 'quickInitModal'; ov.className = 'modal-overlay';
+  ov.onclick = function(e){ if(e.target === ov) ov.remove(); };
+
+  var modal = document.createElement('div'); modal.className = 'modal';
+  modal.style.cssText = 'width:min(420px,92vw);display:flex;flex-direction:column';
+
+  var hdr = document.createElement('div'); hdr.className = 'modal-hdr';
+  hdr.innerHTML = '<h2>Add Initiative</h2><button class="close" onclick="document.getElementById(\'quickInitModal\').remove()">\u2715</button>';
+  modal.appendChild(hdr);
+
+  var s = _defaultBarStartFrac();
+  var bodyDiv = document.createElement('div');
+  bodyDiv.style.cssText = 'padding:18px 22px;display:flex;flex-direction:column;gap:12px';
+  var statusOpts = Object.keys(BAR_COLORS).map(function(k){ return '<option value="'+k+'">'+escHtml(BAR_COLORS[k])+'</option>'; }).join('');
+  bodyDiv.innerHTML =
+    '<div style="font-size:12px;color:var(--muted);line-height:1.5">Adding to product: <strong style="color:var(--text)">'+escHtml(row.name||'(unnamed)')+'</strong></div>' +
+    '<label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Initiative name<input id="qiName" type="text" placeholder="e.g. VBU900 FW Update" style="width:100%;margin-top:4px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--white)"></label>' +
+    '<label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Status<select id="qiStatus" style="width:100%;margin-top:4px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text);background:var(--white)">'+statusOpts+'</select></label>' +
+    '<div style="font-size:11px;color:var(--muted);line-height:1.4">Defaults to the current quarter. You can fine-tune the dates and add a description later by clicking <em>Edit product</em>.</div>';
+  modal.appendChild(bodyDiv);
+
+  var footer = document.createElement('div');
+  footer.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;padding:12px 22px;border-top:1px solid var(--border)';
+  footer.innerHTML =
+    '<button class="prio-btn" onclick="document.getElementById(\'quickInitModal\').remove()">Cancel</button>' +
+    '<button class="prio-btn primary" onclick="_saveQuickInitiative(\''+rowId.replace(/\\/g,'\\\\').replace(/\'/g,"\\'")+'\','+s+')">Add</button>';
+  modal.appendChild(footer);
+
+  ov.appendChild(modal);
+  document.body.appendChild(ov);
+  setTimeout(function(){ var el=document.getElementById('qiName'); if(el) el.focus(); }, 40);
+}
+
+function _saveQuickInitiative(rowId, defaultStart){
+  var row = rows.find(function(r){ return r.id === rowId; });
+  if(!row){ showToast('Product not found','error'); return; }
+  var name = (document.getElementById('qiName').value || '').trim();
+  if(!name){ showToast('Enter an initiative name','warning'); return; }
+  var status = document.getElementById('qiStatus').value || 'b';
+  if(!row.bars) row.bars = [];
+  row.bars.push({
+    s: defaultStart,
+    e: Math.min(defaultStart + 3, NM),
+    c: status,
+    t: name,
+    desc: ''
+  });
+  persistData();
+  render();
+  var ov = document.getElementById('quickInitModal'); if(ov) ov.remove();
+  showToast('Initiative "' + name + '" added','success');
+}
+
 function closeRowKebab(){
   var menu = document.getElementById('rowKebabMenu');
   if(menu) menu.remove();
@@ -3823,7 +3884,7 @@ function openEditModal(rowId){
   var row=rows.find(function(r){return r.id===rowId});
   if(!row){ showToast('Row not found — it may have been deleted','error'); console.warn('[openEditModal] row not found:', rowId); return; }
   editingRowId=rowId;
-  document.getElementById('modalTitle').textContent='Edit Row';
+  document.getElementById('modalTitle').textContent='Edit Product';
   document.getElementById('fName').value=row.name;
   document.getElementById('fSub').value=row.sub;
   document.getElementById('fPriority').value=row.priority||'';
@@ -3843,13 +3904,14 @@ function openAddRowModal(secId){
   if(!canEdit('roadmap')){showToast('Read-only access \u2014 you can\'t add rows','error');return;}
   editingRowId=null;
   document.getElementById('modalIntegrationSection').style.display='none';
-  document.getElementById('modalTitle').textContent='Add New Row';
+  document.getElementById('modalTitle').textContent='Add New Product';
   document.getElementById('fName').value='';
   document.getElementById('fSub').value='';
   document.getElementById('fPriority').value='';
   populateSectionSelect(secId||sections[0].id);
   populateParentRowSelect(null, '');
-  renderBarsForm([{s:0,e:3,c:'b',t:'New Initiative',desc:''}]);
+  var _s=_defaultBarStartFrac();
+  renderBarsForm([{s:_s,e:Math.min(_s+3,NM),c:'b',t:'New Initiative',desc:''}]);
   renderDeliverablesForm([]);
   renderLinksForm([]);
   renderAttachmentsForm([]);
@@ -4096,10 +4158,40 @@ function barFormRow(bar,i){
 function removeBarRow(btn){
   btn.closest('.form-row').remove();
 }
+// v1.36.3: Compute a default start-month index close to "today" so the
+// date picker inside the Add Product / Add Initiative form defaults to
+// the current quarter instead of the first quarter of the earliest
+// displayed FY. Falls back to 0 if today isn't covered by the visible
+// timeline (e.g. user viewing historical data).
+function _defaultBarStartFrac(){
+  try {
+    var now = new Date();
+    var curYear = now.getFullYear();
+    var curMonthName = ALL_MONTHS[now.getMonth()];
+    var col = 0;
+    for(var qi=0; qi<quarters.length; qi++){
+      var q = quarters[qi];
+      for(var mi=0; mi<q.months.length; mi++){
+        var mname = q.months[mi];
+        // Quarters that wrap Dec→Feb store year=startYear, but JAN/FEB
+        // actually belong to the NEXT calendar year — mirror the logic
+        // used in getMonthLabel so we match the right column.
+        var displayYear = (q.q===4 && ['JAN','FEB','MAR'].indexOf(mname)>=0) ? q.year+1 : q.year;
+        if(mname === curMonthName && displayYear === curYear){
+          return col;
+        }
+        col++;
+      }
+    }
+  } catch(e){ console.warn('[addBar] default-frac calc failed:', e); }
+  return 0;
+}
+
 function addBar(){
   var c=document.getElementById('barsContainer');
   var count=c.querySelectorAll('.form-row').length;
-  c.appendChild(barFormRow({s:0,e:3,c:'b',t:'New Bar'},count));
+  var s = _defaultBarStartFrac();
+  c.appendChild(barFormRow({s:s,e:Math.min(s+3,NM),c:'b',t:'New Bar'},count));
 }
 
 function renderPrioritiesForm(priorities){
@@ -5589,7 +5681,7 @@ function renderStackedTabs(){
     var bBtns2 = document.createElement('div');
     bBtns2.style.cssText = 'display:flex;gap:6px';
     var addRowBtn2 = document.createElement('button');
-    addRowBtn2.textContent = '+ Add Row';
+    addRowBtn2.textContent = '+ Add Product';
     addRowBtn2.style.cssText = 'padding:3px 10px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:5px;font-size:11px;cursor:pointer';
     (function(tid2){ addRowBtn2.onclick = function(){ openAddRowModalForTab(tid2); }; })(tab.id);
     bBtns2.appendChild(addRowBtn2);
@@ -5687,7 +5779,7 @@ function renderStackedTabs(){
     });
     if(tabRows.length===0){
       var empty=document.createElement('tr');
-      empty.innerHTML='<td colspan="'+(tNM+1)+'" style="text-align:center;padding:20px;color:var(--muted);font-size:13px;font-style:italic">No rows yet — click + Add Row to get started</td>';
+      empty.innerHTML='<td colspan="'+(tNM+1)+'" style="text-align:center;padding:20px;color:var(--muted);font-size:13px;font-style:italic">No products yet — click + Add Product to get started</td>';
       tbody.appendChild(empty);
     }
     table.appendChild(tbody);
@@ -5844,7 +5936,7 @@ function openAddRowModalForTab(tabId){
   var origSave = window._stackedSaveTarget;
   window._stackedSaveTarget = tabId;
 
-  document.getElementById('modalTitle').textContent='Add Row to '+tab.name;
+  document.getElementById('modalTitle').textContent='Add Product to '+tab.name;
   document.getElementById('fName').value='';
   document.getElementById('fSub').value='';
   populateSectionSelect(sections[0]&&sections[0].id);
@@ -6924,9 +7016,30 @@ function applyDataPayload(d){
   }
   if(Array.isArray(d.planTemplates)) planTemplates = d.planTemplates;
   if(d._usageStats && typeof d._usageStats==='object') _usageStats=d._usageStats;
+  // v1.36.3: sync profile across devices too. Users reported same account
+  // showing different avatar + display name on Electron vs web because the
+  // profile was localStorage-only. Cloud is now authoritative; localStorage
+  // remains as the instant-load cache but gets overwritten on sync-down.
+  // avatarUrl is a data-URL (base64) stored in the JSONB blob — fine for
+  // normal avatar sizes; anything huge should move to Supabase Storage later.
+  if(d.userProfile && typeof d.userProfile==='object'){
+    var _up = d.userProfile;
+    // Don't clobber an email we already have from the auth session with a
+    // stale/empty one from the payload.
+    var _existingEmail = userProfile && userProfile.email;
+    userProfile = {
+      name:      _up.name      || (userProfile && userProfile.name)      || '',
+      title:     _up.title     || (userProfile && userProfile.title)     || '',
+      org:       _up.org       || (userProfile && userProfile.org)       || '',
+      email:     _up.email     || _existingEmail || '',
+      avatarUrl: _up.avatarUrl || (userProfile && userProfile.avatarUrl) || ''
+    };
+    try {
+      if(typeof applyProfileToUI === 'function') applyProfileToUI();
+      if(typeof saveProfileSettings === 'function') saveProfileSettings();
+    } catch(e){ console.warn('[applyDataPayload.userProfile]', e && e.message); }
+  }
   // v1.33.0: sync capacity + calendar integration settings across devices.
-  // We intentionally sync ONLY these two sub-objects — never personal profile
-  // fields, which stay in per-user localStorage.
   if(d.settings && typeof d.settings==='object'){
     if(d.settings.capacity && typeof d.settings.capacity==='object'){
       if(!appSettings.capacity) appSettings.capacity={};
@@ -6957,6 +7070,17 @@ function buildDataPayload(){
     settings:{
       capacity: (appSettings&&appSettings.capacity) || {hoursPerWeek:40,hoursPerDay:8,workDays:5},
       integrations: (appSettings&&appSettings.integrations) || {google:{},microsoft:{}}
+    },
+    // v1.36.3 — sync profile (name/title/org/avatarUrl) across devices so the
+    // same user sees the same avatar + display name on Electron and web.
+    // Previously left out of the payload on purpose (see v1.33.0 comment in
+    // applyDataPayload) — user-reported divergence forced this change.
+    userProfile: {
+      name:      (userProfile && userProfile.name)      || '',
+      title:     (userProfile && userProfile.title)     || '',
+      org:       (userProfile && userProfile.org)       || '',
+      email:     (userProfile && userProfile.email)     || '',
+      avatarUrl: (userProfile && userProfile.avatarUrl) || ''
     }
   };
 }
@@ -7056,7 +7180,15 @@ async function pushCloudData(){
       okrs: okrsData,
       roadmapView: _roadmapView,
       taskLibrary: taskLibrary,
-      taskLibrarySeeded: _taskLibrarySeeded
+      taskLibrarySeeded: _taskLibrarySeeded,
+      // v1.36.3 — sync profile across devices (see buildDataPayload note)
+      userProfile: {
+        name:      (userProfile && userProfile.name)      || '',
+        title:     (userProfile && userProfile.title)     || '',
+        org:       (userProfile && userProfile.org)       || '',
+        email:     (userProfile && userProfile.email)     || '',
+        avatarUrl: (userProfile && userProfile.avatarUrl) || ''
+      }
     };
 
     var uid=_currentUser.id;
@@ -7280,6 +7412,10 @@ function saveProfileSettings(){
     localStorage.setItem('pmr_settings_'+uid, JSON.stringify(appSettings));
     localStorage.setItem('pmr_role_'+uid, _userRole);
   } catch(e){ console.warn('[saveProfileSettings]', e && e.message); }
+  // v1.36.3: Profile changes now also trigger the debounced cloud sync so
+  // a new avatar/name/title pushed on desktop lands on web (and vice versa).
+  // persistData() itself debounces at 400ms, so calling it per-keystroke is safe.
+  try { if(typeof persistData === 'function') persistData(); } catch(e){}
 }
 
 /* v1.29.0 FIX 12 — User Avatar Circle
@@ -7539,6 +7675,15 @@ function openProfile(){
   avatarWrap.appendChild(avatarEl); avatarWrap.appendChild(avatarFileInp); avatarWrap.appendChild(changeLbl);
   bannerInner.appendChild(avatarWrap);
 
+  // v1.36.3: Account quick-actions bar — Settings moved here from the sidebar
+  var quickActions = document.createElement('div');
+  quickActions.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-left:auto;flex-shrink:0';
+  var settingsBtn = document.createElement('button');
+  settingsBtn.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:7px 12px;background:var(--white);border:1px solid var(--border);border-radius:9999px;font-size:11px;font-weight:600;color:var(--text);cursor:pointer;font-family:inherit';
+  settingsBtn.innerHTML = '<svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg> Settings';
+  settingsBtn.onclick = function(){ ov.remove(); openSettings(); };
+  quickActions.appendChild(settingsBtn);
+
   var nameBlock=document.createElement('div'); nameBlock.style.cssText='flex:1;min-width:0';
   var dispName=document.createElement('div'); dispName.style.cssText='font-size:17px;font-weight:700;color:var(--navy)';
   dispName.textContent=userProfile.name||'Your Name';
@@ -7548,6 +7693,7 @@ function openProfile(){
   dispEmail.textContent=userProfile.email||'';
   nameBlock.appendChild(dispName); nameBlock.appendChild(dispTitle); nameBlock.appendChild(dispEmail);
   bannerInner.appendChild(nameBlock);
+  bannerInner.appendChild(quickActions);
   banner.appendChild(bannerInner);
   body.appendChild(banner);
 
@@ -7807,8 +7953,8 @@ var HELP_TABS = [
   {
     id:'start', label:'Getting started',
     content:[
-      {icon:'clipboard', title:'Create your first row', body:'Click "+ Add Row" in the toolbar. Give it a name, assign it to a section, then add one or more Product Initiatives (timeline bars) with From/To dates and a status colour.'},
-      {icon:'tag', title:'Sections', body:'Sections are coloured group headers (e.g. Strategy, Delivery). Use "+ Add Section" or create one inline from the Add Row modal.'},
+      {icon:'clipboard', title:'Create your first product', body:'Click "+ Add Product" in the toolbar. Give it a name, assign it to a section, then add one or more Product Initiatives (timeline bars) with From/To dates and a status colour.'},
+      {icon:'tag', title:'Sections', body:'Sections are coloured group headers (e.g. Strategy, Delivery). Use "+ Add Section" or create one inline from the Add Product modal.'},
       {icon:'folder', title:'Tabs', body:'Use tabs to organise multiple roadmaps. "+ New Tab" gives you a Blank Roadmap (independent data) or Stack Below (shown underneath the current roadmap for side-by-side comparison).'},
     ]
   },
@@ -25764,7 +25910,7 @@ function addNewArtifact() {
 
   // Brand status
   var hasGuide=brandGuideData.fileName||(brandGuideData.colors&&brandGuideData.colors.length)||brandGuideData.notes;
-  h+='<div style="font-size:10px;color:'+(hasGuide?'#166534':'#92400e')+';margin-bottom:12px">'+(hasGuide?'OK Brand guide loaded':'Warning No brand guide — go to Settings Settings to upload')+'</div>';
+  h+='<div style="font-size:10px;color:'+(hasGuide?'#166534':'#92400e')+';margin-bottom:12px">'+(hasGuide?'OK Brand guide loaded':'Warning No brand guide — go to Settings to upload')+'</div>';
 
   // Buttons
   h+='<div style="display:flex;gap:8px">';
@@ -26452,7 +26598,7 @@ function openSettings(){
   var hasBrand=brandGuideData.fileName||(brandGuideData.colors&&brandGuideData.colors.length)||brandGuideData.notes;
   var tplCount=Object.keys(artTemplates).filter(function(k){return artTemplates[k]&&artTemplates[k].fileName;}).length;
 
-  var h='<div style="background:var(--navy);color:#fff;padding:16px 20px;border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between"><h2 style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:800;letter-spacing:.04em">Settings Settings</h2><button onclick="document.getElementById(\'settingsOverlay\').remove()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">&times;</button></div>';
+  var h='<div style="background:var(--navy);color:#fff;padding:16px 20px;border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between"><h2 style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:800;letter-spacing:.04em">Settings</h2><button onclick="document.getElementById(\'settingsOverlay\').remove()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">&times;</button></div>';
   h+='<div style="padding:20px">';
 
   // ── AI Configuration ──
@@ -26537,13 +26683,25 @@ function openSettings(){
   h+='</div>';
 
   // ── Role ──
+  // v1.36.3: role field is read-only for non-managers per spec (only
+  // platform_admin / manager can change roles). Previous version let
+  // any user change their own role which broke RBAC.
   h+='<div style="padding-top:16px;border-top:1px solid #e8edf7;margin-bottom:12px">';
-  h+='<div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:8px">User Your Role</div>';
-  h+='<select onchange="changeSelfRole(this.value)" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px">';
-  [{v:'manager',l:'Manager — Full access + role management'},{v:'product_manager',l:'Product Manager — Full access to all features'},{v:'developer',l:'Developer — Edit CapacityIQ & ToDo, read-only elsewhere'},{v:'read_only',l:'Read Only — View everything, edit nothing'}].forEach(function(r){
-    h+='<option value="'+r.v+'"'+(_userRole===r.v?' selected':'')+'>'+r.l+'</option>';
-  });
-  h+='</select></div>';
+  h+='<div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:8px">User Role</div>';
+  var _roleLabels={manager:'Manager',product_manager:'Product Manager',developer:'Developer',read_only:'Read Only'};
+  if(isManager()){
+    h+='<select onchange="changeSelfRole(this.value)" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px">';
+    [{v:'manager',l:'Manager — Full access + role management'},{v:'product_manager',l:'Product Manager — Full access to all features'},{v:'developer',l:'Developer — Edit CapacityIQ & ToDo, read-only elsewhere'},{v:'read_only',l:'Read Only — View everything, edit nothing'}].forEach(function(r){
+      h+='<option value="'+r.v+'"'+(_userRole===r.v?' selected':'')+'>'+r.l+'</option>';
+    });
+    h+='</select>';
+  } else {
+    h+='<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface-low);border:1px solid var(--border);border-radius:6px">';
+    h+='<span style="font-size:11px;font-weight:700;background:var(--accent);color:#fff;padding:3px 10px;border-radius:9999px">'+(_roleLabels[_userRole]||_userRole)+'</span>';
+    h+='<span style="font-size:11px;color:var(--muted)">Contact a Manager to change your role.</span>';
+    h+='</div>';
+  }
+  h+='</div>';
 
   // v1.33.1: Integrations section — Slack OAuth management.
   // Calendar integrations live on the Capacity view toolbar; Slack lives
@@ -28736,7 +28894,7 @@ async function init() {
 // with email rows + Google Contacts/Calendar stubs.
 var _onboardingSteps = [
   {title:'Welcome to Roadmap OS', body:'Your all-in-one product roadmap tool. This quick tour will help you get started in under 2 minutes.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>'},
-  {title:'Create Your Roadmap', body:'Click "+ Add Row" in the main view to add initiatives. Drag bars on the timeline to set durations. Organize by sections like Engineering, Product, or Design.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h2M8 18h6"/></svg>'},
+  {title:'Create Your Roadmap', body:'Click "+ Add Product" in the main view to add initiatives. Drag bars on the timeline to set durations. Organize by sections like Engineering, Product, or Design.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h2M8 18h6"/></svg>'},
   {title:'Set Up Your Team', body:'Open CapacityIQ from the sidebar to add teams and members. Track capacity, sprints, and initiatives in one place.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>'},
   {title:'Invite Your Teammates', kind:'invite', body:'Optional — collaborate with colleagues on the same roadmap. You can always invite people later from Settings.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>'},
   {title:'Import Tasks', body:'Use the Template Library to import pre-built project templates with 25+ tasks each. Or upload your own Excel/CSV files to populate tasks instantly.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>'},
