@@ -21005,7 +21005,10 @@ var _ICONS={
   calendar:'<svg viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>',
   download:'<svg viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>',
   target:'<svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>',
-  link:'<svg viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>'
+  link:'<svg viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>',
+  // v1.39.1 — icons for new Strategy reports
+  rocket:'<svg viewBox="0 0 24 24"><path d="M5 17l-3 4 4-3M12 2s3 3 3 7-3 7-3 7-3-3-3-7 3-7 3-7zM8 15c-2 1-4 2-5 4M16 15c2 1 4 2 5 4M12 11a2 2 0 100-4 2 2 0 000 4z"/></svg>',
+  "chart-bar":'<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>'
 };
 function svgIcon(name,size){
   var s=size||16;
@@ -24033,19 +24036,83 @@ function rptG2MRollup(container){
     '<th style="text-align:right;padding:10px 12px;font-size:11px;color:var(--muted)">G2M SCORE</th>'+
     '<th style="text-align:left;padding:10px 12px;font-size:11px;color:var(--muted)">PROGRESS</th>'+
     '<th style="text-align:center;padding:10px 12px;font-size:11px;color:var(--muted)">STATUS</th>'+
+    '<th style="text-align:left;padding:10px 12px;font-size:11px;color:var(--muted)">COMMENT</th>'+
+    '<th style="text-align:center;padding:10px 12px;font-size:11px;color:var(--muted);width:110px">DEEP DIVE</th>'+
     '</tr></thead><tbody>';
   scored.forEach(function(s){
     var col=s.score>=70?'#22c55e':s.score>=40?'#f59e0b':'#dc2626';
     var label=s.score>=80?'Ready':s.score>=40?'In progress':'Not ready';
-    h+='<tr style="border-bottom:1px solid var(--border)">'+
+    // v1.39.1 — comment stored on g2mAllData[rowName].comment. Falls back to row.g2mComment
+    // for rows that never opened the checklist.
+    var g2mRow = g2mAllData[s.row.name] || {};
+    var comment = (g2mRow.comment || s.row.g2mComment || '').trim();
+    var rowNameEsc = (s.row.name||'').replace(/'/g,"\\'");
+    var commentPreview = comment ? escHtml(comment.length > 80 ? comment.slice(0,80)+'\u2026' : comment) : '<span style="color:var(--muted);font-style:italic">No comment</span>';
+    h+='<tr style="border-bottom:1px solid var(--border);vertical-align:top">'+
       '<td style="padding:10px 12px;font-weight:600">'+escHtml(s.row.name||'')+'</td>'+
       '<td style="padding:10px 12px;text-align:right;font-weight:800;color:'+col+';font-variant-numeric:tabular-nums">'+s.score+'%</td>'+
       '<td style="padding:10px 12px"><span style="display:block;width:120px;height:6px;background:var(--border);border-radius:9999px;overflow:hidden"><span style="display:block;height:100%;width:'+s.score+'%;background:'+col+'"></span></span></td>'+
       '<td style="padding:10px 12px;text-align:center"><span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:9999px;background:'+col+'18;color:'+col+'">'+label+'</span></td>'+
+      '<td style="padding:10px 12px;font-size:12px;color:var(--text);max-width:280px;line-height:1.4">'+commentPreview+
+        ' <button onclick="_rptEditG2MComment(\''+rowNameEsc+'\')" title="Add / edit comment" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:11px;padding:2px 4px;margin-left:4px">'+(comment?'Edit':'+ Add')+'</button>'+
+      '</td>'+
+      '<td style="padding:10px 12px;text-align:center">'+
+        '<button onclick="_rptOpenG2M(\''+rowNameEsc+'\')" title="Open the G2M checklist for this product" style="padding:5px 12px;font-size:11px;font-weight:700;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:9999px;cursor:pointer;display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 16 16" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg> Open</button>'+
+      '</td>'+
       '</tr>';
   });
   h+='</tbody></table>';
   card.innerHTML=h; container.appendChild(card);
+}
+
+// v1.39.1 — G2M rollup helpers
+function _rptOpenG2M(rowName){
+  try { closeReports(); } catch(e){}
+  if(typeof openG2MForProduct === 'function'){
+    setTimeout(function(){ openG2MForProduct(rowName); }, 60);
+  } else if(typeof openG2M === 'function'){
+    setTimeout(openG2M, 60);
+  }
+}
+function _rptEditG2MComment(rowName){
+  var existing = (g2mAllData[rowName] && g2mAllData[rowName].comment) || '';
+  var ex = document.getElementById('g2mCommentModal'); if(ex) ex.remove();
+  var ov = document.createElement('div');
+  ov.id = 'g2mCommentModal'; ov.className = 'modal-overlay';
+  ov.onclick = function(e){ if(e.target === ov) ov.remove(); };
+  var modal = document.createElement('div'); modal.className = 'modal';
+  modal.style.cssText = 'width:min(520px,94vw);display:flex;flex-direction:column';
+  var hdr = document.createElement('div'); hdr.className = 'modal-hdr';
+  hdr.innerHTML = '<h2>G2M context — '+escHtml(rowName)+'</h2>' +
+    '<button class="close" onclick="document.getElementById(\'g2mCommentModal\').remove()">\u2715</button>';
+  modal.appendChild(hdr);
+  var body = document.createElement('div');
+  body.style.cssText = 'padding:18px 22px;display:flex;flex-direction:column;gap:10px';
+  body.innerHTML =
+    '<div style="font-size:12px;color:var(--muted);line-height:1.5">Add a short executive summary of where this product stands on its go-to-market journey. Visible on the G2M Readiness Rollup report.</div>' +
+    '<label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Comment<textarea id="g2mCommentInput" rows="6" placeholder="e.g. Waiting on compliance sign-off · HW qualification done · Sales enablement kicks off Apr 28" style="width:100%;margin-top:4px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:13px;color:var(--text);background:var(--white);font-family:inherit;resize:vertical;box-sizing:border-box">'+escHtml(existing)+'</textarea></label>';
+  modal.appendChild(body);
+  var footer = document.createElement('div');
+  footer.style.cssText = 'display:flex;gap:8px;justify-content:space-between;padding:12px 22px;border-top:1px solid var(--border)';
+  footer.innerHTML =
+    '<button class="prio-btn" onclick="_rptOpenG2M(\''+rowName.replace(/\\/g,'\\\\').replace(/\'/g,"\\'")+'\')" style="color:var(--accent)">Open full G2M checklist \u2192</button>' +
+    '<div style="display:flex;gap:8px">' +
+      '<button class="prio-btn" onclick="document.getElementById(\'g2mCommentModal\').remove()">Cancel</button>' +
+      '<button class="prio-btn primary" onclick="_rptSaveG2MComment(\''+rowName.replace(/\\/g,'\\\\').replace(/\'/g,"\\'")+'\')">Save</button>' +
+    '</div>';
+  modal.appendChild(footer);
+  ov.appendChild(modal); document.body.appendChild(ov);
+  setTimeout(function(){ var el=document.getElementById('g2mCommentInput'); if(el) el.focus(); }, 40);
+}
+function _rptSaveG2MComment(rowName){
+  var txt = (document.getElementById('g2mCommentInput').value || '').trim();
+  if(!g2mAllData[rowName]) g2mAllData[rowName] = { items: [] };
+  g2mAllData[rowName].comment = txt;
+  persistData();
+  var ov = document.getElementById('g2mCommentModal'); if(ov) ov.remove();
+  // Re-render the current report so the new comment shows immediately
+  if(_rptCurrentReport === 'g2m-rollup') renderReport('g2m-rollup');
+  showToast('Comment saved','success');
 }
 
 // ══ REPORT 11: Prioritisation ══
