@@ -9,7 +9,7 @@
      because xlsx and pptxgenjs use it internally. Network egress from the
      renderer is locked to 'self' — all Supabase + AI traffic is routed
      through the main process via the IPC bridge. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://nigusoyssktoebzscbwe.supabase.co wss://nigusoyssktoebzscbwe.supabase.co; object-src 'none'; base-uri 'self'; form-action 'none';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com https://drive-thirdparty.googleusercontent.com https://www.gstatic.com https://ssl.gstatic.com; media-src 'self' blob:; connect-src 'self' https://nigusoyssktoebzscbwe.supabase.co wss://nigusoyssktoebzscbwe.supabase.co https://www.googleapis.com https://content.googleapis.com https://accounts.google.com; frame-src 'self' https://docs.google.com https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'none';">
 <title>Roadmap OS</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMyNTYzYTgiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMWExNDY0Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHJ4PSI3IiBmaWxsPSJ1cmwoI2JnKSIvPgogIDxyZWN0IHg9IjQiIHk9IjYiICB3aWR0aD0iMjQiIGhlaWdodD0iNSIgcng9IjIuNSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwuOSkiLz4KICA8cmVjdCB4PSI0IiB5PSIxNCIgd2lkdGg9IjE1IiBoZWlnaHQ9IjUiIHJ4PSIyLjUiIGZpbGw9IiMxNmEzNGEiIG9wYWNpdHk9Ii45Ii8+CiAgPHJlY3QgeD0iNCIgeT0iMjEiIHdpZHRoPSIxMCIgaGVpZ2h0PSI1IiByeD0iMi41IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LC41KSIvPgogIDxyZWN0IHg9IjE3IiB5PSIyMSIgd2lkdGg9IjExIiBoZWlnaHQ9IjUiIHJ4PSIyLjUiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsLjI1KSIvPgogIDxjaXJjbGUgY3g9IjI4IiBjeT0iOC41IiByPSIzIiBmaWxsPSIjNGE5MGQ5IiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGNpcmNsZSBjeD0iMTkiIGN5PSIxNi41IiByPSIzIiBmaWxsPSIjZmZmIiBzdHJva2U9IiMxNmEzNGEiIHN0cm9rZS13aWR0aD0iMS41Ii8+Cjwvc3ZnPgo=">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&display=swap" rel="stylesheet">
@@ -1935,7 +1935,7 @@ body.dark-mode .onboard-card{background:#1e293b}
       <a onclick="closeAllOverlays();openPlans();updateNavActive('Plans');return false;">Plans</a>
       <a onclick="closeAllOverlays();openTodo();updateNavActive('To-Do');return false;">To-Do</a>
       <a onclick="closeAllOverlays();openCapacity();updateNavActive('CapacityIQ');return false;">CapacityIQ</a>
-      <a onclick="closeAllOverlays();_rptCurrentReport='initiative-health';openReports();updateNavActive('Strategy');return false;">Strategy</a>
+      <a onclick="closeAllOverlays();_rptCurrentReport='initiative-health';openReports();updateNavActive('Reports');return false;">Reports</a>
       <a onclick="closeAllOverlays();openInsights();updateNavActive('Insights');return false;">Insights</a>
     </nav>
     <div style="margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -2098,10 +2098,10 @@ body.dark-mode .onboard-card{background:#1e293b}
       <h5 style="font-weight:700;font-size:13px;margin-bottom:4px">CapacityIQ</h5>
       <p style="font-size:11px;color:var(--muted)">Team capacity planning</p>
     </button>
-    <button class="dash-card" onclick="closeAllOverlays();openShare()" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);text-align:left;font-family:inherit" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
-      <div style="margin-bottom:8px;color:var(--accent)"><span class="ico" aria-hidden="true" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg></span></div>
-      <h5 style="font-weight:700;font-size:13px;margin-bottom:4px">Share Roadmap</h5>
-      <p style="font-size:11px;color:var(--muted)" id="dashShareSummary">—</p>
+    <button class="dash-card" onclick="closeAllOverlays();openPlans()" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);text-align:left;font-family:inherit" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+      <div style="margin-bottom:8px;color:var(--accent)"><span class="ico" aria-hidden="true" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg></span></div>
+      <h5 style="font-weight:700;font-size:13px;margin-bottom:4px">Plans Overview</h5>
+      <p style="font-size:11px;color:var(--muted)" id="dashPlansSummary">—</p>
     </button>
   </div>
 </div>
@@ -2165,6 +2165,20 @@ body.dark-mode .onboard-card{background:#1e293b}
       <option value="name">Name (A&ndash;Z)</option>
       <option value="startMonth">Start month</option>
       <option value="endMonth">End month</option>
+    </select>
+  </span>
+  <!-- v1.40.0: date range filter — quick presets filter rows whose bars fall
+       outside the selected window. "All" clears the filter. -->
+  <span style="display:flex;align-items:center;gap:6px;margin-left:10px">
+    <label for="roadmapRangeSelect" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)">Range</label>
+    <select id="roadmapRangeSelect" onchange="setRoadmapDateRange(this.value)" style="font-size:11px;font-weight:600;border:1px solid var(--border);border-radius:9999px;padding:4px 26px 4px 10px;background:var(--white);color:var(--text);cursor:pointer">
+      <option value="all">All</option>
+      <option value="this-q">This Quarter</option>
+      <option value="next-q">Next Quarter</option>
+      <option value="h1">H1 (first 6 months)</option>
+      <option value="h2">H2 (last 6 months)</option>
+      <option value="ytd">Year to Date</option>
+      <option value="fy">This Fiscal Year</option>
     </select>
   </span>
   <!-- v1.36.0: Roadmap + Data dropdowns (moved from sidebar, plus new FY controls) -->
@@ -2431,11 +2445,10 @@ body.dark-mode .onboard-card{background:#1e293b}
       <div class="todo-stat" style="color:#22c55e"><span id="todoStatDone">0</span> Done</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
-      <!-- v1.36.0: cross-page tabs — quick jump to Timesheet + My Capacity inside KPI Scorecard -->
+      <!-- v1.40.0: My Capacity removed — now covered by CapacityIQ dashboard -->
       <div style="display:flex;background:#f1f5f9;border-radius:9999px;padding:3px;margin-right:4px" id="todoCrossTabs">
         <button class="ts-view-btn active" data-todo-tab="todo" onclick="switchTodoTab('todo')">To-Do</button>
         <button class="ts-view-btn" data-todo-tab="timesheet" onclick="switchTodoTab('timesheet')">Timesheet</button>
-        <button class="ts-view-btn" data-todo-tab="my-capacity" onclick="switchTodoTab('my-capacity')">My Capacity</button>
       </div>
       <button class="btn green" onclick="addTodoItem()">+ Add Task</button>
       <button class="btn" onclick="openTemplateBuilder('todo',{initiativeName:(document.getElementById('todoFilterSelect')&&document.getElementById('todoFilterSelect').value)||'Template Imports'})" title="Multi-select tasks from templates and the task library" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:-2px;margin-right:4px"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>From Library</button>
@@ -2508,7 +2521,7 @@ body.dark-mode .onboard-card{background:#1e293b}
     <div class="ts-view-toggle">
       <button class="ts-view-btn active" id="kpiViewScorecard" onclick="setKPIView('scorecard')">Scorecard</button>
       <button class="ts-view-btn" id="kpiViewTimesheet" onclick="setKPIView('timesheet')">Timesheet</button>
-      <button class="ts-view-btn" id="kpiViewCapacity" onclick="setKPIView('capacity')">My Capacity</button>
+      <!-- v1.40.0: My Capacity tab removed — CapacityIQ dashboard now covers personal capacity -->
     </div>
     <div id="kpiOverallScore" style="margin-left:auto;margin-right:8px"></div>
     <select id="kpiQuarterSelect" onchange="renderKPI()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--text);font-size:13px;font-weight:500;font-family:inherit;min-width:100px">
@@ -3275,46 +3288,79 @@ function drawTodayLine(){
   if(!wrap) return;
   var old=wrap.querySelector('.today-line');
   if(old) old.remove();
+  var table=document.getElementById('roadmap');
+  if(!table) return;
 
   var now=new Date();
   var todayYear=now.getFullYear();
   var todayMonth=now.getMonth(); // 0-based
   var todayDay=now.getDate();
-  var todayMonthName=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][todayMonth];
+  var MN=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  var todayMonthName=MN[todayMonth];
+  var todayMonthNum=todayMonth+1; // 1-based calendar month
 
-  // v1.38.0 — use getMonthLabel() as source of truth. It returns "MMM YYYY"
-  // for each visible month index, correctly accounting for the FY wrap (Q4
-  // DEC/JAN/FEB year=year+1 logic). Previously we duplicated the year-walk
-  // here and drifted in edge cases (e.g. custom FY start month introduced in
-  // v1.36.0) — the line always ended up stuck at column 0 when the duplicated
-  // calendar-year calc disagreed with getMonthLabel.
-  var targetIdx = -1;
-  if(typeof NM === 'number' && typeof getMonthLabel === 'function'){
-    var needle = todayMonthName + ' ' + todayYear;
-    for(var mi = 0; mi < NM; mi++){
-      if(getMonthLabel(mi) === needle){ targetIdx = mi; break; }
+  // v1.40.0 — derive target index by walking quarters[] directly and
+  // computing the calendar year for each (quarter, month) pair from the
+  // fiscal-year start month. This replaces the prior reliance on
+  // getMonthLabel() whose `q.q===4 && JAN/FEB/MAR` heuristic only happens
+  // to be correct for March-start FYs and silently misplaces the today
+  // line when the user runs a non-March FY or when q.year drifts from the
+  // convention after manual edits to quarter metadata.
+  var startMonth=3;
+  if(typeof _fyStartMonth==='number' && _fyStartMonth>=1 && _fyStartMonth<=12){
+    startMonth=_fyStartMonth;
+  } else if(typeof appSettings==='object' && appSettings && appSettings.fyStartMonth){
+    var _idx=MN.indexOf(appSettings.fyStartMonth);
+    if(_idx>=0) startMonth=_idx+1;
+  }
+  var MNUM={JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12};
+
+  var targetIdx=-1, col=0;
+  for(var qi=0; qi<quarters.length && targetIdx<0; qi++){
+    var q=quarters[qi];
+    for(var mi=0; mi<q.months.length; mi++){
+      var mname=q.months[mi];
+      var mnum=MNUM[mname]||0;
+      var calYear=(mnum>=startMonth)?q.year:q.year+1;
+      if(mname===todayMonthName && calYear===todayYear){ targetIdx=col; break; }
+      col++;
     }
   }
-  if(targetIdx < 0) return; // today outside the visible timeline — hide line
+  if(targetIdx<0) return; // today outside the visible timeline
 
-  // Use actual DOM positions of month header cells for accurate placement
-  var table=document.getElementById('roadmap');
-  if(!table) return;
   var monthHeaders=table.querySelectorAll('th.mh');
-  if(!monthHeaders||targetIdx>=monthHeaders.length) return;
-
+  if(!monthHeaders || !monthHeaders.length || targetIdx>=monthHeaders.length) return;
   var th=monthHeaders[targetIdx];
-  var wrapRect=wrap.getBoundingClientRect();
-  var thRect=th.getBoundingClientRect();
 
-  var dim=DAYS_IN_MONTH[todayMonthName]||30;
-  var frac=(todayDay-1)/dim;
-  var px=(thRect.left - wrapRect.left) + wrap.scrollLeft + frac*thRect.width;
-
-  var line=document.createElement('div');
-  line.className='today-line';
-  line.style.left=Math.round(px)+'px';
-  wrap.appendChild(line);
+  // Defer the getBoundingClientRect measurement to the next frame so any
+  // in-flight layout (first render, tab switch, font load) has settled.
+  // On desktop Electron we saw thRect.width briefly reporting 0 during the
+  // initial boot which left the line stuck at column 0. The zero-width
+  // guard reschedules one more frame as a safety net.
+  var attempt=0;
+  function place(){
+    if(!document.body.contains(th)) return;
+    if(!wrap.isConnected) return;
+    // Line may have been drawn by a prior call already — remove stale one.
+    var stale=wrap.querySelector('.today-line');
+    if(stale) stale.remove();
+    var wrapRect=wrap.getBoundingClientRect();
+    var thRect=th.getBoundingClientRect();
+    if((!thRect.width || !wrapRect.width) && attempt<3){
+      attempt++;
+      requestAnimationFrame(place);
+      return;
+    }
+    if(!thRect.width) return; // give up — table not laid out
+    var dim=DAYS_IN_MONTH[todayMonthName]||30;
+    var frac=(todayDay-1)/dim;
+    var px=(thRect.left - wrapRect.left) + wrap.scrollLeft + frac*thRect.width;
+    var line=document.createElement('div');
+    line.className='today-line';
+    line.style.left=Math.round(px)+'px';
+    wrap.appendChild(line);
+  }
+  requestAnimationFrame(place);
 }
 
 // ── DAY-PRECISION HELPERS ────────────────────────────────────────────────────
@@ -3506,6 +3552,89 @@ function setRoadmapSort(mode){
   _roadmapSortBy = mode || 'default';
   persistData();
   render();
+}
+
+// v1.40.0: Roadmap date-range filter. Resolves a preset key into a
+// {start,end} month-index window over the current quarters[]. Returning
+// null means "no filter — show everything".
+function setRoadmapDateRange(preset){
+  _roadmapRangePreset = preset || 'all';
+  persistData();
+  render();
+}
+function _resolveRoadmapRange(){
+  if(!_roadmapRangePreset || _roadmapRangePreset==='all') return null;
+  if(!NM) return null;
+  var now = new Date();
+  var todayYear = now.getFullYear();
+  var todayMonth = now.getMonth();
+  var MN=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  var todayName = MN[todayMonth];
+  var startMonth = (typeof _fyStartMonth==='number' && _fyStartMonth>=1) ? _fyStartMonth : 3;
+  var MNUM={JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12};
+  // Locate today's flat index by walking quarters with calendar-year logic.
+  var todayIdx=-1, col=0;
+  for(var qi=0; qi<quarters.length && todayIdx<0; qi++){
+    var q=quarters[qi];
+    for(var mi=0; mi<q.months.length; mi++){
+      var mname=q.months[mi];
+      var mnum=MNUM[mname]||0;
+      var calYear=(mnum>=startMonth)?q.year:q.year+1;
+      if(mname===todayName && calYear===todayYear){ todayIdx=col; break; }
+      col++;
+    }
+  }
+  if(todayIdx<0) todayIdx=0;
+  var p=_roadmapRangePreset;
+  if(p==='this-q'){
+    var qs=Math.floor(todayIdx/3)*3;
+    return {start:qs, end:qs+3};
+  }
+  if(p==='next-q'){
+    var nqs=Math.floor(todayIdx/3)*3 + 3;
+    return {start:nqs, end:Math.min(NM, nqs+3)};
+  }
+  if(p==='h1') return {start:0, end:Math.min(NM, 6)};
+  if(p==='h2') return {start:Math.max(0, NM-6), end:NM};
+  if(p==='ytd'){
+    // From start of today's calendar year to today (inclusive).
+    var yStart=-1, cc=0;
+    for(var qj=0; qj<quarters.length && yStart<0; qj++){
+      var qq=quarters[qj];
+      for(var mj=0; mj<qq.months.length; mj++){
+        var nn=qq.months[mj];
+        var nm=MNUM[nn]||0;
+        var yr=(nm>=startMonth)?qq.year:qq.year+1;
+        if(yr===todayYear){ yStart=cc; break; }
+        cc++;
+      }
+    }
+    if(yStart<0) yStart=0;
+    return {start:yStart, end:todayIdx+1};
+  }
+  if(p==='fy'){
+    // Full fiscal year containing today — find the Q1 on-or-before today.
+    var fyStartIdx=-1, cc2=0;
+    for(var qk=0; qk<quarters.length; qk++){
+      var qqq=quarters[qk];
+      if(qqq.q===1 && cc2<=todayIdx) fyStartIdx=cc2;
+      cc2 += qqq.months.length;
+    }
+    if(fyStartIdx<0) fyStartIdx=0;
+    return {start:fyStartIdx, end:Math.min(NM, fyStartIdx+12)};
+  }
+  return null;
+}
+function _rowInRange(row, range){
+  if(!range) return true;
+  if(!row || !row.bars || !row.bars.length) return true; // keep rows with no bars
+  for(var i=0; i<row.bars.length; i++){
+    var b=row.bars[i];
+    var s=parseFloat(b.s); var e=parseFloat(b.e);
+    if(isNaN(s) || isNaN(e)) continue;
+    if(s < range.end && e > range.start) return true;
+  }
+  return false;
 }
 
 // View toggle: Timeline or Kanban
@@ -3723,6 +3852,9 @@ function render(){
   // Sync the sort dropdown UI with current state
   var sortSel=document.getElementById('roadmapSortSelect');
   if(sortSel && sortSel.value !== _roadmapSortBy) sortSel.value = _roadmapSortBy;
+  // v1.40.0: sync range dropdown
+  var rangeSel = document.getElementById('roadmapRangeSelect');
+  if(rangeSel && rangeSel.value !== _roadmapRangePreset) rangeSel.value = _roadmapRangePreset;
   // Sync view toggle UI
   var tb = document.getElementById('viewTimelineBtn');
   var kb = document.getElementById('viewKanbanBtn');
@@ -3730,6 +3862,11 @@ function render(){
   if(kb) kb.classList.toggle('active', _roadmapView === 'kanban');
 
   var orderedRows = getOrderedRowsForRender();
+  // v1.40.0: apply date-range filter AFTER ordering so sort is preserved.
+  var _range = _resolveRoadmapRange();
+  if(_range){
+    orderedRows = orderedRows.filter(function(r){ return _rowInRange(r, _range); });
+  }
   var groupBySection = (_roadmapSortBy === 'default');
   // Pre-compute priority scores once if we're sorted by priority — used for the inline badge.
   var prioFwk = getActiveFramework();
@@ -4505,12 +4642,20 @@ function saveRow(){
 
   if(editingRowId){
     var row=rows.find(function(r){return r.id===editingRowId});
+    var _prevName = row.name;
+    var _prevHadG = (row.bars||[]).some(function(b){ return b && b.c==='g'; });
+    var _newHasG  = bars.some(function(b){ return b && b.c==='g'; });
     row.name=name; row.sub=sub; row.sec=secId; row.priority=priority;
     row.bars=bars; row.priorities=priorities; row.deliverables=deliverables;
     row.links=links; row.attachments=attachments; row.initiativeLinks=initLinks;
     row.parentRowId = parentRowId;
+    _appendChangeLog('edit', editingRowId, _prevName!==name ? ('Renamed "'+_prevName+'" \u2192 "'+name+'"') : ('Edited "'+name+'"'));
+    if(!_prevHadG && _newHasG && typeof pushLocalNotification==='function'){
+      pushLocalNotification('ship', 'Shipped: '+name, 'An initiative bar moved to Released.', 'row:'+editingRowId);
+    }
   } else {
     var newRow={id:'r'+Date.now(),sec:secId,name:name,sub:sub,priority:priority,bars:bars,priorities:priorities,deliverables:deliverables,links:links,attachments:attachments,initiativeLinks:initLinks,parentRowId:parentRowId};
+    _appendChangeLog('create', newRow.id, 'Created "'+name+'"');
     // Insert after the last row in this section (not at array end)
     var lastIdxInSec=-1;
     rows.forEach(function(r,i){ if(r.sec===secId) lastIdxInSec=i; });
@@ -4550,7 +4695,9 @@ function saveRow(){
 function deleteRow(rowId){
   if(!canEdit('roadmap')) return;
   if(!confirm('Delete this row?')) return;
+  var gone = rows.find(function(r){ return r.id===rowId; });
   rows=rows.filter(function(r){return r.id!==rowId});
+  if(gone) _appendChangeLog('delete', rowId, 'Deleted "'+(gone.name||rowId)+'"');
   render();
   persistData();
 }
@@ -6875,10 +7022,11 @@ async function onAuthSuccess(user){
   // dashboard. Uses a sessionStorage breadcrumb set by _processOAuthFragment.
   var _postAuthGoto = '';
   try { _postAuthGoto = sessionStorage.getItem('pmr_post_auth_goto') || ''; sessionStorage.removeItem('pmr_post_auth_goto'); } catch(_){}
-  if(_postAuthGoto === 'capacity' && typeof openKPI === 'function'){
+  if(_postAuthGoto === 'capacity' && typeof openCapacity === 'function'){
+    // v1.40.0: post-auth hand-off now lands in CapacityIQ dashboard.
     setTimeout(function(){
-      openKPI();
-      setTimeout(function(){ setKPIView('capacity'); showToast('Calendar connected — click Sync Now to import events','success'); }, 120);
+      openCapacity();
+      showToast('Calendar connected — click Sync Now to import events','success');
     }, 400);
   } else if(_postAuthGoto === 'artifacts' && typeof openArtifacts === 'function'){
     setTimeout(function(){
@@ -7082,6 +7230,9 @@ function applyDataPayload(d){
   }
   if(typeof d.roadmapSortBy === 'string') _roadmapSortBy = d.roadmapSortBy;
   if(typeof d.roadmapView === 'string') _roadmapView = d.roadmapView;
+  if(typeof d.roadmapRangePreset === 'string') _roadmapRangePreset = d.roadmapRangePreset;
+  if(Array.isArray(d.roadmapChangeLog)) _roadmapChangeLog = d.roadmapChangeLog;
+  if(Array.isArray(d.localNotifications)) _localNotifications = d.localNotifications;
   if(Array.isArray(d.projectPlans)){
     projectPlans = d.projectPlans;
     if(!_activePlanId && projectPlans.length) _activePlanId = projectPlans[0].id;
@@ -7141,7 +7292,7 @@ function applyDataPayload(d){
   if(aTab&&aTab.sections){sections=aTab.sections;rows=aTab.rows;if(aTab.quarters)quarters=aTab.quarters;}
 }
 function buildDataPayload(){
-  return {sections:sections,rows:rows,quarters:quarters,tabs_data:tabs_data,activeTabId:activeTabId,g2mData:g2mAllData,todoData:todoAllData,kpiData:kpiAllData,timesheetData:timesheetData,ucrData:ucrAllData,artifactsData:artifactsData,brandGuideData:brandGuideData,artTemplates:artTemplates,capData:capData,prioritization:prioritizationData,roadmapSortBy:_roadmapSortBy,projectPlans:projectPlans,planTemplates:planTemplates,okrs:okrsData,roadmapView:_roadmapView,taskLibrary:taskLibrary,taskLibrarySeeded:_taskLibrarySeeded,_usageStats:_usageStats,
+  return {sections:sections,rows:rows,quarters:quarters,tabs_data:tabs_data,activeTabId:activeTabId,g2mData:g2mAllData,todoData:todoAllData,kpiData:kpiAllData,timesheetData:timesheetData,ucrData:ucrAllData,artifactsData:artifactsData,brandGuideData:brandGuideData,artTemplates:artTemplates,capData:capData,prioritization:prioritizationData,roadmapSortBy:_roadmapSortBy,projectPlans:projectPlans,planTemplates:planTemplates,okrs:okrsData,roadmapView:_roadmapView,roadmapRangePreset:_roadmapRangePreset,roadmapChangeLog:_roadmapChangeLog,localNotifications:_localNotifications,taskLibrary:taskLibrary,taskLibrarySeeded:_taskLibrarySeeded,_usageStats:_usageStats,
     // v1.33.0 — sync capacity + integrations across devices.
     settings:{
       capacity: (appSettings&&appSettings.capacity) || {hoursPerWeek:40,hoursPerDay:8,workDays:5},
@@ -7323,6 +7474,7 @@ async function pushCloudData(){
       planTemplates: planTemplates,
       okrs: okrsData,
       roadmapView: _roadmapView,
+      roadmapRangePreset: _roadmapRangePreset,
       taskLibrary: taskLibrary,
       taskLibrarySeeded: _taskLibrarySeeded,
       // v1.36.3 — sync profile across devices (see buildDataPayload note)
@@ -8859,6 +9011,49 @@ var _notifications = [];          // table rows merged with derived items (share
 var _notificationsCache = [];     // raw notifications-api rows (for table-backed actions)
 var _notifPollTimer = null;
 var _lastNotifPollAt = 0;
+// v1.40.0: local (self-served) notifications — the server-side
+// sendNotification() suppresses self-notifications, so any "alert yourself"
+// events (overdue tasks, your own ship events, local change-log highlights)
+// live in this array. Persisted in the data payload like roadmapChangeLog.
+var _localNotifications = [];
+function pushLocalNotification(type, title, detail, link){
+  try {
+    if(!Array.isArray(_localNotifications)) _localNotifications = [];
+    // Dedupe within 10 minutes so repeated renders don't spam the bell.
+    var now = Date.now();
+    var dupe = _localNotifications.find(function(n){
+      return n.type===type && n.title===title && (now - (n.ts||0)) < 10*60*1000;
+    });
+    if(dupe) return;
+    _localNotifications.push({
+      id: 'local_'+now+'_'+Math.random().toString(36).slice(2,6),
+      ts: now,
+      type: type || 'info',
+      title: title || 'Update',
+      detail: detail || '',
+      link: link || '',
+      read: false
+    });
+    if(_localNotifications.length > 100) _localNotifications = _localNotifications.slice(-100);
+    _notifyDesktop(title, detail);
+    // Refresh badge (soft — avoids a full poll round-trip)
+    if(typeof loadNotifications==='function') loadNotifications();
+  } catch(_e){ console.warn('pushLocalNotification failed', _e); }
+}
+// Desktop notification (Electron + browsers with Notification API). Silent
+// no-op if permission is denied or the API isn't available.
+function _notifyDesktop(title, body){
+  try {
+    if(typeof Notification === 'undefined') return;
+    if(Notification.permission === 'granted'){
+      new Notification(title || 'Roadmap OS', { body: body || '', silent: false });
+    } else if(Notification.permission !== 'denied'){
+      Notification.requestPermission().then(function(p){
+        if(p === 'granted') new Notification(title || 'Roadmap OS', { body: body || '' });
+      });
+    }
+  } catch(_e){}
+}
 
 // Send a notification: writes an in-app row (if recipient is a registered user)
 // AND sends an email via Resend (always, registered or not).
@@ -8969,6 +9164,26 @@ async function loadNotifications(){
     });
   }
 
+  // v1.40.0: local self-served notifications (late tasks, your own ship
+  // events, in-app alerts). Merged after the server-side rows so persistent
+  // items keep priority in sort/dedupe.
+  if(Array.isArray(_localNotifications)){
+    _localNotifications.forEach(function(n){
+      _notifications.push({
+        id: n.id,
+        persistent: false,
+        read: !!n.read,
+        type: n.type || 'info',
+        icon: _notifTypeIcon(n.type),
+        title: n.title,
+        detail: n.detail || '',
+        link: n.link || '',
+        time: n.ts ? new Date(n.ts).toISOString() : null,
+        _local: true
+      });
+    });
+  }
+
   // Update unread badge
   var unread = _notifications.filter(function(n){ return !n.read; }).length;
   var badge=document.getElementById('notifBadge');
@@ -9022,7 +9237,17 @@ function _handleNotificationLink(link){
 }
 
 async function _markNotificationRead(id){
-  if(!id || !_accessToken) return;
+  if(!id) return;
+  // v1.40.0: local (non-persistent) notifications live in _localNotifications
+  // and never hit the edge function. Detect by id prefix and short-circuit.
+  if(typeof id === 'string' && id.indexOf('local_') === 0){
+    var ln = (_localNotifications||[]).find(function(x){ return x.id === id; });
+    if(ln) ln.read = true;
+    persistData();
+    loadNotifications();
+    return;
+  }
+  if(!_accessToken) return;
   try {
     await window.electronAPI.supaRequest({
       path: '/functions/v1/notifications-api',
@@ -9038,7 +9263,10 @@ async function _markNotificationRead(id){
 }
 
 async function _markAllNotificationsRead(){
-  if(!_accessToken) return;
+  // v1.40.0: mark locals read too
+  (_localNotifications||[]).forEach(function(n){ n.read = true; });
+  persistData();
+  if(!_accessToken){ await loadNotifications(); var ov0=document.getElementById('notifModal'); if(ov0){ov0.remove();openNotifications();} return; }
   try {
     await window.electronAPI.supaRequest({
       path: '/functions/v1/notifications-api',
@@ -12870,6 +13098,31 @@ function openTodo(){
   updateTodoBackBtn();
   renderTodo();
   updateNavActive('');  // v1.25.0: ToDo isn't a top-nav tab — clear active
+  // v1.40.0: scan for overdue tasks and surface them via local notifications.
+  _scanForOverdueTasks();
+}
+
+// v1.40.0: look for non-done tasks with a due date in the past across every
+// initiative in todoAllData and push one local notification per task. The
+// 10-minute dedupe in pushLocalNotification prevents spam on every reopen.
+function _scanForOverdueTasks(){
+  try {
+    if(typeof todoAllData !== 'object' || !todoAllData) return;
+    var nowMs = Date.now();
+    Object.keys(todoAllData).forEach(function(init){
+      var list = todoAllData[init] || [];
+      list.forEach(function(t){
+        if(!t || t.status === 'done') return;
+        if(!t.dueDate) return;
+        var due = new Date(t.dueDate);
+        if(isNaN(due)) return;
+        if(due.getTime() < nowMs){
+          pushLocalNotification('overdue', 'Overdue: '+(t.text||t.name||'Task'),
+            'Due '+due.toLocaleDateString()+' · '+init, '');
+        }
+      });
+    });
+  } catch(_e){}
 }
 function closeTodo(){
   document.getElementById('todoOverlay').classList.remove('open');
@@ -13386,25 +13639,23 @@ function deleteTodoItem(initiative,todoId){
   renderTodo();
 }
 
-// v1.36.0: To-Do page cross-tabs — jump to Timesheet / My Capacity views
-// which are rendered by the existing KPI Scorecard overlay. The overlay
-// surfaces via setKPIView and we close the To-Do page first. On KPI close
-// the user lands back on the roadmap; the tabs aren't persistent state —
-// they're just a launcher. If the user is already inside KPI (timesheet or
-// capacity) this is a no-op.
+// v1.36.0 (updated v1.40.0): To-Do page cross-tabs — jump to Timesheet.
+// My Capacity removed in v1.40 — CapacityIQ dashboard is the single source
+// of personal capacity. If a legacy caller passes 'my-capacity' we route
+// to openCapacity() instead.
 function switchTodoTab(tab){
   var btns = document.querySelectorAll('#todoCrossTabs [data-todo-tab]');
   btns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-todo-tab') === tab); });
-  if(tab === 'todo') return; // already here
-  // Close the todo overlay, open KPI in the right view
+  if(tab === 'todo') return;
   try { if(typeof closeTodo === 'function') closeTodo(); } catch(e){}
+  if(tab === 'my-capacity'){
+    if(typeof openCapacity === 'function'){ openCapacity(); return; }
+    tab = 'timesheet';
+  }
   if(typeof openKPI !== 'function'){ showToast('KPI Scorecard unavailable','error'); return; }
   openKPI();
-  // Run after the overlay paints so setKPIView wires up
   setTimeout(function(){
-    if(typeof setKPIView === 'function'){
-      setKPIView(tab === 'my-capacity' ? 'capacity' : 'timesheet');
-    }
+    if(typeof setKPIView === 'function') setKPIView('timesheet');
   }, 30);
 }
 
@@ -13924,6 +14175,30 @@ var _prioEditingFrameworkId = null;
 var _roadmapSortBy = 'default'; // 'default' | 'priority' | 'name' | 'startMonth' | 'endMonth'
 // Roadmap view mode — Timeline (default) or Kanban
 var _roadmapView = 'timeline'; // 'timeline' | 'kanban'
+// v1.40.0: Roadmap date-range filter. Stored as a preset key; `null` = show
+// all rows. Presets resolve to a {start,end} month-index window at render
+// time so they stay correct when the user extends the timeline.
+var _roadmapRangePreset = 'all';
+// v1.40.0: Lightweight initiative change log — capped at 200 entries so the
+// payload stays small. Logged on row create / edit / delete. Rendered by
+// the Change Log report on the Reports Dashboard.
+var _roadmapChangeLog = [];
+// v1.40.0: reports dashboard capacity period selector (persisted only across
+// the current session — no need to sync across devices).
+var _rptCapPeriod = 'weekly';
+function _appendChangeLog(action, rowId, summary){
+  try {
+    if(!Array.isArray(_roadmapChangeLog)) _roadmapChangeLog = [];
+    _roadmapChangeLog.push({
+      ts: Date.now(),
+      action: action,
+      rowId: rowId || null,
+      summary: summary || '',
+      user: (typeof _currentUser!=='undefined' && _currentUser && _currentUser.email) || ''
+    });
+    if(_roadmapChangeLog.length > 200) _roadmapChangeLog = _roadmapChangeLog.slice(-200);
+  } catch(_e){}
+}
 
 // ══════════════════════════════════════════════════════════════════════════════
 // PROJECT PLANS — task list, dependencies, Gantt, roadmap linking
@@ -20652,26 +20927,30 @@ function _weekLabel(weekStr){
 }
 
 function setKPIView(view){
+  // v1.40.0: 'capacity' view is no longer reachable from the KPI header —
+  // CapacityIQ dashboard owns personal capacity now. If any legacy caller
+  // still passes 'capacity', reroute them into CapacityIQ.
+  if(view==='capacity'){
+    if(typeof closeKPI==='function') try { closeKPI(); } catch(e){}
+    if(typeof openCapacity==='function'){ openCapacity(); return; }
+    view='timesheet';
+  }
   _kpiView=view;
-  document.getElementById('kpiViewScorecard').className='ts-view-btn'+(view==='scorecard'?' active':'');
-  document.getElementById('kpiViewTimesheet').className='ts-view-btn'+(view==='timesheet'?' active':'');
-  document.getElementById('kpiViewCapacity').className='ts-view-btn'+(view==='capacity'?' active':'');
-  document.getElementById('tsWeekNav').style.display=(view==='timesheet'||view==='capacity')?'flex':'none';
+  var scoreBtn=document.getElementById('kpiViewScorecard');
+  var tsBtn=document.getElementById('kpiViewTimesheet');
+  if(scoreBtn) scoreBtn.className='ts-view-btn'+(view==='scorecard'?' active':'');
+  if(tsBtn) tsBtn.className='ts-view-btn'+(view==='timesheet'?' active':'');
+  var wkNav=document.getElementById('tsWeekNav');
+  if(wkNav) wkNav.style.display=(view==='timesheet')?'flex':'none';
   var addBtn=document.getElementById('kpiAddBtn');
   if(addBtn){
-    // v1.36.4: Timesheet no longer has "+ Add Task" — timesheet entries are
-    // derived from ToDo / G2M / Plans tasks assigned to the user. Adding a
-    // task here would bypass those systems and produce orphans.
-    if(view==='capacity' || view==='timesheet'){ addBtn.style.display='none'; }
+    if(view==='timesheet'){ addBtn.style.display='none'; }
     else { addBtn.style.display=''; addBtn.textContent='+ Add KPI';
       addBtn.setAttribute('onclick','showAddCustomKPI()'); }
   }
   if(view==='timesheet'){
     document.getElementById('tsWeekLabel').textContent=_weekLabel(_tsCurrentWeek);
     renderTimesheet();
-  } else if(view==='capacity'){
-    document.getElementById('tsWeekLabel').textContent=_weekLabel(_tsCurrentWeek);
-    renderCapacityView();
   } else {
     renderKPI();
   }
@@ -21270,11 +21549,27 @@ function populateDashboard(){
     todoSum.textContent=open+' open of '+total+' total tasks';
   }
 
-  // Share summary
-  var shareSum=document.getElementById('dashShareSummary');
-  if(shareSum){
-    var cnt=(_sharedToMe||[]).length;
-    shareSum.textContent=cnt>0?cnt+' roadmap(s) shared with you':'No shared roadmaps';
+  // v1.40.0: Plans Overview replaces Shared-with-me — surfaces the user's
+  // active plans count with a tiny status breakdown.
+  var plansSum=document.getElementById('dashPlansSummary');
+  if(plansSum){
+    var plans=(typeof projectPlans!=='undefined' && projectPlans)?projectPlans:[];
+    if(!plans.length){
+      plansSum.textContent='No plans yet — click to create one';
+    } else {
+      var totalTasks=0, doneTasks=0, openPlans=0;
+      plans.forEach(function(p){
+        var tsks=p.tasks||[];
+        totalTasks+=tsks.length;
+        var allDone=tsks.length>0;
+        tsks.forEach(function(t){
+          if(t.status==='done') doneTasks++; else allDone=false;
+        });
+        if(!allDone) openPlans++;
+      });
+      var pct = totalTasks ? Math.round(doneTasks/totalTasks*100) : 0;
+      plansSum.textContent = plans.length+' plan'+(plans.length===1?'':'s')+' · '+openPlans+' active · '+pct+'% complete';
+    }
   }
 }
 
@@ -23413,6 +23708,7 @@ var RPT_REPORTS=[
   {id:'prioritization',    name:'Prioritisation',    icon:'chart-bar',desc:'Framework scores (RICE/ICE/MoSCoW)'},
   {id:'weekly-capacity',name:'Weekly Capacity',icon:'calendar',desc:'Time allocation this week'},
   {id:'ucr-summary',       name:'Change Requests',   icon:'edit',    desc:'User change requests summary'},
+  {id:'change-log',        name:'Roadmap Change Log',icon:'edit',    desc:'Recent initiative edits, additions, deletions'},
   {id:'qbr-pack',name:'QBR Pack',icon:'doc',desc:'Quarterly Business Review summary'},
   {id:'deliverables-tracker',name:'Deliverables Tracker',icon:'check',desc:'What was promised vs delivered'}
 ];
@@ -23422,7 +23718,7 @@ function openReports(){
   document.getElementById('reportsOverlay').classList.add('open');
   renderReportsSidebar();
   renderReport(_rptCurrentReport);
-  updateNavActive('Strategy');
+  updateNavActive('Reports');
 }
 function closeReports(){
   document.getElementById('reportsOverlay').classList.remove('open');
@@ -23451,8 +23747,44 @@ function renderReport(id){
   else if(id==='prioritization') rptPrioritization(c);
   else if(id==='weekly-capacity') rptWeeklyCapacity(c);
   else if(id==='ucr-summary') rptUCRSummary(c);
+  else if(id==='change-log') rptChangeLog(c);
   else if(id==='qbr-pack') rptQBRPack(c);
   else if(id==='deliverables-tracker') rptDeliverablesTracker(c);
+}
+
+// v1.40.0: Roadmap Change Log report — lists initiative edits/additions/
+// deletions captured by _appendChangeLog. Empty state explains how entries
+// are captured so users aren't confused by a blank view on first open.
+function rptChangeLog(c){
+  var log = Array.isArray(_roadmapChangeLog) ? _roadmapChangeLog.slice() : [];
+  log.reverse(); // newest first
+  var h = '';
+  h += '<div style="padding:16px 20px">';
+  h += '<h2 style="margin:0 0 6px;font-size:18px;font-weight:700">Roadmap Change Log</h2>';
+  h += '<p style="margin:0 0 14px;font-size:12px;color:var(--muted)">Recent initiative-level changes (latest 200).</p>';
+  if(!log.length){
+    h += '<div style="padding:30px;border:1px dashed var(--border);border-radius:12px;text-align:center;color:var(--muted);font-size:13px">No changes logged yet. Create, edit, or delete a roadmap initiative to start populating this list.</div>';
+  } else {
+    var actionBadge = {
+      create:'<span style="background:#16a34a22;color:#16a34a;border:1px solid #16a34a44;font-size:10px;padding:2px 8px;border-radius:999px;font-weight:700">Created</span>',
+      edit:  '<span style="background:#2563eb22;color:#2563eb;border:1px solid #2563eb44;font-size:10px;padding:2px 8px;border-radius:999px;font-weight:700">Edited</span>',
+      delete:'<span style="background:#dc262622;color:#dc2626;border:1px solid #dc262644;font-size:10px;padding:2px 8px;border-radius:999px;font-weight:700">Deleted</span>'
+    };
+    h += '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:var(--surface-low);color:var(--muted);text-transform:uppercase;font-size:10px;letter-spacing:.04em"><th style="text-align:left;padding:8px 10px">When</th><th style="text-align:left;padding:8px 10px">Action</th><th style="text-align:left;padding:8px 10px">Summary</th><th style="text-align:left;padding:8px 10px">By</th></tr></thead><tbody>';
+    log.forEach(function(entry){
+      var dt = new Date(entry.ts);
+      var when = isNaN(dt) ? '' : dt.toLocaleString();
+      h += '<tr style="border-bottom:1px solid var(--border)">'+
+        '<td style="padding:8px 10px;color:var(--muted);white-space:nowrap">'+escHtml(when)+'</td>'+
+        '<td style="padding:8px 10px">'+(actionBadge[entry.action] || escHtml(entry.action||''))+'</td>'+
+        '<td style="padding:8px 10px">'+escHtml(entry.summary||'')+'</td>'+
+        '<td style="padding:8px 10px;color:var(--muted)">'+escHtml(entry.user||'')+'</td>'+
+      '</tr>';
+    });
+    h += '</tbody></table>';
+  }
+  h += '</div>';
+  c.innerHTML = h;
 }
 
 // ── HELPERS ──
@@ -23577,29 +23909,55 @@ function rptPortfolioOverview(container){
 
 // ══ REPORT 3: Weekly Capacity Summary ══
 function rptWeeklyCapacity(container){
+  // v1.40.0: multi-period capacity — daily/weekly/monthly/quarterly/yearly
+  // pills scale the base weekly numbers using the same multiplier table as
+  // the CapacityIQ dashboard (_capPeriodMultiplier).
+  var per = _rptCapPeriod || 'weekly';
+  var mult = (typeof _capPeriodMultiplier === 'function') ? _capPeriodMultiplier(per) : 1;
   var title=document.createElement('h2'); title.style.cssText='font-size:20px;font-weight:700;margin-bottom:4px;color:var(--text)';
-  title.textContent='Weekly Capacity Summary';
-  var sub=document.createElement('p'); sub.style.cssText='font-size:13px;color:var(--muted);margin-bottom:24px';
-  sub.textContent='Time allocation and availability for the current week. Exportable format.';
+  title.textContent = ({daily:'Daily',weekly:'Weekly',monthly:'Monthly',quarterly:'Quarterly',yearly:'Yearly'})[per] + ' Capacity Summary';
+  var sub=document.createElement('p'); sub.style.cssText='font-size:13px;color:var(--muted);margin-bottom:14px';
+  sub.textContent='Time allocation and availability. Switch period to compare windows.';
   container.appendChild(title); container.appendChild(sub);
+
+  // Period pills
+  var pills = document.createElement('div');
+  pills.style.cssText = 'display:inline-flex;gap:4px;background:var(--surface-low);border-radius:9999px;padding:3px;margin-bottom:18px';
+  ['daily','weekly','monthly','quarterly','yearly'].forEach(function(p){
+    var active = p===per;
+    var btn = document.createElement('button');
+    btn.textContent = p.charAt(0).toUpperCase()+p.slice(1);
+    btn.style.cssText = 'padding:4px 12px;font-size:11px;font-weight:600;border:none;border-radius:9999px;cursor:pointer;background:'+(active?'var(--accent)':'transparent')+';color:'+(active?'#fff':'var(--text)');
+    btn.onclick = function(){
+      _rptCapPeriod = p;
+      var c = document.getElementById('rptContent');
+      if(c){ c.innerHTML=''; rptWeeklyCapacity(c); }
+    };
+    pills.appendChild(btn);
+  });
+  container.appendChild(pills);
 
   if(!_tsCurrentWeek) _tsCurrentWeek=_getISOWeek(new Date());
   var weekDates=_weekDates(_tsCurrentWeek);
   var weekStart=weekDates[0];
-  var available=_capacityHoursPerWeek;
+  var baseAvailable = _capacityHoursPerWeek;
+  var available = baseAvailable * mult;
 
-  // Gather data
+  // Gather data — scale planned + logged by same multiplier so the
+  // utilisation comparison stays meaningful across windows.
   var todos=_getTodosForWeek(weekStart);
-  var plannedHrs=0; todos.forEach(function(t){plannedHrs+=t.hours;});
+  var basePlanned=0; todos.forEach(function(t){basePlanned+=t.hours;});
+  var plannedHrs = basePlanned * mult;
   var tsData=timesheetData[_tsCurrentWeek];
-  var loggedHrs=0; if(tsData&&tsData.tasks) tsData.tasks.forEach(function(t){loggedHrs+=parseFloat(t.hours)||0;});
+  var baseLogged=0; if(tsData&&tsData.tasks) tsData.tasks.forEach(function(t){baseLogged+=parseFloat(t.hours)||0;});
+  var loggedHrs = baseLogged * mult;
   var remaining=Math.max(0,available-plannedHrs);
-  var pct=Math.round(plannedHrs/available*100);
+  var pct=available>0 ? Math.round(plannedHrs/available*100) : 0;
 
-  // Week label
+  // Period label
   var weekLabel=document.createElement('div');
   weekLabel.style.cssText='font-size:14px;font-weight:600;color:var(--accent);margin-bottom:16px';
-  weekLabel.textContent='Week: '+_weekLabel(_tsCurrentWeek);
+  weekLabel.textContent = per==='weekly' ? ('Week: '+_weekLabel(_tsCurrentWeek)) : ('Period: '+per.charAt(0).toUpperCase()+per.slice(1));
   container.appendChild(weekLabel);
 
   // Cards
@@ -23621,9 +23979,9 @@ function rptWeeklyCapacity(container){
   barBg.appendChild(barFill); barCard.appendChild(barBg);
   container.appendChild(barCard);
 
-  // Task breakdown by initiative
+  // Task breakdown by initiative (scaled to the selected period)
   var byInit={};
-  todos.forEach(function(t){ if(!byInit[t.initiative]) byInit[t.initiative]={hours:0,tasks:[]}; byInit[t.initiative].hours+=t.hours; byInit[t.initiative].tasks.push(t); });
+  todos.forEach(function(t){ if(!byInit[t.initiative]) byInit[t.initiative]={hours:0,tasks:[]}; byInit[t.initiative].hours+=t.hours*mult; byInit[t.initiative].tasks.push(t); });
 
   var breakCard=document.createElement('div'); breakCard.className='rpt-card';
   breakCard.innerHTML='<h3>Time Allocation by Initiative</h3>';
@@ -26025,8 +26383,37 @@ function renderCapDashboard(content, actions){
     '</div>' +
     '<button class="cap-btn" onclick="capExportDashboard()" style="margin-left:8px">Export</button>';
 
-  // Build member rows
-  var members = (capData.members || []).filter(function(m){
+  // Build member rows. v1.40.0: if the user hasn't set up any team members
+  // yet, synthesise a "You" row from the current user + their capacity
+  // settings so the dashboard still surfaces personal utilisation. This
+  // replaces the separate "My Capacity" tab that used to live on the KPI
+  // Scorecard (removed in v1.40.0).
+  var rawMembers = (capData.members || []);
+  if(!rawMembers.length){
+    var _selfName='You', _selfEmail='';
+    try {
+      if(typeof userProfile!=='undefined' && userProfile){
+        _selfName = userProfile.name || userProfile.displayName || _selfName;
+        _selfEmail = userProfile.email || '';
+      }
+      if(typeof _currentUser!=='undefined' && _currentUser){
+        if(!_selfEmail) _selfEmail = _currentUser.email || '';
+        var _mm=_currentUser.user_metadata||{};
+        if(_selfName==='You') _selfName = _mm.display_name || _mm.full_name || _mm.name || _selfName;
+      }
+    } catch(_e){}
+    var _hpw = getCapHours().hpw || 40;
+    rawMembers = [{
+      id:'self',
+      name:_selfName,
+      email:_selfEmail,
+      weeklyCapacity:_hpw,
+      hoursPerDay:getCapHours().hpd || 8,
+      teamId:null,
+      _synthetic:true
+    }];
+  }
+  var members = rawMembers.filter(function(m){
     if(!_capDashTeamFilter) return true;
     return m.teamId === _capDashTeamFilter;
   });
@@ -26176,25 +26563,72 @@ function renderCapTeams(content,actions){
     content.appendChild(card);
   });
 }
+// v1.40.0: Add Team popup — name + description + color + member selection.
 function addCapTeam(){
-  var content=document.getElementById('capContent');
-  var form=document.createElement('div');
-  form.className='cap-card';
-  form.id='capTeamForm';
-  form.innerHTML='<h3>Add Team</h3><div style="display:flex;gap:8px;align-items:center">'+
-    '<input id="capTeamName" class="cap-input" placeholder="Team name..." style="flex:1">'+
-    '<input id="capTeamColor" type="color" value="#0d9488" style="width:40px;height:34px;border:1px solid #475569;border-radius:6px;cursor:pointer">'+
-    '<button class="cap-btn primary" onclick="confirmAddCapTeam()">Add</button>'+
-    '<button class="cap-btn" onclick="document.getElementById(\'capTeamForm\').remove()">Cancel</button></div>';
-  content.insertBefore(form,content.firstChild);
-  document.getElementById('capTeamName').focus();
+  var existing = document.getElementById('capAddTeamOverlay');
+  if(existing) existing.remove();
+  var ov = document.createElement('div');
+  ov.id = 'capAddTeamOverlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9100;display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
+  var mem = (capData.members || []);
+  var memOpts = mem.length
+    ? mem.map(function(m){
+        return '<label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer">'+
+          '<input type="checkbox" class="cap-add-team-mem" value="'+m.id+'">'+
+          '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(m.name||'Unnamed')+(m.role?' <span style="color:var(--muted);font-size:10px">'+escHtml(m.role)+'</span>':'')+'</span>'+
+        '</label>';
+      }).join('')
+    : '<div style="font-size:11px;color:var(--muted);padding:8px 0">No existing members yet — you can add members after creating the team.</div>';
+  var panel = document.createElement('div');
+  panel.style.cssText = 'background:var(--white);border:1px solid var(--border);border-radius:14px;width:100%;max-width:520px;max-height:86vh;display:flex;flex-direction:column;color:var(--text);box-shadow:0 24px 64px rgba(0,0,0,.35)';
+  panel.innerHTML =
+    '<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">'+
+      '<h3 style="margin:0;font-size:16px;font-weight:700;flex:1">Add Team</h3>'+
+      '<button onclick="document.getElementById(\'capAddTeamOverlay\').remove()" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1">&times;</button>'+
+    '</div>'+
+    '<div style="padding:16px 20px;overflow-y:auto;flex:1">'+
+      '<label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:10px">Name<input id="capAddTeamName" class="cap-input" placeholder="e.g. Platform Engineering" style="width:100%;margin-top:4px"></label>'+
+      '<label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:10px">Description<textarea id="capAddTeamDesc" class="cap-input" rows="2" style="width:100%;margin-top:4px;resize:vertical;font-family:inherit" placeholder="What is this team responsible for?"></textarea></label>'+
+      '<label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:10px">Color<input id="capAddTeamColor" type="color" value="#0d9488" style="margin-top:4px;height:34px;width:64px;border:1px solid var(--border);border-radius:8px;background:var(--white);cursor:pointer"></label>'+
+      '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Members</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+memOpts+'</div>'+
+    '</div>'+
+    '<div style="padding:12px 20px;border-top:1px solid var(--border);background:var(--surface-low);display:flex;justify-content:flex-end;gap:8px">'+
+      '<button class="cap-btn" onclick="document.getElementById(\'capAddTeamOverlay\').remove()">Cancel</button>'+
+      '<button class="cap-btn primary" onclick="confirmAddCapTeam()">Create team</button>'+
+    '</div>';
+  ov.appendChild(panel);
+  document.body.appendChild(ov);
+  setTimeout(function(){ var i = document.getElementById('capAddTeamName'); if(i) i.focus(); }, 20);
 }
 function confirmAddCapTeam(){
-  var name=document.getElementById('capTeamName').value.trim();
-  if(!name) return;
-  var color=document.getElementById('capTeamColor').value;
-  capData.teams.push({id:'team_'+Date.now(),name:name,color:color,createdAt:Date.now()});
-  persistData();capNav('teams');
+  var nameInp = document.getElementById('capAddTeamName');
+  var descInp = document.getElementById('capAddTeamDesc');
+  var colInp  = document.getElementById('capAddTeamColor');
+  var name = nameInp ? (nameInp.value || '').trim() : '';
+  if(!name){ showToast('Team name is required','error'); if(nameInp) nameInp.focus(); return; }
+  var desc = descInp ? (descInp.value || '').trim() : '';
+  var color = colInp ? colInp.value : '#0d9488';
+  var teamId = (typeof _newId === 'function') ? _newId('team_') : ('team_'+Date.now());
+  var team = { id: teamId, name: name, description: desc, color: color, createdAt: Date.now() };
+  if(!Array.isArray(capData.teams)) capData.teams = [];
+  capData.teams.push(team);
+  // Assign selected members to this team.
+  var picks = Array.prototype.slice.call(document.querySelectorAll('.cap-add-team-mem:checked'))
+    .map(function(x){ return x.value; });
+  picks.forEach(function(mid){
+    var m = (capData.members || []).find(function(x){ return x.id === mid; });
+    if(!m) return;
+    if(!Array.isArray(m.teams)) m.teams = m.teamId ? [m.teamId] : [];
+    if(m.teams.indexOf(teamId) < 0) m.teams.push(teamId);
+    m.teamId = teamId;
+  });
+  persistData();
+  var ov = document.getElementById('capAddTeamOverlay');
+  if(ov) ov.remove();
+  capNav('teams');
+  showToast('Team "'+name+'" created','success');
 }
 function removeCapTeam(id){
   capData.teams=capData.teams.filter(function(t){return t.id!==id;});
@@ -26241,17 +26675,28 @@ function openCapTeamEdit(teamId){
       '</div>'
     : '<div style="font-size:11px;color:var(--muted);margin-top:4px">All existing members are already on this team.</div>';
 
+  // v1.40.0: Editable name + description + color, no horizontal scroll on
+  // member table (word-wrap in cells). 30-day trial copy preserved.
   ov.innerHTML =
-    '<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;width:100%;max-width:620px;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.35);color:var(--text)">' +
+    '<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;width:100%;max-width:640px;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.35);color:var(--text)">' +
       '<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">' +
-        '<span style="width:14px;height:14px;border-radius:3px;background:' + team.color + '"></span>' +
-        '<h3 style="margin:0;font-size:16px;font-weight:700;flex:1">Edit team: ' + escHtml(team.name) + '</h3>' +
+        '<span id="capTeamEditSwatch" style="width:14px;height:14px;border-radius:3px;background:' + team.color + '"></span>' +
+        '<h3 style="margin:0;font-size:16px;font-weight:700;flex:1">Edit team</h3>' +
         '<button onclick="document.getElementById(\'capTeamEditOverlay\').remove()" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1">&times;</button>' +
       '</div>' +
-      '<div style="padding:16px 20px;overflow-y:auto;flex:1">' +
+      '<div style="padding:16px 20px;overflow-y:auto;overflow-x:hidden;flex:1">' +
+
+        '<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;margin-bottom:12px;align-items:end">' +
+          '<label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Name<input id="capTeamEditName" class="cap-input" style="width:100%;margin-top:4px" value="' + escHtml(team.name || '') + '"></label>' +
+          '<label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Color<input id="capTeamEditColor" type="color" value="' + (team.color || '#0d9488') + '" style="width:100%;height:34px;margin-top:4px;border:1px solid var(--border);border-radius:8px;background:var(--white);cursor:pointer"></label>' +
+          '<button class="cap-btn primary" onclick="_capTeamSaveMeta(\'' + teamId + '\')">Save</button>' +
+        '</div>' +
+        '<label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:12px">Description' +
+          '<textarea id="capTeamEditDesc" class="cap-input" rows="2" style="width:100%;margin-top:4px;resize:vertical;font-family:inherit" placeholder="What is this team responsible for?">' + escHtml(team.description || '') + '</textarea>' +
+        '</label>' +
 
         '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Current members (' + members.length + ')</div>' +
-        '<table class="cap-table" style="width:100%;font-size:12px">' +
+        '<table class="cap-table" style="width:100%;font-size:12px;table-layout:fixed;word-break:break-word">' +
           '<tbody>' + memberRows + '</tbody>' +
         '</table>' +
 
@@ -26261,7 +26706,7 @@ function openCapTeamEdit(teamId){
         '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:18px 0 6px">Invite by email</div>' +
         '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Send a signup link — invitees get a <strong>30-day free trial</strong> on first sign-in.</div>' +
         '<div style="display:flex;gap:8px;align-items:stretch">' +
-          '<input id="capTeamEditInviteEmail" type="email" class="cap-input" placeholder="name@company.com" style="flex:1" onkeydown="if(event.key===\'Enter\') _capTeamSendInvite(\'' + teamId + '\')">' +
+          '<input id="capTeamEditInviteEmail" type="email" class="cap-input" placeholder="name@company.com" style="flex:1;min-width:0" onkeydown="if(event.key===\'Enter\') _capTeamSendInvite(\'' + teamId + '\')">' +
           '<button id="capTeamEditInviteBtn" class="cap-btn primary" onclick="_capTeamSendInvite(\'' + teamId + '\')">Send invite</button>' +
         '</div>' +
         '<div id="capTeamEditInviteStatus" style="font-size:11px;margin-top:6px;min-height:16px"></div>' +
@@ -26275,6 +26720,25 @@ function openCapTeamEdit(teamId){
 
   document.body.appendChild(ov);
   _capTeamLoadPendingInvites(teamId);
+}
+
+// v1.40.0: Save team name / color / description from the Edit Team modal.
+function _capTeamSaveMeta(teamId){
+  var team = (capData.teams || []).find(function(t){ return t.id === teamId; });
+  if(!team) return;
+  var nameInp = document.getElementById('capTeamEditName');
+  var colInp  = document.getElementById('capTeamEditColor');
+  var descInp = document.getElementById('capTeamEditDesc');
+  var swatch  = document.getElementById('capTeamEditSwatch');
+  if(nameInp){
+    var nm = (nameInp.value || '').trim();
+    if(nm) team.name = nm;
+  }
+  if(colInp && colInp.value){ team.color = colInp.value; if(swatch) swatch.style.background = colInp.value; }
+  if(descInp) team.description = (descInp.value || '').trim();
+  persistData();
+  showToast('Team updated','success');
+  capNav('teams');
 }
 
 function _capTeamRemoveMember(teamId, memberId){
@@ -26734,7 +27198,9 @@ function renderCapTemplates(content,actions){
   // main Templates Library + platform templates + user customs all appear
   // here alongside CapacityIQ-native templates. The "+ Build from Scratch"
   // button now launches the Template Builder in capacityiq mode.
+  // v1.40.0: search input + card-body click opens a focused preview.
   actions.innerHTML =
+    '<input id="capTplSearch" type="search" placeholder="Search templates..." oninput="_capFilterTemplates(this.value)" style="flex:1;max-width:240px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--white);color:var(--text);margin-right:8px" value="'+escHtml(_capTplQuery||'')+'">'+
     '<button class="cap-btn" onclick="openTemplateBuilder(\'capacityiq\')">+ Build New Template</button>' +
     '<button class="cap-btn primary" onclick="showCreateTemplate()" style="margin-left:6px">+ Create (Advanced)</button>';
 
@@ -26750,6 +27216,17 @@ function renderCapTemplates(content,actions){
   var capNames = {};
   all.forEach(function(t){ if(t.source === 'capacityiq') capNames[t.name] = true; });
   all = all.filter(function(t){ return !(t.source === 'platform' && capNames[t.name]); });
+
+  // v1.40.0: apply search filter across name/description/category.
+  var q = (_capTplQuery||'').toLowerCase().trim();
+  if(q){
+    all = all.filter(function(t){
+      var nm = (t.name||'').toLowerCase();
+      var ds = (t.description||'').toLowerCase();
+      var cat = (t.category||'').toLowerCase();
+      return nm.indexOf(q)>=0 || ds.indexOf(q)>=0 || cat.indexOf(q)>=0;
+    });
+  }
 
   // Group by source for section headers.
   var bySource = {};
@@ -26792,6 +27269,7 @@ function renderCapTemplates(content,actions){
       }
 
       var card = document.createElement('div'); card.className = 'cap-template-card';
+      card.style.cursor = 'pointer';
       var actionRow = '';
       if(src === 'capacityiq'){
         actionRow =
@@ -26799,7 +27277,7 @@ function renderCapTemplates(content,actions){
           (tpl.custom ? '<button class="cap-btn danger" onclick="event.stopPropagation();deleteCapTemplate(\''+tpl.id+'\')" style="font-size:9px;padding:3px 8px;margin-left:4px">Delete</button>' : '');
       } else {
         actionRow =
-          '<button class="cap-btn primary" onclick="event.stopPropagation();openTemplateBuilder(\'capacityiq\')" style="font-size:9px;padding:3px 8px">Open in Builder</button>';
+          '<button class="cap-btn primary" onclick="event.stopPropagation();openCapTemplatePreview(\''+tpl.source+'\',\''+tpl.id+'\')" style="font-size:9px;padding:3px 8px">Preview</button>';
       }
       card.innerHTML =
         '<div class="icon" style="color:var(--accent)">'+svgIcon(tpl.icon||'clipboard',{size:24})+'</div>'+
@@ -26807,6 +27285,14 @@ function renderCapTemplates(content,actions){
         '<div class="desc">'+escHtml(tpl.description||'')+'</div>'+
         '<div style="margin-top:8px;font-size:10px;color:var(--muted)">'+tasks.length+' tasks'+(totalHrs?(' · '+totalHrs+'h estimated'):'')+'</div>'+
         '<div style="margin-top:8px;display:flex;gap:4px">'+actionRow+'</div>';
+      // v1.40.0: card body click opens focused preview. Buttons inside the
+      // card stop propagation so their actions still take precedence.
+      (function(srcKey, tplId){
+        card.addEventListener('click', function(e){
+          if(e.target && e.target.tagName === 'BUTTON') return;
+          openCapTemplatePreview(srcKey, tplId);
+        });
+      })(src, tpl.id);
       grid.appendChild(card);
     });
     content.appendChild(grid);
@@ -26815,9 +27301,121 @@ function renderCapTemplates(content,actions){
   if(!anyRendered){
     var empty = document.createElement('div');
     empty.style.cssText = 'font-size:13px;color:var(--muted);text-align:center;padding:40px 20px';
-    empty.textContent = 'No templates yet. Click "+ Build New Template" to create one.';
+    empty.textContent = q
+      ? 'No templates match "' + escHtml(q) + '".'
+      : 'No templates yet. Click "+ Build New Template" to create one.';
     content.appendChild(empty);
   }
+}
+
+// v1.40.0: CapacityIQ templates — search + focused preview.
+var _capTplQuery = '';
+function _capFilterTemplates(q){
+  _capTplQuery = q || '';
+  var content = document.getElementById('capContent');
+  var actions = document.getElementById('capTopActions');
+  if(!content || !actions) return;
+  content.innerHTML = ''; actions.innerHTML = '';
+  renderCapTemplates(content, actions);
+  // restore focus so the user can keep typing
+  var inp = document.getElementById('capTplSearch');
+  if(inp){ inp.focus(); inp.value = _capTplQuery; inp.setSelectionRange(inp.value.length, inp.value.length); }
+}
+
+function _findTemplate(source, id){
+  var all = (typeof getAllTemplates === 'function') ? getAllTemplates() : [];
+  return all.find(function(t){ return t.id === id && (!source || t.source === source); }) ||
+         ((capData && capData.templates) || []).find(function(t){ return t.id === id; });
+}
+
+function openCapTemplatePreview(source, id){
+  var tpl = _findTemplate(source, id);
+  if(!tpl){ showToast('Template not found', 'error'); return; }
+  var existing = document.getElementById('capTplPreviewOverlay');
+  if(existing) existing.remove();
+  var ov = document.createElement('div');
+  ov.id = 'capTplPreviewOverlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9050;display:flex;align-items:center;justify-content:center;padding:40px 20px';
+  ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
+  var panel = document.createElement('div');
+  panel.style.cssText = 'background:var(--white);color:var(--text);border:1px solid var(--border);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,.3);max-width:560px;width:100%;max-height:82vh;overflow:auto;padding:20px 22px';
+  // Resolve tasks + hours
+  var tasks = tpl.tasks || [];
+  var totalHrs = 0;
+  var listHtml = '';
+  if(source === 'capacityiq'){
+    tasks.forEach(function(tt){
+      var tt2 = (capData.taskTypes || []).find(function(x){ return x.id === tt.taskTypeId; });
+      var nm = tt2 ? tt2.name : (tt.name || '(task)');
+      var hr = tt2 ? (tt2.fixedHours || 0) : (tt.hours || 0);
+      totalHrs += hr;
+      listHtml += '<li style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;display:flex;justify-content:space-between;gap:8px"><span>'+escHtml(nm)+'</span><span style="color:var(--muted);font-variant-numeric:tabular-nums">'+hr+'h</span></li>';
+    });
+  } else {
+    tasks.forEach(function(t){
+      var hr = parseFloat(t.hours) || 0;
+      totalHrs += hr;
+      listHtml += '<li style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;display:flex;justify-content:space-between;gap:8px"><span>'+escHtml(t.name||'(task)')+'</span><span style="color:var(--muted);font-variant-numeric:tabular-nums">'+hr+'h</span></li>';
+    });
+  }
+  var canUseDirectly = (source === 'capacityiq');
+  var canSaveCopy = (source !== 'custom');
+  panel.innerHTML =
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'+
+      '<div style="color:var(--accent);flex-shrink:0">'+svgIcon(tpl.icon||'clipboard',{size:26})+'</div>'+
+      '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escHtml(tpl.name)+'</div>'+
+        '<div style="font-size:11px;color:var(--muted)">'+escHtml(tpl.description||'')+'</div></div>'+
+      '<button onclick="document.getElementById(\'capTplPreviewOverlay\').remove()" style="background:none;border:none;font-size:20px;color:var(--muted);cursor:pointer;line-height:1">&times;</button>'+
+    '</div>'+
+    '<div style="display:flex;gap:10px;font-size:11px;color:var(--muted);margin-bottom:10px">'+
+      '<span>'+tasks.length+' tasks</span>'+
+      (totalHrs?'<span>'+totalHrs+'h estimated</span>':'')+
+      '<span>Source: '+escHtml(labelForSource(tpl.source))+'</span>'+
+    '</div>'+
+    '<ul id="capTplPreviewTasks" style="list-style:none;padding:0;margin:0 0 14px;max-height:300px;overflow:auto;font-size:12px">'+
+      (listHtml||'<li style="color:var(--muted);padding:10px 0">No tasks in this template.</li>')+
+    '</ul>'+
+    '<div style="display:flex;gap:8px;justify-content:flex-end">'+
+      '<button class="cap-btn" onclick="document.getElementById(\'capTplPreviewOverlay\').remove()">Close</button>'+
+      (canSaveCopy ? '<button class="cap-btn" onclick="saveCapTemplateCopy(\''+source+'\',\''+id+'\')">Save Copy</button>' : '')+
+      (canUseDirectly
+        ? '<button class="cap-btn primary" onclick="document.getElementById(\'capTplPreviewOverlay\').remove();createInitiativeFromTemplate(\''+id+'\')">Use Template</button>'
+        : '<button class="cap-btn primary" onclick="document.getElementById(\'capTplPreviewOverlay\').remove();openTemplateBuilder(\'capacityiq\')">Open in Builder</button>')+
+    '</div>';
+  ov.appendChild(panel);
+  document.body.appendChild(ov);
+}
+
+function labelForSource(src){
+  return ({capacityiq:'CapacityIQ',platform:'Platform',custom:'Your Library',other:'Other'})[src] || (src||'—');
+}
+
+// Save a copy of a platform/other template into the user's custom CIQ list
+// so "Save" actually persists the template going forward. Fixes a long-
+// standing gap where previewing a platform template gave no way to keep it.
+function saveCapTemplateCopy(source, id){
+  var tpl = _findTemplate(source, id);
+  if(!tpl){ showToast('Template not found','error'); return; }
+  if(!capData) capData = { templates: [], taskTypes: [], teams: [], members: [] };
+  if(!Array.isArray(capData.templates)) capData.templates = [];
+  var newId = _newId ? _newId('tpl_') : ('tpl_'+Date.now());
+  var tasksCopy = (tpl.tasks || []).map(function(t){
+    return { name: t.name || '(task)', hours: parseFloat(t.hours) || 0, category: t.category || '' };
+  });
+  capData.templates.push({
+    id: newId,
+    name: (tpl.name || 'Template') + ' (Copy)',
+    description: tpl.description || '',
+    icon: tpl.icon || 'clipboard',
+    tasks: tasksCopy,
+    custom: true,
+    createdAt: Date.now()
+  });
+  persistData();
+  showToast('Template saved to Your Templates','success');
+  var ov = document.getElementById('capTplPreviewOverlay');
+  if(ov) ov.remove();
+  if(_capPage === 'templates') capNav('templates');
 }
 
 function showCreateTemplate(){
@@ -27160,12 +27758,34 @@ async function _uploadToAttachments(path, file){
 }
 
 // ── Google Drive → Document Repository ─────────────────────────────────
-// Mirrors the Calendar OAuth pattern: signInWithOAuth with the Drive scope,
-// capture provider_token in _processOAuthFragment, store in
-// appSettings.integrations.googleDrive. Kept separate from the calendar
-// token because the two scopes can't live on the same token if Supabase's
-// Google OAuth config only whitelists one.
-var _DRIVE_SCOPE_GOOGLE = 'openid email profile https://www.googleapis.com/auth/drive.readonly';
+// Uses the `drive.file` scope + Google Picker API. `drive.file` is a
+// NON-sensitive scope (no app verification required), and it grants access
+// only to files the user explicitly picks in Google's own Picker widget —
+// so we never see the user's wider Drive, and Google doesn't need to audit
+// us for restricted-scope usage.
+//
+// OAuth flow: Supabase signInWithOAuth('google', { scopes: drive.file })
+//   captures provider_token in _processOAuthFragment → stored in
+//   appSettings.integrations.googleDrive (separate slot from calendar so
+//   the two scopes don't overwrite each other).
+//
+// Picker flow: load https://apis.google.com/js/api.js once, call
+//   gapi.load('picker'), build a picker with the OAuth token as oauthToken
+//   and the API key as developerKey, show it, then import the picked
+//   file(s) using the existing Drive v3 files.get endpoint.
+var _DRIVE_SCOPE_GOOGLE = 'openid email profile https://www.googleapis.com/auth/drive.file';
+
+// Google API key for the Picker (developerKey). Must be:
+//   1. Created in Google Cloud Console → APIs & Services → Credentials → API key.
+//   2. Restricted to HTTP referrers (app.pmroadmapper.com, localhost:*, etc.).
+//   3. Restricted to the "Google Picker API" (and "Google Drive API") services.
+//   4. Picker API must be enabled on the same GCP project as your Supabase
+//      Google OAuth client.
+// The key is referrer-restricted so client-side exposure is safe.
+var GOOGLE_PICKER_API_KEY = '';  // TODO — paste your Picker API key here
+
+var _gdrivePickerLoaded = false;
+var _gdrivePickerLoading = null;
 
 function _gDriveGlyph(){
   // Google Drive's triangle mark (brand-safe minimal SVG).
@@ -27205,27 +27825,78 @@ function disconnectGoogleDrive(){
   }
 }
 
-// List files the user can see. Query is a Drive v3 `q` expression; if empty
-// we fall back to the 40 most recently modified non-trashed files.
-async function _gdriveListFiles(search){
-  var tok = appSettings.integrations.googleDrive.token;
-  var q   = 'trashed = false';
-  if(search && search.trim()){
-    var esc = search.trim().replace(/'/g, "\\'");
-    q = "name contains '" + esc + "' and trashed = false";
-  }
-  var url = 'https://www.googleapis.com/drive/v3/files' +
-            '?q=' + encodeURIComponent(q) +
-            '&pageSize=40&orderBy=modifiedTime desc' +
-            '&fields=' + encodeURIComponent('files(id,name,mimeType,size,modifiedTime,iconLink,webViewLink,owners(emailAddress))');
-  var r = await fetch(url, { headers: { Authorization: 'Bearer ' + tok } });
-  if(r.status === 401){
-    appSettings.integrations.googleDrive.connected = false; persistData();
-    throw new Error('Google Drive token expired — reconnect required');
-  }
-  if(!r.ok) throw new Error('Drive API ' + r.status);
-  var j = await r.json();
-  return j.files || [];
+// Load https://apis.google.com/js/api.js once, then gapi.load('picker').
+// Resolves once `google.picker` is available on the global scope. Safe to
+// call many times — subsequent calls re-use the in-flight promise.
+function _gdriveLoadPicker(){
+  if(_gdrivePickerLoaded) return Promise.resolve();
+  if(_gdrivePickerLoading) return _gdrivePickerLoading;
+  _gdrivePickerLoading = new Promise(function(resolve, reject){
+    function onApiReady(){
+      try {
+        window.gapi.load('picker', { callback: function(){ _gdrivePickerLoaded = true; resolve(); }, onerror: function(e){ reject(new Error('gapi.load(picker) failed: ' + (e && e.message || e))); } });
+      } catch(err){ reject(err); }
+    }
+    if(window.gapi){ onApiReady(); return; }
+    var s = document.createElement('script');
+    s.src = 'https://apis.google.com/js/api.js';
+    s.async = true;
+    s.defer = true;
+    s.onload  = onApiReady;
+    s.onerror = function(){ reject(new Error('Failed to load apis.google.com/js/api.js (check CSP + network)')); };
+    document.head.appendChild(s);
+  });
+  return _gdrivePickerLoading;
+}
+
+// Show Google's hosted Picker. Resolves with the array of picked file
+// metadata ({id, name, mimeType, sizeBytes, …}) when the user hits Select,
+// or [] when they cancel. Rejects on load / configuration errors.
+function _gdriveShowPicker(){
+  return new Promise(async function(resolve, reject){
+    try {
+      if(!GOOGLE_PICKER_API_KEY){
+        reject(new Error('Google Picker API key not configured — set GOOGLE_PICKER_API_KEY in renderer/index.html'));
+        return;
+      }
+      if(!_googleDriveTokenValid()){
+        reject(new Error('Not connected to Google Drive'));
+        return;
+      }
+      await _gdriveLoadPicker();
+      var tok = appSettings.integrations.googleDrive.token;
+
+      // DocsView: user's own Drive including Google-native docs (Docs /
+      // Sheets / Slides). `setSelectFolderEnabled(false)` keeps them picking
+      // files, not folders.
+      var docsView = new google.picker.DocsView(google.picker.ViewId.DOCS)
+        .setIncludeFolders(false)
+        .setSelectFolderEnabled(false)
+        .setOwnedByMe(true);
+      var sharedView = new google.picker.DocsView(google.picker.ViewId.DOCS)
+        .setIncludeFolders(false)
+        .setSelectFolderEnabled(false)
+        .setOwnedByMe(false);
+
+      var picker = new google.picker.PickerBuilder()
+        .setOAuthToken(tok)
+        .setDeveloperKey(GOOGLE_PICKER_API_KEY)
+        .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+        .enableFeature(google.picker.Feature.SUPPORT_DRIVES)
+        .addView(docsView)
+        .addView(sharedView)
+        .setTitle('Pick files to import into Roadmap OS')
+        .setCallback(function(data){
+          if(data.action === google.picker.Action.PICKED){
+            resolve(data.docs || []);
+          } else if(data.action === google.picker.Action.CANCEL){
+            resolve([]);
+          }
+        })
+        .build();
+      picker.setVisible(true);
+    } catch(err){ reject(err); }
+  });
 }
 
 // Map Google-native docs to a downloadable export format + filename extension.
@@ -27294,17 +27965,25 @@ function openGoogleDrivePicker(){
     accountLine = '<div style="font-size:11px;color:var(--muted);margin-bottom:10px">Connected as <strong style="color:var(--text)">'+escHtml(em)+'</strong> · <a href="#" onclick="event.preventDefault();disconnectGoogleDrive()" style="color:var(--accent)">Disconnect</a></div>';
   }
 
+  var keyConfigured = !!GOOGLE_PICKER_API_KEY;
   var bodyHtml = connected
-    ? '<div style="display:flex;gap:8px;margin-bottom:12px">' +
-        '<input id="gdriveSearchInput" type="text" placeholder="Search Drive (blank = recent files)" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--white);color:var(--text)" onkeydown="if(event.key===\'Enter\') _gdriveRefreshList()">' +
-        '<button class="btn accent" style="padding:7px 14px;font-size:12px" onclick="_gdriveRefreshList()">Search</button>' +
-      '</div>' +
-      '<div id="gdriveFileList" style="max-height:48vh;overflow-y:auto;border:1px solid var(--border);border-radius:10px;padding:4px"></div>' +
-      '<div id="gdriveStatus" style="font-size:11px;margin-top:8px;min-height:16px;color:var(--muted)"></div>'
+    ? (keyConfigured
+        ? '<div style="text-align:center;padding:20px 12px">' +
+            '<div style="margin-bottom:10px">'+_gDriveGlyph()+'</div>' +
+            '<div style="font-size:13px;color:var(--text);margin-bottom:4px">Choose files from your Drive.</div>' +
+            '<div style="font-size:11px;color:var(--muted);margin-bottom:18px">We only see files you pick here — nothing else in your Drive.</div>' +
+            '<button class="btn accent" style="padding:10px 24px;font-size:13px;display:inline-flex;align-items:center;gap:8px" onclick="_gdriveOpenPickerFlow()">'+_gDriveGlyph()+' Open Google Picker</button>' +
+          '</div>' +
+          '<div id="gdriveStatus" style="font-size:11px;margin-top:14px;min-height:16px;color:var(--muted);text-align:center"></div>'
+        : '<div style="padding:18px;border:1px solid #f59e0b44;background:#f59e0b11;border-radius:10px;color:var(--text);font-size:12px;line-height:1.55">' +
+            '<strong style="color:#b45309">Picker API key not configured</strong><br>' +
+            'Set <code>GOOGLE_PICKER_API_KEY</code> in <code>renderer/index.html</code> to a referrer-restricted Google API key ' +
+            'with the Picker and Drive APIs enabled. See the comment block above the constant for exact steps.' +
+          '</div>')
     : '<div style="text-align:center;padding:28px 12px">' +
         '<div style="margin-bottom:12px">'+_gDriveGlyph()+'</div>' +
         '<div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px">Connect Google Drive</div>' +
-        '<div style="font-size:12px;color:var(--muted);margin-bottom:18px">Read-only access — we only pull files you pick.</div>' +
+        '<div style="font-size:12px;color:var(--muted);margin-bottom:18px">We only get access to files you pick — never your full Drive.</div>' +
         '<button class="btn accent" style="padding:10px 24px;font-size:13px;display:inline-flex;align-items:center;gap:8px" onclick="connectGoogleDrive()">'+_gDriveGlyph()+' Connect Google Drive</button>' +
       '</div>';
 
@@ -27319,36 +27998,37 @@ function openGoogleDrivePicker(){
     '</div>';
 
   document.body.appendChild(ov);
-  if(connected) _gdriveRefreshList();
 }
 
-async function _gdriveRefreshList(){
-  var list   = document.getElementById('gdriveFileList');
+async function _gdriveOpenPickerFlow(){
   var status = document.getElementById('gdriveStatus');
-  var input  = document.getElementById('gdriveSearchInput');
-  if(!list || !status) return;
-  status.textContent = 'Loading…';
-  list.innerHTML = '';
+  function setStatus(msg, color){ if(status){ status.textContent = msg; status.style.color = color || 'var(--muted)'; } }
+
   try {
-    var files = await _gdriveListFiles(input ? input.value : '');
-    if(!files.length){ status.textContent = 'No files match.'; return; }
-    status.textContent = files.length + ' file' + (files.length === 1 ? '' : 's');
-    list.innerHTML = files.map(function(f){
-      var sizeLabel = f.size ? _formatFileSize(parseInt(f.size, 10)) : '';
-      var when = f.modifiedTime ? new Date(f.modifiedTime).toLocaleDateString() : '';
-      var mime = (f.mimeType || '').replace('application/vnd.google-apps.','G ');
-      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid var(--border)">' +
-        (f.iconLink ? '<img src="'+escHtml(f.iconLink)+'" style="width:18px;height:18px;flex-shrink:0" alt="">' : '<span style="width:18px;color:var(--muted)">'+svgIcon('file',{size:16})+'</span>') +
-        '<div style="flex:1;min-width:0">' +
-          '<div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(f.name || '(untitled)')+'</div>' +
-          '<div style="font-size:10px;color:var(--muted)">'+escHtml(mime)+(sizeLabel?' · '+sizeLabel:'')+(when?' · '+when:'')+'</div>' +
-        '</div>' +
-        '<button class="btn accent" style="padding:4px 10px;font-size:11px" onclick=\'_gdriveImportFile("'+f.id+'")\' data-gdrive-id="'+escHtml(f.id)+'">Import</button>' +
-      '</div>';
-    }).join('');
+    setStatus('Opening picker…');
+    var picked = await _gdriveShowPicker();
+    if(!picked.length){ setStatus(''); return; }
+    setStatus('Importing ' + picked.length + ' file' + (picked.length === 1 ? '' : 's') + '…');
+
+    // Picker's doc object uses `id`, `name`, `mimeType`, `sizeBytes` — map to
+    // the shape _gdriveImportFile expects (it re-fetches metadata anyway).
+    var imported = 0, failed = 0;
+    for(var i = 0; i < picked.length; i++){
+      try {
+        await _gdriveImportFile(picked[i].id);
+        imported++;
+      } catch(err){
+        console.warn('[gdrive] import failed for', picked[i].id, err && err.message);
+        failed++;
+      }
+    }
+    if(failed === 0){
+      setStatus('Imported ' + imported + ' file' + (imported === 1 ? '' : 's') + ' into the repository.', '#16a34a');
+    } else {
+      setStatus('Imported ' + imported + ', failed ' + failed + '. See console for details.', '#f59e0b');
+    }
   } catch(err){
-    status.textContent = 'Error: ' + (err && err.message || err);
-    status.style.color = '#ef4444';
+    setStatus(err && err.message || String(err), '#ef4444');
   }
 }
 
@@ -29224,6 +29904,9 @@ function exportBackup() {
     planTemplates: typeof planTemplates !== 'undefined' ? planTemplates : undefined,
     okrs: typeof okrsData !== 'undefined' ? okrsData : undefined,
     roadmapView: typeof _roadmapView !== 'undefined' ? _roadmapView : undefined,
+    roadmapRangePreset: typeof _roadmapRangePreset !== 'undefined' ? _roadmapRangePreset : undefined,
+    roadmapChangeLog: typeof _roadmapChangeLog !== 'undefined' ? _roadmapChangeLog : undefined,
+    localNotifications: typeof _localNotifications !== 'undefined' ? _localNotifications : undefined,
     taskLibrary: typeof taskLibrary !== 'undefined' ? taskLibrary : undefined,
     taskLibrarySeeded: typeof _taskLibrarySeeded !== 'undefined' ? _taskLibrarySeeded : undefined,
     documentRepository: documentRepository || []
@@ -29702,6 +30385,9 @@ function _applyJsonBackupData(d){
   if(d.taskLibrary && typeof taskLibrary !== 'undefined') taskLibrary = d.taskLibrary;
   if(d.roadmapSortBy && typeof _roadmapSortBy !== 'undefined') _roadmapSortBy = d.roadmapSortBy;
   if(d.roadmapView && typeof _roadmapView !== 'undefined') _roadmapView = d.roadmapView;
+  if(d.roadmapRangePreset && typeof _roadmapRangePreset !== 'undefined') _roadmapRangePreset = d.roadmapRangePreset;
+  if(Array.isArray(d.roadmapChangeLog) && typeof _roadmapChangeLog !== 'undefined') _roadmapChangeLog = d.roadmapChangeLog;
+  if(Array.isArray(d.localNotifications) && typeof _localNotifications !== 'undefined') _localNotifications = d.localNotifications;
   recomputeTimeline(); renderTableHeader(); renderTabs(); renderStackedTabs(); render(); persistData();
 }
 
@@ -31750,7 +32436,7 @@ var _PMR_OVERLAY_MAP = {
   g2m:          { open:'openG2M',          close:'closeG2M',          id:'g2mOverlay',          nav:'Checklist' },
   plans:        { open:'openPlans',        close:'closePlans',        id:'plansOverlay',        nav:'Plans' },
   artifacts:    { open:'openArtifacts',    close:'closeArtifacts',    id:'artOverlay',          nav:'' },
-  reports:      { open:'openReports',      close:'closeReports',      id:'reportsOverlay',      nav:'Strategy' },
+  reports:      { open:'openReports',      close:'closeReports',      id:'reportsOverlay',      nav:'Reports' },
   insights:     { open:'openInsights',     close:'closeInsights',     id:'insightsOverlay',     nav:'Insights' },
   ucr:          { open:'openUCR',          close:'closeUCR',          id:'ucrOverlay',          nav:'' },
   prioritization:{ open:'openPrioritization', close:'closePrioritization', id:'prioritizationOverlay', nav:'' },
