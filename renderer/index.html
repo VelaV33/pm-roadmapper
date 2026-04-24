@@ -1199,6 +1199,28 @@ body.dark-mode .plan-sprint-bar{background:var(--surface-low);border-color:var(-
 body.dark-mode .plan-sprint-bar #sprintGoalInput,
 body.dark-mode .plan-sprint-bar .sprint-dod-row input{background:var(--white);color:var(--text);border-color:var(--border)}
 body.dark-mode .plan-sprint-bar .sprint-bar-expand{background:var(--white);color:var(--text)}
+/* v1.38.0 — help/support floating action button */
+.help-fab{position:fixed;bottom:20px;right:20px;z-index:10500}
+.help-fab-button{width:52px;height:52px;border-radius:50%;background:var(--accent);color:#fff;border:none;box-shadow:0 6px 20px rgba(45,107,244,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s}
+.help-fab-button:hover{transform:scale(1.06);box-shadow:0 8px 24px rgba(45,107,244,.45)}
+.help-panel{position:absolute;bottom:64px;right:0;width:320px;background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:0 16px 48px rgba(15,27,61,.2);overflow:hidden;font-family:inherit}
+.help-panel-hdr{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.help-panel-hdr h3{margin:0;font-size:14px;font-weight:800;color:var(--text)}
+.help-panel-close{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;padding:0 4px}
+.help-panel-body{padding:6px}
+.help-option{display:flex;align-items:center;gap:11px;width:100%;padding:11px 14px;border:none;background:none;color:var(--text);font-size:13px;text-align:left;cursor:pointer;border-radius:8px;font-family:inherit}
+.help-option:hover{background:var(--surface-low)}
+.help-option svg{width:18px;height:18px;stroke:currentColor;stroke-width:1.6;fill:none;flex-shrink:0;color:var(--accent)}
+.help-form{padding:14px 18px 16px;display:flex;flex-direction:column;gap:10px}
+.help-form h4{margin:0 0 2px;font-size:13px;font-weight:800;color:var(--text)}
+.help-form label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px}
+.help-form input,.help-form textarea,.help-form select{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;color:var(--text);background:var(--white);outline:none;box-sizing:border-box}
+.help-form textarea{resize:vertical;min-height:72px}
+.help-form-actions{display:flex;gap:6px;margin-top:4px}
+.help-form-actions button{flex:1;padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--text);font-family:inherit}
+.help-form-actions button.help-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+body.dark-mode .help-panel{background:var(--white);border-color:var(--border)}
+body.dark-mode .help-form input,body.dark-mode .help-form textarea,body.dark-mode .help-form select{background:var(--surface-low);color:var(--text);border-color:var(--border)}
 body.dark-mode .kanban-card{background:#1e293b;border-color:#334155}
 body.dark-mode .kanban-pct-bar{background:#0f172a}
 body.dark-mode .kanban-col-count{background:#1e293b}
@@ -1912,6 +1934,7 @@ body.dark-mode .onboard-card{background:#1e293b}
       <a onclick="closeAllOverlays();openG2M();updateNavActive('Checklist');return false;">Checklist</a>
       <a onclick="closeAllOverlays();openPlans();updateNavActive('Plans');return false;">Plans</a>
       <a onclick="closeAllOverlays();openTodo();updateNavActive('To-Do');return false;">To-Do</a>
+      <a onclick="closeAllOverlays();openCapacity();updateNavActive('CapacityIQ');return false;">CapacityIQ</a>
       <a onclick="closeAllOverlays();_rptCurrentReport='initiative-health';openReports();updateNavActive('Strategy');return false;">Strategy</a>
       <a onclick="closeAllOverlays();openInsights();updateNavActive('Insights');return false;">Insights</a>
     </nav>
@@ -1954,26 +1977,19 @@ body.dark-mode .onboard-card{background:#1e293b}
     <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
     Checklist
   </button>
-  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openTodo()">
-    <svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
-    ToDo List
-  </button>
+  <!-- v1.38.0: ToDo List removed from sidebar (lives in top nav) -->
   <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openKPI()">
     <svg viewBox="0 0 24 24"><path d="M16 8v8m-4-5v5m-4-2v2m-2 4h16a2 2 0 002-2V5a2 2 0 00-2-2H4a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
     KPI Scorecard
   </button>
-  <button class="sidebar-item" onclick="closeDds();var sb=document.getElementById('appSidebar');if(sb)sb.classList.add('collapsed');closeAllOverlays();openUCR()">
-    <svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-    Change Requests
-  </button>
+  <!-- v1.38.0: Change Requests (UCR) removed from sidebar. Data preserved
+       in ucrAllData in the JSONB blob — only the UI entry point is gone. -->
   <button class="sidebar-item" onclick="closeDds();var sb=document.getElementById('appSidebar');if(sb)sb.classList.add('collapsed');closeAllOverlays();openArtifacts()">
     <svg viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
     Artifacts
   </button>
-  <button class="sidebar-item" onclick="closeDds();var sb=document.getElementById('appSidebar');if(sb)sb.classList.add('collapsed');closeAllOverlays();openCapacity()">
-    <svg viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-    CapacityIQ
-  </button>
+  <!-- v1.38.0: CapacityIQ moved to the top nav (see header/topnav). -->
+
   <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openPrioritization()">
     <svg viewBox="0 0 24 24"><path d="M3 4h18M3 12h12M3 20h6"/></svg>
     Prioritization
@@ -2504,7 +2520,6 @@ body.dark-mode .onboard-card{background:#1e293b}
     </div>
     <div style="display:flex;gap:8px">
       <button class="btn accent" id="kpiAddBtn" onclick="showAddCustomKPI()">+ Add KPI</button>
-      <button class="btn green" onclick="exportKPIWord()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:-2px;margin-right:4px"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Export Word</button>
       <button class="btn" onclick="closeKPI()" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)">← Back to Roadmap</button>
     </div>
   </div>
@@ -2600,10 +2615,12 @@ body.dark-mode .onboard-card{background:#1e293b}
         <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
         Dashboard
       </div>
-      <div class="cap-sidebar-item" data-cap-nav="initiatives" role="button" tabindex="0" onclick="capNav('initiatives')">
-        <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-        Initiatives
-      </div>
+      <!-- v1.38.0: Initiatives, Sprints, Task Reference removed from
+           CapacityIQ sidebar. Initiatives live in the Plans page; Task
+           Reference functionality moved into the Task Library; Sprints
+           replaced by the Plans sprint bar (sprint goal, DoD, DoR, points
+           → hours tracker). Data preserved in capData.{initiatives,
+           sprints, taskTypes} in the JSONB blob. -->
       <div class="cap-sidebar-item" data-cap-nav="templates" role="button" tabindex="0" onclick="capNav('templates')">
         <svg viewBox="0 0 24 24"><path d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
         Templates
@@ -2611,14 +2628,6 @@ body.dark-mode .onboard-card{background:#1e293b}
       <div class="cap-sidebar-item" data-cap-nav="teams" role="button" tabindex="0" onclick="capNav('teams')">
         <svg viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
         Teams &amp; People
-      </div>
-      <div class="cap-sidebar-item" data-cap-nav="sprints" role="button" tabindex="0" onclick="capNav('sprints')">
-        <svg viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        Sprints
-      </div>
-      <div class="cap-sidebar-item" data-cap-nav="tasktypes" role="button" tabindex="0" onclick="capNav('tasktypes')">
-        <svg viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-        Task Reference
       </div>
       <div class="cap-sidebar-item" data-cap-nav="library" role="button" tabindex="0" onclick="capNav('library')">
         <svg viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
@@ -3273,40 +3282,21 @@ function drawTodayLine(){
   var todayDay=now.getDate();
   var todayMonthName=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][todayMonth];
 
-  // Find today's month index in the timeline
-  // Build a calendar year for each month by walking sequentially
-  // and inferring year from month order (when month goes backwards like DEC→JAN, year increments)
-  var targetIdx=-1;
-  var col=0;
-  var allMonths=[];
-  quarters.forEach(function(q){
-    q.months.forEach(function(m){ allMonths.push({name:m,qYear:q.year,q:q.q}); });
-  });
-
-  // Assign calendar years: use first quarter's year as base, increment when month wraps
-  var monthNum={JAN:0,FEB:1,MAR:2,APR:3,MAY:4,JUN:5,JUL:6,AUG:7,SEP:8,OCT:9,NOV:10,DEC:11};
-  if(allMonths.length>0){
-    // Start: first month's calendar year
-    var firstM=allMonths[0];
-    var calYear=firstM.qYear;
-    // If Q1 starts with MAR, the year is q.year
-    // Adjust: for FY quarters, Q1 MAR year = q.year, so MAR 2025 for FY26
-    allMonths[0].calYear=calYear;
-    for(var ai=1;ai<allMonths.length;ai++){
-      var prev=monthNum[allMonths[ai-1].name];
-      var curr=monthNum[allMonths[ai].name];
-      if(curr<=prev) calYear++; // month wrapped (e.g. DEC→JAN)
-      allMonths[ai].calYear=calYear;
+  // v1.38.0 — use getMonthLabel() as source of truth. It returns "MMM YYYY"
+  // for each visible month index, correctly accounting for the FY wrap (Q4
+  // DEC/JAN/FEB year=year+1 logic). Previously we duplicated the year-walk
+  // here and drifted in edge cases (e.g. custom FY start month introduced in
+  // v1.36.0) — the line always ended up stuck at column 0 when the duplicated
+  // calendar-year calc disagreed with getMonthLabel.
+  var targetIdx = -1;
+  if(typeof NM === 'number' && typeof getMonthLabel === 'function'){
+    var needle = todayMonthName + ' ' + todayYear;
+    for(var mi = 0; mi < NM; mi++){
+      if(getMonthLabel(mi) === needle){ targetIdx = mi; break; }
     }
   }
+  if(targetIdx < 0) return; // today outside the visible timeline — hide line
 
-  for(var ai=0;ai<allMonths.length;ai++){
-    if(allMonths[ai].name===todayMonthName && allMonths[ai].calYear===todayYear){
-      targetIdx=ai;
-      break;
-    }
-  }
-  if(targetIdx<0) return;
   // Use actual DOM positions of month header cells for accurate placement
   var table=document.getElementById('roadmap');
   if(!table) return;
@@ -14064,6 +14054,36 @@ function bulkUpsertTaskLibrary(items){
   return added;
 }
 
+// v1.38.0 — sync every template's tasks into the central Task Library.
+// Runs on Plans overlay open + on app-start after data loads. Idempotent
+// (upsertTaskInLibrary dedupes on normalised name + category).
+//
+// Why: before this, template tasks lived inside `_tplCache` / bundled
+// platforms / `capData.templates` only and had to be *imported* via the
+// Template Builder to reach the library. The Add Task → From Library
+// picker and the ToDo From-Library picker therefore saw ~173 seed tasks,
+// not the ~1000+ that actually exist across all templates.
+function syncTemplateTasksToLibrary(){
+  if(typeof getAllTemplates !== 'function') return 0;
+  var templates = getAllTemplates() || [];
+  var added = 0;
+  templates.forEach(function(tpl){
+    (tpl.tasks || []).forEach(function(t){
+      var before = taskLibrary.length;
+      upsertTaskInLibrary({
+        name:        t.name || t.title || '',
+        category:    t.phase || t.workstream || tpl.category || '',
+        hours:       parseFloat(t.hours) || 0,
+        description: t.description || '',
+        source:      'template',
+        sourceRefId: tpl.id
+      });
+      if(taskLibrary.length > before) added++;
+    });
+  });
+  return added;
+}
+
 // Seed the library from CapacityIQ task types. Idempotent — upsert
 // dedupes on normalized name + category.
 //
@@ -16177,8 +16197,15 @@ function openPlans(){
   if(!_taskLibrarySeeded){
     seedTaskLibraryFromCapacity();
     seedDefaultTaskLibrary(); // v1.32.0 FIX 3: seed 200+ default tasks
-    persistData();
   }
+  // v1.38.0 — always sync template tasks too. Idempotent via upsert;
+  // keeps the library fresh as templates are added server-side without
+  // needing a manual re-seed flow.
+  try {
+    var _synced = syncTemplateTasksToLibrary();
+    if(_synced > 0) console.log('[task-library] +' + _synced + ' from templates; total ' + taskLibrary.length);
+  } catch(e){ console.warn('[task-library] template sync failed:', e && e.message); }
+  if(!_taskLibrarySeeded){ _taskLibrarySeeded = true; persistData(); }
   renderPlansOverlay();
   updateNavActive('');  // v1.25.0
 }
@@ -20955,6 +20982,60 @@ function _onSidebarOutsideClick(e){
 
 // When the user picks a module from the sidebar, auto-collapse it so the
 // chosen page is fully visible.
+// v1.38.0 — Help & support widget
+function toggleHelpWidget(){
+  var p = document.getElementById('helpPanel'); if(!p) return;
+  var willOpen = p.style.display === 'none' || !p.style.display;
+  p.style.display = willOpen ? 'block' : 'none';
+  if(willOpen) _renderHelpMenu();
+}
+function _renderHelpMenu(){
+  var body = document.getElementById('helpPanelBody'); if(!body) return;
+  var opts = [
+    { k:'bug',     label:'Report a Bug',       svg:'<circle cx="10" cy="10" r="8"/><line x1="10" y1="6" x2="10" y2="10"/><line x1="10" y1="13" x2="10.01" y2="13"/>' },
+    { k:'feature', label:'Request a Feature',  svg:'<polygon points="10,2 13,8 19,8 14,12 16,18 10,14 4,18 6,12 1,8 7,8"/>' },
+    { k:'help',    label:'Get Help',           svg:'<circle cx="10" cy="10" r="8"/><path d="M8 8a2 2 0 1 1 4 0c0 1-2 1.5-2 3"/><line x1="10" y1="14" x2="10.01" y2="14"/>' },
+    { k:'ticket',  label:'Log a Ticket',       svg:'<rect x="3" y="3" width="14" height="14" rx="2"/><line x1="7" y1="7" x2="13" y2="7"/><line x1="7" y1="10" x2="13" y2="10"/><line x1="7" y1="13" x2="10" y2="13"/>' }
+  ];
+  body.innerHTML = opts.map(function(o){
+    return '<button class="help-option" onclick="_openHelpForm(\''+o.k+'\')"><svg viewBox="0 0 20 20">'+o.svg+'</svg><span>'+o.label+'</span></button>';
+  }).join('');
+}
+function _openHelpForm(kind){
+  var labels = { bug:'Report a Bug', feature:'Request a Feature', help:'Get Help', ticket:'Log a Ticket' };
+  var body = document.getElementById('helpPanelBody'); if(!body) return;
+  var userEmail = (_currentUser && _currentUser.email) || (userProfile && userProfile.email) || '';
+  body.innerHTML =
+    '<div class="help-form">'+
+      '<h4>'+escHtml(labels[kind]||'Contact us')+'</h4>'+
+      '<div><label>Subject</label><input id="helpSubject" type="text" placeholder="Brief summary"></div>'+
+      '<div><label>Description</label><textarea id="helpDesc" rows="4" placeholder="Describe the issue or request\u2026"></textarea></div>'+
+      '<div><label>Priority</label><select id="helpPriority"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select></div>'+
+      '<div style="font-size:10px;color:var(--muted)">From: '+escHtml(userEmail || 'anonymous')+'</div>'+
+      '<div class="help-form-actions">'+
+        '<button onclick="_renderHelpMenu()">Back</button>'+
+        '<button class="help-primary" onclick="_submitHelpRequest(\''+kind+'\')">Submit</button>'+
+      '</div>'+
+    '</div>';
+  setTimeout(function(){ var s=document.getElementById('helpSubject'); if(s) s.focus(); }, 50);
+}
+function _submitHelpRequest(kind){
+  var subj = (document.getElementById('helpSubject').value||'').trim();
+  var desc = (document.getElementById('helpDesc').value||'').trim();
+  var prio = document.getElementById('helpPriority').value;
+  if(!subj){ showToast('Enter a subject','warning'); return; }
+  var userEmail = (_currentUser && _currentUser.email) || (userProfile && userProfile.email) || 'anonymous';
+  var labels = { bug:'Bug', feature:'Feature request', help:'Help', ticket:'Ticket' };
+  var bodyText = 'Type: '+(labels[kind]||kind)+'\nPriority: '+prio+'\nUser: '+userEmail+'\n\n'+desc;
+  var mailto = 'mailto:support@pmroadmapper.com?subject='+encodeURIComponent('[Roadmap OS] '+subj)+'&body='+encodeURIComponent(bodyText);
+  try {
+    if(window.electronAPI && window.electronAPI.openExternal) window.electronAPI.openExternal(mailto);
+    else window.location.href = mailto;
+  } catch(e){ window.location.href = mailto; }
+  showToast("Thanks — we'll be in touch.",'success');
+  toggleHelpWidget();
+}
+
 function _autoCollapseSidebarAfterClick(){
   var sb = document.getElementById('appSidebar');
   if(sb) sb.classList.add('collapsed');
@@ -20979,6 +21060,17 @@ document.addEventListener('DOMContentLoaded', function(){
     var btn = e.target.closest('.sidebar-item');
     if(btn) setTimeout(_autoCollapseSidebarAfterClick, 50);
   });
+  // v1.38.0: close sidebar on ANY top-nav / page-switch click too. Previously
+  // _onSidebarOutsideClick was only attached when the burger opened it, so
+  // opening via saved localStorage preference left it non-dismissible from
+  // clicks elsewhere in the app.
+  document.addEventListener('mousedown', function(e){
+    if(sb.classList.contains('collapsed')) return;
+    if(sb.contains(e.target)) return;
+    // Ignore the burger button click (it manages its own toggle)
+    if(e.target.closest('button[onclick*="toggleSidebar"]')) return;
+    sb.classList.add('collapsed');
+  }, true);
 });
 
 function closeAllOverlays(){
@@ -25265,71 +25357,225 @@ async function _ensureTmpCapIQTemplates(){
   }
 }
 
-function renderCapDashboard(content,actions){
-  actions.innerHTML='<button class="cap-btn primary" onclick="capExportDashboard()">Doc Export</button>';
-  var totalTeams=capData.teams.length;
-  var totalMembers=capData.members.length;
-  var totalInitiatives=capData.initiatives.filter(function(i){return i.status!=='Complete'&&i.status!=='Cancelled';}).length;
-  var totalTasks=capData.tasks.filter(function(t){return t.status!=='Done';}).length;
-  var stats=document.createElement('div');
-  stats.className='cap-grid';
-  stats.innerHTML=
-    '<div class="cap-stat"><div class="num" style="color:#0d9488">'+totalTeams+'</div><div class="lbl">Teams</div></div>'+
-    '<div class="cap-stat"><div class="num" style="color:#8b5cf6">'+totalMembers+'</div><div class="lbl">Team Members</div></div>'+
-    '<div class="cap-stat"><div class="num" style="color:#f59e0b">'+totalInitiatives+'</div><div class="lbl">Active Initiatives</div></div>'+
-    '<div class="cap-stat"><div class="num" style="color:#ef4444">'+totalTasks+'</div><div class="lbl">Open Tasks</div></div>';
-  content.appendChild(stats);
-  if(capData.sprints.length===0||capData.teams.length===0){
-    content.innerHTML+='<div class="cap-card"><h3>Set up sprints and teams to see the capacity heatmap</h3><p style="color:#64748b;font-size:12px">Go to Teams & People to add members, and Sprints to create sprint periods.</p></div>';
-    return;
+// v1.38.0 — CapacityIQ dashboard overhaul.
+// Replaces the old Team × Sprint heatmap (sprints live in Plans now) with
+// a real-data member utilisation table + initiative health table.
+// Data sources: capData.teams/members · projectPlans[].tasks[] (via owner
+// string match) · roadmap rows[] (for initiative dates + names).
+var _capDashPeriod = 'weekly'; // daily | weekly | monthly | quarterly | yearly
+var _capDashTeamFilter = '';   // '' = all teams
+
+// Multipliers to convert weekly capacity → selected period (working-time).
+function _capPeriodMultiplier(period){
+  switch(period){
+    case 'daily':    return 1/5;  // one work day
+    case 'weekly':   return 1;
+    case 'monthly':  return 4;    // ~4 working weeks
+    case 'quarterly':return 12;
+    case 'yearly':   return 48;   // ~52 - 4 weeks leave
+    default:         return 1;
   }
-  var card=document.createElement('div');
-  card.className='cap-card';
-  card.innerHTML='<h3>Capacity Heatmap — Team x Sprint</h3>';
-  var tbl=document.createElement('table');
-  tbl.className='cap-heatmap';
-  var thead='<tr><th>Team</th>';
-  capData.sprints.forEach(function(s){thead+='<th>'+s.name+'</th>';});
-  thead+='</tr>';
-  tbl.innerHTML='<thead>'+thead+'</thead>';
-  var tbody=document.createElement('tbody');
-  var sprintTotals={};
-  capData.sprints.forEach(function(s){sprintTotals[s.id]={avail:0,alloc:0};});
-  capData.teams.forEach(function(team){
-    var tr=document.createElement('tr');
-    var cells='<td>'+team.name+'</td>';
-    capData.sprints.forEach(function(sprint){
-      var avail=0;
-      capData.members.filter(function(m){return m.teamId===team.id&&m.isActive;}).forEach(function(m){
-        avail+=(m.hoursPerDay||8)*(m.productivityFactor||0.75)*(sprint.workingDays||10);
-      });
-      var alloc=0;
-      capData.tasks.filter(function(t){return t.assignedTeamId===team.id&&t.sprintId===sprint.id&&t.status!=='Done';}).forEach(function(t){
-        alloc+=parseFloat(t.manualHours)||parseFloat(t.autoHours)||0;
-      });
-      sprintTotals[sprint.id].avail+=avail;
-      sprintTotals[sprint.id].alloc+=alloc;
-      var pct=avail>0?Math.round(alloc/avail*100):0;
-      var cls=pct>95?'cap-red':pct>75?'cap-amber':'cap-green';
-      if(avail===0) cells+='<td><span class="cap-cell" style="background:#334155;color:#64748b">No members</span></td>';
-      else cells+='<td><span class="cap-cell '+cls+'">'+pct+'% ('+alloc.toFixed(0)+'/'+avail.toFixed(0)+'h)</span></td>';
+}
+
+// Sum task.durationDays × hoursPerDay across all plans for tasks whose owner
+// matches this member (by name or email). Only counts tasks that are not
+// done. This is a pragmatic match — projects don't store userId on tasks.
+function _capMemberAllocatedHours(member){
+  var hpd = getCapHours().hpd || 8;
+  var match = [];
+  if(member.name)  match.push(String(member.name).toLowerCase().trim());
+  if(member.email) match.push(String(member.email).toLowerCase().trim());
+  if(!match.length) return 0;
+  var hrs = 0;
+  (projectPlans || []).forEach(function(p){
+    (p.tasks || []).forEach(function(t){
+      if(!t || t.status === 'done') return;
+      var owner = String(t.owner || '').toLowerCase().trim();
+      if(owner && match.indexOf(owner) >= 0){
+        hrs += (parseFloat(t.durationDays) || 0) * hpd;
+      }
     });
-    tr.innerHTML=cells;
-    tbody.appendChild(tr);
   });
-  var totalTr=document.createElement('tr');
-  var totalCells='<td style="font-weight:800;color:#e2e8f0">TOTAL</td>';
-  capData.sprints.forEach(function(sprint){
-    var st=sprintTotals[sprint.id];
-    var pct=st.avail>0?Math.round(st.alloc/st.avail*100):0;
-    var cls=pct>95?'cap-red':pct>75?'cap-amber':'cap-green';
-    totalCells+='<td><span class="cap-cell '+cls+'" style="font-weight:900">'+pct+'%</span></td>';
+  return hrs;
+}
+
+// Sum task hours for any plan that's linked (via linkedRowIds) to the given
+// roadmap row. Returns {total, completed, remaining, openTasks, hasTasks}.
+function _capInitiativeHours(rowId){
+  var hpd = getCapHours().hpd || 8;
+  var total=0, completed=0, openTasks=0;
+  var linked = (projectPlans || []).filter(function(p){
+    return (p.linkedRowIds || []).indexOf(rowId) >= 0;
   });
-  totalTr.innerHTML=totalCells;
-  tbody.appendChild(totalTr);
-  tbl.appendChild(tbody);
-  card.appendChild(tbl);
-  content.appendChild(card);
+  linked.forEach(function(p){
+    (p.tasks || []).forEach(function(t){
+      if(!t) return;
+      var hrs = (parseFloat(t.durationDays) || 0) * hpd;
+      total += hrs;
+      if(t.status === 'done') completed += hrs;
+      else openTasks += 1;
+    });
+  });
+  return {
+    total: total,
+    completed: completed,
+    remaining: Math.max(0, total - completed),
+    openTasks: openTasks,
+    hasTasks: total > 0,
+    linkedPlans: linked.length
+  };
+}
+
+// Estimate delivery date from a row's roadmap bars (latest end date across
+// all bars), converted from the MONTHS frac index to a Date.
+function _capInitiativeDeliveryDate(row){
+  if(!row || !row.bars || !row.bars.length) return null;
+  var maxE = 0;
+  row.bars.forEach(function(b){ if((b.e||0) > maxE) maxE = b.e; });
+  // frac → month+day
+  try {
+    var md = fracToMonthDay(Math.max(0, maxE - 0.01));
+    var label = getMonthLabel(md.mi); // "APR 2026"
+    if(!label) return null;
+    var parts = label.split(' ');
+    var monthIdx = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'].indexOf(parts[0]);
+    var yr = parseInt(parts[1], 10);
+    if(monthIdx < 0 || isNaN(yr)) return null;
+    return new Date(yr, monthIdx, md.day);
+  } catch(e){ return null; }
+}
+
+// Health colour from utilisation or date vs today.
+function _capHealthDot(color){
+  return '<svg viewBox="0 0 16 16" style="width:11px;height:11px;vertical-align:-1px"><circle cx="8" cy="8" r="6" fill="'+color+'"/></svg>';
+}
+
+function renderCapDashboard(content, actions){
+  var per = _capDashPeriod;
+  var mult = _capPeriodMultiplier(per);
+  actions.innerHTML =
+    '<div style="display:flex;gap:4px;background:var(--surface-low);border-radius:9999px;padding:3px">' +
+      ['daily','weekly','monthly','quarterly','yearly'].map(function(p){
+        var active = p === per;
+        return '<button class="cap-btn'+(active?' primary':'')+'" onclick="_capSetDashPeriod(\''+p+'\')" style="padding:4px 12px;font-size:11px">'+p.charAt(0).toUpperCase()+p.slice(1)+'</button>';
+      }).join('') +
+    '</div>' +
+    '<button class="cap-btn" onclick="capExportDashboard()" style="margin-left:8px">Export</button>';
+
+  // Build member rows
+  var members = (capData.members || []).filter(function(m){
+    if(!_capDashTeamFilter) return true;
+    return m.teamId === _capDashTeamFilter;
+  });
+  var hpw = getCapHours().hpw || 40;
+  var summary = { capacity: 0, allocated: 0 };
+  var memberRows = members.map(function(m){
+    var team = (capData.teams || []).find(function(t){ return t.id === m.teamId; });
+    // Prefer member-level weekly capacity if stored; fall back to user default.
+    var weekly = parseFloat(m.weeklyCapacity) || parseFloat(m.hoursPerWeek) ||
+                 (parseFloat(m.hoursPerDay) ? parseFloat(m.hoursPerDay) * 5 : 0) || hpw;
+    var capPeriod = weekly * mult;
+    var allocWeekly = _capMemberAllocatedHours(m);
+    var allocPeriod = allocWeekly * mult;
+    summary.capacity += capPeriod;
+    summary.allocated += allocPeriod;
+    var util = capPeriod > 0 ? Math.round((allocPeriod / capPeriod) * 100) : 0;
+    var health = util > 100 ? '#dc2626' : util > 85 ? '#f59e0b' : '#22c55e';
+    return { m: m, team: team, capacity: capPeriod, allocated: allocPeriod, util: util, health: health };
+  });
+
+  // Summary stats
+  var available = Math.max(0, summary.capacity - summary.allocated);
+  var summaryUtil = summary.capacity > 0 ? Math.round((summary.allocated / summary.capacity) * 100) : 0;
+  var stats = document.createElement('div');
+  stats.className = 'cap-grid';
+  stats.innerHTML =
+    '<div class="cap-stat"><div class="num" style="color:#0d9488">'+Math.round(summary.capacity)+'h</div><div class="lbl">Total Capacity ('+per+')</div></div>' +
+    '<div class="cap-stat"><div class="num" style="color:#f59e0b">'+Math.round(summary.allocated)+'h</div><div class="lbl">Allocated</div></div>' +
+    '<div class="cap-stat"><div class="num" style="color:#0ea5e9">'+Math.round(available)+'h</div><div class="lbl">Available</div></div>' +
+    '<div class="cap-stat"><div class="num" style="color:'+(summaryUtil>100?'#dc2626':summaryUtil>85?'#f59e0b':'#22c55e')+'">'+summaryUtil+'%</div><div class="lbl">Utilisation</div></div>';
+  content.appendChild(stats);
+
+  // Member utilisation table
+  if(memberRows.length){
+    var memCard = document.createElement('div'); memCard.className = 'cap-card';
+    memCard.innerHTML = '<h3>Team Member Capacity</h3>';
+    var table = document.createElement('table');
+    table.className = 'cap-heatmap';
+    table.style.width = '100%';
+    var head = '<tr><th style="text-align:left">Member</th><th style="text-align:left">Team</th><th style="text-align:right">Capacity</th><th style="text-align:right">Allocated</th><th style="text-align:right">Utilisation</th><th style="text-align:center">Health</th></tr>';
+    table.innerHTML = '<thead>'+head+'</thead>';
+    var tbody = document.createElement('tbody');
+    memberRows.forEach(function(r){
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td>'+escHtml(r.m.name||'(unnamed)')+(r.m.email?'<span style="display:block;font-size:10px;color:var(--muted)">'+escHtml(r.m.email)+'</span>':'')+'</td>'+
+        '<td>'+(r.team?'<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+r.team.color+';margin-right:6px;vertical-align:0"></span>'+escHtml(r.team.name):'<span style="color:var(--muted)">—</span>')+'</td>'+
+        '<td style="text-align:right;font-variant-numeric:tabular-nums">'+Math.round(r.capacity)+'h</td>'+
+        '<td style="text-align:right;font-variant-numeric:tabular-nums'+(r.allocated>r.capacity?';color:#dc2626;font-weight:700':'')+'">'+Math.round(r.allocated)+'h</td>'+
+        '<td style="text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:'+r.health+'">'+r.util+'%</td>'+
+        '<td style="text-align:center">'+_capHealthDot(r.health)+'</td>';
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    memCard.appendChild(table);
+    content.appendChild(memCard);
+  } else {
+    var emptyMem = document.createElement('div'); emptyMem.className = 'cap-card';
+    emptyMem.innerHTML = '<h3>No team members yet</h3><p style="color:var(--muted);font-size:12px">Go to <strong>Teams &amp; People</strong> to add members — their capacity will show here automatically.</p>';
+    content.appendChild(emptyMem);
+  }
+
+  // Initiative health table — pulls from roadmap rows
+  var initRows = (rows || []).map(function(row){
+    var info = _capInitiativeHours(row.id);
+    if(!info.hasTasks) return null;
+    var delivery = _capInitiativeDeliveryDate(row);
+    var now = new Date();
+    var isLate = delivery && delivery < now && info.remaining > 0;
+    var pct = info.total > 0 ? Math.round(info.completed / info.total * 100) : 0;
+    var health = isLate ? '#dc2626' : (pct < 25 ? '#f59e0b' : '#22c55e');
+    return { row: row, info: info, delivery: delivery, isLate: isLate, pct: pct, health: health };
+  }).filter(Boolean);
+
+  if(initRows.length){
+    initRows.sort(function(a,b){
+      if(a.isLate !== b.isLate) return a.isLate ? -1 : 1;
+      return b.info.remaining - a.info.remaining;
+    });
+    var initCard = document.createElement('div'); initCard.className = 'cap-card';
+    initCard.innerHTML = '<h3>Initiative Capacity</h3>';
+    var itbl = document.createElement('table');
+    itbl.className = 'cap-heatmap';
+    itbl.style.width = '100%';
+    itbl.innerHTML = '<thead><tr><th style="text-align:left">Initiative</th><th style="text-align:right">Hours</th><th style="text-align:right">Complete</th><th style="text-align:right">Remaining</th><th style="text-align:left">Delivery</th><th style="text-align:center">Health</th></tr></thead>';
+    var ib = document.createElement('tbody');
+    initRows.forEach(function(r){
+      var tr = document.createElement('tr');
+      var dlv = r.delivery ? (r.delivery.toISOString().slice(0,10) + (r.isLate ? ' <span style="color:#dc2626;font-weight:700">late</span>' : '')) : '<span style="color:var(--muted)">—</span>';
+      tr.innerHTML =
+        '<td>'+escHtml(r.row.name||'(unnamed)')+'<span style="display:block;font-size:10px;color:var(--muted)">'+r.info.linkedPlans+' plan'+(r.info.linkedPlans===1?'':'s')+' · '+r.info.openTasks+' open tasks</span></td>'+
+        '<td style="text-align:right;font-variant-numeric:tabular-nums">'+Math.round(r.info.total)+'h</td>'+
+        '<td style="text-align:right;font-variant-numeric:tabular-nums">'+r.pct+'%</td>'+
+        '<td style="text-align:right;font-variant-numeric:tabular-nums">'+Math.round(r.info.remaining)+'h</td>'+
+        '<td>'+dlv+'</td>'+
+        '<td style="text-align:center">'+_capHealthDot(r.health)+'</td>';
+      ib.appendChild(tr);
+    });
+    itbl.appendChild(ib);
+    initCard.appendChild(itbl);
+    content.appendChild(initCard);
+  }
+}
+
+function _capSetDashPeriod(p){
+  _capDashPeriod = p;
+  var content = document.getElementById('capContent');
+  var actions = document.getElementById('capTopActions');
+  if(content && actions){
+    content.innerHTML = ''; actions.innerHTML = '';
+    renderCapDashboard(content, actions);
+  }
 }
 
 function renderCapTeams(content,actions){
@@ -30810,6 +31056,24 @@ init();
     <button class="btn-save" onclick="saveEditQuarters()">Save Changes</button>
   </div>
 </div>
+</div>
+
+<!-- v1.38.0 — floating help & support widget (bottom-right FAB) -->
+<div id="helpFab" class="help-fab">
+  <button id="helpFabBtn" class="help-fab-button" onclick="toggleHelpWidget()" title="Help & support" aria-label="Help & support">
+    <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+      <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+  </button>
+  <div id="helpPanel" class="help-panel" style="display:none" role="dialog" aria-label="Help options">
+    <div class="help-panel-hdr">
+      <h3>How can we help?</h3>
+      <button class="help-panel-close" onclick="toggleHelpWidget()" aria-label="Close">&times;</button>
+    </div>
+    <div class="help-panel-body" id="helpPanelBody"></div>
+  </div>
 </div>
 
 </body>

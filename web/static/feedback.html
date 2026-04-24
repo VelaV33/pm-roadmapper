@@ -3,17 +3,36 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Submit Feedback</title>
+<title>Submit Feedback — Roadmap OS</title>
+<!-- v1.38.0: Roadmap OS favicon (inline SVG, no external asset needed) -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23005bb1'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='system-ui,sans-serif' font-size='18' font-weight='800' fill='white'%3ER%3C/text%3E%3C/svg%3E">
 <style>
   :root{
     --bg:#f9f9fa; --card:#ffffff; --text:#0F1B3D; --muted:#7b8db0;
     --border:#e5e7eb; --accent:#005bb1; --green:#16a34a;
   }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0f172a; --card:#1e293b; --text:#e2e8f0; --muted:#94a3b8; --border:#334155; }
+  }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;background:var(--bg);color:var(--text)}
   .wrap{max-width:560px;margin:0 auto;padding:32px 18px}
+  .brand-row{display:flex;align-items:center;gap:10px;margin-bottom:24px}
+  .brand-logo{width:36px;height:36px;border-radius:8px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800}
+  .brand-name{font-size:16px;font-weight:800;color:var(--text)}
   h1{font-size:24px;font-weight:800;letter-spacing:-0.02em;margin:0 0 6px}
   .sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5}
+  .attach-wrap{display:flex;flex-direction:column;gap:6px}
+  .attach-label{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1px dashed var(--border);border-radius:10px;cursor:pointer;color:var(--muted);font-size:13px;background:transparent;font-family:inherit}
+  .attach-label:hover{border-color:var(--accent);color:var(--accent)}
+  .attach-label svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.6}
+  input[type=file]{display:none}
+  .attach-list{display:flex;flex-direction:column;gap:4px;margin-top:4px}
+  .attach-chip{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:12px}
+  .attach-chip button{background:none;border:none;color:var(--muted);cursor:pointer;padding:0 4px;font-size:14px}
+  .trial-cta{display:block;margin-top:16px;padding:12px 18px;border-radius:10px;background:linear-gradient(135deg,#005bb1,#0ea5e9);color:#fff;text-decoration:none;font-size:13px;font-weight:700;text-align:center;letter-spacing:.01em}
+  .trial-cta:hover{filter:brightness(.92)}
+  .powered-by{font-size:11px;color:var(--muted);margin:16px 0 4px;text-align:center}
   .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:0 1px 3px rgba(15,27,61,.06)}
   label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:14px 0 6px}
   input[type=text],input[type=email],textarea{
@@ -39,6 +58,10 @@
 </head>
 <body>
   <div class="wrap">
+    <div class="brand-row">
+      <div class="brand-logo" aria-hidden="true">R</div>
+      <div class="brand-name">Roadmap OS</div>
+    </div>
     <h1>Share your feedback</h1>
     <p class="sub">Tell us what you'd like to see, what's not working, or any idea you have. Your feedback goes straight to the product team.</p>
 
@@ -49,6 +72,16 @@
 
         <label for="description">Details</label>
         <textarea id="description" maxlength="5000" placeholder="What problem are you trying to solve? What would help?"></textarea>
+
+        <label>Attachments <span style="color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400">(optional — screenshots help)</span></label>
+        <div class="attach-wrap">
+          <label for="attach-input" class="attach-label">
+            <svg viewBox="0 0 20 20"><path d="M13.5 6.5l-5.25 5.25a2 2 0 102.83 2.83l6.36-6.36a3.5 3.5 0 10-4.95-4.95L5.5 9.5a5 5 0 107.07 7.07L17 12.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Attach files (images, PDFs, documents)
+          </label>
+          <input type="file" id="attach-input" multiple accept="image/*,.pdf,.doc,.docx,.txt,.csv,.xlsx">
+          <div id="attach-list" class="attach-list"></div>
+        </div>
 
         <label for="name">Your name (optional)</label>
         <input type="text" id="name" maxlength="100" placeholder="So we can follow up">
@@ -62,7 +95,8 @@
       <div id="msg" class="msg"></div>
     </div>
 
-    <p class="footer">Powered by Roadmap OS</p>
+    <p class="powered-by">Powered by Roadmap OS</p>
+    <a class="trial-cta" href="https://pmroadmapper.com/signup" target="_blank" rel="noopener noreferrer">Start your 30-day free trial &rarr;</a>
   </div>
 
 <script>
@@ -79,6 +113,34 @@
   var form = document.getElementById('fb-form');
   var msg = document.getElementById('msg');
   var btn = document.getElementById('submit-btn');
+  var attachInput = document.getElementById('attach-input');
+  var attachList = document.getElementById('attach-list');
+  var _attachedFiles = []; // {name, size, type}
+
+  function _renderAttachments(){
+    attachList.innerHTML = '';
+    _attachedFiles.forEach(function(f, i){
+      var chip = document.createElement('div'); chip.className = 'attach-chip';
+      chip.innerHTML = '<span>'+f.name+' <span style="color:var(--muted)">('+Math.round(f.size/1024)+' KB)</span></span>';
+      var rm = document.createElement('button'); rm.textContent = '\u2715';
+      rm.title = 'Remove';
+      rm.onclick = function(){ _attachedFiles.splice(i,1); _renderAttachments(); };
+      chip.appendChild(rm);
+      attachList.appendChild(chip);
+    });
+  }
+  attachInput.addEventListener('change', function(e){
+    var files = Array.from(e.target.files || []);
+    files.forEach(function(f){
+      if(f.size > 5 * 1024 * 1024){
+        alert('Skipping '+f.name+' — larger than 5 MB');
+        return;
+      }
+      _attachedFiles.push(f);
+    });
+    _renderAttachments();
+    attachInput.value = ''; // allow re-selecting the same file
+  });
 
   if(!OWNER_ID){
     msg.className = 'msg error';
@@ -111,13 +173,21 @@
     btn.disabled = true;
     btn.textContent = 'Submitting...';
 
+    // Append attachment filenames to description so they reach the team
+    // even before the edge function supports binary uploads.
+    var fullDesc = description || '';
+    if(_attachedFiles.length){
+      fullDesc += (fullDesc ? '\n\n' : '') + 'Attachments:\n' +
+        _attachedFiles.map(function(f){ return '- '+f.name+' ('+Math.round(f.size/1024)+' KB)'; }).join('\n') +
+        '\n(Files were attached client-side; please reply to request upload.)';
+    }
     fetch(SUPA_URL + '/functions/v1/feedback-submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         owner_user_id: OWNER_ID,
         title: title,
-        description: description || null,
+        description: fullDesc || null,
         submitter_email: email || null,
         submitter_name: name || null
       })
