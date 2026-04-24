@@ -1160,6 +1160,45 @@ body.dark-mode .kanban-col.drop-target{background:#1e3a8a;border-color:#3b82f6}
 .kanban-due{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)}
 .kanban-pct-bar{height:4px;background:#f1f5f9;border-radius:9999px;overflow:hidden;margin-top:8px}
 .kanban-pct-fill{height:100%;background:var(--accent);border-radius:9999px}
+/* v1.37.0 — sprint/agile kanban chrome */
+.kanban-meta-row{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.kanban-meta-pill{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:9999px;letter-spacing:.02em;white-space:nowrap}
+.kanban-meta-pill.kanban-effort{background:rgba(14,165,233,.12);color:#0369a1}
+.kanban-label-row{display:flex;gap:3px;flex-wrap:wrap;margin-top:6px}
+.kanban-label-chip{display:inline-flex;align-items:center;font-size:9px;font-weight:600;padding:1px 6px;border-radius:4px;background:var(--surface-low);color:var(--muted);border:1px solid var(--border);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kanban-label-chip.kanban-label-more{font-style:italic;background:transparent}
+.kanban-blocked-banner{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:5px 8px;border-radius:6px;background:rgba(220,38,38,.1);color:#b91c1c;margin-top:6px;border:1px solid rgba(220,38,38,.2);line-height:1.3}
+.kanban-deps{display:flex;align-items:center;gap:4px;font-size:10px;color:#b45309;margin-top:6px;font-weight:600}
+.kanban-card-blocked{border-color:rgba(220,38,38,.4)}
+body.dark-mode .kanban-label-chip{background:var(--surface-low);color:var(--muted);border-color:var(--border)}
+body.dark-mode .kanban-blocked-banner{background:rgba(248,113,113,.12);color:#fca5a5;border-color:rgba(248,113,113,.25)}
+body.dark-mode .kanban-deps{color:#fbbf24}
+body.dark-mode .kanban-meta-pill.kanban-effort{background:rgba(14,165,233,.18);color:#7dd3fc}
+/* v1.37.0 — sprint/agile bar */
+.plan-sprint-bar{background:var(--surface-low);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin:6px 0 14px;box-shadow:var(--shadow-card)}
+.plan-sprint-bar .sprint-bar-top{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.plan-sprint-bar .sprint-goal-wrap{flex:1;min-width:260px;display:flex;flex-direction:column;gap:3px}
+.plan-sprint-bar .sprint-bar-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.plan-sprint-bar #sprintGoalInput{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-weight:700;color:var(--text);background:var(--white);outline:none;font-family:inherit}
+.plan-sprint-bar .sprint-stats{display:flex;gap:16px;flex-wrap:wrap}
+.plan-sprint-bar .sprint-stat{text-align:right;min-width:60px}
+.plan-sprint-bar .sprint-stat-num{font-size:18px;font-weight:800;color:var(--text);line-height:1}
+.plan-sprint-bar .sprint-stat-lbl{font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
+.plan-sprint-bar .sprint-burndown-row{display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap}
+.plan-sprint-bar .sprint-burndown-bar{flex:1;min-width:160px;height:6px;background:var(--border);border-radius:9999px;overflow:hidden}
+.plan-sprint-bar .sprint-burndown-fill{height:100%;background:linear-gradient(90deg,var(--accent),#22c55e);border-radius:9999px;transition:width .3s}
+.plan-sprint-bar .sprint-dor-toggle{font-size:11px;color:var(--muted);display:inline-flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap}
+.plan-sprint-bar .sprint-dor-toggle input{accent-color:var(--accent);cursor:pointer}
+.plan-sprint-bar .sprint-bar-expand{padding:5px 12px;border-radius:9999px;border:1px solid var(--border);background:var(--white);color:var(--text);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit}
+.plan-sprint-bar .sprint-dod-panel{margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)}
+.plan-sprint-bar .sprint-dod-row{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+.plan-sprint-bar .sprint-dod-row input{flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text);background:var(--white);outline:none;font-family:inherit}
+.plan-sprint-bar .sprint-dod-row button{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 8px;font-size:13px}
+.plan-sprint-bar .sprint-dod-add{padding:6px 12px;border:1px dashed var(--border);border-radius:9999px;background:transparent;color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;margin-top:4px}
+body.dark-mode .plan-sprint-bar{background:var(--surface-low);border-color:var(--border)}
+body.dark-mode .plan-sprint-bar #sprintGoalInput,
+body.dark-mode .plan-sprint-bar .sprint-dod-row input{background:var(--white);color:var(--text);border-color:var(--border)}
+body.dark-mode .plan-sprint-bar .sprint-bar-expand{background:var(--white);color:var(--text)}
 body.dark-mode .kanban-card{background:#1e293b;border-color:#334155}
 body.dark-mode .kanban-pct-bar{background:#0f172a}
 body.dark-mode .kanban-col-count{background:#1e293b}
@@ -2658,6 +2697,8 @@ body.dark-mode .onboard-card{background:#1e293b}
           <button class="prio-btn primary" onclick="openAddTaskModal()">+ Add task</button>
         </div>
       </div>
+      <!-- v1.37.0 — sprint / agile toolbar: goal + DoD + velocity + DoR toggle -->
+      <div id="planSprintBar" class="plan-sprint-bar" style="display:none"></div>
       <div class="plans-content" id="plansContent"></div>
     </div>
   </div>
@@ -6817,6 +6858,9 @@ async function onAuthSuccess(user){
   }, 200);
 
   setTimeout(function(){ loadAllCommentBadges(); loadSharedToMe(); loadUserTier(); }, 800);
+  // If this load came from an invite email (?invite_token=...), redeem it now
+  // that auth + _accessToken are established. Runs once and strips the token.
+  setTimeout(function(){ if(typeof _redeemInviteFromUrl === 'function') _redeemInviteFromUrl(); }, 900);
   setTimeout(checkShowTour, 2500);
   setTimeout(checkOnboarding, 1500); // v1.32.0 FIX 15: trigger onboarding for new users
   console.log('Signed in successfully');  // v1.25.0: PII removed from log
@@ -15354,6 +15398,18 @@ function _daysBetween(startIso, endIso){
 }
 
 // ── Task helpers ────────────────────────────────────────────────────────────
+// v1.37.0 — sprint/agile fields added to the base task shape. All optional
+// and tolerated on old plans (UI renders sensible defaults when undefined).
+//   priority             P0/P1/P2/P3 (critical/high/medium/low)
+//   effort               story points (commonly 1,2,3,5,8,13 — Fibonacci)
+//   type                 feature | bug | tech-debt | spike | chore
+//   labels               array of arbitrary string tags
+//   acceptanceCriteria   array of {text, done}
+//   reviewer             second owner for approval
+//   blockedReason        short reason when status === 'blocked'
+//   doneAt               ISO timestamp captured when card hits Done (used
+//                        for velocity/burndown even when completion dates
+//                        weren't manually set)
 function _newTask(overrides){
   var today = _todayIso();
   return Object.assign({
@@ -15362,6 +15418,7 @@ function _newTask(overrides){
     source: 'custom',
     sourceRefId: null,
     owner: '',
+    reviewer: '',
     startDate: today,
     endDate: today,
     durationDays: 1,
@@ -15370,8 +15427,55 @@ function _newTask(overrides){
     predecessors: [],
     isMilestone: false,
     notes: '',
-    sortIndex: 0
+    sortIndex: 0,
+    priority: 'medium',
+    effort: 0,
+    type: 'feature',
+    labels: [],
+    acceptanceCriteria: [],
+    blockedReason: '',
+    doneAt: null
   }, overrides || {});
+}
+
+// Sprint/agile constants used across the Plans UI
+var SPRINT_PRIORITIES = [
+  { k:'p0', label:'P0 · Critical', color:'#dc2626', tint:'rgba(220,38,38,.12)' },
+  { k:'p1', label:'P1 · High',     color:'#ea580c', tint:'rgba(234,88,12,.12)' },
+  { k:'p2', label:'P2 · Medium',   color:'#0284c7', tint:'rgba(2,132,199,.12)' },
+  { k:'p3', label:'P3 · Low',      color:'#64748b', tint:'rgba(100,116,139,.12)' },
+  { k:'medium', label:'Medium (default)', color:'#64748b', tint:'rgba(100,116,139,.1)' }
+];
+var SPRINT_TYPES = [
+  { k:'feature',    label:'Feature',   color:'#0ea5e9' },
+  { k:'bug',        label:'Bug',       color:'#dc2626' },
+  { k:'tech-debt',  label:'Tech debt', color:'#7c3aed' },
+  { k:'spike',      label:'Spike',     color:'#f59e0b' },
+  { k:'chore',      label:'Chore',     color:'#64748b' }
+];
+function _sprintPrio(p){ return SPRINT_PRIORITIES.find(function(x){return x.k===p;}) || SPRINT_PRIORITIES[4]; }
+function _sprintType(t){ return SPRINT_TYPES.find(function(x){return x.k===t;}) || SPRINT_TYPES[0]; }
+function _acProgress(t){
+  var ac = (t && t.acceptanceCriteria) || [];
+  if(!ac.length) return null;
+  var done = ac.filter(function(x){ return x && x.done; }).length;
+  return { done: done, total: ac.length };
+}
+// Definition-of-Ready: a card is "ready to start" when name set, owner set,
+// effort set, at least one acceptance criterion, and no open dependencies
+// (predecessors that aren't done). Used as a soft gate when moving cards
+// to In Progress if the plan has dorEnabled.
+function _dorCheck(plan, task){
+  var issues = [];
+  if(!task.name || !task.name.trim()) issues.push('task name is blank');
+  if(!task.owner) issues.push('no owner assigned');
+  if(!parseFloat(task.effort)) issues.push('effort not estimated');
+  if(!(task.acceptanceCriteria||[]).length) issues.push('no acceptance criteria');
+  (task.predecessors||[]).forEach(function(pid){
+    var pt = getTaskById(plan, pid);
+    if(pt && pt.status !== 'done') issues.push('predecessor "'+(pt.name||pid)+'" not done');
+  });
+  return issues;
 }
 
 function getTaskById(plan, taskId){
@@ -15720,7 +15824,121 @@ function openEditTaskModal(taskId){
     pctInp.style.cssText = inputCss() + ';text-align:right';
     pctW.appendChild(pctInp); pctW.style.marginBottom = '0'; sg.appendChild(pctW);
     body.appendChild(sg);
+
+    // v1.37.0 — blocked reason (visible only when status === 'blocked')
+    var blockedRow = field('Blocked because', 'Short reason surfaced on the Kanban card.');
+    var blockedInp = document.createElement('input'); blockedInp.type='text'; blockedInp.placeholder='e.g. waiting on vendor quote';
+    blockedInp.value = t.blockedReason || ''; blockedInp.style.cssText = inputCss();
+    blockedRow.appendChild(blockedInp); body.appendChild(blockedRow);
+    var _syncBlockedVisibility = function(){
+      blockedRow.style.display = statSel.value === 'blocked' ? '' : 'none';
+    };
+    _syncBlockedVisibility();
+    statSel.addEventListener('change', _syncBlockedVisibility);
   }
+
+  // ── Priority / Effort / Type row (v1.37.0) ────────────────────────────
+  if(!isSummary){
+    var sprintGrid = document.createElement('div');
+    sprintGrid.style.cssText = 'display:grid;grid-template-columns:1fr 120px 1fr;gap:12px;margin-bottom:14px';
+    var prioW = field('Priority');
+    var prioSel = document.createElement('select'); prioSel.style.cssText = inputCss();
+    ['p0','p1','p2','p3'].forEach(function(k){
+      var def = _sprintPrio(k);
+      var o = document.createElement('option'); o.value = k; o.textContent = def.label;
+      var cur = (t.priority === 'medium') ? 'p2' : (t.priority || 'p2');
+      if(cur === k) o.selected = true;
+      prioSel.appendChild(o);
+    });
+    prioW.appendChild(prioSel); prioW.style.marginBottom = '0'; sprintGrid.appendChild(prioW);
+
+    var effW = field('Effort (pts)', 'Story points. 1 ≈ trivial · 13 ≈ very large.');
+    var effInp = document.createElement('input'); effInp.type='number'; effInp.min='0'; effInp.step='1';
+    effInp.value = parseFloat(t.effort) || 0;
+    effInp.style.cssText = inputCss() + ';text-align:right';
+    effW.appendChild(effInp); effW.style.marginBottom = '0'; sprintGrid.appendChild(effW);
+
+    var typeW = field('Type');
+    var typeSel = document.createElement('select'); typeSel.style.cssText = inputCss();
+    SPRINT_TYPES.forEach(function(def){
+      var o = document.createElement('option'); o.value = def.k; o.textContent = def.label;
+      if((t.type || 'feature') === def.k) o.selected = true;
+      typeSel.appendChild(o);
+    });
+    typeW.appendChild(typeSel); typeW.style.marginBottom = '0'; sprintGrid.appendChild(typeW);
+    body.appendChild(sprintGrid);
+  }
+
+  // ── Labels (v1.37.0) — comma-separated tag input ──────────────────────
+  var labelsRow = field('Labels', 'Comma-separated tags, e.g. "firmware, hardware, customer-request".');
+  var labelsInp = document.createElement('input'); labelsInp.type = 'text';
+  labelsInp.value = ((t.labels||[]).join(', '));
+  labelsInp.placeholder = 'add tags separated by commas';
+  labelsInp.style.cssText = inputCss();
+  labelsRow.appendChild(labelsInp); body.appendChild(labelsRow);
+
+  // ── Reviewer (v1.37.0) ─────────────────────────────────────────────────
+  if(!isSummary){
+    var reviewerRow = field('Reviewer', 'The person who approves this task as done.');
+    var revBtn = document.createElement('button');
+    revBtn.className = t.reviewer ? 'owner-pick-btn' : 'owner-pick-btn unassigned';
+    revBtn.style.padding = '10px 14px';
+    revBtn.innerHTML = t.reviewer
+      ? '<span class="owner-pick-pill">'+escHtml((t.reviewer[0]||'?').toUpperCase())+'</span><span>'+escHtml(t.reviewer)+'</span>'
+      : '+ Click to assign reviewer';
+    revBtn.onclick = function(){
+      openOwnerPickerModal({
+        currentOwner: t.reviewer || '',
+        onPick: function(n){
+          t.reviewer = n;
+          revBtn.className = n ? 'owner-pick-btn' : 'owner-pick-btn unassigned';
+          revBtn.innerHTML = n
+            ? '<span class="owner-pick-pill">'+escHtml((n[0]||'?').toUpperCase())+'</span><span>'+escHtml(n)+'</span>'
+            : '+ Click to assign reviewer';
+        }
+      });
+    };
+    reviewerRow.appendChild(revBtn); body.appendChild(reviewerRow);
+  }
+
+  // ── Acceptance criteria (v1.37.0) — inline checklist ──────────────────
+  var acRow = field('Acceptance criteria', 'Each item is a binary "done / not done" check. Makes "done" unambiguous.');
+  var acList = document.createElement('div'); acList.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-bottom:6px';
+  var _acState = (t.acceptanceCriteria || []).map(function(x){ return { text: (x&&x.text)||'', done: !!(x&&x.done) }; });
+  function renderAcList(){
+    acList.innerHTML = '';
+    if(!_acState.length){
+      var empty = document.createElement('div');
+      empty.style.cssText = 'font-size:11px;color:var(--muted);padding:4px 0';
+      empty.textContent = 'No criteria yet — add one below.';
+      acList.appendChild(empty);
+      return;
+    }
+    _acState.forEach(function(ac, i){
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface-low);border:1px solid var(--border);border-radius:8px';
+      var cb = document.createElement('input'); cb.type='checkbox'; cb.checked = !!ac.done;
+      cb.style.cssText = 'flex-shrink:0;accent-color:var(--accent);cursor:pointer';
+      cb.onchange = function(){ _acState[i].done = cb.checked; };
+      var inp = document.createElement('input'); inp.type='text'; inp.value = ac.text; inp.placeholder='Criterion…';
+      inp.style.cssText = 'flex:1;border:none;background:transparent;font-size:12px;color:var(--text);outline:none;font-family:inherit';
+      inp.oninput = function(){ _acState[i].text = inp.value; };
+      var rm = document.createElement('button');
+      rm.textContent = '\u2715';
+      rm.title = 'Remove criterion';
+      rm.style.cssText = 'background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:2px 6px';
+      rm.onclick = function(){ _acState.splice(i,1); renderAcList(); };
+      row.appendChild(cb); row.appendChild(inp); row.appendChild(rm);
+      acList.appendChild(row);
+    });
+  }
+  renderAcList();
+  acRow.appendChild(acList);
+  var acAdd = document.createElement('button');
+  acAdd.textContent = '+ Add criterion';
+  acAdd.style.cssText = 'padding:6px 12px;font-size:11px;font-weight:700;border:1px dashed var(--border);border-radius:9999px;background:transparent;color:var(--accent);cursor:pointer';
+  acAdd.onclick = function(){ _acState.push({text:'', done:false}); renderAcList(); };
+  acRow.appendChild(acAdd); body.appendChild(acRow);
 
   // Predecessors
   if(!isSummary){
@@ -15813,6 +16031,22 @@ function openEditTaskModal(taskId){
       rescheduleSuccessors(p, t.id);
     }
     t.notes = notesInp.value;
+    // v1.37.0 — persist sprint/agile fields
+    if(!isSummary){
+      t.priority = (typeof prioSel !== 'undefined') ? prioSel.value : (t.priority || 'p2');
+      var _newEff = parseFloat(effInp && effInp.value);
+      t.effort = isNaN(_newEff) ? 0 : _newEff;
+      t.type = (typeof typeSel !== 'undefined') ? typeSel.value : (t.type || 'feature');
+      t.reviewer = t.reviewer || '';
+      t.blockedReason = (blockedInp && blockedInp.value || '').trim();
+    }
+    // Labels available on both summary + leaf tasks
+    t.labels = (labelsInp.value || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+    // Acceptance criteria (drop blank rows on save)
+    t.acceptanceCriteria = _acState.filter(function(x){ return x.text && x.text.trim(); });
+    // Track when the card first hit "done" for velocity/burndown calcs.
+    if(t.status === 'done' && !t.doneAt) t.doneAt = new Date().toISOString();
+    if(t.status !== 'done' && t.doneAt) t.doneAt = null;
     p.updatedAt = Date.now();
     persistData();
     ov.remove();
@@ -16383,6 +16617,114 @@ function renderPlanMain(){
   if(_planView === 'list') renderPlanListView(p);
   else if(_planView === 'kanban') renderPlanKanbanView(p);
   else renderPlanGanttView(p);
+
+  // v1.37.0 — sprint/agile bar (goal + DoD + DoR toggle + live stats)
+  renderPlanSprintBar(p);
+}
+
+// v1.37.0 — render sprint/agile controls above the plan view.
+// Sprint goal one-liner, live task + points stats, Definition of Done
+// checklist, Definition-of-Ready enforcement toggle.
+function renderPlanSprintBar(plan){
+  var bar = document.getElementById('planSprintBar');
+  if(!bar || !plan){ if(bar) bar.style.display = 'none'; return; }
+  bar.style.display = '';
+  var dod = Array.isArray(plan.definitionOfDone) ? plan.definitionOfDone : [];
+  var dorEnabled = !!plan.dorEnabled;
+  var goalText = (plan.sprintGoal || '').trim();
+  var leaves = (plan.tasks || []).filter(function(t){ return !hasChildren(plan, t.id); });
+  var total = leaves.length;
+  var doneCnt = leaves.filter(function(t){ return t.status === 'done'; }).length;
+  var blocked = leaves.filter(function(t){ return t.status === 'blocked'; }).length;
+  var inProg  = leaves.filter(function(t){ return t.status === 'in-progress'; }).length;
+  var ptsPlanned = leaves.reduce(function(s,t){ return s + (parseFloat(t.effort)||0); }, 0);
+  var ptsDone    = leaves.filter(function(t){ return t.status==='done'; })
+                         .reduce(function(s,t){ return s + (parseFloat(t.effort)||0); }, 0);
+  var pct = total ? Math.round(doneCnt/total*100) : 0;
+  var ptsPct = ptsPlanned ? Math.round(ptsDone/ptsPlanned*100) : 0;
+
+  bar.innerHTML =
+    '<div class="sprint-bar-top">' +
+      '<div class="sprint-goal-wrap">' +
+        '<span class="sprint-bar-label">Sprint goal</span>' +
+        '<input id="sprintGoalInput" type="text" placeholder="e.g. Ship firmware 1.4 to field trials" value="'+escHtml(goalText)+'">' +
+      '</div>' +
+      '<div class="sprint-stats">' +
+        '<div class="sprint-stat"><div class="sprint-stat-num">'+doneCnt+'/'+total+'</div><div class="sprint-stat-lbl">Tasks</div></div>' +
+        '<div class="sprint-stat"><div class="sprint-stat-num">'+pct+'%</div><div class="sprint-stat-lbl">Complete</div></div>' +
+        '<div class="sprint-stat"><div class="sprint-stat-num" style="color:'+(blocked?'#dc2626':'var(--muted)')+'">'+blocked+'</div><div class="sprint-stat-lbl">Blocked</div></div>' +
+        '<div class="sprint-stat"><div class="sprint-stat-num" style="color:'+(inProg?'#0ea5e9':'var(--muted)')+'">'+inProg+'</div><div class="sprint-stat-lbl">In progress</div></div>' +
+        '<div class="sprint-stat"><div class="sprint-stat-num">'+ptsDone+'<span style="font-size:13px;color:var(--muted);font-weight:600">/'+ptsPlanned+'</span></div><div class="sprint-stat-lbl">Points ('+ptsPct+'%)</div></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="sprint-burndown-row">' +
+      '<div class="sprint-burndown-bar"><div class="sprint-burndown-fill" style="width:'+pct+'%"></div></div>' +
+      '<label class="sprint-dor-toggle"><input type="checkbox" id="sprintDorToggle"'+(dorEnabled?' checked':'')+'> Enforce Definition of Ready</label>' +
+      '<button class="sprint-bar-expand" id="sprintDoDToggleBtn">' +
+        (dod.length ? dod.length + ' DoD items' : 'Definition of Done') +
+      ' \u25BE</button>' +
+    '</div>' +
+    '<div class="sprint-dod-panel" id="sprintDoDPanel" style="display:none">' +
+      '<div class="sprint-bar-label" style="margin-bottom:8px">Definition of Done — every task must satisfy these before moving to Done.</div>' +
+      '<div id="sprintDoDList"></div>' +
+      '<button id="sprintDoDAdd" class="sprint-dod-add">+ Add criterion</button>' +
+    '</div>';
+
+  var gEl = document.getElementById('sprintGoalInput');
+  var gTimer = null;
+  gEl.addEventListener('input', function(){
+    clearTimeout(gTimer);
+    gTimer = setTimeout(function(){
+      plan.sprintGoal = gEl.value;
+      plan.updatedAt = Date.now();
+      persistData();
+    }, 400);
+  });
+
+  var dorCb = document.getElementById('sprintDorToggle');
+  dorCb.addEventListener('change', function(){
+    plan.dorEnabled = dorCb.checked;
+    plan.updatedAt = Date.now();
+    persistData();
+  });
+
+  var dodPanel = document.getElementById('sprintDoDPanel');
+  document.getElementById('sprintDoDToggleBtn').addEventListener('click', function(){
+    dodPanel.style.display = dodPanel.style.display === 'none' ? 'block' : 'none';
+  });
+  var dodList = document.getElementById('sprintDoDList');
+  function renderDoDList(){
+    dodList.innerHTML = '';
+    (plan.definitionOfDone || []).forEach(function(item, i){
+      var row = document.createElement('div'); row.className = 'sprint-dod-row';
+      var inp = document.createElement('input'); inp.type='text'; inp.value = item;
+      inp.placeholder = 'e.g. Peer-reviewed · tests pass · docs updated';
+      inp.addEventListener('input', function(){ plan.definitionOfDone[i] = inp.value; plan.updatedAt = Date.now(); persistData(); });
+      var rm = document.createElement('button'); rm.textContent = '\u2715'; rm.title = 'Remove';
+      rm.addEventListener('click', function(){
+        plan.definitionOfDone.splice(i, 1);
+        plan.updatedAt = Date.now();
+        persistData();
+        renderDoDList();
+      });
+      row.appendChild(inp); row.appendChild(rm);
+      dodList.appendChild(row);
+    });
+    if(!(plan.definitionOfDone || []).length){
+      var empty = document.createElement('div');
+      empty.style.cssText = 'font-size:11px;color:var(--muted);padding:4px 0';
+      empty.textContent = 'No DoD criteria yet — every team should define theirs.';
+      dodList.appendChild(empty);
+    }
+  }
+  renderDoDList();
+  document.getElementById('sprintDoDAdd').addEventListener('click', function(){
+    if(!Array.isArray(plan.definitionOfDone)) plan.definitionOfDone = [];
+    plan.definitionOfDone.push('');
+    plan.updatedAt = Date.now();
+    persistData();
+    renderDoDList();
+  });
 }
 
 function setPlanView(view){
@@ -18176,7 +18518,11 @@ function renderPlanKanbanView(plan){
         var statusCls = getTaskStatusClass(t);
         var ownerInitial = t.owner ? (t.owner[0]||'?').toUpperCase() : '';
         var ownerChip = t.owner
-          ? '<span class="kanban-owner-chip" title="'+escHtml(t.owner)+'"><span class="owner-pick-pill">'+escHtml(ownerInitial)+'</span><span style="overflow:hidden;text-overflow:ellipsis">'+escHtml(t.owner)+'</span></span>'
+          ? '<span class="kanban-owner-chip" title="Owner: '+escHtml(t.owner)+'"><span class="owner-pick-pill">'+escHtml(ownerInitial)+'</span><span style="overflow:hidden;text-overflow:ellipsis">'+escHtml(t.owner)+'</span></span>'
+          : '';
+        // v1.37.0 — reviewer chip next to owner (if different)
+        var reviewerChip = (t.reviewer && t.reviewer !== t.owner)
+          ? '<span class="kanban-owner-chip" title="Reviewer: '+escHtml(t.reviewer)+'" style="background:rgba(124,58,237,.08);border-color:rgba(124,58,237,.25);color:#6d28d9"><span class="owner-pick-pill" style="background:#7c3aed">'+escHtml((t.reviewer[0]||'?').toUpperCase())+'</span><span style="overflow:hidden;text-overflow:ellipsis">'+escHtml(t.reviewer)+'</span></span>'
           : '';
         var msPrefix = t.isMilestone ? '<span style="color:#f59e0b;font-size:14px;margin-right:4px">\u25C6</span>' : '';
         var dueLine = '';
@@ -18186,12 +18532,50 @@ function renderPlanKanbanView(plan){
         var pctBar = (t.percentComplete > 0)
           ? '<div class="kanban-pct-bar"><div class="kanban-pct-fill" style="width:'+t.percentComplete+'%"></div></div>'
           : '';
-        var cardCls = 'kanban-card' + (statusCls ? ' '+statusCls : '') + (t.isMilestone ? ' milestone' : '');
-        // v1.26.12: tabindex + role + onkeydown so kanban cards are reachable
-        // by Tab and openable with Enter / Space (was click-only on a <div>)
+        // v1.37.0 — top-row meta: priority pill + type pill + effort badge + AC progress
+        var prio = _sprintPrio(t.priority);
+        var typ = _sprintType(t.type);
+        var metaPills = '';
+        if(t.priority && t.priority !== 'medium'){
+          metaPills += '<span class="kanban-meta-pill" style="background:'+prio.tint+';color:'+prio.color+'" title="Priority">'+escHtml(prio.label.replace(/ · .*/,''))+'</span>';
+        }
+        if(t.type && t.type !== 'feature'){
+          metaPills += '<span class="kanban-meta-pill" style="background:'+typ.color+'18;color:'+typ.color+';border:1px solid '+typ.color+'33" title="Type">'+escHtml(typ.label)+'</span>';
+        }
+        if(parseFloat(t.effort) > 0){
+          metaPills += '<span class="kanban-meta-pill kanban-effort" title="Effort (story points)">'+escHtml(String(t.effort))+' pts</span>';
+        }
+        var acProg = _acProgress(t);
+        if(acProg){
+          var acDone = acProg.done === acProg.total;
+          metaPills += '<span class="kanban-meta-pill" style="background:'+(acDone?'rgba(22,163,74,.12)':'rgba(100,116,139,.1)')+';color:'+(acDone?'#15803d':'#64748b')+'" title="Acceptance criteria '+acProg.done+'/'+acProg.total+' complete"><svg viewBox="0 0 16 16" style="width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:-1px"><path d="M3 8l3 3 7-7"/></svg> '+acProg.done+'/'+acProg.total+'</span>';
+        }
+        // v1.37.0 — labels row (max 3 shown, +N more)
+        var labelsHtml = '';
+        if((t.labels||[]).length){
+          var shown = t.labels.slice(0,3).map(function(L){ return '<span class="kanban-label-chip">'+escHtml(L)+'</span>'; }).join('');
+          var extra = t.labels.length > 3 ? '<span class="kanban-label-chip kanban-label-more">+'+(t.labels.length-3)+'</span>' : '';
+          labelsHtml = '<div class="kanban-label-row">'+shown+extra+'</div>';
+        }
+        // v1.37.0 — blocked banner with reason
+        var blockedBanner = '';
+        if(t.status === 'blocked'){
+          blockedBanner = '<div class="kanban-blocked-banner"><svg viewBox="0 0 16 16" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:-1px;flex-shrink:0"><circle cx="8" cy="8" r="6"/><path d="M4 4l8 8"/></svg> Blocked'+(t.blockedReason ? ': '+escHtml(t.blockedReason) : '')+'</div>';
+        }
+        // v1.37.0 — dependency hint (predecessors not yet done)
+        var depsHtml = '';
+        var openDeps = (t.predecessors||[]).map(function(pid){ return getTaskById(plan, pid); }).filter(function(pt){ return pt && pt.status !== 'done'; });
+        if(openDeps.length){
+          depsHtml = '<div class="kanban-deps" title="Waiting on: '+escHtml(openDeps.map(function(pt){return pt.name;}).join(', '))+'"><svg viewBox="0 0 16 16" style="width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:1.8;vertical-align:-1px"><path d="M3 8h10M9 4l4 4-4 4"/></svg> Blocked by '+openDeps.length+' task'+(openDeps.length===1?'':'s')+'</div>';
+        }
+        var cardCls = 'kanban-card' + (statusCls ? ' '+statusCls : '') + (t.isMilestone ? ' milestone' : '') + (t.status === 'blocked' ? ' kanban-card-blocked' : '');
         html += '<div class="'+cardCls+'" draggable="true" tabindex="0" role="button" aria-label="'+escHtml('Edit task: ' + (t.name || '(unnamed)'))+'" data-task-id="'+escHtml(t.id)+'" onclick="openEditTaskModal(\''+escHtml(t.id)+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openEditTaskModal(\''+escHtml(t.id)+'\');}">'+
+          (metaPills ? '<div class="kanban-meta-row">'+metaPills+'</div>' : '')+
           '<div class="kanban-card-title">'+msPrefix+escHtml(t.name||'(unnamed)')+'</div>'+
-          (ownerChip ? '<div style="margin-top:8px">'+ownerChip+'</div>' : '')+
+          blockedBanner+
+          depsHtml+
+          labelsHtml+
+          (ownerChip || reviewerChip ? '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">'+ownerChip+reviewerChip+'</div>' : '')+
           (dueLine || pctBar ? '<div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:10px">'+(dueLine || '<span></span>')+'<span style="font-size:10px;color:var(--muted);font-weight:700">'+(t.percentComplete||0)+'%</span></div>' : '')+
           (pctBar)+
         '</div>';
@@ -18238,10 +18622,35 @@ function _wireKanbanDragDrop(content, plan){
       var t = getTaskById(plan, dragId);
       if(!t) return;
       var prev = t.status;
+      // v1.37.0 — Definition of Ready gate: block moves INTO in-progress when
+      // the plan has DoR enforcement on AND the task isn't ready yet.
+      if(plan.dorEnabled && newStatus === 'in-progress' && prev !== 'in-progress'){
+        var issues = _dorCheck(plan, t);
+        if(issues.length){
+          showToast('Not ready: ' + issues.join(' · '), 'warning');
+          return;
+        }
+      }
+      // v1.37.0 — moving into "blocked" prompts for a reason (if none yet).
+      if(newStatus === 'blocked' && !t.blockedReason){
+        var reason = prompt('Why is this task blocked? (shown on the card)', '');
+        if(reason === null) return; // cancelled — abort the move
+        t.blockedReason = (reason || '').trim();
+      }
+      if(newStatus !== 'blocked') t.blockedReason = '';
       t.status = newStatus;
-      if(newStatus === 'done') t.percentComplete = 100;
-      else if(newStatus === 'not-started') t.percentComplete = 0;
-      else if(newStatus === 'in-progress' && t.percentComplete === 0) t.percentComplete = 25;
+      if(newStatus === 'done') {
+        t.percentComplete = 100;
+        if(!t.doneAt) t.doneAt = new Date().toISOString();
+      } else if(newStatus === 'not-started') {
+        t.percentComplete = 0;
+        t.doneAt = null;
+      } else if(newStatus === 'in-progress' && t.percentComplete === 0) {
+        t.percentComplete = 25;
+        t.doneAt = null;
+      } else if(newStatus !== 'done') {
+        t.doneAt = null;
+      }
       if(t.source === 'g2m' && prev !== newStatus) _syncPlanTaskToG2M(t);
       plan.updatedAt = Date.now();
       persistData();
@@ -24910,7 +25319,8 @@ function renderCapTeams(content,actions){
       '<h3 contenteditable="true" style="margin:0;outline:none;cursor:text" onblur="var t=capData.teams.find(function(x){return x.id===\''+team.id+'\'});if(t){t.name=this.textContent.trim();persistData()}">'+escHtml(team.name)+'</h3>'+
       '<span style="font-size:10px;color:var(--muted)">'+members.length+' members</span>'+
       '<div style="display:flex;align-items:center;margin-left:4px">'+memberAvatars+'</div>'+
-      '<button class="cap-btn danger" onclick="removeCapTeam(\''+team.id+'\')" style="margin-left:auto;font-size:9px;padding:3px 8px">Remove</button>'+
+      '<button class="cap-btn" onclick="openCapTeamEdit(\''+team.id+'\')" style="margin-left:auto;font-size:9px;padding:3px 8px">Edit</button>'+
+      '<button class="cap-btn danger" onclick="removeCapTeam(\''+team.id+'\')" style="font-size:9px;padding:3px 8px;margin-left:4px">Remove</button>'+
     '</div>'+
     '<div contenteditable="true" style="font-size:11px;color:var(--muted);margin-bottom:8px;outline:none;min-height:16px;cursor:text" data-placeholder="Add team description..." onblur="var t=capData.teams.find(function(x){return x.id===\''+team.id+'\'});if(t){t.description=this.textContent.trim();persistData()}">'+(escHtml(team.description||''))+'</div>'+
     (teamInitiatives.length ? '<div style="font-size:10px;color:var(--muted);margin-bottom:6px">Roadmap: '+teamInitiatives.slice(0,3).map(function(r){return '<span style="background:var(--surface-low);padding:1px 6px;border-radius:4px;margin-right:4px;font-weight:600">'+escHtml(r.name)+'</span>';}).join('')+(teamInitiatives.length>3?'<span>+' + (teamInitiatives.length-3) + ' more</span>':'')+'</div>' : '');
@@ -24951,6 +25361,212 @@ function removeCapTeam(id){
   capData.teams=capData.teams.filter(function(t){return t.id!==id;});
   capData.members=capData.members.filter(function(m){return m.teamId!==id;});
   persistData();capNav('teams');
+}
+
+// Per-team Edit modal: manage members of a single team AND invite new people
+// by email. Invitees get a 30-day trial on first sign-in (server-side state
+// lives in public.team_invites / public.user_profiles).
+function openCapTeamEdit(teamId){
+  var team = (capData.teams || []).find(function(t){ return t.id === teamId; });
+  if(!team){ showToast('Team not found', 'error'); return; }
+
+  var existing = document.getElementById('capTeamEditOverlay');
+  if(existing) existing.remove();
+
+  var ov = document.createElement('div');
+  ov.id = 'capTeamEditOverlay';
+  ov.className = 'modal-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9100;display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.onclick = function(e){ if(e.target === ov) ov.remove(); };
+
+  var members    = (capData.members || []).filter(function(m){ return m.teamId === teamId; });
+  var nonMembers = (capData.members || []).filter(function(m){ return m.teamId !== teamId; });
+
+  var memberRows = members.length
+    ? members.map(function(m){
+        return '<tr>' +
+          '<td style="padding:6px 8px;color:var(--text);font-weight:600">' + escHtml(m.name || '') + '</td>' +
+          '<td style="padding:6px 8px;color:var(--muted);font-size:11px">' + escHtml(m.role || '') + '</td>' +
+          '<td style="padding:6px 8px;text-align:right"><button class="cap-btn danger" onclick="_capTeamRemoveMember(\'' + teamId + '\',\'' + m.id + '\')" style="font-size:10px;padding:2px 8px">Remove</button></td>' +
+        '</tr>';
+      }).join('')
+    : '<tr><td colspan="3" style="padding:14px 8px;color:var(--muted);font-size:12px;text-align:center">No members yet.</td></tr>';
+
+  var nonMemberOpts = nonMembers.map(function(m){
+    return '<option value="' + m.id + '" style="background:#1e293b">' + escHtml(m.name || 'Unnamed') + (m.role ? ' — ' + escHtml(m.role) : '') + '</option>';
+  }).join('');
+  var addExistingBlock = nonMembers.length
+    ? '<div style="display:flex;gap:8px;margin-top:8px">' +
+        '<select id="capTeamEditPickExisting" class="cap-select" style="flex:1">' + nonMemberOpts + '</select>' +
+        '<button class="cap-btn" onclick="_capTeamAddExisting(\'' + teamId + '\')">Add to team</button>' +
+      '</div>'
+    : '<div style="font-size:11px;color:var(--muted);margin-top:4px">All existing members are already on this team.</div>';
+
+  ov.innerHTML =
+    '<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;width:100%;max-width:620px;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.35);color:var(--text)">' +
+      '<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">' +
+        '<span style="width:14px;height:14px;border-radius:3px;background:' + team.color + '"></span>' +
+        '<h3 style="margin:0;font-size:16px;font-weight:700;flex:1">Edit team: ' + escHtml(team.name) + '</h3>' +
+        '<button onclick="document.getElementById(\'capTeamEditOverlay\').remove()" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1">&times;</button>' +
+      '</div>' +
+      '<div style="padding:16px 20px;overflow-y:auto;flex:1">' +
+
+        '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Current members (' + members.length + ')</div>' +
+        '<table class="cap-table" style="width:100%;font-size:12px">' +
+          '<tbody>' + memberRows + '</tbody>' +
+        '</table>' +
+
+        '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:18px 0 6px">Add existing member</div>' +
+        addExistingBlock +
+
+        '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:18px 0 6px">Invite by email</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Send a signup link — invitees get a <strong>30-day free trial</strong> on first sign-in.</div>' +
+        '<div style="display:flex;gap:8px;align-items:stretch">' +
+          '<input id="capTeamEditInviteEmail" type="email" class="cap-input" placeholder="name@company.com" style="flex:1" onkeydown="if(event.key===\'Enter\') _capTeamSendInvite(\'' + teamId + '\')">' +
+          '<button id="capTeamEditInviteBtn" class="cap-btn primary" onclick="_capTeamSendInvite(\'' + teamId + '\')">Send invite</button>' +
+        '</div>' +
+        '<div id="capTeamEditInviteStatus" style="font-size:11px;margin-top:6px;min-height:16px"></div>' +
+        '<div id="capTeamEditPendingWrap" style="margin-top:14px"></div>' +
+
+      '</div>' +
+      '<div style="padding:12px 20px;border-top:1px solid var(--border);background:var(--surface-low);text-align:right">' +
+        '<button class="cap-btn" onclick="document.getElementById(\'capTeamEditOverlay\').remove()">Done</button>' +
+      '</div>' +
+    '</div>';
+
+  document.body.appendChild(ov);
+  _capTeamLoadPendingInvites(teamId);
+}
+
+function _capTeamRemoveMember(teamId, memberId){
+  var m = (capData.members || []).find(function(x){ return x.id === memberId; });
+  if(!m) return;
+  // If the member only belongs to this team, drop them entirely; otherwise
+  // just unlink from this team and keep their membership in other teams.
+  if(Array.isArray(m.teams) && m.teams.length > 1){
+    m.teams = m.teams.filter(function(t){ return t !== teamId; });
+    if(m.teamId === teamId) m.teamId = m.teams[0] || '';
+  } else {
+    capData.members = capData.members.filter(function(x){ return x.id !== memberId; });
+  }
+  persistData();
+  openCapTeamEdit(teamId);  // re-render modal
+  capNav('teams');          // re-render underlying list
+}
+
+function _capTeamAddExisting(teamId){
+  var sel = document.getElementById('capTeamEditPickExisting');
+  if(!sel || !sel.value) return;
+  var m = (capData.members || []).find(function(x){ return x.id === sel.value; });
+  if(!m) return;
+  if(!Array.isArray(m.teams)) m.teams = m.teamId ? [m.teamId] : [];
+  if(m.teams.indexOf(teamId) < 0) m.teams.push(teamId);
+  m.teamId = teamId;  // make the just-added team primary
+  persistData();
+  openCapTeamEdit(teamId);
+  capNav('teams');
+}
+
+async function _capTeamSendInvite(teamId){
+  var input  = document.getElementById('capTeamEditInviteEmail');
+  var btn    = document.getElementById('capTeamEditInviteBtn');
+  var status = document.getElementById('capTeamEditInviteStatus');
+  if(!input || !btn || !status) return;
+  var email = (input.value || '').trim().toLowerCase();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    status.textContent = 'Enter a valid email address.';
+    status.style.color = '#ef4444';
+    return;
+  }
+  var team = (capData.teams || []).find(function(t){ return t.id === teamId; });
+  btn.disabled = true;
+  status.textContent = 'Sending…';
+  status.style.color = 'var(--muted)';
+  try {
+    var r = await window.electronAPI.supaRequest({
+      path:   '/functions/v1/team-invite',
+      method: 'POST',
+      body:   { recipient_email: email, team_id: teamId, team_name: team ? team.name : null },
+      token:  _accessToken || null
+    });
+    if(r.ok && r.data && r.data.ok){
+      status.textContent = r.data.email_sent
+        ? 'Invite sent to ' + email + ' — 30-day trial starts when they sign in.'
+        : 'Invite saved but email could not be sent (check Resend config).';
+      status.style.color = r.data.email_sent ? '#16a34a' : '#f59e0b';
+      input.value = '';
+      _capTeamLoadPendingInvites(teamId);
+    } else {
+      var msg = (r.data && (r.data.error || r.data.message)) || 'Could not send invite';
+      status.textContent = msg;
+      status.style.color = '#ef4444';
+    }
+  } catch(err){
+    status.textContent = 'Network error: ' + (err && err.message || err);
+    status.style.color = '#ef4444';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function _capTeamLoadPendingInvites(teamId){
+  var wrap = document.getElementById('capTeamEditPendingWrap');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  try {
+    var r = await window.electronAPI.supaRequest({
+      path:   '/rest/v1/team_invites?select=id,invited_email,status,created_at,expires_at,team_id&team_id=eq.' + encodeURIComponent(teamId) + '&order=created_at.desc&limit=20',
+      method: 'GET',
+      token:  _accessToken || null
+    });
+    var list = (r && r.ok && Array.isArray(r.data)) ? r.data : [];
+    list = list.filter(function(inv){ return inv.status === 'pending' || inv.status === 'accepted'; });
+    if(!list.length) return;
+    var rows = list.map(function(inv){
+      var badge = inv.status === 'accepted'
+        ? '<span style="background:#16a34a22;color:#16a34a;border:1px solid #16a34a44;font-size:10px;padding:2px 8px;border-radius:999px;font-weight:600">Accepted</span>'
+        : '<span style="background:#f59e0b22;color:#b45309;border:1px solid #f59e0b44;font-size:10px;padding:2px 8px;border-radius:999px;font-weight:600">Pending</span>';
+      return '<tr>' +
+        '<td style="padding:4px 8px;font-size:11px;color:var(--text)">' + escHtml(inv.invited_email) + '</td>' +
+        '<td style="padding:4px 8px;text-align:right">' + badge + '</td>' +
+      '</tr>';
+    }).join('');
+    wrap.innerHTML =
+      '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Recent invites</div>' +
+      '<table class="cap-table" style="width:100%"><tbody>' + rows + '</tbody></table>';
+  } catch(_){ /* best-effort */ }
+}
+
+// On post-login, check URL for ?invite_token=... and redeem it. Runs once per
+// page load — the token is removed from the URL afterwards.
+async function _redeemInviteFromUrl(){
+  try {
+    var url = new URL(window.location.href);
+    var token = url.searchParams.get('invite_token');
+    if(!token) return;
+    var r = await window.electronAPI.supaRequest({
+      path:   '/functions/v1/redeem-invite',
+      method: 'POST',
+      body:   { invite_token: token },
+      token:  _accessToken || null
+    });
+    // Clean the token out of the URL regardless of outcome so reloads don't retry.
+    url.searchParams.delete('invite_token');
+    url.searchParams.delete('email');
+    window.history.replaceState({}, document.title, url.toString());
+
+    if(r && r.ok && r.data && r.data.ok){
+      if(r.data.trial_granted){
+        showToast('Welcome! Your 30-day free trial has started.', 'success');
+      } else if(r.data.already_accepted){
+        // no-op — silently swallow dup redemptions
+      } else {
+        showToast('Invite accepted.', 'success');
+      }
+    } else if(r && r.data && (r.data.error || r.data.message)){
+      showToast('Invite: ' + (r.data.error || r.data.message), 'info');
+    }
+  } catch(e){ console.warn('[invite] redeem failed:', e && e.message); }
 }
 function addCapMember(){
   var content=document.getElementById('capContent');
