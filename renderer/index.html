@@ -7996,6 +7996,28 @@ function openProfile(){
   sep2.textContent='·';
   foot.appendChild(sep2);
 
+  // v1.36.8: Refund Policy link restored (pricing un-archive)
+  var refundLink=document.createElement('a');
+  refundLink.href='https://app.pmroadmapper.com/refund-policy.html';
+  refundLink.target='_blank';
+  refundLink.rel='noopener noreferrer';
+  refundLink.style.cssText='font-size:11px;color:var(--muted);text-decoration:none;';
+  refundLink.onmouseover=function(){ refundLink.style.color='var(--accent)'; };
+  refundLink.onmouseout=function(){ refundLink.style.color='var(--muted)'; };
+  refundLink.textContent='Refund Policy';
+  refundLink.onclick=function(e){
+    if(window.location.protocol === 'file:' && window.electronAPI && window.electronAPI.openExternal){
+      e.preventDefault();
+      window.electronAPI.openExternal(refundLink.href);
+    }
+  };
+  foot.appendChild(refundLink);
+
+  var sep3=document.createElement('span');
+  sep3.style.cssText='font-size:11px;color:var(--muted);margin:0 6px';
+  sep3.textContent='·';
+  foot.appendChild(sep3);
+
   var contactLink=document.createElement('a');
   contactLink.href='https://app.pmroadmapper.com/contact.html?source=contact_form';
   contactLink.target='_blank';
