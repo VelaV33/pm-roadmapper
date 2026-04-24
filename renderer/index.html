@@ -15401,7 +15401,6 @@ function _daysBetween(startIso, endIso){
 // v1.37.0 — sprint/agile fields added to the base task shape. All optional
 // and tolerated on old plans (UI renders sensible defaults when undefined).
 //   priority             P0/P1/P2/P3 (critical/high/medium/low)
-//   effort               story points (commonly 1,2,3,5,8,13 — Fibonacci)
 //   type                 feature | bug | tech-debt | spike | chore
 //   labels               array of arbitrary string tags
 //   acceptanceCriteria   array of {text, done}
@@ -15429,7 +15428,6 @@ function _newTask(overrides){
     notes: '',
     sortIndex: 0,
     priority: 'medium',
-    effort: 0,
     type: 'feature',
     labels: [],
     acceptanceCriteria: [],
@@ -15469,7 +15467,7 @@ function _dorCheck(plan, task){
   var issues = [];
   if(!task.name || !task.name.trim()) issues.push('task name is blank');
   if(!task.owner) issues.push('no owner assigned');
-  if(!parseFloat(task.effort)) issues.push('effort not estimated');
+  if(!parseFloat(task.durationDays)) issues.push('hours not estimated');
   if(!(task.acceptanceCriteria||[]).length) issues.push('no acceptance criteria');
   (task.predecessors||[]).forEach(function(pid){
     var pt = getTaskById(plan, pid);
@@ -15787,23 +15785,36 @@ function openEditTaskModal(taskId){
     var endInp = document.createElement('input'); endInp.type = 'date'; endInp.value = t.endDate || ''; endInp.style.cssText = inputCss();
     if(t.isMilestone) endInp.disabled = true;
     endW.appendChild(endInp); endW.style.marginBottom = '0'; dateGrid.appendChild(endW);
-    var durW = field('Days');
-    var durInp = document.createElement('input'); durInp.type = 'number'; durInp.min = '1'; durInp.step = '1'; durInp.value = t.durationDays || 0; durInp.style.cssText = inputCss() + ';text-align:right';
+    // v1.37.1: task work estimate is now in HOURS. We still store durationDays
+    // internally (Gantt rendering + predecessor scheduling need it), converting
+    // via appSettings.capacity.hoursPerDay (default 8). Users see hours only.
+    var _hpd = getCapHours().hpd || 8;
+    var durW = field('Hours', _hpd + 'h = 1 working day. Change hours-per-day in the Capacity settings.');
+    var durInp = document.createElement('input'); durInp.type = 'number'; durInp.min = '0'; durInp.step = '0.5';
+    durInp.value = (parseFloat(t.durationDays) || 0) * _hpd;
+    durInp.style.cssText = inputCss() + ';text-align:right';
     if(t.isMilestone) durInp.disabled = true;
     durW.appendChild(durInp); durW.style.marginBottom = '0'; dateGrid.appendChild(durW);
     body.appendChild(dateGrid);
 
-    // Auto-link end ↔ duration: editing one updates the other
+    // Auto-link end ↔ duration: editing hours recomputes days + end date.
     durInp.addEventListener('change', function(){
-      var d = Math.max(1, parseInt(durInp.value, 10) || 1);
-      durInp.value = d;
+      var h = Math.max(0, parseFloat(durInp.value) || 0);
+      durInp.value = h;
+      var d = Math.max(1, Math.ceil(h / _hpd));
       if(startInp.value){ endInp.value = _addDays(startInp.value, d - 1); }
     });
     startInp.addEventListener('change', function(){
-      if(startInp.value && durInp.value){ endInp.value = _addDays(startInp.value, Math.max(0, parseInt(durInp.value,10) - 1)); }
+      if(startInp.value && durInp.value){
+        var d = Math.max(1, Math.ceil((parseFloat(durInp.value)||0) / _hpd));
+        endInp.value = _addDays(startInp.value, Math.max(0, d - 1));
+      }
     });
     endInp.addEventListener('change', function(){
-      if(startInp.value && endInp.value) durInp.value = _daysBetween(startInp.value, endInp.value);
+      if(startInp.value && endInp.value){
+        var d = _daysBetween(startInp.value, endInp.value);
+        durInp.value = d * _hpd;
+      }
     });
   }
 
@@ -15839,8 +15850,10 @@ function openEditTaskModal(taskId){
 
   // ── Priority / Effort / Type row (v1.37.0) ────────────────────────────
   if(!isSummary){
+    // v1.37.1: Effort (story points) removed per request — task sizing is
+    // now done purely in hours via the "Hours" field above.
     var sprintGrid = document.createElement('div');
-    sprintGrid.style.cssText = 'display:grid;grid-template-columns:1fr 120px 1fr;gap:12px;margin-bottom:14px';
+    sprintGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px';
     var prioW = field('Priority');
     var prioSel = document.createElement('select'); prioSel.style.cssText = inputCss();
     ['p0','p1','p2','p3'].forEach(function(k){
@@ -15851,12 +15864,6 @@ function openEditTaskModal(taskId){
       prioSel.appendChild(o);
     });
     prioW.appendChild(prioSel); prioW.style.marginBottom = '0'; sprintGrid.appendChild(prioW);
-
-    var effW = field('Effort (pts)', 'Story points. 1 ≈ trivial · 13 ≈ very large.');
-    var effInp = document.createElement('input'); effInp.type='number'; effInp.min='0'; effInp.step='1';
-    effInp.value = parseFloat(t.effort) || 0;
-    effInp.style.cssText = inputCss() + ';text-align:right';
-    effW.appendChild(effInp); effW.style.marginBottom = '0'; sprintGrid.appendChild(effW);
 
     var typeW = field('Type');
     var typeSel = document.createElement('select'); typeSel.style.cssText = inputCss();
@@ -16014,8 +16021,12 @@ function openEditTaskModal(taskId){
     if(!isSummary){
       t.startDate = startInp.value;
       t.endDate = endInp.value;
-      var newDur = parseInt(durInp.value, 10);
-      if(newDur && newDur > 0) t.durationDays = newDur;
+      // v1.37.1: user enters hours — convert to durationDays for Gantt.
+      var _hpdSave = getCapHours().hpd || 8;
+      var newHours = parseFloat(durInp.value);
+      if(!isNaN(newHours) && newHours > 0){
+        t.durationDays = Math.max(1, Math.ceil(newHours / _hpdSave));
+      }
       var prevStatus = t.status;
       t.status = statSel.value;
       var newPct = Math.max(0, Math.min(100, parseInt(pctInp.value, 10) || 0));
@@ -16031,14 +16042,13 @@ function openEditTaskModal(taskId){
       rescheduleSuccessors(p, t.id);
     }
     t.notes = notesInp.value;
-    // v1.37.0 — persist sprint/agile fields
+    // v1.37.0 — persist sprint/agile fields (v1.37.1: effort removed)
     if(!isSummary){
       t.priority = (typeof prioSel !== 'undefined') ? prioSel.value : (t.priority || 'p2');
-      var _newEff = parseFloat(effInp && effInp.value);
-      t.effort = isNaN(_newEff) ? 0 : _newEff;
       t.type = (typeof typeSel !== 'undefined') ? typeSel.value : (t.type || 'feature');
       t.reviewer = t.reviewer || '';
       t.blockedReason = (blockedInp && blockedInp.value || '').trim();
+      if('effort' in t) delete t.effort;
     }
     // Labels available on both summary + leaf tasks
     t.labels = (labelsInp.value || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
@@ -16623,8 +16633,9 @@ function renderPlanMain(){
 }
 
 // v1.37.0 — render sprint/agile controls above the plan view.
-// Sprint goal one-liner, live task + points stats, Definition of Done
+// Sprint goal one-liner, live task + hours stats, Definition of Done
 // checklist, Definition-of-Ready enforcement toggle.
+// v1.37.1: hours replace story-point "Points" stat.
 function renderPlanSprintBar(plan){
   var bar = document.getElementById('planSprintBar');
   if(!bar || !plan){ if(bar) bar.style.display = 'none'; return; }
@@ -16637,11 +16648,12 @@ function renderPlanSprintBar(plan){
   var doneCnt = leaves.filter(function(t){ return t.status === 'done'; }).length;
   var blocked = leaves.filter(function(t){ return t.status === 'blocked'; }).length;
   var inProg  = leaves.filter(function(t){ return t.status === 'in-progress'; }).length;
-  var ptsPlanned = leaves.reduce(function(s,t){ return s + (parseFloat(t.effort)||0); }, 0);
-  var ptsDone    = leaves.filter(function(t){ return t.status==='done'; })
-                         .reduce(function(s,t){ return s + (parseFloat(t.effort)||0); }, 0);
+  var _hpdBar = getCapHours().hpd || 8;
+  var hoursPlanned = leaves.reduce(function(s,t){ return s + (parseFloat(t.durationDays)||0) * _hpdBar; }, 0);
+  var hoursDone    = leaves.filter(function(t){ return t.status==='done'; })
+                         .reduce(function(s,t){ return s + (parseFloat(t.durationDays)||0) * _hpdBar; }, 0);
   var pct = total ? Math.round(doneCnt/total*100) : 0;
-  var ptsPct = ptsPlanned ? Math.round(ptsDone/ptsPlanned*100) : 0;
+  var hoursPct = hoursPlanned ? Math.round(hoursDone/hoursPlanned*100) : 0;
 
   bar.innerHTML =
     '<div class="sprint-bar-top">' +
@@ -16654,7 +16666,7 @@ function renderPlanSprintBar(plan){
         '<div class="sprint-stat"><div class="sprint-stat-num">'+pct+'%</div><div class="sprint-stat-lbl">Complete</div></div>' +
         '<div class="sprint-stat"><div class="sprint-stat-num" style="color:'+(blocked?'#dc2626':'var(--muted)')+'">'+blocked+'</div><div class="sprint-stat-lbl">Blocked</div></div>' +
         '<div class="sprint-stat"><div class="sprint-stat-num" style="color:'+(inProg?'#0ea5e9':'var(--muted)')+'">'+inProg+'</div><div class="sprint-stat-lbl">In progress</div></div>' +
-        '<div class="sprint-stat"><div class="sprint-stat-num">'+ptsDone+'<span style="font-size:13px;color:var(--muted);font-weight:600">/'+ptsPlanned+'</span></div><div class="sprint-stat-lbl">Points ('+ptsPct+'%)</div></div>' +
+        '<div class="sprint-stat"><div class="sprint-stat-num">'+hoursDone+'<span style="font-size:13px;color:var(--muted);font-weight:600">/'+hoursPlanned+'h</span></div><div class="sprint-stat-lbl">Hours ('+hoursPct+'%)</div></div>' +
       '</div>' +
     '</div>' +
     '<div class="sprint-burndown-row">' +
@@ -16830,7 +16842,7 @@ var PLAN_COL_DEFS = [
   { key: 'owner',        label: 'Owner',         dflt: 130 },
   { key: 'start',        label: 'Start',         dflt: 120 },
   { key: 'end',          label: 'End',           dflt: 120 },
-  { key: 'days',         label: 'Days',          dflt: 60  },
+  { key: 'days',         label: 'Hours',         dflt: 72  },
   { key: 'predecessors', label: 'Predecessors',  dflt: 160 },
   { key: 'status',       label: 'Status',        dflt: 130 },
   { key: 'percent',      label: '% done',        dflt: 80  },
@@ -16949,17 +16961,21 @@ function renderPlanListView(plan){
       html += '<td>'+ownerBtn+'</td>';
     }
     // Dates — read-only displays for summary tasks (rolled up from children)
+    // v1.37.1: duration column is in HOURS. Stored internally as days, multiplied
+    // by hoursPerDay for display. The cell's data-field is "hours" so onTaskFieldChange
+    // knows to divide back down.
+    var _hpdRow = getCapHours().hpd || 8;
     if(isSummary){
       html += '<td style="font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums">'+escHtml(t.startDate||'\u2014')+'</td>';
       html += '<td style="font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums">'+escHtml(t.endDate||'\u2014')+'</td>';
-      html += '<td style="text-align:right;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums">'+(t.durationDays||0)+'</td>';
+      html += '<td style="text-align:right;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums">'+((t.durationDays||0)*_hpdRow)+'h</td>';
     } else {
       html += '<td><input type="date" class="cell" value="'+escHtml(t.startDate||'')+'" data-field="startDate" data-task-id="'+escHtml(t.id)+'"></td>';
       html += '<td><input type="date" class="cell" value="'+escHtml(t.endDate||'')+'" data-field="endDate" data-task-id="'+escHtml(t.id)+'"'+(t.isMilestone?' disabled':'')+'></td>';
       if(t.isMilestone){
         html += '<td style="text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)">\u2014</td>';
       } else {
-        html += '<td><input type="number" class="cell" value="'+(t.durationDays||0)+'" min="1" step="1" data-field="durationDays" data-task-id="'+escHtml(t.id)+'" style="text-align:right"></td>';
+        html += '<td><input type="number" class="cell" value="'+((t.durationDays||0)*_hpdRow)+'" min="0" step="0.5" data-field="hours" data-task-id="'+escHtml(t.id)+'" style="text-align:right"></td>';
       }
     }
     // Predecessors — only meaningful on leaves
@@ -17191,6 +17207,16 @@ function onTaskFieldChange(taskId, field, value){
     t.durationDays = newDur;
     if(t.startDate){
       t.endDate = _addDays(t.startDate, newDur - 1);
+    }
+    normalizeTaskDates(t);
+    rescheduleSuccessors(p, t.id);
+  } else if(field === 'hours'){
+    // v1.37.1: list view now edits HOURS; convert → durationDays internally.
+    var _hpdCh = getCapHours().hpd || 8;
+    var h = Math.max(0, parseFloat(value) || 0);
+    t.durationDays = Math.max(1, Math.ceil(h / _hpdCh));
+    if(t.startDate){
+      t.endDate = _addDays(t.startDate, t.durationDays - 1);
     }
     normalizeTaskDates(t);
     rescheduleSuccessors(p, t.id);
@@ -18542,8 +18568,12 @@ function renderPlanKanbanView(plan){
         if(t.type && t.type !== 'feature'){
           metaPills += '<span class="kanban-meta-pill" style="background:'+typ.color+'18;color:'+typ.color+';border:1px solid '+typ.color+'33" title="Type">'+escHtml(typ.label)+'</span>';
         }
-        if(parseFloat(t.effort) > 0){
-          metaPills += '<span class="kanban-meta-pill kanban-effort" title="Effort (story points)">'+escHtml(String(t.effort))+' pts</span>';
+        // v1.37.1: effort (story points) removed — show hours estimate instead,
+        // derived from durationDays × hoursPerDay.
+        var _hpd = getCapHours().hpd || 8;
+        var _estHours = (parseFloat(t.durationDays)||0) * _hpd;
+        if(_estHours > 0){
+          metaPills += '<span class="kanban-meta-pill kanban-effort" title="Estimated hours (durationDays × hours/day)">'+escHtml(String(_estHours))+'h</span>';
         }
         var acProg = _acProgress(t);
         if(acProg){
