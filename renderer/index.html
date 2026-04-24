@@ -6327,6 +6327,22 @@ async function _processOAuthFragment(fragment){
         }
       } catch(e){ console.warn('[oauth] calendar token capture failed:', e && e.message); }
     }
+    // Google Drive provider-token capture (separate slot — drive scope vs
+    // calendar scope requires independent tokens).
+    if(provider_token && _calendarIntent === 'drive:google'){
+      try {
+        if(!appSettings.integrations) appSettings.integrations={google:{},microsoft:{}};
+        appSettings.integrations.googleDrive = {
+          connected: true,
+          token: provider_token,
+          refreshToken: provider_refresh || '',
+          expiresAt: Date.now() + (expires_in*1000),
+          email: (r.data && r.data.email) || ''
+        };
+        try { sessionStorage.setItem('pmr_post_auth_goto','artifacts'); } catch(_){}
+        sessionStorage.removeItem('pmr_oauth_intent');
+      } catch(e){ console.warn('[oauth] drive token capture failed:', e && e.message); }
+    }
     return true;
   } catch(e){
     console.warn('[oauth] _processOAuthFragment failed:', e && e.message);
@@ -6863,6 +6879,14 @@ async function onAuthSuccess(user){
     setTimeout(function(){
       openKPI();
       setTimeout(function(){ setKPIView('capacity'); showToast('Calendar connected — click Sync Now to import events','success'); }, 120);
+    }, 400);
+  } else if(_postAuthGoto === 'artifacts' && typeof openArtifacts === 'function'){
+    setTimeout(function(){
+      openArtifacts();
+      setTimeout(function(){
+        showToast('Google Drive connected — click "From Google Drive" to import','success');
+        if(typeof openGoogleDrivePicker === 'function') openGoogleDrivePicker();
+      }, 200);
     }, 400);
   } else {
     // Show dashboard as default view on login
@@ -14113,6 +14137,46 @@ function seedTaskLibraryFromCapacity(){
     }
   });
   _taskLibrarySeeded = true;
+}
+
+// Seed the library directly from bundled platform templates. Independent of
+// CapacityIQ so the library is fully populated even if the user never opens
+// that view. Lazy-fetches the JSON if it hasn't been loaded yet. Idempotent
+// (upsertTaskInLibrary dedupes by normalized name + category). Returns the
+// number of newly inserted entries via onDone(added).
+var _platformTaskLibSeeded = false;
+async function seedTaskLibraryFromPlatformTemplates(onDone){
+  if(_platformTaskLibSeeded){ if(onDone) onDone(0); return; }
+
+  if(!_bundledPlatformTemplates || !_bundledPlatformTemplates.length){
+    try {
+      var jsonUrl = (window.location.protocol === 'file:') ? 'data/platform-templates.json' : '/data/platform-templates.json';
+      var resp = await fetch(jsonUrl);
+      if(resp.ok) _bundledPlatformTemplates = await resp.json();
+    } catch(e){ console.warn('[taskLib] bundled fetch failed:', e && e.message); }
+  }
+  var src = _bundledPlatformTemplates || [];
+  if(!src.length){ if(onDone) onDone(0); return; }
+
+  var before = taskLibrary.length;
+  src.forEach(function(tpl){
+    (tpl.tasks || []).forEach(function(tk){
+      // Department is the useful library category — "Product Management"
+      // rather than the composite "Product Management — Discovery…".
+      var dept = ((tk.workstream || '').split(' — ')[0] || tpl.category || '').trim();
+      upsertTaskInLibrary({
+        name:         tk.name || '',
+        category:     dept,
+        hours:        parseFloat(tk.hours_base) || 0,
+        description:  tk.description || '',
+        source:       'platform',
+        sourceRefId:  tk.task_ref || (tpl.source_ref ? tpl.source_ref + '::' + (tk.name || '') : null)
+      });
+    });
+  });
+  _platformTaskLibSeeded = true;
+  var added = taskLibrary.length - before;
+  if(onDone) onDone(added);
 }
 
 // v1.32.0 FIX 3: Seed 200+ default tasks across 10 categories
@@ -23333,10 +23397,19 @@ function renderInsights(){
 // ══════════════════════════════════════════════════════════════════════════════
 
 var _rptCurrentReport='initiative-health';
+// v1.39.0 — expanded from 5 → 11 reports covering strategy, delivery,
+// capacity, and input-backlog audiences.
 var RPT_REPORTS=[
   {id:'initiative-health',name:'Initiative Health',icon:'target',desc:'Status of every roadmap initiative'},
   {id:'portfolio-overview',name:'Portfolio Overview',icon:'clipboard',desc:'All roadmaps in one view'},
+  {id:'weekly-status',     name:'Weekly Status',     icon:'calendar',desc:'Shipped, shipping next, blocked'},
+  {id:'launch-outcomes',   name:'Launch Outcomes',   icon:'rocket',  desc:'Released initiatives & outcomes'},
+  {id:'okr-progress',      name:'OKR Progress',      icon:'check',   desc:'Objectives & key-result health'},
+  {id:'sprint-metrics',    name:'Sprint Metrics',    icon:'chart-bar',desc:'Per-plan velocity, hours, mix'},
+  {id:'g2m-rollup',        name:'G2M Readiness',     icon:'rocket',  desc:'Go-to-market completeness per product'},
+  {id:'prioritization',    name:'Prioritisation',    icon:'chart-bar',desc:'Framework scores (RICE/ICE/MoSCoW)'},
   {id:'weekly-capacity',name:'Weekly Capacity',icon:'calendar',desc:'Time allocation this week'},
+  {id:'ucr-summary',       name:'Change Requests',   icon:'edit',    desc:'User change requests summary'},
   {id:'qbr-pack',name:'QBR Pack',icon:'doc',desc:'Quarterly Business Review summary'},
   {id:'deliverables-tracker',name:'Deliverables Tracker',icon:'check',desc:'What was promised vs delivered'}
 ];
@@ -23367,7 +23440,14 @@ function renderReport(id){
   var c=document.getElementById('rptContent'); c.innerHTML='';
   if(id==='initiative-health') rptInitiativeHealth(c);
   else if(id==='portfolio-overview') rptPortfolioOverview(c);
+  else if(id==='weekly-status') rptWeeklyStatus(c);
+  else if(id==='launch-outcomes') rptLaunchOutcomes(c);
+  else if(id==='okr-progress') rptOKRProgress(c);
+  else if(id==='sprint-metrics') rptSprintMetrics(c);
+  else if(id==='g2m-rollup') rptG2MRollup(c);
+  else if(id==='prioritization') rptPrioritization(c);
   else if(id==='weekly-capacity') rptWeeklyCapacity(c);
+  else if(id==='ucr-summary') rptUCRSummary(c);
   else if(id==='qbr-pack') rptQBRPack(c);
   else if(id==='deliverables-tracker') rptDeliverablesTracker(c);
 }
@@ -23684,6 +23764,412 @@ function rptDeliverablesTracker(container){
     tblCard.innerHTML=tbl;
   }
   container.appendChild(tblCard);
+}
+
+// ══ REPORT 6: Weekly Status (shipped / shipping next / blocked) ══
+// v1.39.0 — uses task.doneAt (added v1.37) to find "shipped last 7 days".
+function rptWeeklyStatus(container){
+  var title=document.createElement('h2'); title.style.cssText='font-size:20px;font-weight:700;margin-bottom:4px;color:var(--text)';
+  title.textContent='Weekly Status Summary';
+  var sub=document.createElement('p'); sub.style.cssText='font-size:13px;color:var(--muted);margin-bottom:24px';
+  sub.textContent='Shipped last 7 days · Shipping next 7 · Blocked · At-risk initiatives. Copy-paste into your exec update.';
+  container.appendChild(title); container.appendChild(sub);
+
+  var now = Date.now(), weekMs = 7*24*3600*1000;
+  var lastWeek = now - weekMs, nextWeek = now + weekMs;
+  var shipped=[], shippingNext=[], blocked=[];
+  (projectPlans||[]).forEach(function(p){
+    (p.tasks||[]).forEach(function(t){
+      if(!t) return;
+      if(t.status === 'done' && t.doneAt){
+        var ts = new Date(t.doneAt).getTime();
+        if(ts >= lastWeek && ts <= now) shipped.push({plan:p.name,task:t});
+      } else if(t.status === 'blocked'){
+        blocked.push({plan:p.name,task:t});
+      } else if(t.endDate){
+        var endMs = new Date(t.endDate).getTime();
+        if(endMs >= now && endMs <= nextWeek) shippingNext.push({plan:p.name,task:t});
+      }
+    });
+  });
+  var atRiskRows = (rows||[]).filter(function(r){
+    return (r.bars||[]).some(function(b){ return b.c==='r' || b.c==='o'; });
+  });
+
+  // Summary tiles
+  var sumCard=document.createElement('div'); sumCard.className='rpt-card';
+  sumCard.style.cssText += ';display:grid;grid-template-columns:repeat(4,1fr);gap:12px';
+  [
+    {v:shipped.length,l:'Shipped (7d)',c:'var(--g1)'},
+    {v:shippingNext.length,l:'Shipping next (7d)',c:'var(--accent)'},
+    {v:blocked.length,l:'Blocked',c:'var(--r1)'},
+    {v:atRiskRows.length,l:'At-risk products',c:'#f59e0b'}
+  ].forEach(function(s){
+    var stat=document.createElement('div'); stat.className='rpt-stat';
+    stat.innerHTML='<div class="rpt-stat-value" style="color:'+s.c+'">'+s.v+'</div><div class="rpt-stat-label">'+s.l+'</div>';
+    sumCard.appendChild(stat);
+  });
+  container.appendChild(sumCard);
+
+  function section(heading, items, emptyMsg, renderFn){
+    var card=document.createElement('div'); card.className='rpt-card';
+    var h='<h3 style="font-size:14px;font-weight:700;margin:0 0 10px;color:var(--text)">'+escHtml(heading)+'</h3>';
+    if(!items.length){
+      h+='<div style="font-size:12px;color:var(--muted);font-style:italic">'+emptyMsg+'</div>';
+    } else {
+      h+='<ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px">';
+      items.forEach(function(it){ h += renderFn(it); });
+      h+='</ul>';
+    }
+    card.innerHTML=h; container.appendChild(card);
+  }
+  section('Shipped last 7 days', shipped,
+    'Nothing marked done in the last week.',
+    function(it){ return '<li style="font-size:12px;padding:6px 10px;background:var(--surface-low);border-radius:6px"><b>'+escHtml(it.task.name||'')+'</b> <span style="color:var(--muted)">· '+escHtml(it.plan||'')+' · done '+it.task.doneAt.slice(0,10)+'</span></li>'; });
+  section('Shipping next 7 days', shippingNext,
+    'No tasks with end-dates inside the next 7 days.',
+    function(it){ return '<li style="font-size:12px;padding:6px 10px;background:var(--surface-low);border-radius:6px"><b>'+escHtml(it.task.name||'')+'</b> <span style="color:var(--muted)">· '+escHtml(it.plan||'')+' · ends '+escHtml(it.task.endDate||'')+' · owner '+escHtml(it.task.owner||'—')+'</span></li>'; });
+  section('Blocked tasks', blocked,
+    'No blocked tasks right now.',
+    function(it){ return '<li style="font-size:12px;padding:6px 10px;background:rgba(220,38,38,.08);border-left:3px solid #dc2626;border-radius:6px"><b>'+escHtml(it.task.name||'')+'</b> <span style="color:var(--muted)">· '+escHtml(it.plan||'')+'</span>'+(it.task.blockedReason?'<div style="font-size:11px;color:#dc2626;margin-top:2px">'+escHtml(it.task.blockedReason)+'</div>':'')+'</li>'; });
+  section('At-risk / delayed products', atRiskRows.map(function(r){return {row:r};}),
+    'All products are on-track or released.',
+    function(it){ var worst=(it.row.bars||[]).find(function(b){return b.c==='r';})||(it.row.bars||[]).find(function(b){return b.c==='o';}); return '<li style="font-size:12px;padding:6px 10px;background:var(--surface-low);border-radius:6px"><b>'+escHtml(it.row.name||'')+'</b> <span style="color:var(--muted)">· '+(worst?_rptStatusLabel(worst.c):'')+'</span></li>'; });
+}
+
+// ══ REPORT 7: Launch Outcomes ══
+function rptLaunchOutcomes(container){
+  var title=document.createElement('h2'); title.style.cssText='font-size:20px;font-weight:700;margin-bottom:4px;color:var(--text)';
+  title.textContent='Launch Outcomes';
+  var sub=document.createElement('p'); sub.style.cssText='font-size:13px;color:var(--muted);margin-bottom:24px';
+  sub.textContent='Initiatives with at least one released bar, ranked by completeness. Great for "what shipped" post-mortems.';
+  container.appendChild(title); container.appendChild(sub);
+
+  var launches = (rows||[]).filter(function(r){
+    return (r.bars||[]).some(function(b){ return b.c==='g'; });
+  }).map(function(r){
+    var totalBars=(r.bars||[]).length;
+    var released=(r.bars||[]).filter(function(b){return b.c==='g';}).length;
+    var g2m=_rptG2MScore(r.name);
+    var todo=_rptTodoStats(r.name);
+    return { row:r, total:totalBars, released:released, pct:totalBars?Math.round(released/totalBars*100):0, g2m:g2m, todo:todo };
+  }).sort(function(a,b){ return b.pct-a.pct; });
+
+  if(!launches.length){
+    var empty=document.createElement('div'); empty.className='rpt-card';
+    empty.innerHTML='<div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;font-style:italic">No released launches yet — mark a timeline bar as <b>Released</b> (green) to see it here.</div>';
+    container.appendChild(empty); return;
+  }
+  var card=document.createElement('div'); card.className='rpt-card';
+  var h='<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="border-bottom:2px solid var(--border)">'+
+    '<th style="text-align:left;padding:10px 12px;font-size:11px;color:var(--muted)">INITIATIVE</th>'+
+    '<th style="text-align:right;padding:10px 12px;font-size:11px;color:var(--muted)">BARS RELEASED</th>'+
+    '<th style="text-align:right;padding:10px 12px;font-size:11px;color:var(--muted)">G2M</th>'+
+    '<th style="text-align:right;padding:10px 12px;font-size:11px;color:var(--muted)">TASKS DONE</th>'+
+    '<th style="text-align:right;padding:10px 12px;font-size:11px;color:var(--muted)">HOURS LOGGED</th>'+
+    '</tr></thead><tbody>';
+  launches.forEach(function(L){
+    h+='<tr style="border-bottom:1px solid var(--border)">'+
+      '<td style="padding:10px 12px;font-weight:600">'+escHtml(L.row.name||'')+'</td>'+
+      '<td style="padding:10px 12px;text-align:right;font-variant-numeric:tabular-nums">'+L.released+'/'+L.total+' <span style="color:var(--muted)">('+L.pct+'%)</span></td>'+
+      '<td style="padding:10px 12px;text-align:right;font-weight:700;color:'+(L.g2m>=80?'var(--g1)':L.g2m>=50?'#f59e0b':'var(--r1)')+'">'+(L.g2m!=null?L.g2m+'%':'—')+'</td>'+
+      '<td style="padding:10px 12px;text-align:right;font-variant-numeric:tabular-nums">'+L.todo.done+'/'+L.todo.total+'</td>'+
+      '<td style="padding:10px 12px;text-align:right;font-variant-numeric:tabular-nums">'+Math.round(L.todo.actHrs)+'h</td>'+
+      '</tr>';
+  });
+  h+='</tbody></table>';
+  card.innerHTML=h; container.appendChild(card);
+}
+
+// ══ REPORT 8: OKR Progress ══
+function rptOKRProgress(container){
+  var title=document.createElement('h2'); title.style.cssText='font-size:20px;font-weight:700;margin-bottom:4px;color:var(--text)';
+  title.textContent='OKR Progress';
+  var sub=document.createElement('p'); sub.style.cssText='font-size:13px;color:var(--muted);margin-bottom:24px';
+  sub.textContent='Objectives and their key results with current progress. Data from okrsData.objectives.';
+  container.appendChild(title); container.appendChild(sub);
+
+  var objs=(typeof okrsData==='object' && okrsData && Array.isArray(okrsData.objectives)) ? okrsData.objectives : [];
+  if(!objs.length){
+    var empty=document.createElement('div'); empty.className='rpt-card';
+    empty.innerHTML='<div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;font-style:italic">No OKRs set. Open the Strategy page to define objectives and key results.</div>';
+    container.appendChild(empty); return;
+  }
+  // Summary
+  var avg=0, count=0;
+  objs.forEach(function(o){
+    (o.keyResults||[]).forEach(function(kr){
+      var p = (kr.progress!=null) ? parseFloat(kr.progress) : (kr.target>0 ? (parseFloat(kr.current||0)/parseFloat(kr.target))*100 : 0);
+      avg += Math.max(0, Math.min(100, p||0)); count++;
+    });
+  });
+  var overall = count ? Math.round(avg/count) : 0;
+  var sumCard=document.createElement('div'); sumCard.className='rpt-card';
+  sumCard.style.cssText += ';display:grid;grid-template-columns:repeat(3,1fr);gap:12px';
+  [
+    {v:objs.length,l:'Objectives',c:'var(--accent)'},
+    {v:count,l:'Key Results',c:'#7c3aed'},
+    {v:overall+'%',l:'Average KR progress',c:(overall>=70?'var(--g1)':overall>=40?'#f59e0b':'var(--r1)')}
+  ].forEach(function(s){
+    var stat=document.createElement('div'); stat.className='rpt-stat';
+    stat.innerHTML='<div class="rpt-stat-value" style="color:'+s.c+'">'+s.v+'</div><div class="rpt-stat-label">'+s.l+'</div>';
+    sumCard.appendChild(stat);
+  });
+  container.appendChild(sumCard);
+
+  objs.forEach(function(o){
+    var card=document.createElement('div'); card.className='rpt-card';
+    var h='<h3 style="font-size:14px;font-weight:700;margin:0 0 6px;color:var(--text)">'+escHtml(o.title||o.name||'Objective')+'</h3>';
+    if(o.description) h+='<div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">'+escHtml(o.description)+'</div>';
+    var krs=o.keyResults||[];
+    if(!krs.length){
+      h+='<div style="font-size:12px;color:var(--muted);font-style:italic">No key results yet.</div>';
+    } else {
+      h+='<div style="display:flex;flex-direction:column;gap:8px">';
+      krs.forEach(function(kr){
+        var prog = (kr.progress!=null) ? parseFloat(kr.progress) : (kr.target>0 ? (parseFloat(kr.current||0)/parseFloat(kr.target))*100 : 0);
+        prog = Math.max(0, Math.min(100, prog||0));
+        var pCol = prog>=70?'#22c55e':prog>=40?'#f59e0b':'#dc2626';
+        h+='<div style="display:flex;align-items:center;gap:10px">'+
+          '<span style="flex:1;font-size:12px;color:var(--text)">'+escHtml(kr.title||kr.name||'KR')+(kr.target?' <span style="color:var(--muted)">('+escHtml(String(kr.current||0))+' / '+escHtml(String(kr.target))+')</span>':'')+'</span>'+
+          '<span style="flex-shrink:0;width:120px;height:6px;background:var(--border);border-radius:9999px;overflow:hidden"><span style="display:block;height:100%;width:'+Math.round(prog)+'%;background:'+pCol+'"></span></span>'+
+          '<span style="flex-shrink:0;font-size:11px;font-weight:700;color:'+pCol+';min-width:40px;text-align:right">'+Math.round(prog)+'%</span>'+
+          '</div>';
+      });
+      h+='</div>';
+    }
+    card.innerHTML=h;
+    container.appendChild(card);
+  });
+}
+
+// ══ REPORT 9: Sprint / Plan Metrics ══
+function rptSprintMetrics(container){
+  var title=document.createElement('h2'); title.style.cssText='font-size:20px;font-weight:700;margin-bottom:4px;color:var(--text)';
+  title.textContent='Sprint / Plan Metrics';
+  var sub=document.createElement('p'); sub.style.cssText='font-size:13px;color:var(--muted);margin-bottom:24px';
+  sub.textContent='Per-plan velocity, hours burned, blocker count, and type mix (feature / bug / tech-debt / spike / chore).';
+  container.appendChild(title); container.appendChild(sub);
+
+  var plans=(projectPlans||[]).filter(function(p){ return (p.tasks||[]).length; });
+  if(!plans.length){
+    var empty=document.createElement('div'); empty.className='rpt-card';
+    empty.innerHTML='<div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;font-style:italic">No plans with tasks yet. Create a plan from the <b>Plans</b> tab to see metrics here.</div>';
+    container.appendChild(empty); return;
+  }
+  var hpd = getCapHours().hpd || 8;
+  plans.forEach(function(p){
+    var leaves=(p.tasks||[]).filter(function(t){ return t && (p.tasks.find(function(c){return c.parentId===t.id;})==null); });
+    var tot=leaves.length, done=leaves.filter(function(t){return t.status==='done';}).length;
+    var blocked=leaves.filter(function(t){return t.status==='blocked';}).length;
+    var inProg=leaves.filter(function(t){return t.status==='in-progress';}).length;
+    var pct=tot?Math.round(done/tot*100):0;
+    var hrsPlanned=leaves.reduce(function(s,t){return s+(parseFloat(t.durationDays)||0)*hpd;},0);
+    var hrsDone=leaves.filter(function(t){return t.status==='done';}).reduce(function(s,t){return s+(parseFloat(t.durationDays)||0)*hpd;},0);
+    var types={feature:0,bug:0,'tech-debt':0,spike:0,chore:0};
+    leaves.forEach(function(t){ var k=t.type||'feature'; if(types[k]!=null) types[k]++; });
+    var card=document.createElement('div'); card.className='rpt-card';
+    var h='<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">'+
+          '<h3 style="font-size:14px;font-weight:700;margin:0;color:var(--text)">'+escHtml(p.name||'(unnamed plan)')+'</h3>'+
+          (p.sprintGoal?'<span style="font-size:11px;color:var(--muted);font-style:italic">Goal: '+escHtml(p.sprintGoal)+'</span>':'')+
+        '</div>'+
+        '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px">'+
+          '<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:var(--text)">'+done+'/'+tot+'</div><div style="font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em">Tasks</div></div>'+
+          '<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:'+(pct>=70?'#22c55e':pct>=40?'#f59e0b':'#dc2626')+'">'+pct+'%</div><div style="font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em">Complete</div></div>'+
+          '<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:'+(blocked?'#dc2626':'var(--muted)')+'">'+blocked+'</div><div style="font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em">Blocked</div></div>'+
+          '<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:'+(inProg?'#0ea5e9':'var(--muted)')+'">'+inProg+'</div><div style="font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em">In progress</div></div>'+
+          '<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:var(--text)">'+Math.round(hrsDone)+'<span style="font-size:11px;color:var(--muted)">/'+Math.round(hrsPlanned)+'h</span></div><div style="font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em">Hours</div></div>'+
+        '</div>'+
+        '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
+          Object.keys(types).map(function(k){
+            var col={'feature':'#0ea5e9','bug':'#dc2626','tech-debt':'#7c3aed','spike':'#f59e0b','chore':'#64748b'}[k];
+            if(!types[k]) return '';
+            return '<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:9999px;background:'+col+'18;color:'+col+';border:1px solid '+col+'33">'+k+' · '+types[k]+'</span>';
+          }).join('') +
+        '</div>';
+    card.innerHTML=h;
+    container.appendChild(card);
+  });
+}
+
+// ══ REPORT 10: G2M Readiness Rollup ══
+function rptG2MRollup(container){
+  var title=document.createElement('h2'); title.style.cssText='font-size:20px;font-weight:700;margin-bottom:4px;color:var(--text)';
+  title.textContent='G2M Readiness Rollup';
+  var sub=document.createElement('p'); sub.style.cssText='font-size:13px;color:var(--muted);margin-bottom:24px';
+  sub.textContent='Go-to-market completeness for every product, averaged across the 14 departmental checklists.';
+  container.appendChild(title); container.appendChild(sub);
+
+  // Per-row scores
+  var scored=(rows||[]).map(function(r){ return { row:r, score:_rptG2MScore(r.name) }; }).filter(function(x){ return x.score!=null; });
+  if(!scored.length){
+    var empty=document.createElement('div'); empty.className='rpt-card';
+    empty.innerHTML='<div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;font-style:italic">No G2M checklists started yet. Open the <b>Checklist</b> page to begin assessing readiness.</div>';
+    container.appendChild(empty); return;
+  }
+  scored.sort(function(a,b){ return b.score-a.score; });
+  var ready=scored.filter(function(x){return x.score>=80;}).length;
+  var progress=scored.filter(function(x){return x.score>=40 && x.score<80;}).length;
+  var notReady=scored.filter(function(x){return x.score<40;}).length;
+  var avg=Math.round(scored.reduce(function(s,x){return s+x.score;},0)/scored.length);
+
+  var sumCard=document.createElement('div'); sumCard.className='rpt-card';
+  sumCard.style.cssText+=';display:grid;grid-template-columns:repeat(4,1fr);gap:12px';
+  [
+    {v:avg+'%',l:'Portfolio average',c:(avg>=70?'var(--g1)':avg>=40?'#f59e0b':'var(--r1)')},
+    {v:ready,l:'Ready to launch (≥80%)',c:'var(--g1)'},
+    {v:progress,l:'In progress (40–79%)',c:'#f59e0b'},
+    {v:notReady,l:'Not ready (<40%)',c:'var(--r1)'}
+  ].forEach(function(s){
+    var st=document.createElement('div'); st.className='rpt-stat';
+    st.innerHTML='<div class="rpt-stat-value" style="color:'+s.c+'">'+s.v+'</div><div class="rpt-stat-label">'+s.l+'</div>';
+    sumCard.appendChild(st);
+  });
+  container.appendChild(sumCard);
+
+  var card=document.createElement('div'); card.className='rpt-card';
+  var h='<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="border-bottom:2px solid var(--border)">'+
+    '<th style="text-align:left;padding:10px 12px;font-size:11px;color:var(--muted)">PRODUCT</th>'+
+    '<th style="text-align:right;padding:10px 12px;font-size:11px;color:var(--muted)">G2M SCORE</th>'+
+    '<th style="text-align:left;padding:10px 12px;font-size:11px;color:var(--muted)">PROGRESS</th>'+
+    '<th style="text-align:center;padding:10px 12px;font-size:11px;color:var(--muted)">STATUS</th>'+
+    '</tr></thead><tbody>';
+  scored.forEach(function(s){
+    var col=s.score>=70?'#22c55e':s.score>=40?'#f59e0b':'#dc2626';
+    var label=s.score>=80?'Ready':s.score>=40?'In progress':'Not ready';
+    h+='<tr style="border-bottom:1px solid var(--border)">'+
+      '<td style="padding:10px 12px;font-weight:600">'+escHtml(s.row.name||'')+'</td>'+
+      '<td style="padding:10px 12px;text-align:right;font-weight:800;color:'+col+';font-variant-numeric:tabular-nums">'+s.score+'%</td>'+
+      '<td style="padding:10px 12px"><span style="display:block;width:120px;height:6px;background:var(--border);border-radius:9999px;overflow:hidden"><span style="display:block;height:100%;width:'+s.score+'%;background:'+col+'"></span></span></td>'+
+      '<td style="padding:10px 12px;text-align:center"><span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:9999px;background:'+col+'18;color:'+col+'">'+label+'</span></td>'+
+      '</tr>';
+  });
+  h+='</tbody></table>';
+  card.innerHTML=h; container.appendChild(card);
+}
+
+// ══ REPORT 11: Prioritisation ══
+function rptPrioritization(container){
+  var title=document.createElement('h2'); title.style.cssText='font-size:20px;font-weight:700;margin-bottom:4px;color:var(--text)';
+  title.textContent='Prioritisation Output';
+  var sub=document.createElement('p'); sub.style.cssText='font-size:13px;color:var(--muted);margin-bottom:24px';
+  sub.textContent='Initiative scores from your active prioritisation framework (RICE / ICE / MoSCoW).';
+  container.appendChild(title); container.appendChild(sub);
+
+  var prio = (typeof prioritizationData==='object' && prioritizationData) || {};
+  var scores = prio.scores || {};
+  var activeFrameworkId = prio.activeFrameworkId || 'rice';
+  var entries = Object.keys(scores).map(function(rowId){
+    var row = (rows||[]).find(function(r){ return r.id === rowId; });
+    if(!row) return null;
+    var s = scores[rowId] || {};
+    var fw = s[activeFrameworkId] || {};
+    var total = parseFloat(fw.total) || parseFloat(fw.score) || 0;
+    return { row: row, score: total, breakdown: fw };
+  }).filter(Boolean).sort(function(a,b){ return b.score-a.score; });
+
+  if(!entries.length){
+    var empty=document.createElement('div'); empty.className='rpt-card';
+    empty.innerHTML='<div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;font-style:italic">No prioritisation scores yet. Open the <b>Prioritisation</b> page to score initiatives with RICE / ICE / MoSCoW.</div>';
+    container.appendChild(empty); return;
+  }
+  var info=document.createElement('div'); info.className='rpt-card';
+  info.style.cssText+=';padding:12px 16px';
+  info.innerHTML='<div style="font-size:12px;color:var(--muted)">Active framework: <b style="color:var(--text);text-transform:uppercase">'+escHtml(activeFrameworkId)+'</b> · '+entries.length+' initiatives scored</div>';
+  container.appendChild(info);
+
+  var card=document.createElement('div'); card.className='rpt-card';
+  var h='<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="border-bottom:2px solid var(--border)">'+
+    '<th style="text-align:left;padding:10px 12px;width:50px;font-size:11px;color:var(--muted)">RANK</th>'+
+    '<th style="text-align:left;padding:10px 12px;font-size:11px;color:var(--muted)">INITIATIVE</th>'+
+    '<th style="text-align:right;padding:10px 12px;font-size:11px;color:var(--muted)">SCORE</th>'+
+    '<th style="text-align:left;padding:10px 12px;font-size:11px;color:var(--muted)">BREAKDOWN</th>'+
+    '</tr></thead><tbody>';
+  entries.forEach(function(e, i){
+    var bits=[];
+    Object.keys(e.breakdown||{}).forEach(function(k){
+      if(k==='total' || k==='score') return;
+      var v = e.breakdown[k];
+      if(v==null || v==='') return;
+      bits.push('<span style="font-size:10px;color:var(--muted);margin-right:8px"><b style="color:var(--text)">'+escHtml(k)+'</b>: '+escHtml(String(v))+'</span>');
+    });
+    h+='<tr style="border-bottom:1px solid var(--border)">'+
+      '<td style="padding:10px 12px;font-weight:800;color:var(--accent)">#'+(i+1)+'</td>'+
+      '<td style="padding:10px 12px;font-weight:600">'+escHtml(e.row.name||'')+'</td>'+
+      '<td style="padding:10px 12px;text-align:right;font-weight:800;font-variant-numeric:tabular-nums">'+(Math.round(e.score*100)/100)+'</td>'+
+      '<td style="padding:10px 12px">'+(bits.length?bits.join(''):'<span style="color:var(--muted)">—</span>')+'</td>'+
+      '</tr>';
+  });
+  h+='</tbody></table>';
+  card.innerHTML=h; container.appendChild(card);
+}
+
+// ══ REPORT 12: Change Requests (UCR) Summary ══
+function rptUCRSummary(container){
+  var title=document.createElement('h2'); title.style.cssText='font-size:20px;font-weight:700;margin-bottom:4px;color:var(--text)';
+  title.textContent='Change Requests';
+  var sub=document.createElement('p'); sub.style.cssText='font-size:13px;color:var(--muted);margin-bottom:24px';
+  sub.textContent='User Change Requests by status and priority. Data lives in ucrAllData (sidebar entry removed in v1.38 but data intact).';
+  container.appendChild(title); container.appendChild(sub);
+
+  var ucrs = Array.isArray(ucrAllData) ? ucrAllData.slice() : [];
+  if(!ucrs.length){
+    var empty=document.createElement('div'); empty.className='rpt-card';
+    empty.innerHTML='<div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;font-style:italic">No change requests on file.</div>';
+    container.appendChild(empty); return;
+  }
+  // Count by status / priority
+  var byStatus={}, byPriority={};
+  ucrs.forEach(function(u){
+    var s=(u.status||'open').toLowerCase();
+    var p=(u.priority||'medium').toLowerCase();
+    byStatus[s]=(byStatus[s]||0)+1;
+    byPriority[p]=(byPriority[p]||0)+1;
+  });
+  var sumCard=document.createElement('div'); sumCard.className='rpt-card';
+  sumCard.style.cssText+=';display:grid;grid-template-columns:repeat(4,1fr);gap:12px';
+  [
+    {v:ucrs.length,l:'Total UCRs',c:'var(--accent)'},
+    {v:byStatus.open||0,l:'Open',c:'#f59e0b'},
+    {v:(byStatus['in-progress']||byStatus['in progress']||0),l:'In progress',c:'#0ea5e9'},
+    {v:(byStatus.done||byStatus.closed||byStatus.approved||0),l:'Resolved',c:'var(--g1)'}
+  ].forEach(function(s){
+    var st=document.createElement('div'); st.className='rpt-stat';
+    st.innerHTML='<div class="rpt-stat-value" style="color:'+s.c+'">'+s.v+'</div><div class="rpt-stat-label">'+s.l+'</div>';
+    sumCard.appendChild(st);
+  });
+  container.appendChild(sumCard);
+
+  // Sort by priority then created date (newest first)
+  var prioOrder = { high:0, medium:1, low:2, '':3 };
+  ucrs.sort(function(a,b){
+    var pa = prioOrder[(a.priority||'medium').toLowerCase()] || 3;
+    var pb = prioOrder[(b.priority||'medium').toLowerCase()] || 3;
+    if(pa !== pb) return pa-pb;
+    return (b.createdAt||0) - (a.createdAt||0);
+  });
+  var card=document.createElement('div'); card.className='rpt-card';
+  var h='<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="border-bottom:2px solid var(--border)">'+
+    '<th style="text-align:left;padding:10px 12px;font-size:11px;color:var(--muted)">TITLE</th>'+
+    '<th style="text-align:center;padding:10px 12px;font-size:11px;color:var(--muted)">PRIORITY</th>'+
+    '<th style="text-align:center;padding:10px 12px;font-size:11px;color:var(--muted)">STATUS</th>'+
+    '<th style="text-align:left;padding:10px 12px;font-size:11px;color:var(--muted)">REQUESTER</th>'+
+    '<th style="text-align:left;padding:10px 12px;font-size:11px;color:var(--muted)">CREATED</th>'+
+    '</tr></thead><tbody>';
+  ucrs.forEach(function(u){
+    var pcol = {high:'#dc2626',medium:'#f59e0b',low:'#64748b'}[(u.priority||'medium').toLowerCase()] || '#64748b';
+    var scol = {open:'#f59e0b','in-progress':'#0ea5e9',done:'#22c55e',approved:'#22c55e',closed:'#64748b',rejected:'#dc2626'}[(u.status||'open').toLowerCase()] || '#64748b';
+    var created = u.createdAt ? new Date(u.createdAt).toISOString().slice(0,10) : '—';
+    h+='<tr style="border-bottom:1px solid var(--border)">'+
+      '<td style="padding:10px 12px;font-weight:600">'+escHtml(u.title||u.name||'(untitled)')+'</td>'+
+      '<td style="padding:10px 12px;text-align:center"><span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:9999px;background:'+pcol+'18;color:'+pcol+'">'+escHtml((u.priority||'medium').toUpperCase())+'</span></td>'+
+      '<td style="padding:10px 12px;text-align:center"><span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:9999px;background:'+scol+'18;color:'+scol+'">'+escHtml(u.status||'open')+'</span></td>'+
+      '<td style="padding:10px 12px;color:var(--muted)">'+escHtml(u.requester||u.createdBy||'—')+'</td>'+
+      '<td style="padding:10px 12px;color:var(--muted)">'+created+'</td>'+
+      '</tr>';
+  });
+  h+='</tbody></table>';
+  card.innerHTML=h; container.appendChild(card);
 }
 
 // ── CALENDAR SCREENSHOT IMPORT ────────────────────────────────────────────────
@@ -24766,6 +25252,16 @@ function renderTaskLibraryView(content, actions){
   // so adding a task type in CapacityIQ shows up in the library next time.
   seedTaskLibraryFromCapacity();
   seedDefaultTaskLibrary(); // v1.32.0 FIX 3: seed defaults on first view
+
+  // Seed directly from bundled platform templates (async — fetches the JSON
+  // if it hasn't been loaded yet). Re-renders the view once entries arrive.
+  seedTaskLibraryFromPlatformTemplates(function(added){
+    if(added > 0){
+      persistData();
+      if(_capPage === 'library') capNav('library');  // refresh if still on this view
+    }
+  });
+
   persistData();
 
   actions.innerHTML =
@@ -26514,6 +27010,7 @@ function renderDocRepo(container){
   h += '<div style="display:flex;gap:8px">';
   h += '<input type="text" id="docRepoSearch" placeholder="Search documents..." oninput="filterDocRepo()" style="padding:7px 14px;border:1px solid var(--border);border-radius:9999px;font-size:12px;background:var(--white);color:var(--text);width:200px;font-family:inherit">';
   h += '<button class="btn accent" style="padding:6px 14px;font-size:11px" onclick="addDocRepoEntry()">+ Add Document</button>';
+  h += '<button class="btn" style="padding:6px 14px;font-size:11px;display:inline-flex;align-items:center;gap:6px" onclick="openGoogleDrivePicker()" title="Pull documents from Google Drive">'+_gDriveGlyph()+' From Google Drive</button>';
   h += '</div></div>';
   // Folder groups
   var folders = {};
@@ -26593,6 +27090,261 @@ async function _uploadToAttachments(path, file){
     throw new Error(msg);
   }
   return path;
+}
+
+// ── Google Drive → Document Repository ─────────────────────────────────
+// Mirrors the Calendar OAuth pattern: signInWithOAuth with the Drive scope,
+// capture provider_token in _processOAuthFragment, store in
+// appSettings.integrations.googleDrive. Kept separate from the calendar
+// token because the two scopes can't live on the same token if Supabase's
+// Google OAuth config only whitelists one.
+var _DRIVE_SCOPE_GOOGLE = 'openid email profile https://www.googleapis.com/auth/drive.readonly';
+
+function _gDriveGlyph(){
+  // Google Drive's triangle mark (brand-safe minimal SVG).
+  return '<svg viewBox="0 0 24 24" style="width:14px;height:14px;flex-shrink:0" aria-hidden="true">'+
+    '<path fill="#4285f4" d="M7.71 3 1.15 14.5l3.57 6.5 6.58-11.5z"/>'+
+    '<path fill="#0f9d58" d="M22.85 14.5 19.29 21H6.71l3.57-6.5z"/>'+
+    '<path fill="#ffc107" d="m12 2-4.29 7.5h8.58z"/>'+
+    '<path fill="#ea4335" d="M12 14.5h10.86L16.58 3H12z"/>'+
+    '<path fill="#1967d2" d="M12 14.5 6.71 21H1.15z" opacity=".25"/>'+
+  '</svg>';
+}
+
+function _googleDriveTokenValid(){
+  var ig = appSettings.integrations && appSettings.integrations.googleDrive;
+  if(!ig || !ig.connected || !ig.token) return false;
+  return Date.now() < (ig.expiresAt || 0) - 30000;
+}
+
+function connectGoogleDrive(){
+  try { sessionStorage.setItem('pmr_oauth_intent','drive:google'); } catch(_){}
+  if(typeof _supabase === 'undefined' || !_supabase){
+    showToast('Please sign in first', 'error'); return;
+  }
+  _supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { scopes: _DRIVE_SCOPE_GOOGLE }
+  });
+}
+
+function disconnectGoogleDrive(){
+  if(appSettings.integrations && appSettings.integrations.googleDrive){
+    appSettings.integrations.googleDrive = { connected:false, token:'', refreshToken:'', expiresAt:0, email:'' };
+    persistData();
+    showToast('Google Drive disconnected','info');
+    var modal = document.getElementById('gdrivePickerModal');
+    if(modal) openGoogleDrivePicker();  // refresh the modal into its disconnected state
+  }
+}
+
+// List files the user can see. Query is a Drive v3 `q` expression; if empty
+// we fall back to the 40 most recently modified non-trashed files.
+async function _gdriveListFiles(search){
+  var tok = appSettings.integrations.googleDrive.token;
+  var q   = 'trashed = false';
+  if(search && search.trim()){
+    var esc = search.trim().replace(/'/g, "\\'");
+    q = "name contains '" + esc + "' and trashed = false";
+  }
+  var url = 'https://www.googleapis.com/drive/v3/files' +
+            '?q=' + encodeURIComponent(q) +
+            '&pageSize=40&orderBy=modifiedTime desc' +
+            '&fields=' + encodeURIComponent('files(id,name,mimeType,size,modifiedTime,iconLink,webViewLink,owners(emailAddress))');
+  var r = await fetch(url, { headers: { Authorization: 'Bearer ' + tok } });
+  if(r.status === 401){
+    appSettings.integrations.googleDrive.connected = false; persistData();
+    throw new Error('Google Drive token expired — reconnect required');
+  }
+  if(!r.ok) throw new Error('Drive API ' + r.status);
+  var j = await r.json();
+  return j.files || [];
+}
+
+// Map Google-native docs to a downloadable export format + filename extension.
+function _gdriveExportMap(mimeType){
+  switch(mimeType){
+    case 'application/vnd.google-apps.document':
+      return { exportMime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', ext: 'docx' };
+    case 'application/vnd.google-apps.spreadsheet':
+      return { exportMime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', ext: 'xlsx' };
+    case 'application/vnd.google-apps.presentation':
+      return { exportMime: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', ext: 'pptx' };
+    case 'application/vnd.google-apps.drawing':
+      return { exportMime: 'image/png', ext: 'png' };
+    case 'application/vnd.google-apps.script':
+      return { exportMime: 'application/vnd.google-apps.script+json', ext: 'json' };
+  }
+  return null;  // non-Google file — use direct media download
+}
+
+function _gdriveFileExt(file){
+  var map = _gdriveExportMap(file.mimeType);
+  if(map) return map.ext;
+  // Non-Google: extract extension from name, or derive from mimeType.
+  var fromName = (file.name || '').split('.').pop();
+  if(fromName && fromName.length <= 5 && fromName !== file.name) return fromName.toLowerCase();
+  return '';
+}
+
+// Download a Drive file as a Blob. Handles Google-native export + binary media.
+async function _gdriveDownloadFile(file){
+  var tok = appSettings.integrations.googleDrive.token;
+  var map = _gdriveExportMap(file.mimeType);
+  var url, expectedMime;
+  if(map){
+    url = 'https://www.googleapis.com/drive/v3/files/' + encodeURIComponent(file.id) +
+          '/export?mimeType=' + encodeURIComponent(map.exportMime);
+    expectedMime = map.exportMime;
+  } else {
+    url = 'https://www.googleapis.com/drive/v3/files/' + encodeURIComponent(file.id) + '?alt=media';
+    expectedMime = file.mimeType || 'application/octet-stream';
+  }
+  var r = await fetch(url, { headers: { Authorization: 'Bearer ' + tok } });
+  if(r.status === 401){
+    appSettings.integrations.googleDrive.connected = false; persistData();
+    throw new Error('Google Drive token expired — reconnect required');
+  }
+  if(!r.ok) throw new Error('Download failed (HTTP ' + r.status + ')');
+  var blob = await r.blob();
+  // Re-tag the blob with its canonical mime type so the uploaded file ends up
+  // with correct Content-Type in Supabase Storage.
+  return new Blob([blob], { type: expectedMime });
+}
+
+function openGoogleDrivePicker(){
+  var ex = document.getElementById('gdrivePickerModal'); if(ex) ex.remove();
+  var ov = document.createElement('div');
+  ov.id = 'gdrivePickerModal';
+  ov.className = 'modal-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9200;display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.onclick = function(e){ if(e.target === ov) ov.remove(); };
+
+  var connected = _googleDriveTokenValid();
+  var accountLine = '';
+  if(connected){
+    var em = appSettings.integrations.googleDrive.email || '';
+    accountLine = '<div style="font-size:11px;color:var(--muted);margin-bottom:10px">Connected as <strong style="color:var(--text)">'+escHtml(em)+'</strong> · <a href="#" onclick="event.preventDefault();disconnectGoogleDrive()" style="color:var(--accent)">Disconnect</a></div>';
+  }
+
+  var bodyHtml = connected
+    ? '<div style="display:flex;gap:8px;margin-bottom:12px">' +
+        '<input id="gdriveSearchInput" type="text" placeholder="Search Drive (blank = recent files)" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--white);color:var(--text)" onkeydown="if(event.key===\'Enter\') _gdriveRefreshList()">' +
+        '<button class="btn accent" style="padding:7px 14px;font-size:12px" onclick="_gdriveRefreshList()">Search</button>' +
+      '</div>' +
+      '<div id="gdriveFileList" style="max-height:48vh;overflow-y:auto;border:1px solid var(--border);border-radius:10px;padding:4px"></div>' +
+      '<div id="gdriveStatus" style="font-size:11px;margin-top:8px;min-height:16px;color:var(--muted)"></div>'
+    : '<div style="text-align:center;padding:28px 12px">' +
+        '<div style="margin-bottom:12px">'+_gDriveGlyph()+'</div>' +
+        '<div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px">Connect Google Drive</div>' +
+        '<div style="font-size:12px;color:var(--muted);margin-bottom:18px">Read-only access — we only pull files you pick.</div>' +
+        '<button class="btn accent" style="padding:10px 24px;font-size:13px;display:inline-flex;align-items:center;gap:8px" onclick="connectGoogleDrive()">'+_gDriveGlyph()+' Connect Google Drive</button>' +
+      '</div>';
+
+  ov.innerHTML =
+    '<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;width:100%;max-width:620px;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.35);color:var(--text)">' +
+      '<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">' +
+        _gDriveGlyph() +
+        '<h3 style="margin:0;font-size:16px;font-weight:700;flex:1">Pull from Google Drive</h3>' +
+        '<button onclick="document.getElementById(\'gdrivePickerModal\').remove()" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1">&times;</button>' +
+      '</div>' +
+      '<div style="padding:16px 20px;overflow-y:auto;flex:1">' + accountLine + bodyHtml + '</div>' +
+    '</div>';
+
+  document.body.appendChild(ov);
+  if(connected) _gdriveRefreshList();
+}
+
+async function _gdriveRefreshList(){
+  var list   = document.getElementById('gdriveFileList');
+  var status = document.getElementById('gdriveStatus');
+  var input  = document.getElementById('gdriveSearchInput');
+  if(!list || !status) return;
+  status.textContent = 'Loading…';
+  list.innerHTML = '';
+  try {
+    var files = await _gdriveListFiles(input ? input.value : '');
+    if(!files.length){ status.textContent = 'No files match.'; return; }
+    status.textContent = files.length + ' file' + (files.length === 1 ? '' : 's');
+    list.innerHTML = files.map(function(f){
+      var sizeLabel = f.size ? _formatFileSize(parseInt(f.size, 10)) : '';
+      var when = f.modifiedTime ? new Date(f.modifiedTime).toLocaleDateString() : '';
+      var mime = (f.mimeType || '').replace('application/vnd.google-apps.','G ');
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid var(--border)">' +
+        (f.iconLink ? '<img src="'+escHtml(f.iconLink)+'" style="width:18px;height:18px;flex-shrink:0" alt="">' : '<span style="width:18px;color:var(--muted)">'+svgIcon('file',{size:16})+'</span>') +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(f.name || '(untitled)')+'</div>' +
+          '<div style="font-size:10px;color:var(--muted)">'+escHtml(mime)+(sizeLabel?' · '+sizeLabel:'')+(when?' · '+when:'')+'</div>' +
+        '</div>' +
+        '<button class="btn accent" style="padding:4px 10px;font-size:11px" onclick=\'_gdriveImportFile("'+f.id+'")\' data-gdrive-id="'+escHtml(f.id)+'">Import</button>' +
+      '</div>';
+    }).join('');
+  } catch(err){
+    status.textContent = 'Error: ' + (err && err.message || err);
+    status.style.color = '#ef4444';
+  }
+}
+
+// Import a file by re-fetching the metadata, downloading, uploading to
+// Supabase Storage, and appending to documentRepository. Re-renders the
+// artifacts body so the new entry shows up immediately.
+async function _gdriveImportFile(fileId){
+  if(!_currentUser || !_accessToken){ showToast('Please sign in first','error'); return; }
+  var status = document.getElementById('gdriveStatus');
+  if(status){ status.textContent = 'Importing…'; status.style.color = 'var(--muted)'; }
+  var btn = document.querySelector('button[data-gdrive-id="'+fileId+'"]');
+  if(btn){ btn.disabled = true; btn.textContent = 'Importing…'; }
+  try {
+    // Fresh metadata so we have name/mime/size even if the list is stale.
+    var metaUrl = 'https://www.googleapis.com/drive/v3/files/' + encodeURIComponent(fileId) +
+                  '?fields=id,name,mimeType,size,modifiedTime';
+    var tok = appSettings.integrations.googleDrive.token;
+    var mr = await fetch(metaUrl, { headers: { Authorization: 'Bearer ' + tok } });
+    if(!mr.ok) throw new Error('Metadata HTTP ' + mr.status);
+    var file = await mr.json();
+    var blob = await _gdriveDownloadFile(file);
+    if(blob.size > 50 * 1024 * 1024) throw new Error('File too large (50 MB max)');
+
+    var ext  = _gdriveFileExt(file);
+    var baseName = (file.name || 'drive-file').replace(/[\\/:*?"<>|]/g, '_').slice(0, 120);
+    var fname = ext && !baseName.toLowerCase().endsWith('.'+ext) ? baseName + '.' + ext : baseName;
+    var safe  = fname.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 120);
+    var path  = _currentUser.id + '/docs/' + Date.now() + '_' + safe;
+
+    // Cast blob → File so the existing uploader preserves the content type.
+    var asFile = new File([blob], fname, { type: blob.type });
+    await _uploadToAttachments(path, asFile);
+
+    documentRepository.push({
+      id: 'doc_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+      name: file.name || fname,
+      fileName: fname,
+      fileSize: blob.size,
+      fileType: ext || '',
+      folder: 'Google Drive',
+      initiativeId: '',
+      tags: ['google-drive'],
+      description: '',
+      storagePath: path,
+      sourceDriveId: file.id,
+      sourceDriveMime: file.mimeType,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    });
+    persistData();
+
+    if(status){ status.textContent = 'Imported "' + (file.name || fname) + '"'; status.style.color = '#16a34a'; }
+    if(btn){ btn.textContent = 'Imported'; }
+
+    // Re-render the Artifacts body so the doc appears in the repository.
+    try {
+      var body = document.getElementById('artBody');
+      if(body && typeof renderDocRepo === 'function') renderDocRepo(body);
+    } catch(_){}
+  } catch(err){
+    if(status){ status.textContent = 'Import failed: ' + (err && err.message || err); status.style.color = '#ef4444'; }
+    if(btn){ btn.disabled = false; btn.textContent = 'Import'; }
+  }
 }
 
 async function downloadDocRepoEntry(docId){
