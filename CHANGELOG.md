@@ -1,5 +1,53 @@
 # Roadmap OS — Changelog
 
+## v1.43.1 — v12 polish batch
+
+- **Add Task → Select All** on the Library, To-Do, and G2M source tabs (with per-source category checkboxes on G2M).
+- **Hours field** loses the long inline help text; the explanation is now a hover-only `?` tooltip on the field label. The same `.pmr-tip` utility now powers any data-tip popover.
+- **Plans Timeline view** — Filter button now opens a real status / priority / owner picker. The Unplanned counter toggles a filter that surfaces only tasks missing dates. The view has a visible bottom horizontal scrollbar.
+- **Edit Team modal**: pulls the org-user pool from cap members + roadmap row owners + plan task owners, allows multi-team membership, supports a team logo (base64, ≤200KB) and rounds the corners cleanly. The team card on the Teams page now reflects the logo + member avatars.
+- **Send-invite edge function** stops swallowing Resend errors. The actual API error (and a hint — "verify domain" / "RESEND_API_KEY rejected") flows back to the toast on the Edit Team invite form. Email template rewritten with Roadmap OS branding and the live `app.pmroadmapper.com` CTA.
+- **CapacityIQ templates** — fixed a regression where having even one user-saved template ate the entire 35-template bundled platform set. Lists now merge cloud + bundled with id/name dedup.
+- **CapacityIQ dashboard** adds a per-team capacity strip (capacity / allocated / available + utilisation bar) above the existing member breakdown. Members on multiple teams contribute to each.
+- **Reports Dashboard**: Portfolio Overview tab removed.
+
+## v1.43.0 — Closing the Loop: Expected Outcomes, Release Notes & Launch Feedback
+
+A full closing-the-loop workflow tying *predicted* impact to *actual* impact, plus app-level release notes you can read inside the app and on the marketing site.
+
+**Per-initiative**
+
+- **Expected Outcomes** — new section in the row edit modal. Capture metric, target, units, timeframe, and a hypothesis up-front for every initiative. These are the success criteria the loop closes against.
+- **Launch Outcomes & Release Notes** — also on the row edit modal. Stamp a release date and capture release notes for three audiences:
+  - **Dev / technical** — what shipped and how
+  - **Customer-facing** — what users will notice and gain
+  - **Internal summary** — stakeholders, takeaways, next steps
+- **Launch Outcomes report rewritten** (Reports → Launch Outcomes). Now an interactive view per shipped initiative with:
+  - **Closing-the-loop table** — expected outcomes paired with actuals; capture the actual value, source (PM / Data / Customer / Sales / Support), and a status pill (Met / Partial / Missed / Pending).
+  - **Release notes editor** — three audience tabs, save on blur.
+  - **Feedback thread** — typed by source with optional sentiment (positive / neutral / negative). Sales call notes, customer replies, data signals all live alongside the launch they're about.
+  - **Audience filter** — pivot the page between All / Dev / Customer / Internal.
+  - **Include unreleased** — capture expected outcomes early.
+  - **Export to Markdown** — concatenated release notes + outcomes table per shipped row, ready to send out.
+
+**App-level release notes**
+
+- **What's New** — new entry in the help FAB (bottom-right ? icon) opens an in-app modal that renders this CHANGELOG. A red dot on the FAB highlights when there's an unseen release; reading clears it.
+- **Single APP_VERSION constant** — replaces stale `v1.36.1` (login footer) and `v1.29.0` (backup metadata) literals. Bump alongside `package.json` per release.
+- **Marketing site /changelog** — same content, served at app.pmroadmapper.com/changelog.
+
+**Templates parity (under-the-hood)**
+
+- Unified template-task sync — every task in every template (CapacityIQ, platform DB, bundled JSON, custom) now lands in both the Task Library and CapacityIQ task types. Manual "↻ Re-sync template tasks" button on the CapacityIQ Task Reference page.
+- Fixed bundled-template path for Electron — `data/platform-templates.json` is now reachable in the Electron renderer (was 404'ing relative to `renderer/index.html`).
+- CapacityIQ Templates page now waits for the template library to hydrate before rendering, so all 35 bundled templates appear instead of just the two cached locally.
+- Added `data/**/*` and `CHANGELOG.md` to electron-builder so packaged builds ship the JSON catalogue and release notes.
+
+**Plan view polish**
+
+- Sprint bar relabelled to **Plan progress** and centered.
+- Gantt view fully dark-mode aware — alternating row stripes, grid lines, month labels, task names, and dependency arrows now switch with the theme instead of staying light-mode.
+
 ## v1.34.0 — v4 fix batch: import, Template Builder, docs, invites, back nav
 
 See `FIX_LOG_V4.md` for full per-fix detail. Highlights:

@@ -1,6 +1,6 @@
 {
   "name": "netstar-roadmap",
-  "version": "1.42.4",
+  "version": "1.43.1",
   "description": "Roadmap OS — Product Strategy & Roadmap Tool",
   "main": "main.js",
   "scripts": {
@@ -44,6 +44,7 @@
       "renderer/**/*",
       "assets/**/*",
       "data/**/*",
+      "CHANGELOG.md",
       "node_modules/@supabase/**/*",
       "node_modules/pdf-parse-new/**/*",
       "node_modules/mammoth/**/*",

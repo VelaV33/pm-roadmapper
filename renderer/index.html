@@ -1779,6 +1779,18 @@ body.dark-mode .bill-card,body.dark-mode .bill-plan{background:var(--white);bord
 .onboard-actions button:hover{filter:brightness(.92)}
 body.dark-mode .onboard-card{background:#1e293b}
 
+/* v1.43.1: visible bottom scroller for the Plans timeline view */
+.plan-tl-scroll{scrollbar-color:var(--muted) transparent}
+.plan-tl-scroll::-webkit-scrollbar{height:10px;width:10px}
+.plan-tl-scroll::-webkit-scrollbar-thumb{background:var(--muted);border-radius:5px}
+.plan-tl-scroll::-webkit-scrollbar-track{background:transparent}
+body.dark-mode .plan-tl-scroll::-webkit-scrollbar-thumb{background:var(--outline-var)}
+/* v1.43.1: reusable hover tooltip — apply to any inline element with data-tip="..." */
+.pmr-tip{position:relative;display:inline-flex;align-items:center;color:var(--muted);cursor:help;user-select:none}
+.pmr-tip:hover{color:var(--accent)}
+.pmr-tip::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--white);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:11px;font-weight:500;line-height:1.45;white-space:normal;width:240px;text-transform:none;letter-spacing:0;box-shadow:0 6px 20px rgba(0,0,0,.18);opacity:0;pointer-events:none;transition:opacity .15s;z-index:10050}
+.pmr-tip:hover::after{opacity:1}
+body.dark-mode .pmr-tip::after{background:var(--surface-low);color:var(--text);border-color:var(--border)}
 .loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:99990;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:rgba(15,23,42,.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .2s}
 .loading-overlay.active{opacity:1;pointer-events:auto}
 .loading-overlay .loading-logo{width:64px;height:64px;border-radius:14px;background:rgba(59,130,246,.12);display:flex;align-items:center;justify-content:center;animation:loadPulse 2s ease-in-out infinite}
@@ -1971,7 +1983,7 @@ body.dark-mode .onboard-card{background:#1e293b}
   </div>
   </div><!-- /.auth-right -->
   <div class="auth-version" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center">
-    <span>v1.36.1</span>
+    <span id="loginVersionLabel">v1.43.0</span>
     <a href="https://app.pmroadmapper.com/contact.html?source=login" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;opacity:.7;transition:opacity .15s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">Contact Us</a>
     <a href="https://app.pmroadmapper.com/privacy.html" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;opacity:.7;transition:opacity .15s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">Privacy Policy</a>
     <a href="https://app.pmroadmapper.com/terms.html" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;opacity:.7;transition:opacity .15s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7">Terms of Service</a>
@@ -2468,6 +2480,22 @@ body.dark-mode .onboard-card{background:#1e293b}
       <button class="btn accent" style="padding:4px 10px;font-size:11px" onclick="addInitiativeLink()" title="Link to another initiative">+ Link</button>
     </div>
     <div id="initLinksContainer"></div>
+
+    <!-- v1.43.0: Expected outcomes (predictions, planning side of the loop) -->
+    <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Expected Outcomes</label>
+      <button class="btn accent" style="padding:4px 10px;font-size:11px" onclick="addExpectedOutcome()" title="Predict the impact of this initiative — drives the closing-the-loop comparison after release">+ Add</button>
+    </div>
+    <div id="expectedOutcomesContainer" style="display:flex;flex-direction:column;gap:8px"></div>
+
+    <!-- v1.43.0: Launch outcomes — release date + release notes (3 audiences) -->
+    <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Launch Outcomes &amp; Release Notes</label>
+      <span id="loStatusBadge" style="font-size:10px;font-weight:600;color:var(--muted)"></span>
+    </div>
+    <div id="launchOutcomesContainer"></div>
 
     <hr style="border:none;border-top:2px solid var(--accent);margin:18px 0">
     <div id="modalIntegrationSection" style="display:none">
@@ -3549,6 +3577,12 @@ function buildDayOptions(mname,selectedDay){
   } return frag;
 }
 
+// ── APP VERSION ──────────────────────────────────────────────────────────────
+// v1.43.0 — single source of truth for the app version. Bump this with every
+// release alongside package.json. Used by the login footer, the JSON backup
+// metadata, and the in-app What's New modal (lastSeenAppVersion comparison).
+var APP_VERSION = 'v1.43.1';
+
 // ── DATA ─────────────────────────────────────────────────────────────────────
 var sections=[
   {id:"s1",name:"Overarching Strategy",color:"#7c3aed"},
@@ -4248,6 +4282,9 @@ function openEditModal(rowId){
   // v1.42.0: revenue / labels / owner / timestamps + comments
   _populateRowExtraFields(row);
   _renderRowComments(row);
+  // v1.43.0: expected + launch outcomes
+  renderExpectedOutcomesForm(row.expectedOutcomes || []);
+  renderLaunchOutcomesForm(row);
   document.getElementById('rowModal').classList.remove('hidden');
   addVoiceToRowModal();
 }
@@ -4271,6 +4308,9 @@ function openAddRowModal(secId){
   // v1.42.0: blank revenue / labels / owner; hide meta + comments on new row
   _populateRowExtraFields(null);
   var cs = document.getElementById('rowCommentsSection'); if(cs) cs.style.display='none';
+  // v1.43.0: blank outcomes for new row
+  renderExpectedOutcomesForm([]);
+  renderLaunchOutcomesForm({});
   document.getElementById('rowModal').classList.remove('hidden');
   addVoiceToRowModal();
 }
@@ -4477,6 +4517,160 @@ function deleteRowComment(commentId){
   row.updatedAt = new Date().toISOString();
   persistData();
   _renderRowComments(row);
+}
+
+// ── v1.43.0: Expected & launch outcomes (closing-the-loop) ───────────────────
+// Expected outcomes are predictions captured at planning time (metric, target,
+// units, timeframe, hypothesis). Launch outcomes are post-release: a release
+// date, release notes for three audiences (dev / customer / internal), and
+// counters for the actuals + feedback that the dedicated Launch Outcomes
+// report captures in detail.
+function renderExpectedOutcomesForm(arr){
+  var c = document.getElementById('expectedOutcomesContainer');
+  if(!c) return;
+  c.innerHTML = '';
+  var list = Array.isArray(arr) ? arr : [];
+  if(!list.length){
+    c.innerHTML = '<div data-eo-placeholder style="font-size:12px;color:var(--muted);padding:6px 0;font-style:italic">No expected outcomes yet. Add one to set success criteria up-front — they drive the closing-the-loop comparison after release.</div>';
+    return;
+  }
+  list.forEach(function(eo){ _appendExpectedOutcomeRow(eo); });
+}
+
+function _appendExpectedOutcomeRow(eo){
+  var c = document.getElementById('expectedOutcomesContainer');
+  if(!c) return;
+  var ph = c.querySelector('[data-eo-placeholder]');
+  if(ph) ph.remove();
+  var id = (eo && eo.id) || ('eo_'+Date.now()+'_'+Math.random().toString(36).slice(2,5));
+  var row = document.createElement('div');
+  row.className = 'eo-row';
+  row.setAttribute('data-eo-id', id);
+  row.style.cssText = 'display:grid;grid-template-columns:1.4fr 1fr 80px 110px 1.4fr 30px;gap:6px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--white)';
+  var inputCss = 'padding:6px 8px;border:1px solid var(--border);border-radius:5px;font-size:12px;color:var(--text);background:var(--white);min-width:0';
+  row.innerHTML =
+    '<input data-field="metric" placeholder="Metric (e.g. Active users)" value="'+escHtml((eo&&eo.metric)||'')+'" style="'+inputCss+'">' +
+    '<input data-field="target" placeholder="Target (e.g. 1000)" value="'+escHtml((eo&&eo.target)||'')+'" style="'+inputCss+'">' +
+    '<input data-field="units" placeholder="Units" value="'+escHtml((eo&&eo.units)||'')+'" style="'+inputCss+'">' +
+    '<input data-field="timeframe" placeholder="Timeframe (Q2, 30d…)" value="'+escHtml((eo&&eo.timeframe)||'')+'" style="'+inputCss+'">' +
+    '<input data-field="hypothesis" placeholder="Hypothesis / why" value="'+escHtml((eo&&eo.hypothesis)||'')+'" style="'+inputCss+'">' +
+    '<button type="button" onclick="this.closest(\'.eo-row\').remove();_eoCheckEmpty()" style="background:none;border:none;color:#dc2626;cursor:pointer;padding:4px 6px;font-size:16px;line-height:1" title="Remove">×</button>';
+  c.appendChild(row);
+}
+
+function _eoCheckEmpty(){
+  var c = document.getElementById('expectedOutcomesContainer');
+  if(c && !c.querySelector('.eo-row')) renderExpectedOutcomesForm([]);
+}
+
+function addExpectedOutcome(){ _appendExpectedOutcomeRow(null); }
+
+function _collectExpectedOutcomes(){
+  var c = document.getElementById('expectedOutcomesContainer');
+  if(!c) return [];
+  var out = [];
+  c.querySelectorAll('.eo-row').forEach(function(r){
+    var get = function(f){ var el = r.querySelector('[data-field="'+f+'"]'); return el ? el.value.trim() : ''; };
+    var metric = get('metric');
+    if(!metric) return; // skip blank rows
+    out.push({
+      id: r.getAttribute('data-eo-id'),
+      metric: metric,
+      target: get('target'),
+      units: get('units'),
+      timeframe: get('timeframe'),
+      hypothesis: get('hypothesis')
+    });
+  });
+  return out;
+}
+
+function renderLaunchOutcomesForm(row){
+  var c = document.getElementById('launchOutcomesContainer');
+  var badge = document.getElementById('loStatusBadge');
+  if(!c) return;
+  var lo = (row && row.launchOutcomes) || {};
+  var releasedAt = lo.releasedAt || '';
+  var notes = lo.releaseNotes || {};
+  var actuals = Array.isArray(lo.actualMetrics) ? lo.actualMetrics : [];
+  var feedback = Array.isArray(lo.feedback) ? lo.feedback : [];
+  if(badge){
+    badge.textContent = releasedAt ? ('Released '+new Date(releasedAt).toLocaleDateString()) : 'Not yet released';
+    badge.style.color = releasedAt ? 'var(--accent)' : 'var(--muted)';
+  }
+  var taCss = 'width:100%;min-height:90px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text);background:var(--white);box-sizing:border-box;font-family:inherit;resize:vertical';
+  c.innerHTML =
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">' +
+      '<label style="font-size:11px;color:var(--muted);font-weight:600">Released on</label>' +
+      '<input id="loReleasedAt" type="date" value="'+escHtml(releasedAt ? String(releasedAt).slice(0,10) : '')+'" style="padding:6px 8px;border:1px solid var(--border);border-radius:5px;font-size:12px;color:var(--text);background:var(--white)">' +
+      '<button type="button" onclick="loMarkReleasedNow()" class="btn accent" style="padding:4px 10px;font-size:11px">Mark released now</button>' +
+      '<button type="button" onclick="loClearReleasedAt()" style="padding:4px 10px;font-size:11px;background:none;border:1px solid var(--border);border-radius:9999px;color:var(--muted);cursor:pointer">Clear</button>' +
+    '</div>' +
+    '<div style="display:flex;gap:6px;border-bottom:1px solid var(--border);margin-bottom:10px" role="tablist">' +
+      _loTabBtn('dev','Dev / technical', true) +
+      _loTabBtn('customer','Customer-facing', false) +
+      _loTabBtn('internal','Internal summary', false) +
+    '</div>' +
+    '<textarea id="loRn_dev" data-lo-rn="dev" placeholder="What changed (technical) — markdown OK" style="'+taCss+'">'+escHtml(notes.dev||'')+'</textarea>' +
+    '<textarea id="loRn_customer" data-lo-rn="customer" placeholder="Customer-facing release note — what users will notice and gain — markdown OK" style="display:none;'+taCss+'">'+escHtml(notes.customer||'')+'</textarea>' +
+    '<textarea id="loRn_internal" data-lo-rn="internal" placeholder="Internal launch summary — stakeholders, key takeaways, next steps — markdown OK" style="display:none;'+taCss+'">'+escHtml(notes.internal||'')+'</textarea>' +
+    '<div style="font-size:11px;color:var(--muted);margin-top:10px">'+actuals.length+' actual metric'+(actuals.length===1?'':'s')+' captured · '+feedback.length+' feedback comment'+(feedback.length===1?'':'s')+' — manage these on the <a href="#" onclick="event.preventDefault();_openLaunchOutcomesFromModal()" style="color:var(--accent);font-weight:600">Launch Outcomes report</a>.</div>';
+}
+
+function _loTabBtn(key, label, active){
+  return '<button type="button" data-lo-tab="'+key+'" onclick="_loSwitchTab(\''+key+'\')" style="padding:6px 12px;border:none;background:none;border-bottom:2px solid '+(active?'var(--accent)':'transparent')+';color:'+(active?'var(--accent)':'var(--muted)')+';font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">'+label+'</button>';
+}
+
+function _loSwitchTab(key){
+  ['dev','customer','internal'].forEach(function(k){
+    var ta = document.getElementById('loRn_'+k);
+    if(ta) ta.style.display = (k === key) ? 'block' : 'none';
+    var btn = document.querySelector('[data-lo-tab="'+k+'"]');
+    if(btn){
+      btn.style.borderBottomColor = (k === key) ? 'var(--accent)' : 'transparent';
+      btn.style.color = (k === key) ? 'var(--accent)' : 'var(--muted)';
+    }
+  });
+}
+
+function loMarkReleasedNow(){
+  var inp = document.getElementById('loReleasedAt');
+  if(inp) inp.value = new Date().toISOString().slice(0,10);
+  var badge = document.getElementById('loStatusBadge');
+  if(badge){ badge.textContent = 'Released ' + new Date().toLocaleDateString(); badge.style.color = 'var(--accent)'; }
+}
+
+function loClearReleasedAt(){
+  var inp = document.getElementById('loReleasedAt');
+  if(inp) inp.value = '';
+  var badge = document.getElementById('loStatusBadge');
+  if(badge){ badge.textContent = 'Not yet released'; badge.style.color = 'var(--muted)'; }
+}
+
+function _openLaunchOutcomesFromModal(){
+  saveRow();
+  if(typeof openReports === 'function'){
+    openReports();
+    if(typeof rptOpen === 'function') setTimeout(function(){ rptOpen('launch-outcomes'); }, 60);
+  }
+}
+
+function _collectLaunchOutcomes(prev){
+  // Preserve actualMetrics + feedback (managed on the Launch Outcomes report,
+  // not on the modal) by passing the previous launchOutcomes through.
+  var prevLo = (prev && prev.launchOutcomes) || {};
+  var dateInp = document.getElementById('loReleasedAt');
+  var releasedAt = dateInp && dateInp.value ? new Date(dateInp.value + 'T00:00:00').toISOString() : '';
+  var dev      = (document.getElementById('loRn_dev')      || {}).value || '';
+  var customer = (document.getElementById('loRn_customer') || {}).value || '';
+  var internal = (document.getElementById('loRn_internal') || {}).value || '';
+  return {
+    releasedAt:    releasedAt,
+    releaseNotes:  { dev: dev, customer: customer, internal: internal },
+    actualMetrics: Array.isArray(prevLo.actualMetrics) ? prevLo.actualMetrics : [],
+    feedback:      Array.isArray(prevLo.feedback)      ? prevLo.feedback      : [],
+    successCriteria: prevLo.successCriteria || {}
+  };
 }
 
 function closeModal(){ document.getElementById('rowModal').classList.add('hidden'); }
@@ -5346,6 +5540,10 @@ function saveRow(){
       row.ownerEmail = _ownerEmail;
       row.owner = _resolveOwnerName(_ownerEmail);
     }
+    // v1.43.0: outcomes (predictions + post-launch). _collectLaunchOutcomes
+    // preserves the report-managed actualMetrics + feedback arrays.
+    row.expectedOutcomes = _collectExpectedOutcomes();
+    row.launchOutcomes   = _collectLaunchOutcomes(row);
     if(!row.createdAt) row.createdAt = _now;
     row.updatedAt = _now;
     _appendChangeLog('edit', editingRowId, _prevName!==name ? ('Renamed "'+_prevName+'" \u2192 "'+name+'"') : ('Edited "'+name+'"'));
@@ -5365,6 +5563,9 @@ function saveRow(){
       ownerEmail: _ownerEmail || ((typeof userProfile!=='undefined' && userProfile && userProfile.email) || (_currentUser && _currentUser.email) || ''),
       owner: _resolveOwnerName(_ownerEmail),
       watchers: [],
+      // v1.43.0: outcomes seed
+      expectedOutcomes: _collectExpectedOutcomes(),
+      launchOutcomes:   _collectLaunchOutcomes(null),
       createdAt: _now, updatedAt: _now
     };
     _appendChangeLog('create', newRow.id, 'Created "'+name+'"');
@@ -17064,15 +17265,19 @@ function openEditTaskModal(taskId){
   function field(label, hint){
     var w = document.createElement('div'); w.style.cssText = 'margin-bottom:14px';
     var l = document.createElement('label');
-    l.style.cssText = 'display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px';
+    l.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px';
     l.textContent = label;
-    w.appendChild(l);
+    // v1.43.1: convert long inline hints into a compact ? tooltip so the form
+    // stays tight. The .pmr-tip utility class drives the hover bubble.
     if(hint){
-      var h = document.createElement('div');
-      h.style.cssText = 'font-size:10px;color:var(--muted);margin-bottom:6px';
-      h.textContent = hint;
-      w.appendChild(h);
+      var tip = document.createElement('span');
+      tip.className = 'pmr-tip';
+      tip.setAttribute('data-tip', hint);
+      tip.setAttribute('aria-label', hint);
+      tip.innerHTML = '<svg viewBox="0 0 16 16" width="13" height="13" stroke="currentColor" stroke-width="1.5" fill="none" style="display:block;opacity:.65"><circle cx="8" cy="8" r="7"/><path d="M6 6a2 2 0 1 1 2.5 1.94c-.47.2-.5.5-.5.81V10"/><circle cx="8" cy="12" r="0.5" fill="currentColor"/></svg>';
+      l.appendChild(tip);
     }
+    w.appendChild(l);
     return w;
   }
   function inputCss(){ return 'width:100%;padding:9px 14px;border:1px solid var(--border);border-radius:9999px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;background:var(--white);color:var(--text)'; }
@@ -19316,6 +19521,43 @@ function closePredecessorPicker(){
 // ── Add task modal ──────────────────────────────────────────────────────────
 var _addTaskTab = 'custom';
 
+// v1.43.1: shared Select-All helpers for the Add Task modal tabs.
+function _toggleAllAddTaskCbs(cls, checked){
+  var modal = document.getElementById('addTaskBody');
+  if(!modal) return;
+  modal.querySelectorAll('input.'+cls).forEach(function(cb){ cb.checked = checked; });
+  // Sync category-level checkboxes too if any
+  modal.querySelectorAll('input[data-cat-cb]').forEach(function(cb){ cb.checked = checked; });
+  // Refresh whichever counter is on screen
+  ['libSelectAll:libSelectedCount:lib-cb','todoSelectAll:todoSelectedCount:src-cb','g2mSelectAll:g2mSelectedCount:src-cb'].forEach(function(spec){
+    var p = spec.split(':'); var sa = document.getElementById(p[0]); var sc = document.getElementById(p[1]);
+    if(sa && sc) _updateAddTaskCount(p[2], p[0], p[1]);
+  });
+}
+function _updateAddTaskCount(cls, selectAllId, countId){
+  var modal = document.getElementById('addTaskBody');
+  if(!modal) return;
+  var all = modal.querySelectorAll('input.'+cls);
+  var checked = modal.querySelectorAll('input.'+cls+':checked');
+  var sel = document.getElementById(selectAllId);
+  if(sel){
+    sel.checked = all.length > 0 && checked.length === all.length;
+    sel.indeterminate = checked.length > 0 && checked.length < all.length;
+  }
+  var c = document.getElementById(countId);
+  if(c) c.textContent = checked.length+' of '+all.length+' selected';
+}
+function _toggleCategoryAddTaskCbs(cat, checked){
+  var modal = document.getElementById('addTaskBody');
+  if(!modal) return;
+  modal.querySelectorAll('input[data-cat="'+cat+'"]').forEach(function(cb){ cb.checked = checked; });
+  // Refresh both potential counters (only one is on screen at a time)
+  ['todoSelectAll:todoSelectedCount:src-cb','g2mSelectAll:g2mSelectedCount:src-cb'].forEach(function(spec){
+    var p = spec.split(':'); var sa = document.getElementById(p[0]); var sc = document.getElementById(p[1]);
+    if(sa && sc) _updateAddTaskCount(p[2], p[0], p[1]);
+  });
+}
+
 function openAddTaskModal(){
   if(!getActivePlan()){
     showToast('Pick or create a plan first','error');
@@ -19412,6 +19654,11 @@ function renderAddTaskBody(){
     if(!entries.length){
       html += '<div class="plan-empty" style="padding:30px"><h3>No matches</h3><p>Try a different search or category.</p></div>';
     } else {
+      // v1.43.1: Select All bar at the top of the library tab.
+      html += '<div class="select-all-bar" style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--surface-low);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;font-size:12px">'+
+        '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;color:var(--text)"><input type="checkbox" id="libSelectAll" onchange="_toggleAllAddTaskCbs(\'lib-cb\', this.checked)">Select all '+entries.length+'</label>'+
+        '<span id="libSelectedCount" style="color:var(--muted);font-size:11px">0 selected</span>'+
+      '</div>';
       html += '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">'+entries.length+' of '+taskLibrary.length+' &middot; tick to add to plan</div>';
       html += '<div class="plan-source-list" style="max-height:380px;overflow-y:auto"><div class="plan-source-group" style="border:none;padding:0">';
       entries.slice(0, 200).forEach(function(e){
@@ -19422,7 +19669,7 @@ function renderAddTaskBody(){
         if(e.useCount > 1) meta.push('used ' + e.useCount + '\u00D7');
         var metaStr = meta.length ? meta.join(' &middot; ') : '';
         html += '<label class="plan-source-item" style="cursor:pointer;align-items:flex-start">'+
-          '<input type="checkbox" class="lib-cb" data-lib-id="'+escHtml(e.id)+'" style="margin-top:3px">'+
+          '<input type="checkbox" class="lib-cb" data-lib-id="'+escHtml(e.id)+'" style="margin-top:3px" onchange="_updateAddTaskCount(\'lib-cb\', \'libSelectAll\', \'libSelectedCount\')">'+
           '<div style="flex:1;min-width:0">'+
             '<div style="font-weight:600;color:var(--text);font-size:13px;line-height:1.3">'+escHtml(e.name)+'</div>'+
             (metaStr ? '<div style="font-size:10px;color:var(--muted);margin-top:2px">'+metaStr+'</div>' : '')+
@@ -19560,12 +19807,20 @@ function renderAddTaskBody(){
       body.innerHTML = '<div class="plan-empty"><h3>No ToDos yet</h3><p>Add ToDos to your initiatives first, then come back here.</p></div>';
       return;
     }
-    var html = '<div class="plan-source-list">';
+    var totalCount = 0;
+    initiatives.forEach(function(init){
+      (todoAllData[init] || []).forEach(function(td){ if(td.status !== 'done') totalCount++; });
+    });
+    var html = '<div class="select-all-bar" style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--surface-low);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;font-size:12px">'+
+      '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;color:var(--text)"><input type="checkbox" id="todoSelectAll" onchange="_toggleAllAddTaskCbs(\'src-cb\', this.checked)">Select all '+totalCount+'</label>'+
+      '<span id="todoSelectedCount" style="color:var(--muted);font-size:11px">0 selected</span>'+
+    '</div>';
+    html += '<div class="plan-source-list">';
     initiatives.forEach(function(init){
       html += '<div class="plan-source-group"><div class="plan-source-group-title">'+escHtml(init)+'</div>';
       (todoAllData[init] || []).forEach(function(td){
         if(td.status === 'done') return;  // skip completed
-        html += '<label class="plan-source-item"><input type="checkbox" class="src-cb" data-src="todo" data-src-id="'+escHtml(td.id)+'" data-src-name="'+escHtml(td.text||'')+'"><span>'+escHtml(td.text||'')+'</span>'+(td.due?'<span style="color:var(--muted);font-size:11px;margin-left:auto">Due '+escHtml(td.due)+'</span>':'')+'</label>';
+        html += '<label class="plan-source-item"><input type="checkbox" class="src-cb" data-src="todo" data-src-id="'+escHtml(td.id)+'" data-src-name="'+escHtml(td.text||'')+'" onchange="_updateAddTaskCount(\'src-cb\', \'todoSelectAll\', \'todoSelectedCount\')"><span>'+escHtml(td.text||'')+'</span>'+(td.due?'<span style="color:var(--muted);font-size:11px;margin-left:auto">Due '+escHtml(td.due)+'</span>':'')+'</label>';
       });
       html += '</div>';
     });
@@ -19581,13 +19836,24 @@ function renderAddTaskBody(){
       body.innerHTML = '<div class="plan-empty"><h3>No G2M checklists yet</h3><p>Open the Checklist module and create some checklists first.</p></div>';
       return;
     }
-    var html = '<div class="plan-source-list">';
+    var g2mTotalCount = 0;
     products.forEach(function(prod){
-      html += '<div class="plan-source-group"><div class="plan-source-group-title">'+escHtml(prod)+'</div>';
+      (g2mAllData[prod].items || []).forEach(function(item){ if(!item.done) g2mTotalCount++; });
+    });
+    var html = '<div class="select-all-bar" style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--surface-low);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;font-size:12px">'+
+      '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;color:var(--text)"><input type="checkbox" id="g2mSelectAll" onchange="_toggleAllAddTaskCbs(\'src-cb\', this.checked)">Select all '+g2mTotalCount+'</label>'+
+      '<span id="g2mSelectedCount" style="color:var(--muted);font-size:11px">0 selected</span>'+
+    '</div>';
+    html += '<div class="plan-source-list">';
+    products.forEach(function(prod){
+      var prodItems = (g2mAllData[prod].items || []).filter(function(it){ return !it.done; });
+      var prodCat = 'g2m_'+prod.replace(/[^a-z0-9]/gi,'_');
+      html += '<div class="plan-source-group">'+
+        '<div class="plan-source-group-title" style="display:flex;align-items:center;justify-content:space-between"><label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600"><input type="checkbox" data-cat-cb="'+escHtml(prodCat)+'" onchange="_toggleCategoryAddTaskCbs(\''+escHtml(prodCat)+'\', this.checked)">'+escHtml(prod)+'</label><span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted);font-size:11px">'+prodItems.length+'</span></div>';
       (g2mAllData[prod].items || []).forEach(function(item, idx){
         if(item.done) return;
         var name = item.text || item.name || ('Item '+(idx+1));
-        html += '<label class="plan-source-item"><input type="checkbox" class="src-cb" data-src="g2m" data-src-id="'+escHtml((item.id||'')+'_'+idx)+'" data-src-name="'+escHtml(name)+'"><span>'+escHtml(name)+'</span></label>';
+        html += '<label class="plan-source-item"><input type="checkbox" class="src-cb" data-cat="'+escHtml(prodCat)+'" data-src="g2m" data-src-id="'+escHtml((item.id||'')+'_'+idx)+'" data-src-name="'+escHtml(name)+'" onchange="_updateAddTaskCount(\'src-cb\', \'g2mSelectAll\', \'g2mSelectedCount\')"><span>'+escHtml(name)+'</span></label>';
       });
       html += '</div>';
     });
@@ -20529,7 +20795,7 @@ function _wireKanbanDragDrop(content, plan){
 // top-level parent ("themes"), draws horizontal bars on a month or quarter
 // axis, draws a today line + sample milestones, exposes search-in-view +
 // period toggle + group control.
-var _planTLState = { period: 'monthly', search: '', collapsed: {}, groupBy: 'parent' };
+var _planTLState = { period: 'monthly', search: '', collapsed: {}, groupBy: 'parent', filters: { statuses: [], priorities: [], owners: [] }, unplannedOnly: false };
 
 function renderPlanTimelineView(plan){
   var content = document.getElementById('plansContent');
@@ -20603,7 +20869,13 @@ function renderPlanTimelineView(plan){
   });
   var roots = byParent['__root__'] || [];
   var search = (_planTLState.search || '').toLowerCase().trim();
+  var filters = _planTLState.filters || { statuses:[], priorities:[], owners:[] };
+  var hasFilters = (filters.statuses.length || filters.priorities.length || filters.owners.length || _planTLState.unplannedOnly);
   function _matches(t){
+    if(_planTLState.unplannedOnly && t.startDate && t.endDate) return false;
+    if(filters.statuses.length && filters.statuses.indexOf(t.status||'not-started') < 0) return false;
+    if(filters.priorities.length && filters.priorities.indexOf(t.priority||'') < 0) return false;
+    if(filters.owners.length && filters.owners.indexOf((t.owner||'').toLowerCase()) < 0) return false;
     if(!search) return true;
     return (t.name||'').toLowerCase().indexOf(search) >= 0 ||
            (t.owner||'').toLowerCase().indexOf(search) >= 0;
@@ -20619,9 +20891,9 @@ function renderPlanTimelineView(plan){
         '<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--muted);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>' +
         '<input id="planTLSearch" type="search" placeholder="Search in view" value="'+escHtml(_planTLState.search)+'" oninput="_planTLSetSearch(this.value)" style="flex:1;padding:6px 8px;border:1px solid transparent;border-radius:6px;font-size:12px;color:var(--text);background:transparent;outline:none">' +
       '</div>' +
-      '<button class="prio-btn" onclick="_planTLToggleUnplanned()" style="display:inline-flex;align-items:center;gap:6px;font-size:12px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M3 3l18 18M9 9a3 3 0 014.243 0M21 12a9 9 0 01-1.875 5.5m-2.625-2.625A3 3 0 0115 12"/></svg>Unplanned ('+unplanned+')</button>' +
+      '<button class="prio-btn'+(_planTLState.unplannedOnly?' primary':'')+'" onclick="_planTLToggleUnplanned()" style="display:inline-flex;align-items:center;gap:6px;font-size:12px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M3 3l18 18M9 9a3 3 0 014.243 0M21 12a9 9 0 01-1.875 5.5m-2.625-2.625A3 3 0 0115 12"/></svg>Unplanned ('+unplanned+')</button>' +
       '<button class="prio-btn" onclick="_planTLSetPeriod(\''+(period==='monthly'?'quarterly':'monthly')+'\')" style="display:inline-flex;align-items:center;gap:6px;font-size:12px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>'+(period==='monthly'?'Monthly':'Quarterly')+'</button>' +
-      '<button class="prio-btn" style="display:inline-flex;align-items:center;gap:6px;font-size:12px" onclick="_planTLOpenFilter()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>Filter</button>' +
+      '<button class="prio-btn'+(hasFilters?' primary':'')+'" style="display:inline-flex;align-items:center;gap:6px;font-size:12px" onclick="_planTLOpenFilter()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>Filter'+(hasFilters?' \u2022':'')+'</button>' +
       '<button class="prio-btn" style="display:inline-flex;align-items:center;gap:6px;font-size:12px" onclick="_planTLCycleGroup()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M3 6h18M3 12h12M3 18h6"/></svg>Group: '+(_planTLState.groupBy==='parent'?'Parent':'Status')+'</button>' +
     '</div>';
 
@@ -20759,9 +21031,11 @@ function renderPlanTimelineView(plan){
     ? '<div style="position:absolute;left:'+todayX+'px;top:64px;bottom:0;width:0;border-left:2px dashed #2563eb;pointer-events:none;z-index:20"><div style="position:absolute;top:-22px;left:-50px;width:100px;background:#2563eb;color:#fff;font-size:10px;font-weight:700;text-align:center;padding:3px 0;border-radius:0 0 6px 6px;letter-spacing:.04em">TODAY</div></div>'
     : '';
 
+  // v1.43.1: outer wrapper guarantees overflow-x scrolling at the bottom of
+  // the timeline, plus a custom thin scrollbar that's visible in dark mode.
   content.innerHTML =
     toolbarHtml +
-    '<div style="overflow:auto;background:var(--white)" id="planTLScroll">' +
+    '<div style="overflow-x:auto;overflow-y:auto;background:var(--white);scrollbar-width:thin;-webkit-overflow-scrolling:touch" class="plan-tl-scroll" id="planTLScroll">' +
       '<div style="position:relative;min-width:'+TOTAL_W+'px">' +
         yearRow + periodRow + bodyHtml + todayLine +
       '</div>' +
@@ -20778,8 +21052,70 @@ function _planTLSetSearch(v){
 }
 function _planTLSetPeriod(p){ _planTLState.period = p; renderPlanMain(); }
 function _planTLToggleCollapse(id){ _planTLState.collapsed[id] = !_planTLState.collapsed[id]; renderPlanMain(); }
-function _planTLToggleUnplanned(){ showToast('Unplanned filter coming next iteration', 'info'); }
-function _planTLOpenFilter(){ showToast('Advanced filters coming next iteration', 'info'); }
+function _planTLToggleUnplanned(){
+  _planTLState.unplannedOnly = !_planTLState.unplannedOnly;
+  renderPlanMain();
+}
+// v1.43.1: filter modal — status / priority / owner.
+function _planTLOpenFilter(){
+  var p = getActivePlan();
+  if(!p){ showToast('No active plan','error'); return; }
+  var existing = document.getElementById('planTLFilterOverlay');
+  if(existing) existing.remove();
+  var ov = document.createElement('div');
+  ov.id = 'planTLFilterOverlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9100;display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
+  var STATUSES = [
+    { v:'not-started', l:'Not started' },
+    { v:'in-progress', l:'In progress' },
+    { v:'done', l:'Done' },
+    { v:'blocked', l:'Blocked' }
+  ];
+  var PRIORITIES = [
+    { v:'p0', l:'P0' }, { v:'p1', l:'P1' }, { v:'p2', l:'P2' }, { v:'p3', l:'P3' }
+  ];
+  var ownersSet = {};
+  (p.tasks||[]).forEach(function(t){ if(t.owner) ownersSet[t.owner.toLowerCase()] = t.owner; });
+  var owners = Object.keys(ownersSet).map(function(k){ return ownersSet[k]; }).sort();
+  var f = _planTLState.filters || { statuses:[], priorities:[], owners:[] };
+  function chk(arr, v){ return arr && arr.indexOf(v) >= 0 ? ' checked' : ''; }
+  var panel = document.createElement('div');
+  panel.style.cssText = 'background:var(--white);color:var(--text);border:1px solid var(--border);border-radius:14px;width:100%;max-width:480px;max-height:85vh;overflow:auto;box-shadow:0 24px 64px rgba(0,0,0,.35);padding:20px';
+  panel.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><h3 style="margin:0;font-size:16px;font-weight:700">Filter timeline</h3><button onclick="document.getElementById(\'planTLFilterOverlay\').remove()" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer">&times;</button></div>'+
+    '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Status</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px">'+
+      STATUSES.map(function(s){ return '<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" data-flt-status="'+s.v+'"'+chk(f.statuses,s.v)+'>'+s.l+'</label>'; }).join('')+
+    '</div>'+
+    '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Priority</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px">'+
+      PRIORITIES.map(function(s){ return '<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" data-flt-prio="'+s.v+'"'+chk(f.priorities,s.v)+'>'+s.l+'</label>'; }).join('')+
+    '</div>'+
+    '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Owner</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;max-height:140px;overflow-y:auto">'+
+      (owners.length ? owners.map(function(o){ return '<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" data-flt-owner="'+escHtml(o.toLowerCase())+'"'+chk(f.owners, o.toLowerCase())+'>'+escHtml(o)+'</label>'; }).join('') : '<span style="font-size:12px;color:var(--muted)">No owners assigned yet.</span>')+
+    '</div>'+
+    '<div style="display:flex;justify-content:space-between;gap:8px;margin-top:8px"><button class="prio-btn" onclick="_planTLClearFilters()">Clear all</button><div style="display:flex;gap:8px"><button class="prio-btn" onclick="document.getElementById(\'planTLFilterOverlay\').remove()">Cancel</button><button class="prio-btn primary" onclick="_planTLApplyFilters()">Apply</button></div></div>';
+  ov.appendChild(panel);
+  document.body.appendChild(ov);
+}
+function _planTLApplyFilters(){
+  var statuses = Array.from(document.querySelectorAll('[data-flt-status]:checked')).map(function(i){ return i.getAttribute('data-flt-status'); });
+  var priorities = Array.from(document.querySelectorAll('[data-flt-prio]:checked')).map(function(i){ return i.getAttribute('data-flt-prio'); });
+  var owners = Array.from(document.querySelectorAll('[data-flt-owner]:checked')).map(function(i){ return i.getAttribute('data-flt-owner'); });
+  _planTLState.filters = { statuses: statuses, priorities: priorities, owners: owners };
+  var ov = document.getElementById('planTLFilterOverlay'); if(ov) ov.remove();
+  renderPlanMain();
+  showToast('Filters applied','info');
+}
+function _planTLClearFilters(){
+  _planTLState.filters = { statuses:[], priorities:[], owners:[] };
+  _planTLState.unplannedOnly = false;
+  var ov = document.getElementById('planTLFilterOverlay'); if(ov) ov.remove();
+  renderPlanMain();
+  showToast('Filters cleared','info');
+}
 function _planTLCycleGroup(){
   _planTLState.groupBy = _planTLState.groupBy === 'parent' ? 'status' : 'parent';
   renderPlanMain();
@@ -23843,15 +24179,15 @@ function toggleHelpWidget(){
 }
 function _renderHelpMenu(){
   var body = document.getElementById('helpPanelBody'); if(!body) return;
-  var opts = [
-    { k:'bug',     label:'Report a Bug',       svg:'<circle cx="10" cy="10" r="8"/><line x1="10" y1="6" x2="10" y2="10"/><line x1="10" y1="13" x2="10.01" y2="13"/>' },
-    { k:'feature', label:'Request a Feature',  svg:'<polygon points="10,2 13,8 19,8 14,12 16,18 10,14 4,18 6,12 1,8 7,8"/>' },
-    { k:'help',    label:'Get Help',           svg:'<circle cx="10" cy="10" r="8"/><path d="M8 8a2 2 0 1 1 4 0c0 1-2 1.5-2 3"/><line x1="10" y1="14" x2="10.01" y2="14"/>' },
-    { k:'ticket',  label:'Log a Ticket',       svg:'<rect x="3" y="3" width="14" height="14" rx="2"/><line x1="7" y1="7" x2="13" y2="7"/><line x1="7" y1="10" x2="13" y2="10"/><line x1="7" y1="13" x2="10" y2="13"/>' }
-  ];
-  body.innerHTML = opts.map(function(o){
-    return '<button class="help-option" onclick="_openHelpForm(\''+o.k+'\')"><svg viewBox="0 0 20 20">'+o.svg+'</svg><span>'+o.label+'</span></button>';
-  }).join('');
+  // v1.43.0: include "What's New" entry; show a dot when version > lastSeen.
+  var hasNewBadge = _whatsNewIsUnseen();
+  var dotMarkup = '<span class="whats-new-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#dc2626;margin-left:6px"></span>';
+  body.innerHTML =
+    '<button class="help-option" onclick="openWhatsNew()"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8"/><polyline points="10,5 10,11 14,13"/></svg><span>What&apos;s New '+(hasNewBadge?dotMarkup:'')+'</span></button>' +
+    '<button class="help-option" onclick="_openHelpForm(\'bug\')"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8"/><line x1="10" y1="6" x2="10" y2="10"/><line x1="10" y1="13" x2="10.01" y2="13"/></svg><span>Report a Bug</span></button>' +
+    '<button class="help-option" onclick="_openHelpForm(\'feature\')"><svg viewBox="0 0 20 20"><polygon points="10,2 13,8 19,8 14,12 16,18 10,14 4,18 6,12 1,8 7,8"/></svg><span>Request a Feature</span></button>' +
+    '<button class="help-option" onclick="_openHelpForm(\'help\')"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8"/><path d="M8 8a2 2 0 1 1 4 0c0 1-2 1.5-2 3"/><line x1="10" y1="14" x2="10.01" y2="14"/></svg><span>Get Help</span></button>' +
+    '<button class="help-option" onclick="_openHelpForm(\'ticket\')"><svg viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2"/><line x1="7" y1="7" x2="13" y2="7"/><line x1="7" y1="10" x2="13" y2="10"/><line x1="7" y1="13" x2="10" y2="13"/></svg><span>Log a Ticket</span></button>';
 }
 function _openHelpForm(kind){
   var labels = { bug:'Report a Bug', feature:'Request a Feature', help:'Get Help', ticket:'Log a Ticket' };
@@ -23888,6 +24224,144 @@ function _submitHelpRequest(kind){
   toggleHelpWidget();
 }
 
+// ── v1.43.0: What's New (in-app release notes) ──────────────────────────────
+// Single source of truth = CHANGELOG.md at repo root. Bundled for Electron
+// (file:// → ../CHANGELOG.md) and for the web build (web/scripts/build.js
+// copies it to public/ → fetch '/CHANGELOG.md'). Caches the parsed markdown
+// in memory for the session.
+var _whatsNewCache = null;
+
+function _whatsNewIsUnseen(){
+  try {
+    var lastSeen = (typeof appSettings === 'object' && appSettings) ? appSettings.lastSeenAppVersion : null;
+    if(!lastSeen) return true;
+    return _versionLessThan(lastSeen, APP_VERSION);
+  } catch(e){ return false; }
+}
+
+// String compare on "vMAJOR.MINOR.PATCH" semver-ish strings — good enough for
+// our linear release sequence; we don't ship pre-release suffixes today.
+function _versionLessThan(a, b){
+  var pa = String(a||'').replace(/^v/,'').split('.').map(function(n){ return parseInt(n,10) || 0; });
+  var pb = String(b||'').replace(/^v/,'').split('.').map(function(n){ return parseInt(n,10) || 0; });
+  for(var i = 0; i < Math.max(pa.length, pb.length); i++){
+    var x = pa[i] || 0, y = pb[i] || 0;
+    if(x < y) return true;
+    if(x > y) return false;
+  }
+  return false;
+}
+
+async function _fetchChangelog(){
+  if(_whatsNewCache !== null) return _whatsNewCache;
+  var url = (window.location.protocol === 'file:') ? '../CHANGELOG.md' : '/CHANGELOG.md';
+  try {
+    var resp = await fetch(url);
+    if(!resp.ok){ _whatsNewCache = ''; return ''; }
+    _whatsNewCache = await resp.text();
+    return _whatsNewCache;
+  } catch(e){
+    console.warn('[whatsNew] fetch failed:', e && e.message);
+    _whatsNewCache = '';
+    return '';
+  }
+}
+
+// Tiny markdown renderer — handles headings (# / ## / ###), bullet lists,
+// **bold**, `code`, blank-line paragraphs, and links [t](u). Keeps the bundle
+// small (no remark / marked dependency).
+function _renderMarkdown(md){
+  if(!md) return '<div style="color:var(--muted);font-style:italic">No release notes found.</div>';
+  var lines = md.split(/\r?\n/);
+  var out = []; var inList = false;
+  function flushList(){ if(inList){ out.push('</ul>'); inList = false; } }
+  function inline(s){
+    s = escHtml(s);
+    s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/`([^`]+)`/g, '<code style="background:var(--surface-low);padding:1px 5px;border-radius:3px;font-size:90%">$1</code>');
+    s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">$1</a>');
+    return s;
+  }
+  for(var i = 0; i < lines.length; i++){
+    var ln = lines[i];
+    if(/^\s*$/.test(ln)){ flushList(); continue; }
+    var m;
+    if(m = ln.match(/^###\s+(.*)$/)){ flushList(); out.push('<h4 style="font-size:13px;font-weight:700;margin:14px 0 6px;color:var(--text)">'+inline(m[1])+'</h4>'); continue; }
+    if(m = ln.match(/^##\s+(.*)$/)){ flushList(); out.push('<h3 style="font-size:15px;font-weight:700;margin:18px 0 8px;color:var(--text);padding-bottom:6px;border-bottom:1px solid var(--border)">'+inline(m[1])+'</h3>'); continue; }
+    if(m = ln.match(/^#\s+(.*)$/)){ flushList(); out.push('<h2 style="font-size:18px;font-weight:800;margin:0 0 12px;color:var(--text)">'+inline(m[1])+'</h2>'); continue; }
+    if(m = ln.match(/^\s*[-*]\s+(.*)$/)){
+      if(!inList){ out.push('<ul style="padding-left:20px;margin:6px 0;color:var(--text)">'); inList = true; }
+      out.push('<li style="margin:3px 0;font-size:13px;line-height:1.55">'+inline(m[1])+'</li>');
+      continue;
+    }
+    flushList();
+    out.push('<p style="margin:6px 0;font-size:13px;line-height:1.55;color:var(--text)">'+inline(ln)+'</p>');
+  }
+  flushList();
+  return out.join('');
+}
+
+async function openWhatsNew(){
+  // Close help panel
+  var hp = document.getElementById('helpPanel'); if(hp) hp.style.display = 'none';
+  // Build modal lazily — single instance reused across opens.
+  var modal = document.getElementById('whatsNewModal');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'whatsNewModal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML =
+      '<div class="modal" style="max-width:760px">' +
+        '<div class="modal-hdr">' +
+          '<h2>What&apos;s New <span style="font-size:13px;font-weight:600;color:var(--muted);margin-left:8px" id="whatsNewVersion"></span></h2>' +
+          '<button class="close" onclick="closeWhatsNew()">&times;</button>' +
+        '</div>' +
+        '<div class="modal-body" id="whatsNewBody" style="max-height:60vh;overflow:auto"></div>' +
+        '<div class="modal-footer">' +
+          '<button class="btn-cancel" onclick="closeWhatsNew()">Close</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(modal);
+  }
+  modal.classList.remove('hidden');
+  var ver = document.getElementById('whatsNewVersion'); if(ver) ver.textContent = APP_VERSION;
+  var body = document.getElementById('whatsNewBody');
+  if(body) body.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted)">Loading release notes…</div>';
+  var md = await _fetchChangelog();
+  if(body) body.innerHTML = _renderMarkdown(md);
+  // Stamp lastSeen so the badge clears.
+  if(typeof appSettings === 'object' && appSettings){
+    appSettings.lastSeenAppVersion = APP_VERSION;
+    if(typeof persistData === 'function') persistData();
+  }
+  // Refresh the help-FAB dot if it's still showing.
+  var dot = document.querySelector('.help-fab-dot');
+  if(dot) dot.remove();
+}
+
+function closeWhatsNew(){
+  var m = document.getElementById('whatsNewModal');
+  if(m) m.classList.add('hidden');
+}
+
+// Show a small dot on the help FAB when there's an unseen release.
+function _refreshHelpFabBadge(){
+  var btn = document.getElementById('helpFabBtn');
+  if(!btn) return;
+  var existing = btn.querySelector('.help-fab-dot');
+  if(_whatsNewIsUnseen()){
+    if(!existing){
+      var dot = document.createElement('span');
+      dot.className = 'help-fab-dot';
+      dot.style.cssText = 'position:absolute;top:2px;right:2px;width:10px;height:10px;border-radius:50%;background:#dc2626;border:2px solid var(--accent)';
+      btn.style.position = 'relative';
+      btn.appendChild(dot);
+    }
+  } else if(existing){
+    existing.remove();
+  }
+}
+
 function _autoCollapseSidebarAfterClick(){
   var sb = document.getElementById('appSidebar');
   if(sb) sb.classList.add('collapsed');
@@ -23897,6 +24371,15 @@ function _autoCollapseSidebarAfterClick(){
 // Wire delegated auto-collapse: any click on a sidebar-item button triggers a
 // collapse a tick later (so the original onclick runs first).
 document.addEventListener('DOMContentLoaded', function(){
+  // v1.43.0: sync the login footer + help-FAB badge from APP_VERSION.
+  try {
+    var lv = document.getElementById('loginVersionLabel');
+    if(lv) lv.textContent = APP_VERSION;
+    _refreshHelpFabBadge();
+    // Re-check after data loads (badge depends on appSettings.lastSeenAppVersion).
+    setTimeout(_refreshHelpFabBadge, 1500);
+    setTimeout(_refreshHelpFabBadge, 4000);
+  } catch(e){ /* non-fatal */ }
   var sb = document.getElementById('appSidebar');
   if(!sb) return;
   // v1.32.0 FIX 16: restore sidebar preference from localStorage
@@ -26546,7 +27029,6 @@ var _rptCurrentReport='initiative-health';
 // capacity, and input-backlog audiences.
 var RPT_REPORTS=[
   {id:'initiative-health',name:'Initiative Health',icon:'target',desc:'Status of every roadmap initiative'},
-  {id:'portfolio-overview',name:'Portfolio Overview',icon:'clipboard',desc:'All roadmaps in one view'},
   {id:'weekly-status',     name:'Weekly Status',     icon:'calendar',desc:'Shipped, shipping next, blocked'},
   {id:'launch-outcomes',   name:'Launch Outcomes',   icon:'rocket',  desc:'Released initiatives & outcomes'},
   {id:'okr-progress',      name:'OKR Progress',      icon:'check',   desc:'Objectives & key-result health'},
@@ -26585,7 +27067,6 @@ function renderReportsSidebar(){
 function renderReport(id){
   var c=document.getElementById('rptContent'); c.innerHTML='';
   if(id==='initiative-health') rptInitiativeHealth(c);
-  else if(id==='portfolio-overview') rptPortfolioOverview(c);
   else if(id==='weekly-status') rptWeeklyStatus(c);
   else if(id==='launch-outcomes') rptLaunchOutcomes(c);
   else if(id==='okr-progress') rptOKRProgress(c);
@@ -27046,47 +27527,388 @@ function rptWeeklyStatus(container){
 }
 
 // ══ REPORT 7: Launch Outcomes ══
+// v1.43.0 — Launch Outcomes report rewrite. Interactive cards that close the
+// loop between expected outcomes (set on the row) and actual metrics +
+// feedback captured here. Each released initiative gets:
+//   • released-on date + headline numbers (G2M, tasks, hours)
+//   • Closing-the-loop table: each expectedOutcomes[] item paired with the
+//     matching actualMetrics[] entry by expectedId, with a status pill.
+//   • Release notes editor — three audience tabs (Dev / Customer / Internal).
+//   • Feedback thread — typed by source (PM / Customer / Data / Sales /
+//     Support) with optional sentiment.
+//   • Export to markdown button — concatenates each card's notes.
+var _loState = { audienceFilter: 'all', includeUnreleased: false };
+
 function rptLaunchOutcomes(container){
   var title=document.createElement('h2'); title.style.cssText='font-size:20px;font-weight:700;margin-bottom:4px;color:var(--text)';
   title.textContent='Launch Outcomes';
-  var sub=document.createElement('p'); sub.style.cssText='font-size:13px;color:var(--muted);margin-bottom:24px';
-  sub.textContent='Initiatives with at least one released bar, ranked by completeness. Great for "what shipped" post-mortems.';
+  var sub=document.createElement('p'); sub.style.cssText='font-size:13px;color:var(--muted);margin-bottom:18px';
+  sub.textContent='Closing-the-loop view: every shipped initiative with its release notes, actual outcomes vs predictions, and structured feedback by source.';
   container.appendChild(title); container.appendChild(sub);
 
+  // Toolbar — audience filter + include-unreleased toggle + export.
+  var toolbar = document.createElement('div');
+  toolbar.style.cssText = 'display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px';
+  toolbar.innerHTML =
+    '<div style="display:inline-flex;gap:4px;background:var(--surface-low);border-radius:9999px;padding:3px">' +
+      ['all','dev','customer','internal'].map(function(a){
+        var lab = a === 'all' ? 'All audiences' : (a.charAt(0).toUpperCase() + a.slice(1));
+        var act = (_loState.audienceFilter === a);
+        return '<button type="button" onclick="_loSetAudience(\''+a+'\')" style="padding:5px 14px;font-size:11px;font-weight:600;border:none;border-radius:9999px;cursor:pointer;background:'+(act?'var(--accent)':'transparent')+';color:'+(act?'#fff':'var(--text)')+';font-family:inherit">'+lab+'</button>';
+      }).join('') +
+    '</div>' +
+    '<label style="font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:6px;cursor:pointer">' +
+      '<input type="checkbox" id="loIncludeUnreleased"'+(_loState.includeUnreleased?' checked':'')+' onchange="_loToggleUnreleased(this.checked)" style="accent-color:var(--accent)"> Include unreleased initiatives' +
+    '</label>' +
+    '<button type="button" class="btn accent" onclick="_loExportMarkdown()" style="margin-left:auto;padding:6px 14px;font-size:11px">Export to Markdown</button>';
+  container.appendChild(toolbar);
+
+  // Find launches: any row with a green bar OR launchOutcomes.releasedAt set,
+  // plus (optionally) every row when "include unreleased" is on.
   var launches = (rows||[]).filter(function(r){
-    return (r.bars||[]).some(function(b){ return b.c==='g'; });
+    if(_loState.includeUnreleased) return true;
+    var hasGreen = (r.bars||[]).some(function(b){ return b.c==='g'; });
+    var hasRel   = !!(r.launchOutcomes && r.launchOutcomes.releasedAt);
+    return hasGreen || hasRel;
   }).map(function(r){
     var totalBars=(r.bars||[]).length;
     var released=(r.bars||[]).filter(function(b){return b.c==='g';}).length;
     var g2m=_rptG2MScore(r.name);
     var todo=_rptTodoStats(r.name);
     return { row:r, total:totalBars, released:released, pct:totalBars?Math.round(released/totalBars*100):0, g2m:g2m, todo:todo };
-  }).sort(function(a,b){ return b.pct-a.pct; });
+  }).sort(function(a,b){
+    // Sort by released-at desc (recent first), then by pct desc.
+    var aRel = (a.row.launchOutcomes && a.row.launchOutcomes.releasedAt) || '';
+    var bRel = (b.row.launchOutcomes && b.row.launchOutcomes.releasedAt) || '';
+    if(aRel !== bRel) return bRel.localeCompare(aRel);
+    return b.pct - a.pct;
+  });
+
+  // Headline summary
+  var totalLaunches = launches.length;
+  var totalExpected = 0, totalCriteriaMet = 0, totalCriteriaPending = 0, totalFeedback = 0;
+  launches.forEach(function(L){
+    var lo = L.row.launchOutcomes || {};
+    var expected = Array.isArray(L.row.expectedOutcomes) ? L.row.expectedOutcomes : [];
+    var crit = lo.successCriteria || {};
+    expected.forEach(function(eo){
+      totalExpected++;
+      var s = crit[eo.id];
+      if(s === 'met') totalCriteriaMet++;
+      else if(!s || s === 'pending') totalCriteriaPending++;
+    });
+    totalFeedback += (Array.isArray(lo.feedback) ? lo.feedback.length : 0);
+  });
+  var summary = document.createElement('div');
+  summary.className = 'rpt-card';
+  summary.style.cssText += ';display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px';
+  [
+    { v: totalLaunches, l: 'Launches tracked', c: 'var(--accent)' },
+    { v: totalExpected ? Math.round(totalCriteriaMet/totalExpected*100)+'%' : '—', l: 'Success criteria met', c: 'var(--g1)' },
+    { v: totalCriteriaPending, l: 'Criteria pending', c: '#f59e0b' },
+    { v: totalFeedback, l: 'Feedback comments', c: '#7c3aed' }
+  ].forEach(function(s){
+    var stat = document.createElement('div'); stat.className = 'rpt-stat';
+    stat.innerHTML = '<div class="rpt-stat-value" style="color:'+s.c+'">'+s.v+'</div><div class="rpt-stat-label">'+s.l+'</div>';
+    summary.appendChild(stat);
+  });
+  container.appendChild(summary);
 
   if(!launches.length){
     var empty=document.createElement('div'); empty.className='rpt-card';
-    empty.innerHTML='<div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;font-style:italic">No released launches yet — mark a timeline bar as <b>Released</b> (green) to see it here.</div>';
+    empty.innerHTML='<div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;font-style:italic">No released launches yet — mark a timeline bar as <b>Released</b> (green) or set a release date on a row to see it here. Toggle "Include unreleased" above to capture expected outcomes early.</div>';
     container.appendChild(empty); return;
   }
-  var card=document.createElement('div'); card.className='rpt-card';
-  var h='<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="border-bottom:2px solid var(--border)">'+
-    '<th style="text-align:left;padding:10px 12px;font-size:11px;color:var(--muted)">INITIATIVE</th>'+
-    '<th style="text-align:right;padding:10px 12px;font-size:11px;color:var(--muted)">BARS RELEASED</th>'+
-    '<th style="text-align:right;padding:10px 12px;font-size:11px;color:var(--muted)">G2M</th>'+
-    '<th style="text-align:right;padding:10px 12px;font-size:11px;color:var(--muted)">TASKS DONE</th>'+
-    '<th style="text-align:right;padding:10px 12px;font-size:11px;color:var(--muted)">HOURS LOGGED</th>'+
-    '</tr></thead><tbody>';
+
+  // One card per launch
   launches.forEach(function(L){
-    h+='<tr style="border-bottom:1px solid var(--border)">'+
-      '<td style="padding:10px 12px;font-weight:600">'+escHtml(L.row.name||'')+'</td>'+
-      '<td style="padding:10px 12px;text-align:right;font-variant-numeric:tabular-nums">'+L.released+'/'+L.total+' <span style="color:var(--muted)">('+L.pct+'%)</span></td>'+
-      '<td style="padding:10px 12px;text-align:right;font-weight:700;color:'+(L.g2m>=80?'var(--g1)':L.g2m>=50?'#f59e0b':'var(--r1)')+'">'+(L.g2m!=null?L.g2m+'%':'—')+'</td>'+
-      '<td style="padding:10px 12px;text-align:right;font-variant-numeric:tabular-nums">'+L.todo.done+'/'+L.todo.total+'</td>'+
-      '<td style="padding:10px 12px;text-align:right;font-variant-numeric:tabular-nums">'+Math.round(L.todo.actHrs)+'h</td>'+
-      '</tr>';
+    container.appendChild(_loRenderLaunchCard(L));
   });
-  h+='</tbody></table>';
-  card.innerHTML=h; container.appendChild(card);
+}
+
+function _loSetAudience(a){ _loState.audienceFilter = a; _loRerender(); }
+function _loToggleUnreleased(v){ _loState.includeUnreleased = !!v; _loRerender(); }
+function _loRerender(){
+  var c = document.getElementById('rptContent');
+  if(c){ c.innerHTML = ''; rptLaunchOutcomes(c); }
+}
+
+function _loRenderLaunchCard(L){
+  var row = L.row;
+  var lo = row.launchOutcomes || {};
+  var rowId = row.id;
+  var notes = lo.releaseNotes || {};
+  var releasedAt = lo.releasedAt ? new Date(lo.releasedAt).toLocaleDateString() : '(release date not set)';
+  var expected = Array.isArray(row.expectedOutcomes) ? row.expectedOutcomes : [];
+  var actuals  = Array.isArray(lo.actualMetrics) ? lo.actualMetrics : [];
+  var feedback = Array.isArray(lo.feedback) ? lo.feedback : [];
+  var sec = sections.find(function(s){ return s.id === row.sec; });
+  var secColor = sec ? sec.color : 'var(--muted)';
+
+  var card = document.createElement('div');
+  card.className = 'rpt-card lo-card';
+  card.setAttribute('data-lo-row', rowId);
+  card.style.cssText += ';border-left:4px solid '+secColor;
+
+  // ── Header ──
+  var hdrHtml =
+    '<div style="display:flex;align-items:start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px">' +
+      '<div>' +
+        '<h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text)">'+escHtml(row.name||'Untitled')+'</h3>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+(sec?escHtml(sec.name)+' · ':'')+escHtml(releasedAt)+(row.priority?' · <strong>'+escHtml(row.priority)+'</strong>':'')+'</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:14px;font-size:11px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums">' +
+        '<div><div style="font-size:14px;font-weight:700;color:var(--text)">'+L.released+'/'+L.total+'</div>bars released</div>' +
+        '<div><div style="font-size:14px;font-weight:700;color:'+(L.g2m>=80?'var(--g1)':L.g2m>=50?'#f59e0b':'var(--r1)')+'">'+(L.g2m!=null?L.g2m+'%':'—')+'</div>G2M</div>' +
+        '<div><div style="font-size:14px;font-weight:700;color:var(--text)">'+L.todo.done+'/'+L.todo.total+'</div>tasks done</div>' +
+      '</div>' +
+    '</div>';
+
+  // ── Closing-the-loop table ──
+  var loopHtml = '';
+  if(expected.length){
+    loopHtml += '<div style="margin-top:10px"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Closing the loop — expected vs actual</div>';
+    loopHtml += '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="border-bottom:1px solid var(--border);color:var(--muted)">' +
+      '<th style="text-align:left;padding:6px 8px;font-size:10px;font-weight:700">METRIC</th>' +
+      '<th style="text-align:right;padding:6px 8px;font-size:10px;font-weight:700">TARGET</th>' +
+      '<th style="text-align:right;padding:6px 8px;font-size:10px;font-weight:700">ACTUAL</th>' +
+      '<th style="text-align:left;padding:6px 8px;font-size:10px;font-weight:700">SOURCE</th>' +
+      '<th style="text-align:left;padding:6px 8px;font-size:10px;font-weight:700">STATUS</th>' +
+      '</tr></thead><tbody>';
+    expected.forEach(function(eo){
+      var actual = actuals.find(function(a){ return a.expectedId === eo.id; }) || {};
+      var crit   = (lo.successCriteria || {})[eo.id] || 'pending';
+      var pillBg = { met:'rgba(34,197,94,.15)', missed:'rgba(239,68,68,.15)', partial:'rgba(245,158,11,.15)', pending:'rgba(148,163,184,.15)' }[crit];
+      var pillFg = { met:'#15803d', missed:'#b91c1c', partial:'#b45309', pending:'#475569' }[crit];
+      loopHtml += '<tr style="border-bottom:1px solid var(--border)">' +
+        '<td style="padding:6px 8px"><div style="font-weight:600;color:var(--text)">'+escHtml(eo.metric||'')+'</div>'+(eo.timeframe?'<div style="font-size:10px;color:var(--muted)">'+escHtml(eo.timeframe)+'</div>':'')+'</td>' +
+        '<td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums">'+escHtml(eo.target||'—')+(eo.units?' <span style="color:var(--muted)">'+escHtml(eo.units)+'</span>':'')+'</td>' +
+        '<td style="padding:6px 8px;text-align:right">' +
+          '<input type="text" value="'+escHtml(actual.value!=null?String(actual.value):'')+'" placeholder="—" data-lo-actual="'+escHtml(eo.id)+'" onchange="_loSaveActual(\''+escHtml(rowId)+'\',\''+escHtml(eo.id)+'\')" style="width:80px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;color:var(--text);background:var(--white);text-align:right">' +
+        '</td>' +
+        '<td style="padding:6px 8px">' +
+          '<select data-lo-source="'+escHtml(eo.id)+'" onchange="_loSaveActual(\''+escHtml(rowId)+'\',\''+escHtml(eo.id)+'\')" style="padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:11px;color:var(--text);background:var(--white)">' +
+            ['','PM','Data','Customer','Sales','Support'].map(function(s){ return '<option value="'+s+'"'+((actual.source||'')===s?' selected':'')+'>'+(s||'—')+'</option>'; }).join('') +
+          '</select>' +
+        '</td>' +
+        '<td style="padding:6px 8px">' +
+          '<select onchange="_loSetCriterion(\''+escHtml(rowId)+'\',\''+escHtml(eo.id)+'\',this.value)" style="padding:4px 6px;border:1px solid var(--border);border-radius:9999px;font-size:11px;color:'+pillFg+';background:'+pillBg+';font-weight:600">' +
+            ['pending','met','partial','missed'].map(function(s){ return '<option value="'+s+'"'+(crit===s?' selected':'')+'>'+s+'</option>'; }).join('') +
+          '</select>' +
+        '</td>' +
+      '</tr>';
+    });
+    loopHtml += '</tbody></table></div>';
+  } else {
+    loopHtml += '<div style="margin-top:10px;font-size:11px;color:var(--muted);font-style:italic">No expected outcomes set on this row. Open the row → Expected Outcomes section to predict success criteria up-front.</div>';
+  }
+
+  // ── Release notes — audience tabs ──
+  var af = _loState.audienceFilter;
+  var audiences = (af === 'all') ? ['dev','customer','internal'] : [af];
+  var rnHtml = '<div style="margin-top:14px"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Release notes</div>';
+  if(af === 'all'){
+    rnHtml += '<div style="display:flex;gap:6px;border-bottom:1px solid var(--border);margin-bottom:8px">' +
+      audiences.map(function(a, i){
+        return '<button type="button" data-lo-rntab="'+escHtml(rowId)+'_'+a+'" onclick="_loSwitchCardTab(\''+escHtml(rowId)+'\',\''+a+'\')" style="padding:6px 12px;border:none;background:none;border-bottom:2px solid '+(i===0?'var(--accent)':'transparent')+';color:'+(i===0?'var(--accent)':'var(--muted)')+';font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">'+a.charAt(0).toUpperCase()+a.slice(1)+'</button>';
+      }).join('') +
+    '</div>';
+  }
+  audiences.forEach(function(a, i){
+    var visible = (af !== 'all') || i === 0;
+    rnHtml += '<textarea data-lo-rn-card="'+escHtml(rowId)+'_'+a+'" onblur="_loSaveReleaseNote(\''+escHtml(rowId)+'\',\''+a+'\',this.value)" placeholder="'+(a==='dev'?'Technical changes — what shipped and how':a==='customer'?'Customer-facing — what users will notice':'Internal summary — stakeholders, takeaways, next steps')+'" style="display:'+(visible?'block':'none')+';width:100%;min-height:80px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text);background:var(--white);box-sizing:border-box;font-family:inherit;resize:vertical;margin-bottom:6px">'+escHtml(notes[a]||'')+'</textarea>';
+  });
+  rnHtml += '</div>';
+
+  // ── Feedback thread ──
+  var fbHtml = '<div style="margin-top:14px"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Feedback &amp; outcomes commentary <span style="color:var(--accent);font-weight:600">('+feedback.length+')</span></div>';
+  if(feedback.length){
+    fbHtml += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">' +
+      feedback.slice().sort(function(a,b){ return (b.ts||'').localeCompare(a.ts||''); }).map(function(fb){
+        var sentColor = { positive:'#15803d', neutral:'var(--muted)', negative:'#b91c1c' }[fb.sentiment||'neutral'] || 'var(--muted)';
+        return '<div style="border:1px solid var(--border);border-radius:6px;padding:8px 10px;background:var(--white)">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);margin-bottom:4px">' +
+            '<span><strong style="color:var(--text)">'+escHtml(fb.user||'Unknown')+'</strong> · <span style="color:'+sentColor+';font-weight:600">'+escHtml((fb.source||'').toUpperCase()||'NOTE')+'</span>'+(fb.sentiment?' · '+escHtml(fb.sentiment):'')+'</span>' +
+            '<span>'+(fb.ts?new Date(fb.ts).toLocaleString():'')+' <button type="button" onclick="_loDeleteFeedback(\''+escHtml(rowId)+'\',\''+escHtml(fb.id)+'\')" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:12px;padding:0 4px" title="Delete">×</button></span>' +
+          '</div>' +
+          '<div style="font-size:13px;color:var(--text);white-space:pre-wrap">'+escHtml(fb.text||'')+'</div>' +
+        '</div>';
+      }).join('') +
+    '</div>';
+  }
+  fbHtml +=
+    '<div style="display:grid;grid-template-columns:120px 130px 1fr auto;gap:6px;align-items:start">' +
+      '<select data-lo-fb-source="'+escHtml(rowId)+'" style="padding:6px 8px;border:1px solid var(--border);border-radius:5px;font-size:12px;color:var(--text);background:var(--white)">' +
+        ['pm','customer','data','sales','support'].map(function(s){ return '<option value="'+s+'">'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; }).join('') +
+      '</select>' +
+      '<select data-lo-fb-sentiment="'+escHtml(rowId)+'" style="padding:6px 8px;border:1px solid var(--border);border-radius:5px;font-size:12px;color:var(--text);background:var(--white)">' +
+        ['neutral','positive','negative'].map(function(s){ return '<option value="'+s+'">'+s+'</option>'; }).join('') +
+      '</select>' +
+      '<textarea data-lo-fb-text="'+escHtml(rowId)+'" rows="1" placeholder="Add a feedback note — sales call, customer reply, data signal…" style="padding:6px 8px;border:1px solid var(--border);border-radius:5px;font-size:12px;color:var(--text);background:var(--white);resize:vertical;font-family:inherit;min-height:34px"></textarea>' +
+      '<button type="button" class="btn accent" onclick="_loPostFeedback(\''+escHtml(rowId)+'\')" style="padding:6px 14px;font-size:11px;align-self:start">Post</button>' +
+    '</div>' +
+  '</div>';
+
+  card.innerHTML = hdrHtml + loopHtml + rnHtml + fbHtml;
+  return card;
+}
+
+function _loSwitchCardTab(rowId, audience){
+  ['dev','customer','internal'].forEach(function(a){
+    var ta = document.querySelector('[data-lo-rn-card="'+rowId+'_'+a+'"]');
+    if(ta) ta.style.display = (a === audience) ? 'block' : 'none';
+    var btn = document.querySelector('[data-lo-rntab="'+rowId+'_'+a+'"]');
+    if(btn){
+      btn.style.borderBottomColor = (a === audience) ? 'var(--accent)' : 'transparent';
+      btn.style.color              = (a === audience) ? 'var(--accent)' : 'var(--muted)';
+    }
+  });
+}
+
+function _loEnsureLO(row){
+  if(!row.launchOutcomes) row.launchOutcomes = {};
+  if(!row.launchOutcomes.releaseNotes)    row.launchOutcomes.releaseNotes    = { dev:'', customer:'', internal:'' };
+  if(!Array.isArray(row.launchOutcomes.actualMetrics)) row.launchOutcomes.actualMetrics = [];
+  if(!Array.isArray(row.launchOutcomes.feedback))      row.launchOutcomes.feedback      = [];
+  if(!row.launchOutcomes.successCriteria) row.launchOutcomes.successCriteria = {};
+  return row.launchOutcomes;
+}
+
+function _loSaveReleaseNote(rowId, audience, value){
+  var row = rows.find(function(r){ return r.id === rowId; });
+  if(!row) return;
+  var lo = _loEnsureLO(row);
+  lo.releaseNotes[audience] = value || '';
+  row.updatedAt = new Date().toISOString();
+  persistData();
+}
+
+function _loSaveActual(rowId, expectedId){
+  var row = rows.find(function(r){ return r.id === rowId; });
+  if(!row) return;
+  var lo = _loEnsureLO(row);
+  var card = document.querySelector('[data-lo-row="'+rowId+'"]');
+  if(!card) return;
+  var valEl = card.querySelector('[data-lo-actual="'+expectedId+'"]');
+  var srcEl = card.querySelector('[data-lo-source="'+expectedId+'"]');
+  var value  = valEl ? valEl.value.trim() : '';
+  var source = srcEl ? srcEl.value : '';
+  var existing = lo.actualMetrics.find(function(a){ return a.expectedId === expectedId; });
+  var eo = (row.expectedOutcomes || []).find(function(e){ return e.id === expectedId; });
+  if(existing){
+    existing.value = value;
+    existing.source = source;
+    existing.capturedAt = new Date().toISOString();
+  } else if(value || source) {
+    lo.actualMetrics.push({
+      id: 'am_'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
+      expectedId: expectedId,
+      metric: eo ? eo.metric : '',
+      value: value,
+      units: eo ? eo.units : '',
+      source: source,
+      capturedAt: new Date().toISOString(),
+      capturedBy: ((typeof userProfile!=='undefined' && userProfile && userProfile.email) || (_currentUser && _currentUser.email) || '')
+    });
+  }
+  row.updatedAt = new Date().toISOString();
+  persistData();
+}
+
+function _loSetCriterion(rowId, expectedId, value){
+  var row = rows.find(function(r){ return r.id === rowId; });
+  if(!row) return;
+  var lo = _loEnsureLO(row);
+  lo.successCriteria[expectedId] = value;
+  row.updatedAt = new Date().toISOString();
+  persistData();
+  _loRerender();
+}
+
+function _loPostFeedback(rowId){
+  var row = rows.find(function(r){ return r.id === rowId; });
+  if(!row) return;
+  var lo = _loEnsureLO(row);
+  var srcEl  = document.querySelector('[data-lo-fb-source="'+rowId+'"]');
+  var sentEl = document.querySelector('[data-lo-fb-sentiment="'+rowId+'"]');
+  var txtEl  = document.querySelector('[data-lo-fb-text="'+rowId+'"]');
+  var text = txtEl ? txtEl.value.trim() : '';
+  if(!text){ showToast('Add some text before posting','error'); return; }
+  var meName  = (typeof userProfile!=='undefined' && userProfile && userProfile.name)  || (_currentUser && _currentUser.email) || 'You';
+  lo.feedback.push({
+    id: 'fb_'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
+    source:    srcEl  ? srcEl.value  : 'pm',
+    sentiment: sentEl ? sentEl.value : 'neutral',
+    text:      text,
+    user:      meName,
+    ts:        new Date().toISOString()
+  });
+  row.updatedAt = new Date().toISOString();
+  persistData();
+  _loRerender();
+}
+
+function _loDeleteFeedback(rowId, fbId){
+  if(!confirm('Delete this feedback comment?')) return;
+  var row = rows.find(function(r){ return r.id === rowId; });
+  if(!row || !row.launchOutcomes) return;
+  row.launchOutcomes.feedback = (row.launchOutcomes.feedback||[]).filter(function(f){ return f.id !== fbId; });
+  row.updatedAt = new Date().toISOString();
+  persistData();
+  _loRerender();
+}
+
+function _loExportMarkdown(){
+  var af = _loState.audienceFilter;
+  var audiences = (af === 'all') ? ['customer','internal','dev'] : [af];
+  var lines = ['# Launch Outcomes', '', 'Generated ' + new Date().toLocaleString(), ''];
+  (rows||[]).forEach(function(r){
+    var lo = r.launchOutcomes || {};
+    var hasGreen = (r.bars||[]).some(function(b){ return b.c==='g'; });
+    if(!_loState.includeUnreleased && !hasGreen && !lo.releasedAt) return;
+    lines.push('## ' + (r.name || 'Untitled'));
+    if(lo.releasedAt) lines.push('_Released ' + new Date(lo.releasedAt).toLocaleDateString() + '_');
+    lines.push('');
+    var notes = lo.releaseNotes || {};
+    audiences.forEach(function(a){
+      if(notes[a] && notes[a].trim()){
+        lines.push('### ' + a.charAt(0).toUpperCase() + a.slice(1) + ' notes');
+        lines.push(notes[a].trim());
+        lines.push('');
+      }
+    });
+    var expected = Array.isArray(r.expectedOutcomes) ? r.expectedOutcomes : [];
+    var actuals  = Array.isArray(lo.actualMetrics) ? lo.actualMetrics : [];
+    if(expected.length){
+      lines.push('### Outcomes');
+      lines.push('| Metric | Target | Actual | Status |');
+      lines.push('|---|---|---|---|');
+      expected.forEach(function(eo){
+        var a = actuals.find(function(x){ return x.expectedId === eo.id; }) || {};
+        var s = (lo.successCriteria || {})[eo.id] || 'pending';
+        lines.push('| ' + (eo.metric||'') + ' | ' + (eo.target||'') + (eo.units?' '+eo.units:'') + ' | ' + (a.value!=null?a.value:'—') + ' | ' + s + ' |');
+      });
+      lines.push('');
+    }
+    var fb = Array.isArray(lo.feedback) ? lo.feedback : [];
+    if(fb.length){
+      lines.push('### Feedback');
+      fb.forEach(function(f){
+        lines.push('- **' + (f.source||'').toUpperCase() + (f.sentiment?' / '+f.sentiment:'') + '** — ' + (f.text||'').replace(/\n/g,' ') + '  _(' + (f.user||'') + (f.ts?', '+new Date(f.ts).toLocaleDateString():'') + ')_');
+      });
+      lines.push('');
+    }
+    lines.push('---');
+    lines.push('');
+  });
+  var md = lines.join('\n');
+  var blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'launch-outcomes-' + new Date().toISOString().slice(0,10) + '.md';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
+  if(typeof showToast === 'function') showToast('Launch Outcomes exported','success');
 }
 
 // ══ REPORT 8: OKR Progress ══
@@ -29305,6 +30127,54 @@ function renderCapDashboard(content, actions){
     '<div class="cap-stat"><div class="num" style="color:'+(summaryUtil>100?'#dc2626':summaryUtil>85?'#f59e0b':'#22c55e')+'">'+summaryUtil+'%</div><div class="lbl">Utilisation</div></div>';
   content.appendChild(stats);
 
+  // v1.43.1: per-team aggregate strip — sum of capacity / allocated per
+  // team with a utilisation bar. Sits above the member table.
+  if((capData.teams || []).length && memberRows.length){
+    var teamMap = {};
+    memberRows.forEach(function(r){
+      var teamIds = [];
+      if(r.m.teamId) teamIds.push(r.m.teamId);
+      if(Array.isArray(r.m.teams)) r.m.teams.forEach(function(t){ if(teamIds.indexOf(t)<0) teamIds.push(t); });
+      if(!teamIds.length) teamIds = ['__no_team__'];
+      teamIds.forEach(function(tid){
+        if(!teamMap[tid]) teamMap[tid] = { capacity:0, allocated:0, count:0 };
+        teamMap[tid].capacity += r.capacity;
+        teamMap[tid].allocated += r.allocated;
+        teamMap[tid].count++;
+      });
+    });
+    var teamCard = document.createElement('div'); teamCard.className = 'cap-card';
+    teamCard.innerHTML = '<h3>Team Capacity</h3>';
+    var teamGrid = document.createElement('div');
+    teamGrid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:8px';
+    Object.keys(teamMap).forEach(function(tid){
+      var t = (capData.teams || []).find(function(x){ return x.id === tid; });
+      if(!t && tid !== '__no_team__') return;
+      var nm = t ? t.name : 'Unassigned';
+      var color = t ? t.color : '#94a3b8';
+      var d = teamMap[tid];
+      var avail = Math.max(0, d.capacity - d.allocated);
+      var util = d.capacity > 0 ? Math.round((d.allocated / d.capacity) * 100) : 0;
+      var fillColor = util > 100 ? '#dc2626' : util > 85 ? '#f59e0b' : '#22c55e';
+      var logoBlock = (t && t.logo)
+        ? '<img src="'+t.logo+'" alt="" style="width:24px;height:24px;border-radius:5px;object-fit:cover;border:1px solid var(--border)">'
+        : '<span style="width:14px;height:14px;border-radius:3px;background:'+color+';flex-shrink:0;display:inline-block"></span>';
+      var card = document.createElement('div');
+      card.style.cssText = 'background:var(--surface-low);border:1px solid var(--border);border-radius:10px;padding:12px';
+      card.innerHTML =
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'+logoBlock+
+          '<div style="font-weight:700;color:var(--text);font-size:13px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(nm)+'</div>'+
+          '<div style="font-size:10px;color:var(--muted);font-weight:600">'+d.count+'</div>'+
+        '</div>'+
+        '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px"><span>Capacity <strong style="color:var(--text)">'+Math.round(d.capacity)+'h</strong></span><span>Allocated <strong style="color:var(--text)">'+Math.round(d.allocated)+'h</strong></span><span>Avail <strong style="color:var(--text)">'+Math.round(avail)+'h</strong></span></div>'+
+        '<div style="height:6px;background:var(--surface-high);border-radius:3px;overflow:hidden"><div style="height:100%;width:'+Math.min(100,util)+'%;background:'+fillColor+';border-radius:3px;transition:width .3s"></div></div>'+
+        '<div style="display:flex;justify-content:flex-end;font-size:11px;font-weight:700;color:'+fillColor+';margin-top:4px;font-variant-numeric:tabular-nums">'+util+'% utilisation</div>';
+      teamGrid.appendChild(card);
+    });
+    teamCard.appendChild(teamGrid);
+    content.appendChild(teamCard);
+  }
+
   // Member utilisation table
   if(memberRows.length){
     var memCard = document.createElement('div'); memCard.className = 'cap-card';
@@ -29390,23 +30260,32 @@ function _capSetDashPeriod(p){
 function renderCapTeams(content,actions){
   actions.innerHTML='<button class="cap-btn primary" onclick="addCapTeam()">+ Add Team</button><button class="cap-btn" onclick="addCapMember()">+ Add Member</button><button class="cap-btn" onclick="editCapMemberships()">✎ Edit Memberships</button>';
   capData.teams.forEach(function(team){
-    var members=capData.members.filter(function(m){return m.teamId===team.id;});
+    // v1.43.1: include multi-team membership when listing this team's members
+    var members=capData.members.filter(function(m){
+      if(m.teamId===team.id) return true;
+      if(Array.isArray(m.teams) && m.teams.indexOf(team.id)>=0) return true;
+      return false;
+    });
     var card=document.createElement('div');
     card.className='cap-card';
     // v1.32.0 FIX 8: show description, member avatars, associated initiatives and plans
     var teamInitiatives = rows.filter(function(r){ return r.team === team.name || r.owner === team.name; });
     var memberAvatars = members.slice(0,5).map(function(m){
-      return '<span style="width:24px;height:24px;border-radius:50%;background:'+team.color+';color:#fff;font-size:9px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--white);margin-left:-6px">'+(m.name||'?')[0].toUpperCase()+'</span>';
+      return '<span style="width:24px;height:24px;border-radius:50%;background:'+team.color+';color:#fff;font-size:9px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--white);margin-left:-6px" title="'+escHtml(m.name||m.email||'')+'">'+escHtml(((m.name||m.email||'?')[0]||'?').toUpperCase())+'</span>';
     }).join('');
     if(members.length > 5) memberAvatars += '<span style="font-size:9px;color:var(--muted);margin-left:4px">+' + (members.length - 5) + '</span>';
-    card.innerHTML='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'+
-      '<span style="width:12px;height:12px;border-radius:3px;background:'+team.color+'"></span>'+
-      '<h3 contenteditable="true" style="margin:0;outline:none;cursor:text" onblur="var t=capData.teams.find(function(x){return x.id===\''+team.id+'\'});if(t){t.name=this.textContent.trim();persistData()}">'+escHtml(team.name)+'</h3>'+
-      '<span style="font-size:10px;color:var(--muted)">'+members.length+' members</span>'+
-      '<div style="display:flex;align-items:center;margin-left:4px">'+memberAvatars+'</div>'+
-      '<button class="cap-btn" onclick="openCapTeamEdit(\''+team.id+'\')" style="margin-left:auto;font-size:9px;padding:3px 8px">Edit</button>'+
-      '<button class="cap-btn danger" onclick="removeCapTeam(\''+team.id+'\')" style="font-size:9px;padding:3px 8px;margin-left:4px">Remove</button>'+
+    // v1.43.1: prefer team logo when present; fall back to color swatch
+    var swatch = team.logo
+      ? '<img src="'+team.logo+'" alt="" style="width:28px;height:28px;border-radius:6px;object-fit:cover;border:1px solid var(--border)">'
+      : '<span style="width:14px;height:14px;border-radius:3px;background:'+team.color+'"></span>';
+    card.innerHTML='<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'+
+      swatch +
+      '<h3 contenteditable="true" style="margin:0;outline:none;cursor:text;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" onblur="var t=capData.teams.find(function(x){return x.id===\''+team.id+'\'});if(t){t.name=this.textContent.trim();persistData()}">'+escHtml(team.name)+'</h3>'+
+      '<span style="font-size:10px;color:var(--muted)">'+members.length+' member'+(members.length===1?'':'s')+'</span>'+
+      '<button class="cap-btn" onclick="openCapTeamEdit(\''+team.id+'\')" style="font-size:9px;padding:3px 8px">Edit</button>'+
+      '<button class="cap-btn danger" onclick="removeCapTeam(\''+team.id+'\')" style="font-size:9px;padding:3px 8px">Remove</button>'+
     '</div>'+
+    (memberAvatars ? '<div style="display:flex;align-items:center;margin:4px 0 6px;padding-left:6px">'+memberAvatars+'</div>' : '')+
     '<div contenteditable="true" style="font-size:11px;color:var(--muted);margin-bottom:8px;outline:none;min-height:16px;cursor:text" data-placeholder="Add team description..." onblur="var t=capData.teams.find(function(x){return x.id===\''+team.id+'\'});if(t){t.description=this.textContent.trim();persistData()}">'+(escHtml(team.description||''))+'</div>'+
     (teamInitiatives.length ? '<div style="font-size:10px;color:var(--muted);margin-bottom:6px">Roadmap: '+teamInitiatives.slice(0,3).map(function(r){return '<span style="background:var(--surface-low);padding:1px 6px;border-radius:4px;margin-right:4px;font-weight:600">'+escHtml(r.name)+'</span>';}).join('')+(teamInitiatives.length>3?'<span>+' + (teamInitiatives.length-3) + ' more</span>':'')+'</div>' : '');
     if(members.length>0){
@@ -29511,37 +30390,80 @@ function openCapTeamEdit(teamId){
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9100;display:flex;align-items:center;justify-content:center;padding:24px';
   ov.onclick = function(e){ if(e.target === ov) ov.remove(); };
 
-  var members    = (capData.members || []).filter(function(m){ return m.teamId === teamId; });
-  var nonMembers = (capData.members || []).filter(function(m){ return m.teamId !== teamId; });
+  // v1.43.1: a member can belong to multiple teams. Lookup membership by
+  // either the legacy m.teamId or the newer m.teams[] array.
+  function _isOnTeam(m, tid){
+    if(m.teamId === tid) return true;
+    if(Array.isArray(m.teams) && m.teams.indexOf(tid) >= 0) return true;
+    return false;
+  }
+  var members = (capData.members || []).filter(function(m){ return _isOnTeam(m, teamId); });
+  // "Org users" pool — pull from cap members + current user + roadmap row
+  // owners + plan task owners. Dedupe by lower-cased email.
+  function _orgUserPool(){
+    var byEmail = {};
+    function add(name, email){
+      if(!email) return;
+      var k = String(email).toLowerCase();
+      if(!byEmail[k]) byEmail[k] = { name: name || email, email: email };
+      else if(name && !byEmail[k].name) byEmail[k].name = name;
+    }
+    (capData.members || []).forEach(function(m){ add(m.name, m.email); });
+    var meEmail = (typeof userProfile!=='undefined' && userProfile && userProfile.email) || (typeof _currentUser!=='undefined' && _currentUser && _currentUser.email) || '';
+    var meName  = (typeof userProfile!=='undefined' && userProfile && userProfile.name) || meEmail || 'You';
+    if(meEmail) add(meName, meEmail);
+    if(Array.isArray(rows)){
+      rows.forEach(function(r){ if(r.ownerEmail) add(r.owner||r.ownerEmail, r.ownerEmail); });
+    }
+    if(Array.isArray(projectPlans)){
+      projectPlans.forEach(function(p){
+        (p.tasks||[]).forEach(function(t){ if(t.owner && t.owner.indexOf('@')>0) add(t.owner, t.owner); });
+      });
+    }
+    return Object.keys(byEmail).sort().map(function(k){ return byEmail[k]; });
+  }
 
   var memberRows = members.length
     ? members.map(function(m){
         return '<tr>' +
           '<td style="padding:6px 8px;color:var(--text);font-weight:600">' + escHtml(m.name || '') + '</td>' +
-          '<td style="padding:6px 8px;color:var(--muted);font-size:11px">' + escHtml(m.role || '') + '</td>' +
+          '<td style="padding:6px 8px;color:var(--muted);font-size:11px">' + escHtml(m.email || m.role || '') + '</td>' +
           '<td style="padding:6px 8px;text-align:right"><button class="cap-btn danger" onclick="_capTeamRemoveMember(\'' + teamId + '\',\'' + m.id + '\')" style="font-size:10px;padding:2px 8px">Remove</button></td>' +
         '</tr>';
       }).join('')
-    : '<tr><td colspan="3" style="padding:14px 8px;color:var(--muted);font-size:12px;text-align:center">No members yet.</td></tr>';
+    : '<tr><td colspan="3" style="padding:14px 8px;color:var(--muted);font-size:12px;text-align:center">No members yet \u2014 add from your organisation below.</td></tr>';
 
-  var nonMemberOpts = nonMembers.map(function(m){
-    return '<option value="' + m.id + '" style="background:#1e293b">' + escHtml(m.name || 'Unnamed') + (m.role ? ' — ' + escHtml(m.role) : '') + '</option>';
+  // v1.43.1: org-user dropdown. Filters out anyone already on THIS team.
+  var teamEmails = {};
+  members.forEach(function(m){ if(m.email) teamEmails[m.email.toLowerCase()] = true; });
+  var orgPool = _orgUserPool().filter(function(u){ return !teamEmails[(u.email||'').toLowerCase()]; });
+  var orgOpts = orgPool.map(function(u){
+    return '<option value="' + escHtml(u.email) + '" data-name="' + escHtml(u.name||'') + '">' + escHtml(u.name || u.email) + ' \u2014 ' + escHtml(u.email) + '</option>';
   }).join('');
-  var addExistingBlock = nonMembers.length
+  var addOrgBlock = orgPool.length
     ? '<div style="display:flex;gap:8px;margin-top:8px">' +
-        '<select id="capTeamEditPickExisting" class="cap-select" style="flex:1">' + nonMemberOpts + '</select>' +
-        '<button class="cap-btn" onclick="_capTeamAddExisting(\'' + teamId + '\')">Add to team</button>' +
+        '<select id="capTeamEditOrgPick" class="cap-select" style="flex:1"><option value="">Select someone\u2026</option>' + orgOpts + '</select>' +
+        '<button class="cap-btn" onclick="_capTeamAddFromOrg(\'' + teamId + '\')">Add to team</button>' +
       '</div>'
-    : '<div style="font-size:11px;color:var(--muted);margin-top:4px">All existing members are already on this team.</div>';
+    : '<div style="font-size:11px;color:var(--muted);margin-top:4px">No other users known yet \u2014 invite by email below.</div>';
 
-  // v1.40.0: Editable name + description + color, no horizontal scroll on
-  // member table (word-wrap in cells). v1.42.0 — trial copy removed.
+  // v1.43.1: overflow:hidden on the wrapper so the footer's tinted bg can't
+  // bleed past the rounded corners. Logo upload + multi-team support added.
+  var logoHtml = team.logo
+    ? '<img src="' + team.logo + '" alt="Team logo" style="width:48px;height:48px;border-radius:10px;object-fit:cover;border:1px solid var(--border)">'
+    : '<div style="width:48px;height:48px;border-radius:10px;background:'+(team.color||'#0d9488')+';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px">'+escHtml((team.name||'?').charAt(0).toUpperCase())+'</div>';
   ov.innerHTML =
-    '<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;width:100%;max-width:640px;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.35);color:var(--text)">' +
-      '<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">' +
-        '<span id="capTeamEditSwatch" style="width:14px;height:14px;border-radius:3px;background:' + team.color + '"></span>' +
-        '<h3 style="margin:0;font-size:16px;font-weight:700;flex:1">Edit team</h3>' +
-        '<button onclick="document.getElementById(\'capTeamEditOverlay\').remove()" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1">&times;</button>' +
+    '<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;width:100%;max-width:640px;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.35);color:var(--text);overflow:hidden">' +
+      '<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px">' +
+        '<div id="capTeamEditLogoWrap">'+logoHtml+'</div>'+
+        '<div style="flex:1;min-width:0">'+
+          '<h3 style="margin:0;font-size:16px;font-weight:700">Edit team</h3>'+
+          '<div style="display:flex;gap:6px;margin-top:6px">'+
+            '<button class="cap-btn" onclick="_capTeamUploadLogo(\''+teamId+'\')" style="font-size:11px;padding:3px 10px">'+(team.logo?'Replace logo':'Upload logo')+'</button>'+
+            (team.logo ? '<button class="cap-btn" onclick="_capTeamRemoveLogo(\''+teamId+'\')" style="font-size:11px;padding:3px 10px;color:#dc2626;border-color:#fca5a5">Remove logo</button>' : '')+
+          '</div>'+
+        '</div>'+
+        '<button onclick="document.getElementById(\'capTeamEditOverlay\').remove()" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1;align-self:flex-start">&times;</button>' +
       '</div>' +
       '<div style="padding:16px 20px;overflow-y:auto;overflow-x:hidden;flex:1">' +
 
@@ -29559,8 +30481,9 @@ function openCapTeamEdit(teamId){
           '<tbody>' + memberRows + '</tbody>' +
         '</table>' +
 
-        '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:18px 0 6px">Add existing member</div>' +
-        addExistingBlock +
+        '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:18px 0 6px">Add from organisation</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-bottom:4px">A user can belong to multiple teams.</div>' +
+        addOrgBlock +
 
         '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:18px 0 6px">Invite by email</div>' +
         '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Send a signup link so they can join your team.</div>' +
@@ -29579,6 +30502,62 @@ function openCapTeamEdit(teamId){
 
   document.body.appendChild(ov);
   _capTeamLoadPendingInvites(teamId);
+}
+
+// v1.43.1: add a member from the organisation pool to this team (allows
+// multi-team membership — same person can be on Engineering AND Product).
+function _capTeamAddFromOrg(teamId){
+  var sel = document.getElementById('capTeamEditOrgPick');
+  var email = sel ? (sel.value || '').trim() : '';
+  if(!email){ showToast('Pick a user first','warning'); return; }
+  if(!Array.isArray(capData.members)) capData.members = [];
+  var existing = capData.members.find(function(m){ return (m.email||'').toLowerCase() === email.toLowerCase(); });
+  if(existing){
+    if(!Array.isArray(existing.teams)) existing.teams = existing.teamId ? [existing.teamId] : [];
+    if(existing.teams.indexOf(teamId) < 0) existing.teams.push(teamId);
+    if(!existing.teamId) existing.teamId = teamId;
+  } else {
+    var nm = sel.options[sel.selectedIndex] && sel.options[sel.selectedIndex].getAttribute('data-name') || email;
+    capData.members.push({
+      id: 'mem_'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
+      name: nm, email: email, teamId: teamId, teams: [teamId],
+      role: 'Member', hoursPerDay: 8, productivityFactor: 1, isActive: true,
+      createdAt: Date.now()
+    });
+  }
+  persistData();
+  showToast('Added to team', 'success');
+  openCapTeamEdit(teamId);
+}
+
+// v1.43.1: team logo upload — base64 data URL, capped at ~150KB to keep the
+// JSONB blob reasonable. Stored on team.logo.
+function _capTeamUploadLogo(teamId){
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = function(e){
+    var file = e.target.files && e.target.files[0];
+    if(!file) return;
+    if(file.size > 200*1024){
+      showToast('Logo too large \u2014 keep it under 200KB.', 'error');
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(){
+      var team = (capData.teams || []).find(function(t){ return t.id === teamId; });
+      if(team){ team.logo = reader.result; persistData(); openCapTeamEdit(teamId); showToast('Logo updated','success'); }
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+function _capTeamRemoveLogo(teamId){
+  var team = (capData.teams || []).find(function(t){ return t.id === teamId; });
+  if(!team) return;
+  delete team.logo;
+  persistData();
+  openCapTeamEdit(teamId);
 }
 
 // v1.40.0: Save team name / color / description from the Edit Team modal.
@@ -29652,9 +30631,13 @@ async function _capTeamSendInvite(teamId){
       token:  _accessToken || null
     });
     if(r.ok && r.data && r.data.ok){
+      // v1.43.1: surface the actual Resend error + the hint payload from the
+      // edge function so the user can act on missing keys / unverified domains.
+      var emailErr = r.data.email_error || '';
+      var hint = r.data.hint || '';
       status.textContent = r.data.email_sent
         ? 'Invite sent to ' + email + '.'
-        : 'Invite saved but email could not be sent (check Resend config).';
+        : ('Invite saved but email send failed: ' + (emailErr || 'unknown') + (hint ? ' \u2014 ' + hint : ''));
       status.style.color = r.data.email_sent ? '#16a34a' : '#f59e0b';
       input.value = '';
       _capTeamLoadPendingInvites(teamId);
@@ -32798,7 +33781,7 @@ function exportBackup() {
   var backup = {
     _backupVersion: 2,
     _exportedAt: new Date().toISOString(),
-    _appVersion: 'v1.29.0',
+    _appVersion: (typeof APP_VERSION !== 'undefined' ? APP_VERSION : 'v1.43.0'),
     sections: sections,
     rows: rows,
     quarters: quarters,
@@ -34981,10 +35964,27 @@ function getAllTemplates(){
     });
   });
 
-  // 2. Main Template Library (DB-backed `_tplCache` / bundled JSON).
+  // 2. Main Template Library (DB-backed `_tplCache` + bundled JSON).
+  // v1.43.1: previously this was `tplCache.length ? tplCache : bundled` —
+  // a single user-saved template short-circuited the entire bundled set
+  // (35 platform templates) so desktop users only ever saw 2-3 templates.
+  // Now we merge both, deduped by id then by name.
   var tplCache = (typeof _tplCache !== 'undefined' && _tplCache) || [];
   var bundled  = (typeof _bundledPlatformTemplates !== 'undefined' && _bundledPlatformTemplates) || [];
-  var combined = tplCache.length ? tplCache : bundled;
+  var combined = [];
+  var seenIds = {}, seenNames = {};
+  tplCache.forEach(function(tpl){
+    var nm = (tpl.name || '').toLowerCase().trim();
+    if(tpl.id) seenIds[tpl.id] = true;
+    if(nm) seenNames[nm] = true;
+    combined.push(tpl);
+  });
+  bundled.forEach(function(tpl){
+    if(tpl.id && seenIds[tpl.id]) return;
+    var nm = (tpl.name || '').toLowerCase().trim();
+    if(nm && seenNames[nm]) return;
+    combined.push(tpl);
+  });
   combined.forEach(function(tpl, idx){
     var rawTasks = tpl.tasks || [];
     var tasks = rawTasks.map(function(t, i){
