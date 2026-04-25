@@ -1203,12 +1203,12 @@ body.dark-mode .kanban-deps{color:#fbbf24}
 body.dark-mode .kanban-meta-pill.kanban-effort{background:rgba(14,165,233,.18);color:#7dd3fc}
 /* v1.37.0 — sprint/agile bar */
 .plan-sprint-bar{background:var(--surface-low);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin:6px 0 14px;box-shadow:var(--shadow-card)}
-.plan-sprint-bar .sprint-bar-top{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
-.plan-sprint-bar .sprint-goal-wrap{flex:1;min-width:260px;display:flex;flex-direction:column;gap:3px}
+.plan-sprint-bar .sprint-bar-top{display:flex;gap:24px;align-items:center;flex-wrap:wrap;justify-content:center}
+.plan-sprint-bar .sprint-goal-wrap{flex:0 1 460px;min-width:260px;max-width:520px;display:flex;flex-direction:column;gap:3px;align-items:center;text-align:center}
 .plan-sprint-bar .sprint-bar-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
-.plan-sprint-bar #sprintGoalInput{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-weight:700;color:var(--text);background:var(--white);outline:none;font-family:inherit}
-.plan-sprint-bar .sprint-stats{display:flex;gap:16px;flex-wrap:wrap}
-.plan-sprint-bar .sprint-stat{text-align:right;min-width:60px}
+.plan-sprint-bar #sprintGoalInput{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-weight:700;color:var(--text);background:var(--white);outline:none;font-family:inherit;text-align:center}
+.plan-sprint-bar .sprint-stats{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.plan-sprint-bar .sprint-stat{text-align:center;min-width:60px}
 .plan-sprint-bar .sprint-stat-num{font-size:18px;font-weight:800;color:var(--text);line-height:1}
 .plan-sprint-bar .sprint-stat-lbl{font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
 .plan-sprint-bar .sprint-burndown-row{display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap}
@@ -14966,6 +14966,103 @@ function syncTemplateTasksToLibrary(){
   return added;
 }
 
+// v1.43.0 — unified sync. Walks every template the app knows about and
+// pushes every task into BOTH the Task Library and CapacityIQ's
+// capData.taskTypes. Idempotent (dedupes on normalised name + category
+// in each pool). Awaits loadTemplateLibrary so _tplCache is hydrated and
+// templates from the DB aren't missed. Returns counts so callers can
+// surface a toast.
+async function syncAllTemplateTasksEverywhere(opts){
+  opts = opts || {};
+  // Ensure _tplCache is loaded so DB-backed templates participate.
+  if(typeof loadTemplateLibrary === 'function' && (typeof _tplCache === 'undefined' || !_tplCache || !_tplCache.length)){
+    try { await loadTemplateLibrary(); } catch(e){ console.warn('[tpl-sync] loadTemplateLibrary failed:', e && e.message); }
+  }
+  // Ensure bundled JSON is loaded as a fallback source.
+  if((typeof _bundledPlatformTemplates === 'undefined' || !_bundledPlatformTemplates || !_bundledPlatformTemplates.length)){
+    try {
+      var jsonUrl = (window.location.protocol === 'file:') ? 'data/platform-templates.json' : '/data/platform-templates.json';
+      var resp = await fetch(jsonUrl);
+      if(resp.ok) _bundledPlatformTemplates = await resp.json();
+    } catch(e){ console.warn('[tpl-sync] bundled fetch failed:', e && e.message); }
+  }
+
+  if(typeof getAllTemplates !== 'function') return { libAdded:0, ttAdded:0, templates:0, tasks:0 };
+  var templates = getAllTemplates() || [];
+  if(!capData) capData = { teams:[], members:[], sprints:[], taskTypes:[], templates:[], initiatives:[], tasks:[] };
+  if(!Array.isArray(capData.taskTypes)) capData.taskTypes = [];
+
+  // Dedupe map for taskTypes — normalised name + category → existing entry.
+  var ttIndex = {};
+  capData.taskTypes.forEach(function(tt){
+    var key = _normalizeTaskName(tt.name) + '||' + (tt.category || '').toLowerCase();
+    ttIndex[key] = tt;
+  });
+
+  var libAdded = 0, ttAdded = 0, totalTasks = 0;
+
+  templates.forEach(function(tpl){
+    (tpl.tasks || []).forEach(function(t){
+      var name = (t.name || t.title || '').trim();
+      if(!name) return;
+      totalTasks++;
+      // Department / category — strip the " — Phase" suffix if present.
+      var rawCat = (t.workstream || t.phase || tpl.category || '').toString();
+      var category = (rawCat.split(' — ')[0] || '').trim();
+      var hours = parseFloat(t.hours) || parseFloat(t.hours_base) || 0;
+      var description = t.description || '';
+
+      // 1) Task Library — existing helper handles dedupe + useCount.
+      var beforeLib = taskLibrary.length;
+      upsertTaskInLibrary({
+        name:        name,
+        category:    category,
+        hours:       hours,
+        description: description,
+        source:      'template',
+        sourceRefId: tpl.id
+      });
+      if(taskLibrary.length > beforeLib) libAdded++;
+
+      // 2) CapacityIQ task types — dedupe on normalised name + category.
+      var key = _normalizeTaskName(name) + '||' + category.toLowerCase();
+      var existing = ttIndex[key];
+      if(existing){
+        // Backfill missing fields without clobbering user edits.
+        if(!existing.fixedHours && hours) existing.fixedHours = hours;
+        if(!existing.description && description) existing.description = description;
+        if(!existing.role && t.role) existing.role = t.role;
+      } else {
+        var newTT = {
+          id:          'tt_tpl_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7),
+          category:    category || 'General',
+          name:        name,
+          fixedHours:  hours,
+          defaultTeam: '',
+          sortOrder:   capData.taskTypes.length,
+          description: description,
+          role:        t.role || '',
+          sourceRef:   (tpl.id || '') + '::' + name
+        };
+        capData.taskTypes.push(newTT);
+        ttIndex[key] = newTT;
+        ttAdded++;
+      }
+    });
+  });
+
+  if((libAdded > 0 || ttAdded > 0) && typeof persistData === 'function'){
+    try { persistData(); } catch(e){ console.warn('[tpl-sync] persist failed:', e && e.message); }
+  }
+
+  console.log('[tpl-sync] templates=' + templates.length + ' tasks=' + totalTasks + ' libAdded=' + libAdded + ' ttAdded=' + ttAdded + ' (library total=' + taskLibrary.length + ', taskTypes total=' + capData.taskTypes.length + ')');
+
+  if(opts.toast && (libAdded > 0 || ttAdded > 0) && typeof showToast === 'function'){
+    showToast('Synced ' + (libAdded + ttAdded) + ' task' + ((libAdded + ttAdded) === 1 ? '' : 's') + ' across Library + CapacityIQ', 'success');
+  }
+  return { libAdded: libAdded, ttAdded: ttAdded, templates: templates.length, tasks: totalTasks };
+}
+
 // Seed the library from CapacityIQ task types. Idempotent — upsert
 // dedupes on normalized name + category.
 //
@@ -17120,13 +17217,12 @@ function openPlans(){
     seedTaskLibraryFromCapacity();
     seedDefaultTaskLibrary(); // v1.32.0 FIX 3: seed 200+ default tasks
   }
-  // v1.38.0 — always sync template tasks too. Idempotent via upsert;
-  // keeps the library fresh as templates are added server-side without
-  // needing a manual re-seed flow.
-  try {
-    var _synced = syncTemplateTasksToLibrary();
-    if(_synced > 0) console.log('[task-library] +' + _synced + ' from templates; total ' + taskLibrary.length);
-  } catch(e){ console.warn('[task-library] template sync failed:', e && e.message); }
+  // v1.43.0 — sync every template's tasks into BOTH the Task Library and
+  // CapacityIQ task types. Async: awaits loadTemplateLibrary so DB-backed
+  // templates are included. Idempotent (dedupes on name + category).
+  syncAllTemplateTasksEverywhere({ toast: false }).catch(function(e){
+    console.warn('[task-library] unified sync failed:', e && e.message);
+  });
   if(!_taskLibrarySeeded){ _taskLibrarySeeded = true; persistData(); }
   renderPlansOverlay();
   updateNavActive('');  // v1.25.0
@@ -18105,7 +18201,7 @@ function renderPlanSprintBar(plan){
   bar.innerHTML =
     '<div class="sprint-bar-top">' +
       '<div class="sprint-goal-wrap">' +
-        '<span class="sprint-bar-label">Sprint goal</span>' +
+        '<span class="sprint-bar-label">Plan progress</span>' +
         '<input id="sprintGoalInput" type="text" placeholder="e.g. Ship firmware 1.4 to field trials" value="'+escHtml(goalText)+'">' +
       '</div>' +
       '<div class="sprint-stats">' +
@@ -20430,12 +20526,26 @@ function renderPlanGanttView(plan){
   var W = LEFT_W + (totalDays * DAY_W) + 20;
   var H = HEADER_H + (sortedTasks.length * ROW_H) + 20;
 
+  // Theme-aware colors so the SVG reads correctly in dark mode
+  var isDark = document.body.classList.contains('dark-mode');
+  var THEME = {
+    altRow:    isDark ? 'rgba(255,255,255,.03)' : '#fafbfc',
+    weekend:   isDark ? 'rgba(148,163,184,.10)' : 'rgba(148,163,184,.08)',
+    gridLine:  isDark ? '#334155' : '#cbd5e1',
+    monthLbl:  isDark ? '#cbd5e1' : '#475569',
+    dayNum:    isDark ? '#94a3b8' : '#94a3b8',
+    taskName:  isDark ? '#e2e8f0' : '#0f172a',
+    ownerName: isDark ? '#94a3b8' : '#94a3b8',
+    milestoneStroke: isDark ? '#1e293b' : '#fff',
+    depArrow:  isDark ? '#64748b' : '#94a3b8'
+  };
+
   var svg = '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" font-family="Inter,sans-serif" style="min-width:'+W+'px">';
 
   // Background bands per row (alternating)
   sortedTasks.forEach(function(_, i){
     if(i % 2 === 0){
-      svg += '<rect x="0" y="'+(HEADER_H + i*ROW_H)+'" width="'+W+'" height="'+ROW_H+'" fill="#fafbfc"/>';
+      svg += '<rect x="0" y="'+(HEADER_H + i*ROW_H)+'" width="'+W+'" height="'+ROW_H+'" fill="'+THEME.altRow+'"/>';
     }
   });
 
@@ -20446,17 +20556,17 @@ function renderPlanGanttView(plan){
     var dow = dt.getDay();
     var x = LEFT_W + d * DAY_W;
     if(dow === 0 || dow === 6){
-      svg += '<rect x="'+x+'" y="'+HEADER_H+'" width="'+DAY_W+'" height="'+(H - HEADER_H - 20)+'" fill="rgba(148,163,184,.08)"/>';
+      svg += '<rect x="'+x+'" y="'+HEADER_H+'" width="'+DAY_W+'" height="'+(H - HEADER_H - 20)+'" fill="'+THEME.weekend+'"/>';
     }
     // Month label on day 1
     if(dt.getDate() === 1){
-      svg += '<line x1="'+x+'" y1="'+HEADER_H+'" x2="'+x+'" y2="'+(H-20)+'" stroke="#cbd5e1" stroke-width="1"/>';
+      svg += '<line x1="'+x+'" y1="'+HEADER_H+'" x2="'+x+'" y2="'+(H-20)+'" stroke="'+THEME.gridLine+'" stroke-width="1"/>';
       var monthName = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][dt.getMonth()] + ' ' + dt.getFullYear();
-      svg += '<text x="'+(x+4)+'" y="14" font-size="10" font-weight="700" fill="#475569">'+monthName+'</text>';
+      svg += '<text x="'+(x+4)+'" y="14" font-size="10" font-weight="700" fill="'+THEME.monthLbl+'">'+monthName+'</text>';
     }
     // Day number on every Monday (or every 3 days if zoomed out)
     if(dow === 1 || (DAY_W >= 30 && dt.getDate() % 1 === 0)){
-      svg += '<text x="'+(x + DAY_W/2)+'" y="34" font-size="9" fill="#94a3b8" text-anchor="middle">'+dt.getDate()+'</text>';
+      svg += '<text x="'+(x + DAY_W/2)+'" y="34" font-size="9" fill="'+THEME.dayNum+'" text-anchor="middle">'+dt.getDate()+'</text>';
     }
   }
 
@@ -20469,9 +20579,9 @@ function renderPlanGanttView(plan){
   }
 
   // Header line below header area
-  svg += '<line x1="0" y1="'+HEADER_H+'" x2="'+W+'" y2="'+HEADER_H+'" stroke="#cbd5e1" stroke-width="1"/>';
+  svg += '<line x1="0" y1="'+HEADER_H+'" x2="'+W+'" y2="'+HEADER_H+'" stroke="'+THEME.gridLine+'" stroke-width="1"/>';
   // Vertical separator between gutter and timeline
-  svg += '<line x1="'+LEFT_W+'" y1="0" x2="'+LEFT_W+'" y2="'+H+'" stroke="#cbd5e1" stroke-width="1.5"/>';
+  svg += '<line x1="'+LEFT_W+'" y1="0" x2="'+LEFT_W+'" y2="'+H+'" stroke="'+THEME.gridLine+'" stroke-width="1.5"/>';
 
   // Status colors
   var statusColors = {
@@ -20499,9 +20609,9 @@ function renderPlanGanttView(plan){
 
     // Task label
     var nameTrunc = (t.name || '').length > 32 ? (t.name||'').substring(0, 30) + '\u2026' : (t.name || '');
-    svg += '<text x="10" y="'+(rowY+4)+'" font-size="11" font-weight="600" fill="#0f172a">'+escHtml(nameTrunc)+'</text>';
+    svg += '<text x="10" y="'+(rowY+4)+'" font-size="11" font-weight="600" fill="'+THEME.taskName+'">'+escHtml(nameTrunc)+'</text>';
     if(t.owner){
-      svg += '<text x="'+(LEFT_W - 10)+'" y="'+(rowY+4)+'" font-size="10" fill="#94a3b8" text-anchor="end">'+escHtml(t.owner)+'</text>';
+      svg += '<text x="'+(LEFT_W - 10)+'" y="'+(rowY+4)+'" font-size="10" fill="'+THEME.ownerName+'" text-anchor="end">'+escHtml(t.owner)+'</text>';
     }
 
     // Bar or diamond
@@ -20509,7 +20619,7 @@ function renderPlanGanttView(plan){
       var mx = pos.x1;
       var my = rowY;
       var sz = 8;
-      svg += '<polygon points="'+mx+','+(my-sz)+' '+(mx+sz)+','+my+' '+mx+','+(my+sz)+' '+(mx-sz)+','+my+'" fill="#f59e0b" stroke="#fff" stroke-width="1.5"/>';
+      svg += '<polygon points="'+mx+','+(my-sz)+' '+(mx+sz)+','+my+' '+mx+','+(my+sz)+' '+(mx-sz)+','+my+'" fill="#f59e0b" stroke="'+THEME.milestoneStroke+'" stroke-width="1.5"/>';
       svg += '<text x="'+(mx + sz + 4)+'" y="'+(my + 3)+'" font-size="9" font-weight="700" fill="#b45309">'+escHtml(t.startDate||'')+'</text>';
     } else {
       var color = statusColors[t.status] || statusColors['not-started'];
@@ -20541,9 +20651,9 @@ function renderPlanGanttView(plan){
       var ey = to.y;
       var midX = sx + 8;
       var d = 'M '+sx+' '+sy+' L '+midX+' '+sy+' L '+midX+' '+ey+' L '+ex+' '+ey;
-      svg += '<path d="'+d+'" fill="none" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="0"/>';
+      svg += '<path d="'+d+'" fill="none" stroke="'+THEME.depArrow+'" stroke-width="1.4" stroke-dasharray="0"/>';
       // Arrowhead
-      svg += '<polygon points="'+(ex)+','+ey+' '+(ex-5)+','+(ey-3)+' '+(ex-5)+','+(ey+3)+'" fill="#94a3b8"/>';
+      svg += '<polygon points="'+(ex)+','+ey+' '+(ex-5)+','+(ey-3)+' '+(ex-5)+','+(ey+3)+'" fill="'+THEME.depArrow+'"/>';
     });
   });
 
@@ -21354,8 +21464,8 @@ function renderPrioMatrixTab(){
       allFwks.map(function(f){ return '<option value="'+escHtml(f.id)+'"'+(f.id===fwk.id?' selected':'')+'>'+escHtml(f.name)+'</option>'; }).join('') +
     '</select>' +
     '<div style="position:relative;display:inline-block;margin-left:8px">' +
-      '<button class="prio-btn" onclick="_prioToggleDisplayMenu(event)">Display \u25BE</button>' +
-      '<div id="prioDisplayMenu" style="display:none;position:absolute;top:100%;right:0;margin-top:6px;min-width:240px;background:var(--white);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:8000;padding:10px 12px;color:var(--text);font-size:12px">' +
+      '<button id="prioDisplayBtn" class="prio-btn" onclick="_prioToggleDisplayMenu(event)">Display \u25BE</button>' +
+      '<div id="prioDisplayMenu" style="display:none;position:fixed;min-width:260px;background:var(--white);border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 36px rgba(0,0,0,.28);z-index:10010;padding:12px 14px;color:var(--text);font-size:12px">' +
         '<label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer"><input type="checkbox" '+(ui.showLabels?'checked':'')+' onchange="_prioSetMatrixOpt(\'showLabels\', this.checked)">Item labels</label>' +
         '<label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer"><input type="checkbox" '+(ui.showGrid?'checked':'')+' onchange="_prioSetMatrixOpt(\'showGrid\', this.checked)">Gridlines</label>' +
         '<label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer"><input type="checkbox" '+(ui.showQuadrants?'checked':'')+' onchange="_prioSetMatrixOpt(\'showQuadrants\', this.checked)">Quadrant tints</label>' +
@@ -21593,22 +21703,42 @@ function _wirePrioMatrixDrag(W, H, PAD, maxX, maxY, costCrit, valueCrits){
   svg.addEventListener('pointercancel', endDrag);
 }
 
+// v1.42.2: render the Display menu as a fixed-position popover with a
+// transparent click-trap backdrop. Previously the menu was position:absolute
+// inside the prio toolbar — the items list rendered after it picked up a
+// new stacking context (its scroll container) and painted over the menu, so
+// clicks fell through to the row chips behind. Backdrop also closes on any
+// outside click without that click reaching the chart underneath.
 function _prioToggleDisplayMenu(e){
   if(e) e.stopPropagation();
   var menu = document.getElementById('prioDisplayMenu');
+  var btn = document.getElementById('prioDisplayBtn');
   if(!menu) return;
   var open = menu.style.display === 'block';
-  menu.style.display = open ? 'none' : 'block';
-  if(!open){
-    setTimeout(function(){
-      function _close(ev){
-        if(ev.target.closest && ev.target.closest('#prioDisplayMenu')) return;
-        menu.style.display = 'none';
-        document.removeEventListener('click', _close, true);
-      }
-      document.addEventListener('click', _close, true);
-    }, 0);
+  // Always tear down any existing backdrop first (idempotent toggle).
+  var oldBd = document.getElementById('prioDisplayBackdrop');
+  if(oldBd) oldBd.remove();
+  if(open){ menu.style.display = 'none'; return; }
+  // Position relative to the button rect.
+  if(btn){
+    var rect = btn.getBoundingClientRect();
+    var menuW = 260;
+    var left = Math.max(8, Math.min(window.innerWidth - menuW - 8, rect.right - menuW));
+    menu.style.left = left + 'px';
+    menu.style.top  = (rect.bottom + 6) + 'px';
+    menu.style.right = 'auto';
   }
+  menu.style.display = 'block';
+  // Click-trap backdrop. Captures pointer events on the rest of the page
+  // and closes the menu on any click outside.
+  var bd = document.createElement('div');
+  bd.id = 'prioDisplayBackdrop';
+  bd.style.cssText = 'position:fixed;inset:0;background:transparent;z-index:10005';
+  bd.addEventListener('click', function(){
+    menu.style.display = 'none';
+    bd.remove();
+  });
+  document.body.appendChild(bd);
 }
 
 // ── PRIORITY RATINGS — customize modal (v1.40.1) ───────────────────────────
@@ -27897,6 +28027,16 @@ function openCapacity(){
   if(capData.teams.length===0) seedCapData();
   // Backfill CapacityIQ from bundled TMP platform templates (idempotent).
   _ensureTmpCapIQTemplates();
+  // v1.43.0 — pull every task from every template (CapacityIQ, platform
+  // DB, bundled JSON, custom) into both Task Library AND capData.taskTypes
+  // so the Task Reference page reflects the full catalogue.
+  syncAllTemplateTasksEverywhere({ toast: false }).then(function(res){
+    // Re-render the active CapacityIQ page if new task types were added.
+    if(res && res.ttAdded > 0 && typeof capNav === 'function'){
+      var ov = document.getElementById('capOverlay');
+      if(ov && ov.classList.contains('open')) capNav(_capPage);
+    }
+  }).catch(function(e){ console.warn('[capacity] unified sync failed:', e && e.message); });
   capNav(_capPage);
   updateNavActive('');  // v1.25.0
 }
