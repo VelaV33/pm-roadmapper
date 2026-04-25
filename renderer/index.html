@@ -1930,7 +1930,7 @@ body.dark-mode .onboard-card{background:#1e293b}
     <button onclick="toggleSidebar()" aria-label="Toggle navigation menu" aria-controls="appSidebar" style="background:none;border:none;padding:4px 8px;color:var(--muted);cursor:pointer;display:flex;align-items:center" title="Toggle sidebar"><span class="ico" aria-hidden="true" style="width:20px;height:20px"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span></button>
     <nav class="toolbar-nav" id="mainNav" aria-label="Primary">
       <a onclick="showDashboard();return false;">Dashboard</a>
-      <a class="active" onclick="closeAllOverlays();updateNavActive('Roadmap');return false;">Roadmap</a>
+      <a class="active" onclick="showRoadmapView();return false;">Roadmap</a>
       <a onclick="closeAllOverlays();openG2M();updateNavActive('Checklist');return false;">Checklist</a>
       <a onclick="closeAllOverlays();openPlans();updateNavActive('Plans');return false;">Plans</a>
       <a onclick="closeAllOverlays();openTodo();updateNavActive('To-Do');return false;">To-Do</a>
@@ -2710,6 +2710,7 @@ body.dark-mode .onboard-card{background:#1e293b}
         <div style="display:flex;align-items:center;gap:8px">
           <div style="display:flex;background:#f1f5f9;border-radius:9999px;padding:3px">
             <button id="planViewListBtn" class="plan-view-toggle active" onclick="setPlanView('list')">List</button>
+            <button id="planViewTimelineBtn" class="plan-view-toggle" onclick="setPlanView('timeline')">Timeline</button>
             <button id="planViewGanttBtn" class="plan-view-toggle" onclick="setPlanView('gantt')">Gantt</button>
             <button id="planViewKanbanBtn" class="plan-view-toggle" onclick="setPlanView('kanban')">Kanban</button>
           </div>
@@ -16978,9 +16979,11 @@ function renderPlanMain(){
   var listBtn = document.getElementById('planViewListBtn');
   var ganttBtn = document.getElementById('planViewGanttBtn');
   var kanBtn = document.getElementById('planViewKanbanBtn');
+  var tlBtn = document.getElementById('planViewTimelineBtn');
   if(listBtn){ listBtn.classList.toggle('active', _planView === 'list'); listBtn.setAttribute('aria-pressed', _planView === 'list' ? 'true' : 'false'); }
   if(ganttBtn){ ganttBtn.classList.toggle('active', _planView === 'gantt'); ganttBtn.setAttribute('aria-pressed', _planView === 'gantt' ? 'true' : 'false'); }
   if(kanBtn){ kanBtn.classList.toggle('active', _planView === 'kanban'); kanBtn.setAttribute('aria-pressed', _planView === 'kanban' ? 'true' : 'false'); }
+  if(tlBtn){ tlBtn.classList.toggle('active', _planView === 'timeline'); tlBtn.setAttribute('aria-pressed', _planView === 'timeline' ? 'true' : 'false'); }
   // Sync colour toggle pill state
   var colorBtn = document.getElementById('planColorsToggleBtn');
   if(colorBtn){
@@ -16992,6 +16995,7 @@ function renderPlanMain(){
 
   if(_planView === 'list') renderPlanListView(p);
   else if(_planView === 'kanban') renderPlanKanbanView(p);
+  else if(_planView === 'timeline') renderPlanTimelineView(p);
   else renderPlanGanttView(p);
 
   // v1.37.0 — sprint/agile bar (goal + DoD + DoR toggle + live stats)
@@ -19053,6 +19057,269 @@ function _wireKanbanDragDrop(content, plan){
       renderPlanMain();
     });
   });
+}
+
+// v1.40.2: Productboard-style Timeline view. Groups tasks under their
+// top-level parent ("themes"), draws horizontal bars on a month or quarter
+// axis, draws a today line + sample milestones, exposes search-in-view +
+// period toggle + group control.
+var _planTLState = { period: 'monthly', search: '', collapsed: {}, groupBy: 'parent' };
+
+function renderPlanTimelineView(plan){
+  var content = document.getElementById('plansContent');
+  if(!plan || !plan.tasks || !plan.tasks.length){
+    content.innerHTML = '<div class="plan-empty"><h3>No tasks to chart</h3><p>Add some tasks first \u2014 the Timeline view appears here.</p></div>';
+    return;
+  }
+  var tasks = plan.tasks.slice();
+
+  // Determine date window. Default = today \u00B1 6 months snapped to period start.
+  var minIso = null, maxIso = null;
+  tasks.forEach(function(t){
+    if(t.startDate && (!minIso || _isoToDate(t.startDate) < _isoToDate(minIso))) minIso = t.startDate;
+    if(t.endDate && (!maxIso || _isoToDate(t.endDate) > _isoToDate(maxIso))) maxIso = t.endDate;
+  });
+  var today = new Date();
+  if(!minIso){
+    var s = new Date(today.getFullYear(), today.getMonth() - 2, 1);
+    minIso = _dateToIso(s);
+  }
+  if(!maxIso){
+    var e = new Date(today.getFullYear(), today.getMonth() + 6, 0);
+    maxIso = _dateToIso(e);
+  }
+  var rangeStart = _isoToDate(minIso);
+  rangeStart = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), 1);
+  var rangeEnd = _isoToDate(maxIso);
+  rangeEnd = new Date(rangeEnd.getFullYear(), rangeEnd.getMonth() + 1, 0); // end of month
+
+  // Build period columns
+  var period = _planTLState.period; // 'monthly' | 'quarterly'
+  var cols = [];
+  var cur = new Date(rangeStart);
+  while(cur <= rangeEnd){
+    var label, span; // span = days in this column
+    if(period === 'quarterly'){
+      var q = Math.floor(cur.getMonth() / 3);
+      var qStart = new Date(cur.getFullYear(), q * 3, 1);
+      var qEnd   = new Date(cur.getFullYear(), q * 3 + 3, 0);
+      label = 'Q' + (q+1) + ' ' + cur.getFullYear();
+      cols.push({ label: label, start: new Date(qStart), end: new Date(qEnd) });
+      cur = new Date(qEnd); cur.setDate(cur.getDate() + 1);
+    } else {
+      var m = cur.getMonth(), y = cur.getFullYear();
+      var mStart = new Date(y, m, 1);
+      var mEnd   = new Date(y, m+1, 0);
+      label = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m];
+      cols.push({ label: label, start: mStart, end: mEnd, year: y });
+      cur = new Date(y, m+1, 1);
+    }
+  }
+  if(!cols.length) cols.push({ label: 'No data', start: rangeStart, end: rangeEnd });
+
+  // Layout
+  var GUTTER_W = 320;          // left task-name gutter
+  var COL_W = period === 'quarterly' ? 220 : 140;
+  var GRID_W = cols.length * COL_W;
+  var TOTAL_W = GUTTER_W + GRID_W;
+
+  // Build grouping. groupBy === 'parent' uses task.parentId === null (i.e.
+  // top-level tasks) as themes. Children of the same parent become rows
+  // beneath. Tasks without children render as one-row themes themselves.
+  var byParent = {};
+  tasks.forEach(function(t){
+    var pid = t.parentId || '__root__';
+    if(!byParent[pid]) byParent[pid] = [];
+    byParent[pid].push(t);
+  });
+  Object.keys(byParent).forEach(function(k){
+    byParent[k].sort(function(a,b){ return (a.sortIndex||0) - (b.sortIndex||0); });
+  });
+  var roots = byParent['__root__'] || [];
+  var search = (_planTLState.search || '').toLowerCase().trim();
+  function _matches(t){
+    if(!search) return true;
+    return (t.name||'').toLowerCase().indexOf(search) >= 0 ||
+           (t.owner||'').toLowerCase().indexOf(search) >= 0;
+  }
+
+  // Stats
+  var unplanned = tasks.filter(function(t){ return !t.startDate || !t.endDate; }).length;
+
+  // Top toolbar (search-in-view, unplanned count, period toggle, group)
+  var toolbarHtml =
+    '<div style="display:flex;align-items:center;gap:14px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--white);position:sticky;top:0;z-index:30">' +
+      '<div style="display:flex;align-items:center;gap:6px;flex:1;max-width:280px">' +
+        '<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--muted);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>' +
+        '<input id="planTLSearch" type="search" placeholder="Search in view" value="'+escHtml(_planTLState.search)+'" oninput="_planTLSetSearch(this.value)" style="flex:1;padding:6px 8px;border:1px solid transparent;border-radius:6px;font-size:12px;color:var(--text);background:transparent;outline:none">' +
+      '</div>' +
+      '<button class="prio-btn" onclick="_planTLToggleUnplanned()" style="display:inline-flex;align-items:center;gap:6px;font-size:12px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M3 3l18 18M9 9a3 3 0 014.243 0M21 12a9 9 0 01-1.875 5.5m-2.625-2.625A3 3 0 0115 12"/></svg>Unplanned ('+unplanned+')</button>' +
+      '<button class="prio-btn" onclick="_planTLSetPeriod(\''+(period==='monthly'?'quarterly':'monthly')+'\')" style="display:inline-flex;align-items:center;gap:6px;font-size:12px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>'+(period==='monthly'?'Monthly':'Quarterly')+'</button>' +
+      '<button class="prio-btn" style="display:inline-flex;align-items:center;gap:6px;font-size:12px" onclick="_planTLOpenFilter()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>Filter</button>' +
+      '<button class="prio-btn" style="display:inline-flex;align-items:center;gap:6px;font-size:12px" onclick="_planTLCycleGroup()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M3 6h18M3 12h12M3 18h6"/></svg>Group: '+(_planTLState.groupBy==='parent'?'Parent':'Status')+'</button>' +
+    '</div>';
+
+  // Header rows (year + period). Year row spans cols of the same year.
+  var yearRow = '<div style="display:flex;height:30px;border-bottom:1px solid var(--border);background:var(--surface-low)">';
+  yearRow += '<div style="width:'+GUTTER_W+'px;flex-shrink:0"></div>';
+  if(period === 'monthly'){
+    var i = 0;
+    while(i < cols.length){
+      var startYear = cols[i].year;
+      var span = 1;
+      while(i + span < cols.length && cols[i+span].year === startYear) span++;
+      yearRow += '<div style="width:'+(span*COL_W)+'px;flex-shrink:0;font-size:11px;font-weight:700;color:var(--text);padding:6px 12px;border-right:1px solid var(--border)">'+startYear+'</div>';
+      i += span;
+    }
+  } else {
+    cols.forEach(function(c){
+      yearRow += '<div style="width:'+COL_W+'px;flex-shrink:0;font-size:11px;font-weight:700;color:var(--text);padding:6px 12px;border-right:1px solid var(--border)">'+c.start.getFullYear()+'</div>';
+    });
+  }
+  yearRow += '</div>';
+
+  var periodRow = '<div style="display:flex;height:34px;border-bottom:1px solid var(--border);background:var(--surface-low)">';
+  periodRow += '<div style="width:'+GUTTER_W+'px;flex-shrink:0"></div>';
+  cols.forEach(function(c){
+    periodRow += '<div style="width:'+COL_W+'px;flex-shrink:0;font-size:11px;color:var(--muted);padding:8px 12px;text-align:center;border-right:1px solid var(--border)">'+escHtml(c.label)+'</div>';
+  });
+  periodRow += '</div>';
+
+  // Today line position
+  var todayDate = new Date();
+  var todayX = -1;
+  if(todayDate >= rangeStart && todayDate <= rangeEnd){
+    var fromMs = rangeStart.getTime();
+    var toMs = rangeEnd.getTime() + 24*3600*1000;
+    todayX = GUTTER_W + ((todayDate.getTime() - fromMs) / (toMs - fromMs)) * GRID_W;
+  }
+
+  function _barPos(t){
+    if(!t.startDate || !t.endDate) return null;
+    var s = _isoToDate(t.startDate).getTime();
+    var e = _isoToDate(t.endDate).getTime() + 24*3600*1000;
+    var fromMs = rangeStart.getTime();
+    var toMs = rangeEnd.getTime() + 24*3600*1000;
+    if(e < fromMs || s > toMs) return null; // outside range
+    var x1 = Math.max(0, (s - fromMs) / (toMs - fromMs)) * GRID_W;
+    var x2 = Math.min(1, (e - fromMs) / (toMs - fromMs)) * GRID_W;
+    return { x: GUTTER_W + x1, w: Math.max(40, x2 - x1) };
+  }
+
+  var STATUS_COLORS = {
+    'not-started': { bg:'#e0f2fe', fg:'#0369a1', border:'#bae6fd' },
+    'in-progress': { bg:'#dbeafe', fg:'#1d4ed8', border:'#bfdbfe' },
+    'done':        { bg:'#dcfce7', fg:'#166534', border:'#bbf7d0' },
+    'blocked':     { bg:'#fee2e2', fg:'#991b1b', border:'#fecaca' }
+  };
+  var STATUS_DOTS = {
+    'not-started': '#94a3b8',
+    'in-progress': '#3b82f6',
+    'done':        '#22c55e',
+    'blocked':     '#ef4444'
+  };
+
+  function _bar(t){
+    var pos = _barPos(t);
+    if(!pos) return '';
+    var sc = STATUS_COLORS[t.status] || STATUS_COLORS['not-started'];
+    var nm = (t.name || '(unnamed)').substring(0, 28);
+    var pri = (t.priority || '').toUpperCase();
+    var hrs = +t.durationDays || 0;
+    var pct = +t.percentComplete || 0;
+    var statusDot = '<span style="width:8px;height:8px;border-radius:50%;background:'+(STATUS_DOTS[t.status]||'#94a3b8')+';flex-shrink:0;display:inline-block"></span>';
+    var icon = '<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:'+sc.fg+';fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><path d="M13 5l7 7-7 7M5 12h15"/></svg>';
+    var badge = pri ? '<span style="background:#fff;border:1px solid '+sc.border+';color:'+sc.fg+';font-size:9px;font-weight:700;padding:1px 6px;border-radius:999px">'+escHtml(pri)+'</span>' : '';
+    return '<div onclick="_planTLEditTask(\''+t.id+'\')" title="'+escHtml(t.name||'')+'" style="position:absolute;left:'+pos.x+'px;top:50%;transform:translateY(-50%);height:28px;width:'+pos.w+'px;background:'+sc.bg+';border:1px solid '+sc.border+';border-radius:14px;padding:0 10px;display:flex;align-items:center;gap:6px;color:'+sc.fg+';font-size:11px;font-weight:600;cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;box-shadow:0 1px 2px rgba(0,0,0,.04)">'+icon+'<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0">'+escHtml(nm)+'</span>'+badge+statusDot+'</div>';
+  }
+
+  // Hatched-background placeholder rendered in empty rows so the grid feels alive
+  function _emptyRow(){
+    return '<div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg, transparent 0 8px, rgba(148,163,184,.06) 8px 12px)"></div>';
+  }
+
+  // Build group rows
+  var bodyHtml = '';
+  function _renderRow(t, isThemeRow, depth){
+    var hasKids = (byParent[t.id] || []).length > 0;
+    var matches = _matches(t);
+    var pos = _barPos(t);
+    var rowH = 44;
+    var collapsed = !!_planTLState.collapsed[t.id];
+    var caret = hasKids
+      ? ('<button onclick="event.stopPropagation();_planTLToggleCollapse(\''+t.id+'\')" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:2px;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transform:rotate('+(collapsed?'-90deg':'0deg')+');transition:transform .12s"><path d="M6 9l6 6 6-6"/></svg></button>')
+      : '<span style="width:18px;display:inline-block"></span>';
+    var labelChip = isThemeRow
+      ? '<span style="background:#ede9fe;color:#6d28d9;font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px">'+escHtml(t.name||'(theme)')+'</span><span style="font-size:11px;color:var(--muted);margin-left:8px">'+(byParent[t.id]||[]).length+'</span>'
+      : '<span style="font-size:12px;font-weight:500;color:var(--text);padding-left:'+(depth*14)+'px">'+escHtml(t.name||'(unnamed)')+'</span>';
+    var rowOpacity = matches ? '1' : '.35';
+    bodyHtml +=
+      '<div style="position:relative;display:flex;height:'+rowH+'px;border-bottom:1px solid var(--border);opacity:'+rowOpacity+'">' +
+        '<div style="width:'+GUTTER_W+'px;flex-shrink:0;display:flex;align-items:center;gap:6px;padding:0 10px;background:var(--white);position:sticky;left:0;z-index:5;border-right:1px solid var(--border)">' + caret + labelChip + '</div>' +
+        '<div style="position:relative;flex:1;min-width:'+GRID_W+'px">' + _emptyRow() + (pos ? _bar(t) : '') + '</div>' +
+      '</div>';
+    if(hasKids && !collapsed){
+      (byParent[t.id]||[]).forEach(function(child){ _renderRow(child, false, depth + 1); });
+    }
+  }
+
+  // Group by parent: every root task that has children becomes a "theme";
+  // root tasks without children also render as their own row.
+  if(_planTLState.groupBy === 'status'){
+    var statuses = ['not-started','in-progress','done','blocked'];
+    statuses.forEach(function(st){
+      var inGroup = tasks.filter(function(t){ return (t.status||'not-started') === st; });
+      if(!inGroup.length) return;
+      var labelMap = { 'not-started':'Not started','in-progress':'In progress','done':'Done','blocked':'Blocked' };
+      bodyHtml +=
+        '<div style="position:relative;display:flex;height:36px;border-bottom:1px solid var(--border);background:var(--surface-low)">' +
+          '<div style="width:'+GUTTER_W+'px;flex-shrink:0;display:flex;align-items:center;gap:6px;padding:0 10px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-right:1px solid var(--border)">' +
+            '<span style="background:'+STATUS_DOTS[st]+'33;color:'+STATUS_DOTS[st]+';padding:2px 10px;border-radius:6px">'+labelMap[st]+'</span>'+
+            '<span style="font-size:11px;color:var(--muted)">'+inGroup.length+'</span>'+
+          '</div>' +
+          '<div style="position:relative;flex:1;min-width:'+GRID_W+'px">' + _emptyRow() + '</div>' +
+        '</div>';
+      inGroup.forEach(function(t){ _renderRow(t, false, 0); });
+    });
+  } else {
+    roots.forEach(function(t){ _renderRow(t, (byParent[t.id]||[]).length > 0, 0); });
+  }
+  if(!bodyHtml){
+    bodyHtml = '<div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">No tasks match the current filter.</div>';
+  }
+
+  // Today line overlay (positioned over the entire grid)
+  var todayLine = (todayX > 0)
+    ? '<div style="position:absolute;left:'+todayX+'px;top:64px;bottom:0;width:0;border-left:2px dashed #2563eb;pointer-events:none;z-index:20"><div style="position:absolute;top:-22px;left:-50px;width:100px;background:#2563eb;color:#fff;font-size:10px;font-weight:700;text-align:center;padding:3px 0;border-radius:0 0 6px 6px;letter-spacing:.04em">TODAY</div></div>'
+    : '';
+
+  content.innerHTML =
+    toolbarHtml +
+    '<div style="overflow:auto;background:var(--white)" id="planTLScroll">' +
+      '<div style="position:relative;min-width:'+TOTAL_W+'px">' +
+        yearRow + periodRow + bodyHtml + todayLine +
+      '</div>' +
+    '</div>';
+}
+
+function _planTLSetSearch(v){
+  _planTLState.search = v || '';
+  // Don't full-rerender on every keystroke; just toggle row opacity by
+  // re-rendering — the dataset is small and this matches existing patterns.
+  renderPlanMain();
+  var inp = document.getElementById('planTLSearch');
+  if(inp){ inp.focus(); inp.value = _planTLState.search; }
+}
+function _planTLSetPeriod(p){ _planTLState.period = p; renderPlanMain(); }
+function _planTLToggleCollapse(id){ _planTLState.collapsed[id] = !_planTLState.collapsed[id]; renderPlanMain(); }
+function _planTLToggleUnplanned(){ showToast('Unplanned filter coming next iteration', 'info'); }
+function _planTLOpenFilter(){ showToast('Advanced filters coming next iteration', 'info'); }
+function _planTLCycleGroup(){
+  _planTLState.groupBy = _planTLState.groupBy === 'parent' ? 'status' : 'parent';
+  renderPlanMain();
+}
+function _planTLEditTask(id){
+  if(typeof openEditTaskModal === 'function') openEditTaskModal(id);
 }
 
 function renderPlanGanttView(plan){
@@ -32999,31 +33266,47 @@ function _tbSaveAsTemplate(){
 
 var _pmrHistoryEnabled   = true;
 var _pmrHistoryPopping   = false;   // re-entrancy guard
+var _pmrHistorySeeded    = false;   // true once initial replaceState has fired
+var _pmrPushCount        = 0;       // number of pushState calls we've made — used to know if back() will stay in-SPA
 
+// `roadmap` is the underlying base view (the timeline page rendered when no
+// overlay is open). `dashboard` is a sibling base view that toggles in via
+// showDashboard(). Both need real open hooks so the popstate handler can
+// restore them on back navigation. We register a synthetic `openRoadmap`
+// below that just calls closeAllOverlays() — that's all "going to roadmap"
+// actually means in this SPA.
 var _PMR_OVERLAY_MAP = {
-  dashboard:    { open:null, close:null, id:'dashboardPage', nav:'' },
-  roadmap:      { open:null, close:null, id:null, nav:'Roadmap' },
-  todo:         { open:'openTodo',         close:'closeTodo',         id:'todoOverlay',         nav:'To-Do' },
-  kpi:          { open:'openKPI',          close:'closeKPI',          id:'kpiOverlay',          nav:'' },
-  capacity:     { open:'openCapacity',     close:'closeCapacity',     id:'capOverlay',          nav:'' },
-  g2m:          { open:'openG2M',          close:'closeG2M',          id:'g2mOverlay',          nav:'Checklist' },
-  plans:        { open:'openPlans',        close:'closePlans',        id:'plansOverlay',        nav:'Plans' },
-  artifacts:    { open:'openArtifacts',    close:'closeArtifacts',    id:'artOverlay',          nav:'' },
-  reports:      { open:'openReports',      close:'closeReports',      id:'reportsOverlay',      nav:'Reports' },
-  insights:     { open:'openInsights',     close:'closeInsights',     id:'insightsOverlay',     nav:'Insights' },
-  ucr:          { open:'openUCR',          close:'closeUCR',          id:'ucrOverlay',          nav:'' },
-  prioritization:{ open:'openPrioritization', close:'closePrioritization', id:'prioritizationOverlay', nav:'' },
-  templates:    { open:'openTemplateLibrary', close:'closeTemplateLibrary', id:'templateLibraryOverlay', nav:'' },
-  feedback:     { open:'openFeedback',     close:'closeFeedback',     id:'feedbackOverlay',     nav:'' },
-  admin:        { open:'openAdmin',        close:'closeAdmin',        id:'adminOverlay',        nav:'' },
-  platformAdmin:{ open:'openPlatformAdmin',close:'closePlatformAdmin',id:'platformAdminOverlay',nav:'' }
+  dashboard:    { open:'showDashboard',      close:null,                 id:'dashboardPage',          nav:'Dashboard' },
+  roadmap:      { open:'showRoadmapView',    close:null,                 id:null,                     nav:'Roadmap' },
+  todo:         { open:'openTodo',           close:'closeTodo',          id:'todoOverlay',            nav:'To-Do' },
+  kpi:          { open:'openKPI',            close:'closeKPI',           id:'kpiOverlay',             nav:'' },
+  capacity:     { open:'openCapacity',       close:'closeCapacity',      id:'capOverlay',             nav:'' },
+  g2m:          { open:'openG2M',            close:'closeG2M',           id:'g2mOverlay',             nav:'Checklist' },
+  plans:        { open:'openPlans',          close:'closePlans',         id:'plansOverlay',           nav:'Plans' },
+  artifacts:    { open:'openArtifacts',      close:'closeArtifacts',     id:'artOverlay',             nav:'' },
+  reports:      { open:'openReports',        close:'closeReports',       id:'reportsOverlay',         nav:'Reports' },
+  insights:     { open:'openInsights',       close:'closeInsights',      id:'insightsOverlay',        nav:'Insights' },
+  ucr:          { open:'openUCR',            close:'closeUCR',           id:'ucrOverlay',             nav:'' },
+  prioritization:{ open:'openPrioritization',close:'closePrioritization',id:'prioritizationOverlay',  nav:'' },
+  templates:    { open:'openTemplateLibrary',close:'closeTemplateLibrary',id:'templateLibraryOverlay',nav:'' },
+  feedback:     { open:'openFeedback',       close:'closeFeedback',      id:'feedbackOverlay',        nav:'' },
+  admin:        { open:'openAdmin',          close:'closeAdmin',         id:'adminOverlay',           nav:'' },
+  platformAdmin:{ open:'openPlatformAdmin',  close:'closePlatformAdmin', id:'platformAdminOverlay',   nav:'' }
 };
+
+function _pmrCurrentView(){
+  return (window.history.state && window.history.state.pmrView) || '';
+}
 
 function _pmrPushView(view){
   if(!_pmrHistoryEnabled || _pmrHistoryPopping) return;
+  // Dedup: don't push if we're already on this view (prevents two clicks on
+  // the same nav item from filling history with no-op entries — the first
+  // Back press would otherwise appear to do nothing).
+  if(_pmrCurrentView() === view) return;
   try {
-    var state = { pmrView: view };
-    history.pushState(state, '', '#' + view);
+    history.pushState({ pmrView: view }, '', '#' + view);
+    _pmrPushCount++;
   } catch(e){ /* file:// may disallow; that's fine — Electron doesn't need back */ }
 }
 
@@ -33032,16 +33315,26 @@ function _pmrReplaceView(view){
   try { history.replaceState({ pmrView: view }, '', '#' + view); } catch(e){}
 }
 
+// Synthetic "open the base roadmap view" — what topnav "Roadmap" should do.
+// Defined here (not as a closeAllOverlays alias inline) so it can be wrapped
+// for history pushes like every other openX.
+function showRoadmapView(){
+  if(typeof closeAllOverlays === 'function') closeAllOverlays();
+  if(typeof updateNavActive === 'function') updateNavActive('Roadmap');
+}
+
+// Close every overlay WITHOUT triggering history pushes. Used by the
+// popstate handler when the back button is the source of navigation.
 function _pmrCloseAnyOpenOverlay(){
-  // Close any currently-open overlay (class=open) without pushing state.
   var closed = false;
   Object.keys(_PMR_OVERLAY_MAP).forEach(function(key){
     var entry = _PMR_OVERLAY_MAP[key];
-    if(!entry.id) return;
+    if(!entry.id || !entry.close) return;
     var el = document.getElementById(entry.id);
     if(el && el.classList.contains('open')){
-      // Prefer the app's own close function so it runs cleanup.
-      var fn = entry.close && window[entry.close];
+      var fn = window[entry.close];
+      // Call the close fn with the popping guard set so its history-pushing
+      // wrapper degrades to the underlying behavior (just hides the overlay).
       if(typeof fn === 'function'){ try { fn(); } catch(_){} }
       else { el.classList.remove('open'); }
       closed = true;
@@ -33050,69 +33343,105 @@ function _pmrCloseAnyOpenOverlay(){
   return closed;
 }
 
-// Wrap openX functions so they push history state automatically AND keep the
-// top-nav highlight in sync with the active overlay (Fix 7 v1.35.0). Without
-// this, browser back/forward leaves the previous tab highlighted.
+// Wrap a single openX function so calling it pushes a #view history entry
+// AND syncs the top-nav highlight. Idempotent — won't double-wrap.
+function _pmrWrapOpen(key, entry){
+  if(!entry.open) return;
+  var orig = window[entry.open];
+  if(typeof orig !== 'function' || orig._pmrWrapped) return;
+  var wrapped = function(){
+    var r = orig.apply(this, arguments);
+    _pmrPushView(key);
+    if (typeof updateNavActive === 'function') {
+      try { updateNavActive(entry.nav || ''); } catch(_){}
+    }
+    return r;
+  };
+  wrapped._pmrWrapped = true;
+  window[entry.open] = wrapped;
+}
+
+// Wrap a single closeX function so user-initiated closes route through
+// history.back() — the popstate handler is the single source of truth for
+// navigation. When close is invoked DURING a popstate (overlay teardown),
+// we skip the back() to avoid an infinite loop and just run the original.
+function _pmrWrapClose(entry){
+  if(!entry.close) return;
+  var orig = window[entry.close];
+  if(typeof orig !== 'function' || orig._pmrWrapped) return;
+  var wrapped = function(){
+    if(_pmrHistoryPopping){
+      // popstate-driven close — just hide the overlay, no history work.
+      return orig.apply(this, arguments);
+    }
+    // User-initiated close: rely on browser back so URL + UI stay in sync.
+    // Only call back() if we know we have an SPA-internal entry to land on
+    // (otherwise back() takes the user OUT of the app to whatever page
+    // brought them here). Track our own pushes to make this reliable.
+    if(_pmrPushCount > 0){
+      try { _pmrPushCount--; window.history.back(); return; } catch(_){}
+    }
+    orig.apply(this, arguments);
+    _pmrReplaceView('roadmap');
+    if(typeof updateNavActive === 'function') updateNavActive('Roadmap');
+  };
+  wrapped._pmrWrapped = true;
+  window[entry.close] = wrapped;
+}
+
 function _pmrWireHistory(){
   Object.keys(_PMR_OVERLAY_MAP).forEach(function(key){
     var entry = _PMR_OVERLAY_MAP[key];
-    if(!entry.open) return;
-    var orig = window[entry.open];
-    if(typeof orig !== 'function' || orig._pmrWrapped) return;
-    var wrapped = function(){
-      var r = orig.apply(this, arguments);
-      _pmrPushView(key);
-      // Keep the top nav in sync — explicitly set or clear the active tab.
-      if (typeof updateNavActive === 'function') {
-        try { updateNavActive(entry.nav || ''); } catch(_){}
-      }
-      return r;
-    };
-    wrapped._pmrWrapped = true;
-    window[entry.open] = wrapped;
+    _pmrWrapOpen(key, entry);
+    _pmrWrapClose(entry);
   });
 
   window.addEventListener('popstate', function(ev){
     _pmrHistoryPopping = true;
+    if(_pmrPushCount > 0) _pmrPushCount--;
     try {
-      // If a generic modal (not a tracked overlay) is open, close it instead of navigating.
+      // 1) Generic modal open? Just close it and re-push the current view so
+      // the back button can still leave the page on the next press.
       var openModal = document.querySelector('.modal-overlay');
-      if(openModal){
+      if(openModal && !STATIC_MODAL_IDS_SET[openModal.id]){
         openModal.remove();
-        // Re-push the current view so the next back still works.
-        var cur = (ev.state && ev.state.pmrView) || 'dashboard';
-        try { history.pushState({ pmrView: cur }, '', '#' + cur); } catch(_){}
+        var cur = _pmrCurrentView() || 'roadmap';
+        try { history.pushState({ pmrView: cur }, '', '#' + cur); _pmrPushCount++; } catch(_){}
         return;
       }
-      // Otherwise: close any open full-screen overlay, falling back to dashboard.
-      var target = (ev.state && ev.state.pmrView) || 'dashboard';
+      // 2) Decide where to land: explicit state from the entry, fallback to roadmap.
+      var target = (ev.state && ev.state.pmrView) || 'roadmap';
       _pmrCloseAnyOpenOverlay();
-      if(target === 'dashboard'){
-        if(typeof showDashboard === 'function') showDashboard();
-      } else {
-        var entry = _PMR_OVERLAY_MAP[target];
-        if(entry && entry.open && typeof window[entry.open] === 'function'){
-          // Call the ORIGINAL (underlying) function — not the wrapped one —
-          // so we don't re-push state during a popstate-driven navigation.
-          // Since orig is captured in closure above, we unwrap by calling
-          // the wrapped fn with the popping guard set.
-          window[entry.open]();
-        }
+
+      var entry = _PMR_OVERLAY_MAP[target];
+      if(entry && entry.open && typeof window[entry.open] === 'function'){
+        // Wrapped open() will see _pmrHistoryPopping=true and skip pushing
+        // a new state, so the URL stays at the entry we navigated to.
+        window[entry.open]();
+      } else if(target === 'roadmap'){
+        // Defensive: roadmap should always have a hook now, but just in case.
+        if(typeof closeAllOverlays === 'function') closeAllOverlays();
       }
     } finally {
       _pmrHistoryPopping = false;
     }
   });
 
-  // Seed the initial history entry so the first Back doesn't exit the SPA.
-  _pmrReplaceView('dashboard');
-
-  // Respect an initial hash (e.g. direct-link to #plans)
+  // Seed the initial history entry so the first Back press doesn't drop the
+  // user back to login. Respect an initial hash if present.
   var initialHash = (window.location.hash || '').replace(/^#/, '');
-  if(initialHash && _PMR_OVERLAY_MAP[initialHash] && typeof window[_PMR_OVERLAY_MAP[initialHash].open] === 'function'){
+  var initialView = (initialHash && _PMR_OVERLAY_MAP[initialHash]) ? initialHash : 'roadmap';
+  _pmrReplaceView(initialView);
+  _pmrHistorySeeded = true;
+
+  if(initialHash && initialHash !== 'roadmap' && _PMR_OVERLAY_MAP[initialHash] && typeof window[_PMR_OVERLAY_MAP[initialHash].open] === 'function'){
     setTimeout(function(){ window[_PMR_OVERLAY_MAP[initialHash].open](); }, 500);
   }
 }
+
+// Set of static modal IDs that closeAllOverlays() preserves — the popstate
+// handler should not yank them out of the DOM since they're declared inline.
+var STATIC_MODAL_IDS_SET = { rowModal: 1, barModal: 1, quartersModal: 1 };
 
 // Wire history once the initial DOM is ready AND the renderer has defined
 // its open* functions (they're defined in the top-level script above us).
