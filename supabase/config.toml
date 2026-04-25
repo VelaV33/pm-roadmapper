@@ -421,6 +421,20 @@ verify_jwt = false
 [functions.slack-api]
 verify_jwt = false
 
+# v1.41.0 — integration framework (Jira, GitHub, Slack, Asana, Linear).
+# OAuth callbacks come from external providers (no JWT); webhook receivers
+# are signed by the provider. Both verify in-function. The api + sync
+# functions are user-facing and verify the JWT in-function for routing
+# control (matches existing admin-api pattern).
+[functions.integrations-oauth]
+verify_jwt = false
+[functions.integrations-webhook]
+verify_jwt = false
+[functions.integrations-sync]
+verify_jwt = false
+[functions.integrations-api]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327
