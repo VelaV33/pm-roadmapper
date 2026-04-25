@@ -1,6 +1,6 @@
 {
   "name": "netstar-roadmap",
-  "version": "1.42.3",
+  "version": "1.42.4",
   "description": "Roadmap OS — Product Strategy & Roadmap Tool",
   "main": "main.js",
   "scripts": {

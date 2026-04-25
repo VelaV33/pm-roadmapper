@@ -2419,6 +2419,7 @@ body.dark-mode .onboard-card{background:#1e293b}
       <div id="fLabelsBox" style="display:flex;flex-wrap:wrap;gap:6px;padding:6px;border:1px solid var(--border);border-radius:6px;background:var(--white);min-height:38px"></div>
       <input id="fLabelInput" list="fLabelSuggest" placeholder="Type a label and press Enter…" style="margin-top:6px;width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--text);background:var(--white)">
       <datalist id="fLabelSuggest"></datalist>
+      <datalist id="_barLabelSuggest"></datalist>
     </div>
 
     <div class="form-row">
@@ -4598,15 +4599,22 @@ function cancelNewSectionInline(){
 function renderBarsForm(bars){
   var c=document.getElementById('barsContainer');
   c.innerHTML='';
+  // v1.42.4: seed the per-bar labels datalist with the suggested catalog
+  var dl = document.getElementById('_barLabelSuggest');
+  if(dl && (typeof INITIATIVE_LABELS !== 'undefined')){
+    dl.innerHTML = INITIATIVE_LABELS.map(function(l){ return '<option value="'+escHtml(l)+'">'; }).join('');
+  }
   bars.forEach(function(bar,i){ c.appendChild(barFormRow(bar,i)); });
 }
 function barFormRow(bar,i){
+  // v1.42.4: every bar gets a stable id so per-initiative fields (revenue,
+  // labels, owner, comments, timestamps) survive saveRow's bar-rebuild.
+  if(!bar.id) bar.id = 'b_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+
   var wrap=document.createElement('div');
   wrap.className='form-row';
+  wrap.setAttribute('data-bid', bar.id);
   // v1.36.x: use CSS variables so dark mode works without per-element overrides.
-  // --surface-low is #f3f3f4 in light mode, #1e293b in dark — matches the card
-  // feel in light mode (slight contrast with white modal bg) and stays legible
-  // in dark mode (no more light card on dark modal).
   wrap.style.cssText='background:var(--surface-low);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px';
 
   // ── Remove button (top-right of card) ──
@@ -4711,7 +4719,258 @@ function barFormRow(bar,i){
   row3.appendChild(makeDayGroup('To',   Math.max(bar.s, bar.e - 1/(DAYS_IN_MONTH[MONTHS[Math.floor(bar.e)]||'JAN']||30)), 'eMonth', 'eDay'));
   wrap.appendChild(row3);
 
+  // ── v1.42.4: per-initiative details (revenue / labels / owner / comments)
+  // Disclosure-style — collapsed by default to keep the form lean. Saved
+  // directly onto the bar object via data-field attributes that saveRow's
+  // merge logic preserves.
+  var details = document.createElement('div');
+  details.style.cssText = 'margin-top:10px';
+  var hasDetails = !!(bar.revenue || (bar.labels && bar.labels.length) || bar.ownerEmail || (bar.comments && bar.comments.length));
+  var disclosure = document.createElement('button');
+  disclosure.type = 'button';
+  disclosure.style.cssText = 'background:none;border:none;color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;padding:4px 0;display:flex;align-items:center;gap:4px';
+  disclosure.innerHTML = '<svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .12s;transform:rotate('+(hasDetails?'0deg':'-90deg')+')"><path d="M6 9l6 6 6-6"/></svg>Details: revenue, labels, owner, comments';
+  details.appendChild(disclosure);
+
+  var panel = document.createElement('div');
+  panel.style.cssText = 'margin-top:8px;padding:10px;background:var(--white);border:1px solid var(--border);border-radius:6px;display:'+(hasDetails?'block':'none');
+  details.appendChild(panel);
+
+  disclosure.onclick = function(){
+    var isOpen = panel.style.display === 'block';
+    panel.style.display = isOpen ? 'none' : 'block';
+    var caret = disclosure.querySelector('svg');
+    if(caret) caret.style.transform = 'rotate('+(isOpen?'-90deg':'0deg')+')';
+  };
+
+  // Revenue + Owner row
+  var topGrid = document.createElement('div');
+  topGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px';
+  topGrid.innerHTML =
+    '<label><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Revenue / ROI</div>'+
+      '<div style="display:flex;align-items:center;gap:4px"><span style="color:var(--muted);font-weight:600">$</span><input type="number" min="0" step="100" placeholder="0" data-bi="'+i+'" data-field="revenue" value="'+(bar.revenue!=null?bar.revenue:'')+'" style="flex:1;padding:7px 9px;border:1px solid var(--border);border-radius:5px;font-size:12px;color:var(--text);background:var(--white);box-sizing:border-box"></div>'+
+    '</label>'+
+    '<label><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Initiative Owner</div>'+
+      '<select data-bi="'+i+'" data-field="ownerEmail" style="width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:5px;font-size:12px;color:var(--text);background:var(--white);box-sizing:border-box">'+_buildOwnerOptionsHtml(bar.ownerEmail)+'</select>'+
+    '</label>';
+  panel.appendChild(topGrid);
+
+  // Labels chip selector
+  var labelsLabel = document.createElement('div');
+  labelsLabel.style.cssText = 'font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px';
+  labelsLabel.textContent = 'Labels';
+  panel.appendChild(labelsLabel);
+
+  var labelsBox = document.createElement('div');
+  labelsBox.setAttribute('data-bi', i);
+  labelsBox.setAttribute('data-field', 'labelsBox');
+  labelsBox.style.cssText = 'display:flex;flex-wrap:wrap;gap:5px;padding:5px;border:1px solid var(--border);border-radius:5px;background:var(--white);min-height:32px;margin-bottom:4px';
+  (Array.isArray(bar.labels) ? bar.labels : []).forEach(function(l){ _addBarLabelChip(labelsBox, l); });
+  panel.appendChild(labelsBox);
+
+  var labelsInput = document.createElement('input');
+  labelsInput.placeholder = 'Type a label and press Enter…';
+  labelsInput.setAttribute('list', '_barLabelSuggest');
+  labelsInput.style.cssText = 'width:100%;padding:6px 9px;border:1px solid var(--border);border-radius:5px;font-size:12px;color:var(--text);background:var(--white);box-sizing:border-box;margin-bottom:10px';
+  labelsInput.addEventListener('keydown', function(e){
+    if(e.key === 'Enter' || e.key === ','){
+      e.preventDefault();
+      var v = (labelsInput.value || '').trim().replace(/,$/, '').trim();
+      if(v) _addBarLabelChip(labelsBox, v);
+      labelsInput.value = '';
+    }
+  });
+  panel.appendChild(labelsInput);
+
+  // Timestamps (read-only)
+  var meta = document.createElement('div');
+  meta.style.cssText = 'font-size:10px;color:var(--muted);margin-bottom:10px';
+  var createdStr = bar.createdAt ? new Date(bar.createdAt).toLocaleString() : 'on save';
+  var updatedStr = bar.updatedAt ? new Date(bar.updatedAt).toLocaleString() : '—';
+  meta.innerHTML = 'Created: '+escHtml(createdStr)+' &nbsp;·&nbsp; Updated: '+escHtml(updatedStr);
+  panel.appendChild(meta);
+
+  // Comments
+  var commentsHdr = document.createElement('div');
+  commentsHdr.style.cssText = 'font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;padding-top:8px;border-top:1px solid var(--border)';
+  commentsHdr.innerHTML = 'Comments <span data-bar-comment-count style="color:var(--accent)">'+((bar.comments && bar.comments.length)?'('+bar.comments.length+')':'')+'</span>';
+  panel.appendChild(commentsHdr);
+
+  var commentsList = document.createElement('div');
+  commentsList.setAttribute('data-bar-comments-list', bar.id);
+  commentsList.style.cssText = 'margin-bottom:8px';
+  panel.appendChild(commentsList);
+  _renderBarComments(bar, commentsList);
+
+  var commentRow = document.createElement('div');
+  commentRow.style.cssText = 'display:flex;gap:6px;align-items:flex-start';
+  commentRow.innerHTML =
+    '<textarea rows="2" placeholder="Add a comment…" style="flex:1;padding:6px 9px;border:1px solid var(--border);border-radius:5px;font-size:12px;color:var(--text);background:var(--white);box-sizing:border-box;font-family:inherit;resize:vertical"></textarea>'+
+    '<button type="button" class="btn-save" style="white-space:nowrap;padding:6px 12px;font-size:11px">Post</button>';
+  var ta = commentRow.querySelector('textarea');
+  var postBtn = commentRow.querySelector('button');
+  postBtn.onclick = function(){ _postBarComment(bar, ta, commentsList); };
+  panel.appendChild(commentRow);
+
+  wrap.appendChild(details);
   return wrap;
+}
+
+// v1.42.4: shared helpers used by per-bar details panels.
+function _buildOwnerOptionsHtml(selected){
+  var meEmail = (typeof userProfile!=='undefined' && userProfile && userProfile.email) || (typeof _currentUser!=='undefined' && _currentUser && _currentUser.email) || '';
+  var meName  = (typeof userProfile!=='undefined' && userProfile && userProfile.name) || meEmail || 'You';
+  var sel = selected || meEmail;
+  var html = '<option value="'+escHtml(meEmail)+'"'+(sel===meEmail?' selected':'')+'>'+escHtml(meName)+' (You)</option>';
+  if(typeof capData==='object' && capData && Array.isArray(capData.members)){
+    capData.members.forEach(function(m){
+      if(!m.email || (m.email||'').toLowerCase() === (meEmail||'').toLowerCase()) return;
+      html += '<option value="'+escHtml(m.email)+'"'+(sel===m.email?' selected':'')+'>'+escHtml(m.name||m.email)+'</option>';
+    });
+  }
+  return html;
+}
+
+function _addBarLabelChip(box, label){
+  var have = Array.prototype.some.call(box.querySelectorAll('[data-label]'), function(el){
+    return (el.getAttribute('data-label')||'').toLowerCase() === (label||'').toLowerCase();
+  });
+  if(have) return;
+  var chip = document.createElement('span');
+  chip.setAttribute('data-label', label);
+  chip.style.cssText = 'display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:11px;background:rgba(59,130,246,.12);color:var(--accent);font-size:11px;font-weight:600';
+  chip.innerHTML = escHtml(label) + '<button type="button" aria-label="Remove" style="background:none;border:none;color:inherit;opacity:.7;cursor:pointer;padding:0 0 0 2px;font-size:13px;line-height:1">&times;</button>';
+  chip.querySelector('button').onclick = function(){ chip.remove(); };
+  box.appendChild(chip);
+}
+
+function _renderBarComments(bar, listEl){
+  var cs = Array.isArray(bar.comments) ? bar.comments : [];
+  if(!cs.length){
+    listEl.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:6px 0">No comments yet.</div>';
+    return;
+  }
+  var meEmail = ((_currentUser && _currentUser.email) || (typeof userProfile!=='undefined' && userProfile && userProfile.email) || '').toLowerCase();
+  listEl.innerHTML = cs.map(function(c){
+    var when = c.createdAt ? _timeAgo(c.createdAt) : '';
+    var likedBy = Array.isArray(c.likedBy) ? c.likedBy : [];
+    var iLiked = meEmail && likedBy.indexOf(meEmail) >= 0;
+    var mine = (c.userEmail || '').toLowerCase() === meEmail;
+    var replies = Array.isArray(c.replies) ? c.replies : [];
+    var repliesHtml = replies.map(function(r){
+      return '<div style="padding:4px 0 4px 10px;border-left:2px solid var(--border);margin-top:4px;font-size:11px">'+
+        '<div style="display:flex;align-items:center;gap:4px;color:var(--muted)"><strong style="color:var(--text)">'+escHtml(r.userName||r.userEmail||'')+'</strong><span>'+_timeAgo(r.createdAt)+'</span></div>'+
+        '<div style="margin-top:2px">'+escHtml(r.content||'')+'</div>'+
+      '</div>';
+    }).join('');
+    return '<div style="padding:8px 0;border-bottom:1px solid var(--border)" data-bc-id="'+escHtml(c.id)+'">'+
+      '<div style="display:flex;align-items:center;gap:6px"><strong style="font-size:11px;color:var(--text)">'+escHtml(c.userName||c.userEmail||'Someone')+'</strong>'+
+        '<span style="font-size:10px;color:var(--muted)">'+escHtml(when)+'</span></div>'+
+      '<div style="font-size:12px;color:var(--text);margin:3px 0 5px">'+escHtml(c.content||'')+'</div>'+
+      '<div style="display:flex;gap:8px;font-size:10px">'+
+        '<button type="button" onclick="_toggleBarCommentLike(\''+escHtml(bar.id)+'\',\''+escHtml(c.id)+'\')" style="background:none;border:none;color:'+(iLiked?'var(--accent)':'var(--muted)')+';cursor:pointer;font-weight:600">\u2665 '+(c.likes||0)+'</button>'+
+        '<button type="button" onclick="_showBarCommentReply(\''+escHtml(bar.id)+'\',\''+escHtml(c.id)+'\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-weight:600">Reply</button>'+
+        (mine ? '<button type="button" onclick="_deleteBarComment(\''+escHtml(bar.id)+'\',\''+escHtml(c.id)+'\')" style="background:none;border:none;color:#dc2626;cursor:pointer;font-weight:600">Delete</button>' : '')+
+      '</div>'+
+      repliesHtml +
+      '<div data-bc-reply="'+escHtml(c.id)+'" style="display:none;margin-top:4px;gap:4px"><input type="text" placeholder="Write a reply…" style="flex:1;padding:5px 7px;border:1px solid var(--border);border-radius:5px;font-size:11px;background:var(--white);color:var(--text)"><button type="button" class="btn-save" style="padding:5px 10px;font-size:11px" onclick="_postBarCommentReply(\''+escHtml(bar.id)+'\',\''+escHtml(c.id)+'\')">Reply</button></div>'+
+    '</div>';
+  }).join('');
+}
+
+function _findBarById(barId){
+  for(var i=0; i<rows.length; i++){
+    var bars = rows[i].bars || [];
+    for(var j=0; j<bars.length; j++){
+      if(bars[j].id === barId) return { row: rows[i], bar: bars[j] };
+    }
+  }
+  return null;
+}
+function _refreshBarCommentsListInDom(bar){
+  var listEl = document.querySelector('[data-bar-comments-list="'+bar.id+'"]');
+  if(listEl) _renderBarComments(bar, listEl);
+  // Update the counter
+  var holder = listEl && listEl.parentElement;
+  if(holder){
+    var counter = holder.querySelector('[data-bar-comment-count]');
+    if(counter){
+      var n = (bar.comments||[]).length;
+      counter.textContent = n ? '('+n+')' : '';
+    }
+  }
+}
+
+function _postBarComment(bar, taEl, listEl){
+  var content = (taEl.value || '').trim();
+  if(!content) return;
+  if(!Array.isArray(bar.comments)) bar.comments = [];
+  var meEmail = (_currentUser && _currentUser.email) || (typeof userProfile!=='undefined' && userProfile && userProfile.email) || '';
+  var meName  = (typeof userProfile!=='undefined' && userProfile && userProfile.name) || meEmail || 'You';
+  bar.comments.push({
+    id: 'bc_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+    userEmail: meEmail, userName: meName,
+    content: content, likes: 0, likedBy: [], replies: [],
+    createdAt: new Date().toISOString()
+  });
+  bar.updatedAt = new Date().toISOString();
+  persistData();
+  taEl.value = '';
+  _refreshBarCommentsListInDom(bar);
+}
+
+function _toggleBarCommentLike(barId, commentId){
+  var found = _findBarById(barId); if(!found) return;
+  var bar = found.bar;
+  var c = (bar.comments || []).find(function(x){ return x.id === commentId; });
+  if(!c) return;
+  if(!Array.isArray(c.likedBy)) c.likedBy = [];
+  var meEmail = ((_currentUser && _currentUser.email) || (typeof userProfile!=='undefined' && userProfile && userProfile.email) || '').toLowerCase();
+  var i = c.likedBy.indexOf(meEmail);
+  if(i >= 0){ c.likedBy.splice(i, 1); c.likes = Math.max(0, (c.likes||0) - 1); }
+  else      { c.likedBy.push(meEmail); c.likes = (c.likes||0) + 1; }
+  persistData();
+  _refreshBarCommentsListInDom(bar);
+}
+
+function _showBarCommentReply(barId, commentId){
+  var f = document.querySelector('[data-bc-reply="'+commentId+'"]');
+  if(!f) return;
+  var open = f.style.display === 'flex';
+  f.style.display = open ? 'none' : 'flex';
+  if(!open){ var inp = f.querySelector('input'); if(inp) inp.focus(); }
+}
+
+function _postBarCommentReply(barId, commentId){
+  var found = _findBarById(barId); if(!found) return;
+  var bar = found.bar;
+  var c = (bar.comments || []).find(function(x){ return x.id === commentId; });
+  if(!c) return;
+  var f = document.querySelector('[data-bc-reply="'+commentId+'"]');
+  var inp = f && f.querySelector('input');
+  var content = (inp && inp.value || '').trim();
+  if(!content) return;
+  if(!Array.isArray(c.replies)) c.replies = [];
+  var meEmail = (_currentUser && _currentUser.email) || (typeof userProfile!=='undefined' && userProfile && userProfile.email) || '';
+  var meName  = (typeof userProfile!=='undefined' && userProfile && userProfile.name) || meEmail || 'You';
+  c.replies.push({
+    id: 'bcr_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+    userEmail: meEmail, userName: meName, content: content,
+    createdAt: new Date().toISOString()
+  });
+  bar.updatedAt = new Date().toISOString();
+  persistData();
+  _refreshBarCommentsListInDom(bar);
+}
+
+function _deleteBarComment(barId, commentId){
+  if(!confirm('Delete this comment?')) return;
+  var found = _findBarById(barId); if(!found) return;
+  var bar = found.bar;
+  bar.comments = (bar.comments || []).filter(function(c){ return c.id !== commentId; });
+  bar.updatedAt = new Date().toISOString();
+  persistData();
+  _refreshBarCommentsListInDom(bar);
 }
 function removeBarRow(btn){
   btn.closest('.form-row').remove();
@@ -4960,9 +5219,21 @@ function saveRow(){
   var secId=document.getElementById('fSection').value;
   var priority=document.getElementById('fPriority').value;
 
-  // Collect bars
+  // Collect bars. v1.42.4: preserve per-initiative fields by looking up
+  // the previous bar via its stable id (data-bid) — saveRow rebuilds the
+  // bars[] array from form values, so without this merge any non-form
+  // fields (revenue, labels, ownerEmail, comments, createdAt) would be
+  // dropped on save.
+  var _prevBarsById = {};
+  if(editingRowId){
+    var _prevRow = rows.find(function(r){ return r.id === editingRowId; });
+    if(_prevRow && Array.isArray(_prevRow.bars)){
+      _prevRow.bars.forEach(function(b){ if(b.id) _prevBarsById[b.id] = b; });
+    }
+  }
   var bars=[];
   var barRows=document.getElementById('barsContainer').querySelectorAll('.form-row');
+  var _nowIso = new Date().toISOString();
   barRows.forEach(function(br){
     var t=br.querySelector('[data-field="t"]').value.trim();
     if(!t) return; // skip unnamed bars
@@ -4979,7 +5250,29 @@ function saveRow(){
     var descEl=br.querySelector('[data-field="desc"]');
     var desc=descEl?descEl.value.trim():'';
     if(e<=s) e=s+1/eDim;
-    bars.push({s:s,e:Math.min(e,NM),c:c,t:t,desc:desc});
+
+    // Per-bar detail fields (revenue / owner / labels)
+    var bid = br.getAttribute('data-bid') || '';
+    var prev = _prevBarsById[bid] || {};
+    var revInp = br.querySelector('[data-field="revenue"]');
+    var ownerInp = br.querySelector('[data-field="ownerEmail"]');
+    var labelsBoxEl = br.querySelector('[data-field="labelsBox"]');
+    var revenue = revInp && revInp.value !== '' ? (parseFloat(revInp.value) || 0) : (prev.revenue || 0);
+    var ownerEmail = ownerInp && ownerInp.value ? ownerInp.value : (prev.ownerEmail || '');
+    var labels = labelsBoxEl
+      ? Array.prototype.slice.call(labelsBoxEl.querySelectorAll('[data-label]')).map(function(el){ return el.getAttribute('data-label'); })
+      : (Array.isArray(prev.labels) ? prev.labels : []);
+    var owner = (typeof _resolveOwnerName === 'function') ? _resolveOwnerName(ownerEmail) : (ownerEmail || '');
+
+    bars.push({
+      id: bid || ('b_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)),
+      s: s, e: Math.min(e, NM), c: c, t: t, desc: desc,
+      revenue: revenue, labels: labels,
+      ownerEmail: ownerEmail, owner: owner,
+      comments: Array.isArray(prev.comments) ? prev.comments : [],
+      createdAt: prev.createdAt || _nowIso,
+      updatedAt: _nowIso
+    });
   });
 
   // Product Initiatives are now bars — no separate priorities list
@@ -21749,16 +22042,23 @@ function _wirePrioMatrixHover(pts, fwk, _costCrit){
         dateRange = (ms.day+' '+getMonthLabel(ms.mi))+' \u2192 '+(me.day+' '+getMonthLabel(me.mi));
       } catch(_e){ dateRange = ''; }
     }
-    var ownerLine = p.row.owner ? '<div style="font-size:11px;color:var(--muted);margin-top:4px">Owner: '+escHtml(p.row.owner)+'</div>' : '';
-    var revenueLine = (p.row.revenue && +p.row.revenue > 0) ? '<div style="font-size:11px;color:var(--muted);margin-top:2px">Est. revenue: $'+(+p.row.revenue).toLocaleString()+'</div>' : '';
-    var labelsLine = (Array.isArray(p.row.labels) && p.row.labels.length) ? '<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">'+p.row.labels.slice(0,5).map(function(l){ return '<span style="background:rgba(59,130,246,.12);color:var(--accent);font-size:10px;font-weight:600;padding:2px 6px;border-radius:10px">'+escHtml(l)+'</span>'; }).join('')+'</div>' : '';
+    // v1.42.4: prefer bar-level revenue/owner/labels when present, fall
+    // back to row-level (so older rows without per-bar fields still show).
+    var ownerName = (p.bar && p.bar.owner) || p.row.owner || '';
+    var ownerLine = ownerName ? '<div style="font-size:11px;color:var(--muted);margin-top:4px">Owner: '+escHtml(ownerName)+'</div>' : '';
+    var revenueVal = (p.bar && +p.bar.revenue) || (+p.row.revenue) || 0;
+    var revenueLine = (revenueVal > 0) ? '<div style="font-size:11px;color:var(--muted);margin-top:2px">Est. revenue: $'+revenueVal.toLocaleString()+'</div>' : '';
+    var labelsArr = (p.bar && Array.isArray(p.bar.labels) && p.bar.labels.length) ? p.bar.labels : (Array.isArray(p.row.labels) ? p.row.labels : []);
+    var labelsLine = labelsArr.length ? '<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">'+labelsArr.slice(0,5).map(function(l){ return '<span style="background:rgba(59,130,246,.12);color:var(--accent);font-size:10px;font-weight:600;padding:2px 6px;border-radius:10px">'+escHtml(l)+'</span>'; }).join('')+'</div>' : '';
+    var commentCount = (p.bar && Array.isArray(p.bar.comments)) ? p.bar.comments.length : 0;
+    var commentLine = commentCount ? '<div style="font-size:11px;color:var(--muted);margin-top:4px">'+commentCount+' comment'+(commentCount===1?'':'s')+'</div>' : '';
     var descLine = (p.bar && p.bar.desc) ? '<div style="font-size:12px;color:var(--text);margin-top:6px">'+escHtml(p.bar.desc)+'</div>' : '';
     tip.innerHTML =
       '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="width:10px;height:10px;border-radius:2px;background:'+statusColor+'"></span><strong style="font-size:13px">'+escHtml(title)+'</strong></div>'+
       '<div style="font-size:11px;color:var(--muted)">'+(sec?escHtml(sec.name)+' \u2022 ':'')+escHtml(p.row.name||'')+(statusLabel?' \u2022 '+escHtml(statusLabel):'')+'</div>'+
       descLine +
       (dateRange ? '<div style="font-size:11px;color:var(--muted);margin-top:4px">'+escHtml(dateRange)+'</div>' : '') +
-      ownerLine + revenueLine + labelsLine +
+      ownerLine + revenueLine + labelsLine + commentLine +
       '<div style="font-size:11px;margin-top:8px;color:var(--muted)">Score: <strong style="color:var(--text)">'+(sc==null?'\u2014':sc)+'</strong> \u2022 X='+(+p.x).toFixed(1)+' Y='+(+p.y).toFixed(1)+(p.override?' \u2022 <span style="color:#f59e0b">pinned</span>':'')+'</div>';
     var box = svg.parentElement.getBoundingClientRect();
     var tw = 280, th = tip.offsetHeight || 100;
