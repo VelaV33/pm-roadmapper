@@ -19273,6 +19273,12 @@ function computePriorityScore(row, framework){
   var scores = (prioritizationData.scores || {})[row.id] || {};
   var hasAny = framework.criteria.some(function(c){ return scores[c.id] != null && scores[c.id] !== ''; });
   if(!hasAny) return null;
+  // v1.40.1: if a customFormula is attached we honour it before the
+  // built-in formula switch. Keeps RICE/ICE math available as fallback.
+  if(framework.customFormula){
+    var cs = _prioComputeFromCustomFormula(framework, scores);
+    if(cs != null) return cs;
+  }
   var f = framework.formula;
   if(f === 'rice'){
     var r = +scores.reach || 0;
@@ -19309,6 +19315,70 @@ function computePriorityScore(row, framework){
   });
   if(costSum <= 0) return Math.round(valueSum * 10) / 10;
   return Math.round((valueSum / costSum) * 100) / 100;
+}
+
+// v1.40.1: evaluate a framework.customFormula against a row's scores. Returns
+// null if no factor has any data, so the calling code falls through to the
+// built-in formula. Formula mode evaluates per-factor expressions (Y, X, R)
+// with Yn / Xn / Rn variables wired to the criteria scores. Weighted mode
+// blends factor weights × child weights × criterion scores.
+function _prioComputeFromCustomFormula(fwk, scores){
+  var cf = fwk.customFormula; if(!cf) return null;
+  function _factorAggregate(key){
+    var children = cf.factors && cf.factors[key];
+    if(!Array.isArray(children) || !children.length) return 0;
+    if(cf.mode === 'formula' && cf.formulas && cf.formulas[key]){
+      // Build Y1, Y2 variable bindings then eval the per-factor formula.
+      var vars = {};
+      children.forEach(function(c, i){ vars[c.varKey || (key+(i+1))] = +scores[c.critId] || 0; });
+      return _prioSafeEvalFormula(cf.formulas[key], vars);
+    }
+    // Weighted aggregate: sum(score × childWeight) / sum(childWeight)
+    var totalW = 0, sum = 0;
+    children.forEach(function(c){
+      var s = +scores[c.critId];
+      if(isNaN(s)) return;
+      var w = +c.weight || 0; totalW += w; sum += s * w;
+    });
+    return totalW > 0 ? (sum / totalW) : 0;
+  }
+  var Y = _factorAggregate('Y');
+  var X = _factorAggregate('X');
+  var R = _factorAggregate('R');
+  if(!Y && !X && !R) return null;
+  if(cf.mode === 'formula'){
+    var n = _prioSafeEvalFormula(cf.score || '', { Y:Y, X:X, R:R });
+    return Math.round(n * 100) / 100;
+  }
+  // Weighted top-level: factor scores × top weights, normalised.
+  var wY = +(cf.weights && cf.weights.Y) || 0;
+  var wX = +(cf.weights && cf.weights.X) || 0;
+  var wR = +(cf.weights && cf.weights.R) || 0;
+  var totalTop = wY + wX + wR; if(totalTop <= 0) totalTop = 1;
+  // Higher Y is good; higher X (cost) is bad — invert by `max - X`.
+  // We don't know the raw X scale here, so we just subtract from a soft
+  // ceiling of the highest score across the factor's children. Falls back
+  // to (Y * wY + R * wR - X * wX) / totalTop * 10 as a stable proxy.
+  var raw = (Y * wY + R * wR - X * wX) / totalTop;
+  return Math.round(raw * 100) / 100;
+}
+
+// Restrictive evaluator: only Math.* and the provided variables are
+// reachable. Anything that references DOM, `this`, or globals will throw
+// inside the wrapper and return 0.
+function _prioSafeEvalFormula(expr, vars){
+  if(!expr || !expr.trim()) return 0;
+  try {
+    var keys = Object.keys(vars);
+    var vals = keys.map(function(k){ return +vars[k] || 0; });
+    // eslint-disable-next-line no-new-func
+    var fn = new Function.apply(null, keys.concat(['"use strict"; with(Math){return ('+expr+');}']));
+    var n = fn.apply(null, vals);
+    if(typeof n !== 'number' || !isFinite(n)) return 0;
+    return n;
+  } catch(_e){
+    return 0;
+  }
 }
 
 // Get priority "tier" for color coding: top 25% = high, mid 50% = medium, bottom 25% = low.
@@ -19886,84 +19956,587 @@ function savePrioFrameworkEdits(fid, silent){
 }
 
 // ── Matrix tab ──────────────────────────────────────────────────────────────
+// v1.40.1: Interactive priority matrix — draggable dots, items panel,
+// display options, plus a "Priority Ratings" customize modal that's
+// surfaced from this view. Stores per-row pinned positions in
+// prioritizationData.matrixOverrides so dragging is reversible without
+// trampling the criteria-based scores.
+function _prioMatrixUI(){
+  if(!prioritizationData.matrixUI){
+    prioritizationData.matrixUI = {
+      showLabels: true,
+      showGrid: true,
+      showQuadrants: true,
+      bubbleSize: 'fixed',  // fixed | score
+      colorBy: 'section',   // section | tier | single
+      hidden: []
+    };
+  }
+  return prioritizationData.matrixUI;
+}
+function _prioMatrixOverrides(){
+  if(!prioritizationData.matrixOverrides) prioritizationData.matrixOverrides = {};
+  return prioritizationData.matrixOverrides;
+}
+function _prioToggleMatrixHidden(rowId){
+  var ui = _prioMatrixUI();
+  var i = ui.hidden.indexOf(rowId);
+  if(i >= 0) ui.hidden.splice(i, 1); else ui.hidden.push(rowId);
+  persistData();
+  renderPrioMatrixTab();
+}
+function _prioSetMatrixOpt(key, val){
+  var ui = _prioMatrixUI();
+  ui[key] = val;
+  persistData();
+  renderPrioMatrixTab();
+}
+function _prioResetMatrixOverride(rowId){
+  var ovs = _prioMatrixOverrides();
+  delete ovs[rowId];
+  persistData();
+  renderPrioMatrixTab();
+}
+
 function renderPrioMatrixTab(){
   var content = document.getElementById('prioContent');
   var actions = document.getElementById('prioTopActions');
   var fwk = getActiveFramework();
   var allFwks = getAllFrameworks();
-  actions.innerHTML = '<select class="prio-btn" style="padding:8px 30px 8px 14px" onchange="setActivePrioFramework(this.value)">' +
-    allFwks.map(function(f){ return '<option value="'+escHtml(f.id)+'"'+(f.id===fwk.id?' selected':'')+'>'+escHtml(f.name)+'</option>'; }).join('') + '</select>';
+  var ui = _prioMatrixUI();
 
-  // Pick the first cost criterion as X (effort), and sum of value criteria as Y.
+  actions.innerHTML =
+    '<select class="prio-btn" style="padding:8px 30px 8px 14px" onchange="setActivePrioFramework(this.value)">' +
+      allFwks.map(function(f){ return '<option value="'+escHtml(f.id)+'"'+(f.id===fwk.id?' selected':'')+'>'+escHtml(f.name)+'</option>'; }).join('') +
+    '</select>' +
+    '<div style="position:relative;display:inline-block;margin-left:8px">' +
+      '<button class="prio-btn" onclick="_prioToggleDisplayMenu(event)">Display \u25BE</button>' +
+      '<div id="prioDisplayMenu" style="display:none;position:absolute;top:100%;right:0;margin-top:6px;min-width:240px;background:var(--white);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:8000;padding:10px 12px;color:var(--text);font-size:12px">' +
+        '<label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer"><input type="checkbox" '+(ui.showLabels?'checked':'')+' onchange="_prioSetMatrixOpt(\'showLabels\', this.checked)">Item labels</label>' +
+        '<label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer"><input type="checkbox" '+(ui.showGrid?'checked':'')+' onchange="_prioSetMatrixOpt(\'showGrid\', this.checked)">Gridlines</label>' +
+        '<label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer"><input type="checkbox" '+(ui.showQuadrants?'checked':'')+' onchange="_prioSetMatrixOpt(\'showQuadrants\', this.checked)">Quadrant tints</label>' +
+        '<div style="border-top:1px solid var(--border);margin:6px 0;padding-top:6px">' +
+          '<div style="font-weight:700;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Bubble size</div>' +
+          '<label style="display:flex;align-items:center;gap:8px;padding:2px 0"><input type="radio" name="prioBubble" '+(ui.bubbleSize==='fixed'?'checked':'')+' onchange="_prioSetMatrixOpt(\'bubbleSize\',\'fixed\')">Fixed</label>' +
+          '<label style="display:flex;align-items:center;gap:8px;padding:2px 0"><input type="radio" name="prioBubble" '+(ui.bubbleSize==='score'?'checked':'')+' onchange="_prioSetMatrixOpt(\'bubbleSize\',\'score\')">Scaled by priority score</label>' +
+        '</div>' +
+        '<div style="border-top:1px solid var(--border);margin:6px 0;padding-top:6px">' +
+          '<div style="font-weight:700;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Color by</div>' +
+          '<label style="display:flex;align-items:center;gap:8px;padding:2px 0"><input type="radio" name="prioColor" '+(ui.colorBy==='section'?'checked':'')+' onchange="_prioSetMatrixOpt(\'colorBy\',\'section\')">Section</label>' +
+          '<label style="display:flex;align-items:center;gap:8px;padding:2px 0"><input type="radio" name="prioColor" '+(ui.colorBy==='tier'?'checked':'')+' onchange="_prioSetMatrixOpt(\'colorBy\',\'tier\')">Priority tier</label>' +
+          '<label style="display:flex;align-items:center;gap:8px;padding:2px 0"><input type="radio" name="prioColor" '+(ui.colorBy==='single'?'checked':'')+' onchange="_prioSetMatrixOpt(\'colorBy\',\'single\')">Single accent</label>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    '<button class="prio-btn primary" style="margin-left:8px" onclick="openPriorityRatingsModal()">Customize</button>';
+
+  // Resolve dominant value + cost criteria for drag-mapping. We support any
+  // framework that has at least one value and one cost criterion; weighted
+  // sums still drive the score, but the user can drag to "pin" a row.
   var costCrit = fwk.criteria.find(function(c){ return c.type === 'cost'; });
   var valueCrits = fwk.criteria.filter(function(c){ return c.type === 'value'; });
 
   if(!costCrit || !valueCrits.length){
-    content.innerHTML = '<div class="prio-empty"><h3>This framework can\'t be plotted</h3><p>Matrix view needs at least one <strong>value</strong> and one <strong>cost</strong> criterion. Switch to RICE, ICE, or Value vs Effort, or create a custom framework with both types.</p></div>';
+    content.innerHTML = '<div class="prio-empty"><h3>This framework can\'t be plotted</h3><p>Matrix view needs at least one <strong>value</strong> and one <strong>cost</strong> criterion. Switch frameworks or click <strong>Customize</strong> above to define one.</p></div>';
     return;
   }
 
-  // Compute (x, y) for each row
+  var ovs = _prioMatrixOverrides();
+  var hiddenSet = {};
+  (ui.hidden || []).forEach(function(id){ hiddenSet[id] = true; });
+
+  // Build (x,y) for each row — prefer override, else compute from criteria.
+  function _yFromScores(s){
+    var y = 0;
+    valueCrits.forEach(function(c){ y += (+s[c.id] || 0) * (c.weight || 1); });
+    return y;
+  }
   var pts = [];
   rows.forEach(function(r){
     var s = (prioritizationData.scores || {})[r.id] || {};
-    var x = +s[costCrit.id];
-    if(!x || isNaN(x) || x <= 0) return;
-    var y = 0;
-    valueCrits.forEach(function(c){ y += (+s[c.id] || 0) * (c.weight || 1); });
-    if(y <= 0) return;
-    pts.push({ row: r, x: x, y: y });
+    var ov = ovs[r.id];
+    var x = ov ? ov.x : (+s[costCrit.id] || 0);
+    var y = ov ? ov.y : _yFromScores(s);
+    if((!x || x <= 0) && (!y || y <= 0) && !ov) return;  // unscored
+    pts.push({ row: r, x: x, y: y, override: !!ov, hidden: !!hiddenSet[r.id] });
   });
 
-  if(!pts.length){
-    content.innerHTML = '<div class="prio-empty"><h3>Nothing to plot yet</h3><p>Score some initiatives on the <strong>Score</strong> tab and they\'ll show up here.</p></div>';
-    return;
+  // Determine plot bounds — use overrides + scores together so dragged dots
+  // don't fall off when the user moves the most extreme point.
+  var visiblePts = pts.filter(function(p){ return !p.hidden; });
+  var maxX = Math.max(1, Math.max.apply(null, visiblePts.length ? visiblePts.map(function(p){ return p.x || 0; }) : [1])) * 1.1;
+  var maxY = Math.max(1, Math.max.apply(null, visiblePts.length ? visiblePts.map(function(p){ return p.y || 0; }) : [1])) * 1.1;
+  if(maxX < 5) maxX = 5;
+  if(maxY < 5) maxY = 5;
+
+  var W = 760, H = 520, PAD = 50;
+  var allScores = rows.map(function(r){ return computePriorityScore(r, fwk); });
+
+  function _color(p){
+    if(ui.colorBy === 'single') return 'var(--accent)';
+    if(ui.colorBy === 'tier'){
+      var sc = computePriorityScore(p.row, fwk);
+      var tier = getPriorityTier(sc, allScores);
+      return ({high:'#16a34a', medium:'#2563eb', low:'#dc2626', unscored:'#94a3b8'})[tier] || '#94a3b8';
+    }
+    var sec = sections.find(function(s){ return s.id === p.row.sec; });
+    return sec ? sec.color : 'var(--accent)';
+  }
+  function _radius(p){
+    if(ui.bubbleSize === 'score'){
+      var sc = computePriorityScore(p.row, fwk);
+      if(!sc || !allScores.length) return 9;
+      var mx = Math.max.apply(null, allScores.filter(function(s){ return s != null; }));
+      if(!mx) return 9;
+      return 6 + 10 * (sc / mx);
+    }
+    return 9;
   }
 
-  // Determine plot bounds with a little padding
-  var maxX = Math.max.apply(null, pts.map(function(p){ return p.x; })) * 1.1;
-  var maxY = Math.max.apply(null, pts.map(function(p){ return p.y; })) * 1.1;
-  var W = 800, H = 540, PAD = 50;
-
-  // SVG
-  var svg = '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" font-family="Inter,sans-serif">';
-  // Quadrant backgrounds
-  svg += '<rect x="'+PAD+'" y="'+PAD+'" width="'+((W-PAD*2)/2)+'" height="'+((H-PAD*2)/2)+'" fill="rgba(16,185,129,.08)"/>';                       // top-left: Quick Wins (low effort, high value)
-  svg += '<rect x="'+(PAD+(W-PAD*2)/2)+'" y="'+PAD+'" width="'+((W-PAD*2)/2)+'" height="'+((H-PAD*2)/2)+'" fill="rgba(45,107,244,.08)"/>';        // top-right: Big Bets
-  svg += '<rect x="'+PAD+'" y="'+(PAD+(H-PAD*2)/2)+'" width="'+((W-PAD*2)/2)+'" height="'+((H-PAD*2)/2)+'" fill="rgba(148,163,184,.08)"/>';       // bottom-left: Fillers
-  svg += '<rect x="'+(PAD+(W-PAD*2)/2)+'" y="'+(PAD+(H-PAD*2)/2)+'" width="'+((W-PAD*2)/2)+'" height="'+((H-PAD*2)/2)+'" fill="rgba(220,38,38,.06)"/>'; // bottom-right: Money Pit
+  // Build SVG
+  var svgParts = [];
+  svgParts.push('<svg id="prioMatrixSvg" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" font-family="Inter,sans-serif" style="width:100%;height:auto;cursor:default;user-select:none">');
+  if(ui.showQuadrants){
+    svgParts.push('<rect x="'+PAD+'" y="'+PAD+'" width="'+((W-PAD*2)/2)+'" height="'+((H-PAD*2)/2)+'" fill="rgba(16,185,129,.08)"/>');
+    svgParts.push('<rect x="'+(PAD+(W-PAD*2)/2)+'" y="'+PAD+'" width="'+((W-PAD*2)/2)+'" height="'+((H-PAD*2)/2)+'" fill="rgba(45,107,244,.08)"/>');
+    svgParts.push('<rect x="'+PAD+'" y="'+(PAD+(H-PAD*2)/2)+'" width="'+((W-PAD*2)/2)+'" height="'+((H-PAD*2)/2)+'" fill="rgba(148,163,184,.08)"/>');
+    svgParts.push('<rect x="'+(PAD+(W-PAD*2)/2)+'" y="'+(PAD+(H-PAD*2)/2)+'" width="'+((W-PAD*2)/2)+'" height="'+((H-PAD*2)/2)+'" fill="rgba(220,38,38,.06)"/>');
+  }
+  if(ui.showGrid){
+    var gridSteps = 4;
+    for(var gi = 1; gi < gridSteps; gi++){
+      var gx = PAD + (gi/gridSteps) * (W - PAD*2);
+      var gy = PAD + (gi/gridSteps) * (H - PAD*2);
+      svgParts.push('<line x1="'+gx+'" y1="'+PAD+'" x2="'+gx+'" y2="'+(H-PAD)+'" stroke="#e2e8f0" stroke-dasharray="2 4"/>');
+      svgParts.push('<line x1="'+PAD+'" y1="'+gy+'" x2="'+(W-PAD)+'" y2="'+gy+'" stroke="#e2e8f0" stroke-dasharray="2 4"/>');
+    }
+  }
   // Axes
-  svg += '<line x1="'+PAD+'" y1="'+(H-PAD)+'" x2="'+(W-PAD)+'" y2="'+(H-PAD)+'" stroke="#cbd5e1" stroke-width="1.5"/>';
-  svg += '<line x1="'+PAD+'" y1="'+PAD+'" x2="'+PAD+'" y2="'+(H-PAD)+'" stroke="#cbd5e1" stroke-width="1.5"/>';
+  svgParts.push('<line x1="'+PAD+'" y1="'+(H-PAD)+'" x2="'+(W-PAD)+'" y2="'+(H-PAD)+'" stroke="#cbd5e1" stroke-width="1.5"/>');
+  svgParts.push('<line x1="'+PAD+'" y1="'+PAD+'" x2="'+PAD+'" y2="'+(H-PAD)+'" stroke="#cbd5e1" stroke-width="1.5"/>');
   // Mid lines
-  svg += '<line x1="'+(PAD+(W-PAD*2)/2)+'" y1="'+PAD+'" x2="'+(PAD+(W-PAD*2)/2)+'" y2="'+(H-PAD)+'" stroke="#e2e8f0" stroke-dasharray="4 4"/>';
-  svg += '<line x1="'+PAD+'" y1="'+(PAD+(H-PAD*2)/2)+'" x2="'+(W-PAD)+'" y2="'+(PAD+(H-PAD*2)/2)+'" stroke="#e2e8f0" stroke-dasharray="4 4"/>';
+  svgParts.push('<line x1="'+(PAD+(W-PAD*2)/2)+'" y1="'+PAD+'" x2="'+(PAD+(W-PAD*2)/2)+'" y2="'+(H-PAD)+'" stroke="#cbd5e1" stroke-dasharray="4 4"/>');
+  svgParts.push('<line x1="'+PAD+'" y1="'+(PAD+(H-PAD*2)/2)+'" x2="'+(W-PAD)+'" y2="'+(PAD+(H-PAD*2)/2)+'" stroke="#cbd5e1" stroke-dasharray="4 4"/>');
   // Axis labels
-  svg += '<text x="'+(W/2)+'" y="'+(H-12)+'" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">'+escHtml(costCrit.name)+' \u2192 (cost)</text>';
-  svg += '<text x="14" y="'+(H/2)+'" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" transform="rotate(-90 14 '+(H/2)+')">Value (sum) \u2192</text>';
+  svgParts.push('<text x="'+(W/2)+'" y="'+(H-12)+'" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">'+escHtml(costCrit.name)+' \u2192 (cost / X)</text>');
+  svgParts.push('<text x="14" y="'+(H/2)+'" text-anchor="middle" font-size="12" font-weight="700" fill="#475569" transform="rotate(-90 14 '+(H/2)+')">Value (Y) \u2192</text>');
   // Quadrant labels
-  svg += '<text x="'+(PAD+(W-PAD*2)/4)+'" y="'+(PAD+18)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#047857">QUICK WINS</text>';
-  svg += '<text x="'+(PAD+(W-PAD*2)*3/4)+'" y="'+(PAD+18)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#1d4ed8">BIG BETS</text>';
-  svg += '<text x="'+(PAD+(W-PAD*2)/4)+'" y="'+(H-PAD-8)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#64748b">FILLERS</text>';
-  svg += '<text x="'+(PAD+(W-PAD*2)*3/4)+'" y="'+(H-PAD-8)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#dc2626">MONEY PIT</text>';
+  if(ui.showQuadrants){
+    svgParts.push('<text x="'+(PAD+(W-PAD*2)/4)+'" y="'+(PAD+18)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#047857">QUICK WINS</text>');
+    svgParts.push('<text x="'+(PAD+(W-PAD*2)*3/4)+'" y="'+(PAD+18)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#1d4ed8">BIG BETS</text>');
+    svgParts.push('<text x="'+(PAD+(W-PAD*2)/4)+'" y="'+(H-PAD-8)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#64748b">FILLERS</text>');
+    svgParts.push('<text x="'+(PAD+(W-PAD*2)*3/4)+'" y="'+(H-PAD-8)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#dc2626">MONEY PIT</text>');
+  }
   // Bubbles
   pts.forEach(function(p){
+    if(p.hidden) return;
     var px = PAD + (p.x / maxX) * (W - PAD*2);
     var py = (H - PAD) - (p.y / maxY) * (H - PAD*2);
-    var sec = sections.find(function(s){ return s.id === p.row.sec; });
-    var color = sec ? sec.color : 'var(--accent)';
-    svg += '<circle cx="'+px+'" cy="'+py+'" r="9" fill="'+escHtml(color)+'" fill-opacity="0.85" stroke="#fff" stroke-width="2"/>';
-    svg += '<text x="'+(px+13)+'" y="'+(py+4)+'" font-size="10" font-weight="600" fill="#0f172a">'+escHtml((p.row.name||'').substring(0, 24))+'</text>';
+    var col = _color(p);
+    var rad = _radius(p);
+    svgParts.push('<g class="prio-pt" data-row-id="'+escHtml(p.row.id)+'" style="cursor:grab">' +
+      '<circle cx="'+px+'" cy="'+py+'" r="'+rad+'" fill="'+escHtml(col)+'" fill-opacity="0.9" stroke="#fff" stroke-width="2"/>' +
+      (p.override ? '<circle cx="'+(px-rad-2)+'" cy="'+(py-rad-2)+'" r="3" fill="#f59e0b" stroke="#fff" stroke-width="1"><title>Pinned (drag override active)</title></circle>' : '') +
+      (ui.showLabels ? '<text x="'+(px+rad+4)+'" y="'+(py+4)+'" font-size="10" font-weight="600" fill="#0f172a">'+escHtml((p.row.name||'').substring(0, 28))+'</text>' : '') +
+    '</g>');
   });
-  svg += '</svg>';
+  svgParts.push('</svg>');
 
-  content.innerHTML = '<div class="prio-matrix">' + svg + '</div>' +
-    '<div class="prio-matrix-legend">' +
-      '<div><strong style="color:#047857">Quick Wins</strong> \u2014 high value, low cost. Do these now.</div>' +
-      '<div><strong style="color:#1d4ed8">Big Bets</strong> \u2014 high value, high cost. Plan carefully.</div>' +
-      '<div><strong style="color:#64748b">Fillers</strong> \u2014 low value, low cost. Fill in the gaps.</div>' +
-      '<div><strong style="color:#dc2626">Money Pit</strong> \u2014 low value, high cost. Avoid or kill.</div>' +
+  // Right-side items panel
+  var sectionMap = {};
+  sections.forEach(function(s){ sectionMap[s.id] = s; });
+  var itemsHtml = rows.length
+    ? rows.map(function(r){
+        var sec = sectionMap[r.sec];
+        var sc = computePriorityScore(r, fwk);
+        var tier = getPriorityTier(sc, allScores);
+        var hidden = !!hiddenSet[r.id];
+        var pinned = !!ovs[r.id];
+        var tierColor = ({high:'#16a34a', medium:'#2563eb', low:'#dc2626', unscored:'#94a3b8'})[tier] || '#94a3b8';
+        return '<div class="prio-item" data-row-id="'+escHtml(r.id)+'" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border);font-size:12px;'+(hidden?'opacity:.4;':'')+'">' +
+          '<input type="checkbox" '+(hidden?'':'checked')+' onchange="_prioToggleMatrixHidden(\''+r.id+'\')" title="Show on chart">' +
+          '<span style="width:8px;height:8px;border-radius:50%;background:'+escHtml(sec?sec.color:'#94a3b8')+';flex-shrink:0"></span>' +
+          '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:var(--text);cursor:pointer" onclick="openEditModal(\''+r.id+'\')" title="'+escHtml(r.name||'')+'">'+escHtml(r.name||'(unnamed)')+'</span>' +
+          (pinned ? '<button class="prio-btn" style="font-size:9px;padding:2px 6px" onclick="_prioResetMatrixOverride(\''+r.id+'\')" title="Reset drag override">\u21BA</button>' : '') +
+          '<span style="background:'+tierColor+'22;color:'+tierColor+';border:1px solid '+tierColor+'44;font-size:10px;padding:2px 6px;border-radius:999px;font-weight:700;font-variant-numeric:tabular-nums">'+(sc==null?'\u2014':sc)+'</span>' +
+        '</div>';
+      }).join('')
+    : '<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">No initiatives yet.</div>';
+
+  content.innerHTML =
+    '<div style="display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start">' +
+      '<div class="prio-matrix" style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px">' +
+        svgParts.join('') +
+        '<div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center">Drag dots to pin a position. Pinned dots show an amber marker; reset via the items list.</div>' +
+      '</div>' +
+      '<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;max-height:600px">' +
+        '<div style="padding:10px 12px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:flex;justify-content:space-between;align-items:center"><span>Items ('+rows.length+')</span><span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted)">'+visiblePts.length+' on chart</span></div>' +
+        '<div style="overflow-y:auto;flex:1">'+itemsHtml+'</div>' +
+      '</div>' +
     '</div>';
+
+  // Wire drag handlers — single SVG-level pointermove keeps things light.
+  _wirePrioMatrixDrag(W, H, PAD, maxX, maxY, costCrit, valueCrits);
+}
+
+// v1.40.1: drag-handler wiring. Uses pointer events so it works with touch +
+// stylus too. On dragend we persist the new x/y into matrixOverrides[rowId]
+// without disturbing the per-criterion scores.
+function _wirePrioMatrixDrag(W, H, PAD, maxX, maxY, costCrit, valueCrits){
+  var svg = document.getElementById('prioMatrixSvg');
+  if(!svg) return;
+  var dragging = null;
+
+  function pxToVal(px, py){
+    var x = ((px - PAD) / (W - PAD*2)) * maxX;
+    var y = ((H - PAD - py) / (H - PAD*2)) * maxY;
+    if(x < 0) x = 0; if(y < 0) y = 0;
+    if(x > maxX) x = maxX; if(y > maxY) y = maxY;
+    return { x: x, y: y };
+  }
+  function eventToSvg(e){
+    var pt = svg.createSVGPoint();
+    pt.x = e.clientX; pt.y = e.clientY;
+    var ctm = svg.getScreenCTM();
+    if(!ctm) return { x:0, y:0 };
+    var loc = pt.matrixTransform(ctm.inverse());
+    return { x: loc.x, y: loc.y };
+  }
+
+  svg.addEventListener('pointerdown', function(e){
+    var g = e.target.closest && e.target.closest('.prio-pt');
+    if(!g) return;
+    dragging = { rowId: g.getAttribute('data-row-id'), g: g };
+    g.style.cursor = 'grabbing';
+    try { svg.setPointerCapture(e.pointerId); } catch(_e){}
+    e.preventDefault();
+  });
+  svg.addEventListener('pointermove', function(e){
+    if(!dragging) return;
+    var loc = eventToSvg(e);
+    var px = Math.max(PAD, Math.min(W - PAD, loc.x));
+    var py = Math.max(PAD, Math.min(H - PAD, loc.y));
+    var c = dragging.g.querySelector('circle');
+    if(c){ c.setAttribute('cx', px); c.setAttribute('cy', py); }
+    var t = dragging.g.querySelector('text');
+    if(t){ t.setAttribute('x', px + parseFloat(c.getAttribute('r'))+4); t.setAttribute('y', py + 4); }
+    dragging._lastSvg = { px: px, py: py };
+  });
+  function endDrag(e){
+    if(!dragging) return;
+    if(dragging._lastSvg){
+      var v = pxToVal(dragging._lastSvg.px, dragging._lastSvg.py);
+      var ovs = _prioMatrixOverrides();
+      ovs[dragging.rowId] = { x: v.x, y: v.y, ts: Date.now() };
+      // Also push values back into the dominant criteria so the priority
+      // score reflects the new position even when the override is later
+      // cleared. Y is split evenly across value criteria; X is set on the
+      // single cost criterion.
+      var scores = prioritizationData.scores || (prioritizationData.scores = {});
+      if(!scores[dragging.rowId]) scores[dragging.rowId] = {};
+      var totalWeight = valueCrits.reduce(function(s,c){ return s + (c.weight||1); }, 0) || 1;
+      valueCrits.forEach(function(c){
+        scores[dragging.rowId][c.id] = +(v.y * (c.weight||1) / totalWeight).toFixed(2);
+      });
+      scores[dragging.rowId][costCrit.id] = +v.x.toFixed(2);
+      persistData();
+    }
+    if(dragging.g) dragging.g.style.cursor = 'grab';
+    dragging = null;
+    renderPrioMatrixTab();
+  }
+  svg.addEventListener('pointerup', endDrag);
+  svg.addEventListener('pointercancel', endDrag);
+}
+
+function _prioToggleDisplayMenu(e){
+  if(e) e.stopPropagation();
+  var menu = document.getElementById('prioDisplayMenu');
+  if(!menu) return;
+  var open = menu.style.display === 'block';
+  menu.style.display = open ? 'none' : 'block';
+  if(!open){
+    setTimeout(function(){
+      function _close(ev){
+        if(ev.target.closest && ev.target.closest('#prioDisplayMenu')) return;
+        menu.style.display = 'none';
+        document.removeEventListener('click', _close, true);
+      }
+      document.addEventListener('click', _close, true);
+    }, 0);
+  }
+}
+
+// ── PRIORITY RATINGS — customize modal (v1.40.1) ───────────────────────────
+// Productboard-style customization for the active framework. Two modes:
+//   - "weighted"  → Y/X/R factor groups with weight sliders + sub-criteria
+//   - "formula"   → per-factor formulas (Y1, Y2, ... vars) + scoring formula
+// Both modes are stored on framework.customFormula and consumed by
+// computePriorityScore().
+function _prioGetCustomFormula(fwk){
+  if(!fwk.customFormula){
+    // Seed defaults from existing criteria layout. Y = sum of value, X =
+    // first cost, R defaults to 0 so it's a no-op.
+    var values = fwk.criteria.filter(function(c){ return c.type === 'value'; });
+    var costs  = fwk.criteria.filter(function(c){ return c.type === 'cost'; });
+    fwk.customFormula = {
+      mode: 'weighted',
+      // Top-level factor weights — must sum to 100% in the UI.
+      weights: { Y: 50, X: 50, R: 0 },
+      // Sub-criteria assigned to each factor (ids reference fwk.criteria).
+      factors: {
+        Y: values.map(function(c, i){ return { critId: c.id, weight: Math.round(100/(values.length||1)), varKey: 'Y'+(i+1) }; }),
+        X: costs.map(function(c, i){ return { critId: c.id, weight: Math.round(100/(costs.length||1)), varKey: 'X'+(i+1) }; }),
+        R: []
+      },
+      // Per-factor formulas (used in formula mode).
+      formulas: { Y: '', X: '', R: '0' },
+      score: '(Y + (1 - X)) / 2 * 100'
+    };
+  }
+  // Defensive top-up — older saved frameworks may be missing pieces.
+  var cf = fwk.customFormula;
+  if(!cf.weights) cf.weights = { Y: 50, X: 50, R: 0 };
+  if(!cf.factors) cf.factors = { Y: [], X: [], R: [] };
+  ['Y','X','R'].forEach(function(k){ if(!Array.isArray(cf.factors[k])) cf.factors[k] = []; });
+  if(!cf.formulas) cf.formulas = { Y:'', X:'', R:'0' };
+  if(!cf.score) cf.score = '(Y + (1 - X)) / 2 * 100';
+  return cf;
+}
+
+var _prioRatingsTab = 'weighted'; // weighted | formula
+function openPriorityRatingsModal(){
+  var fwk = getActiveFramework();
+  if(!fwk){ showToast('No active framework','error'); return; }
+  if(fwk.builtIn){
+    // Built-in frameworks are immutable. Clone into a custom one before
+    // editing so the user's tweaks aren't lost on next ship.
+    var clone = JSON.parse(JSON.stringify(fwk));
+    clone.id = 'fwk_'+Date.now();
+    clone.builtIn = false;
+    clone.name = fwk.name + ' (custom)';
+    if(!Array.isArray(prioritizationData.frameworks)) prioritizationData.frameworks = [];
+    prioritizationData.frameworks.push(clone);
+    prioritizationData.activeFrameworkId = clone.id;
+    persistData();
+    showToast('Cloned "'+fwk.name+'" into a custom framework so it can be edited','info');
+    fwk = clone;
+  }
+  _prioGetCustomFormula(fwk);
+  _prioRatingsTab = (fwk.customFormula.mode === 'formula') ? 'formula' : 'weighted';
+  _renderPriorityRatingsModal();
+}
+
+function _renderPriorityRatingsModal(){
+  var fwk = getActiveFramework();
+  var cf = _prioGetCustomFormula(fwk);
+  var existing = document.getElementById('prioRatingsOverlay');
+  if(existing) existing.remove();
+
+  var ov = document.createElement('div');
+  ov.id = 'prioRatingsOverlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9100;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto';
+  ov.addEventListener('click', function(e){ if(e.target === ov) ov.remove(); });
+
+  var panel = document.createElement('div');
+  panel.style.cssText = 'background:var(--white);color:var(--text);border:1px solid var(--border);border-radius:14px;width:100%;max-width:780px;box-shadow:0 24px 64px rgba(0,0,0,.35);display:flex;flex-direction:column;max-height:calc(100vh - 80px)';
+  panel.innerHTML =
+    '<div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px">' +
+      '<div style="width:36px;height:36px;border-radius:8px;background:#7c3aed22;color:#7c3aed;display:flex;align-items:center;justify-content:center">' + svgIcon('chart-bar',{size:20}) + '</div>' +
+      '<div style="flex:1"><h3 style="margin:0;font-size:16px;font-weight:700">Priority Ratings</h3><div style="font-size:11px;color:var(--muted)">Editing framework: <strong>' + escHtml(fwk.name) + '</strong></div></div>' +
+      '<button onclick="document.getElementById(\'prioRatingsOverlay\').remove()" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1">&times;</button>' +
+    '</div>' +
+    '<div style="padding:14px 22px 0;font-size:12px;color:var(--muted);line-height:1.5">' +
+      'Prioritize your items based on a defined set of value and cost criteria. ' +
+      'The entire framework is fully customizable. By default, the priority scores are calculated using a weighted scoring method. ' +
+      'For more control on the scores, advanced users can switch to a custom formula instead.' +
+    '</div>' +
+    '<div id="prioRatingsBody" style="padding:14px 22px;overflow-y:auto;flex:1"></div>' +
+    '<div style="padding:12px 22px;border-top:1px solid var(--border);background:var(--surface-low);display:flex;justify-content:space-between;align-items:center">' +
+      '<button class="prio-btn" style="color:#dc2626;border-color:#fca5a5" onclick="_prioResetCustomFormula()">Reset to defaults</button>' +
+      '<div style="display:flex;gap:8px">' +
+        '<button class="prio-btn" onclick="document.getElementById(\'prioRatingsOverlay\').remove()">Cancel</button>' +
+        '<button class="prio-btn primary" onclick="_prioSaveRatings()">Update</button>' +
+      '</div>' +
+    '</div>';
+  ov.appendChild(panel);
+  document.body.appendChild(ov);
+  _renderPriorityRatingsBody();
+}
+
+function _renderPriorityRatingsBody(){
+  var body = document.getElementById('prioRatingsBody');
+  if(!body) return;
+  var fwk = getActiveFramework();
+  var cf = _prioGetCustomFormula(fwk);
+  var modeBar =
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">' +
+      '<div style="font-size:14px;font-weight:700">' + (_prioRatingsTab === 'weighted' ? 'Customize factors' : 'Custom Formula') + '</div>' +
+      '<button class="prio-btn" style="font-size:11px;color:var(--accent);border:none;background:none;cursor:pointer;font-weight:600" onclick="_prioSwitchRatingsTab(\''+(_prioRatingsTab==='weighted'?'formula':'weighted')+'\')">' +
+        (_prioRatingsTab === 'weighted' ? 'Switch to custom formula' : 'Switch to custom factors') +
+      '</button>' +
+    '</div>';
+  body.innerHTML = modeBar + (_prioRatingsTab === 'weighted'
+    ? _prioRatingsWeightedHtml(fwk, cf)
+    : _prioRatingsFormulaHtml(fwk, cf));
+}
+
+function _prioSwitchRatingsTab(tab){
+  _prioRatingsTab = tab;
+  // Persist the mode so loadCustomFormula picks the right path.
+  var fwk = getActiveFramework();
+  var cf = _prioGetCustomFormula(fwk);
+  cf.mode = (tab === 'formula') ? 'formula' : 'weighted';
+  _renderPriorityRatingsBody();
+}
+
+function _prioRatingsWeightedHtml(fwk, cf){
+  var html = '<div style="font-size:12px;color:var(--muted);margin-bottom:10px">Select which fields should be criteria for your Y, X, and R factors. If they should vary in their influence on the score, set weightings to these factors as well.</div>';
+  html += '<div style="display:grid;grid-template-columns:120px 1fr;gap:6px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;padding:0 12px"><div>Factors</div><div>Weights</div></div>';
+  ['Y','X','R'].forEach(function(key){
+    var topPct = (cf.weights && cf.weights[key]) || 0;
+    var children = (cf.factors[key] || []);
+    var arrow = key==='Y' ? '\u2197\uFE0F' : (key==='X' ? '\u2198\uFE0F' : '\u2197\uFE0F');
+    var arrowColor = key==='Y' ? '#16a34a' : (key==='X' ? '#dc2626' : '#16a34a');
+    var label = key==='Y' ? 'Value (Y)' : (key==='X' ? 'Effort (X)' : 'R factor (R)');
+    html += '<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:10px">';
+    html += '<div style="display:grid;grid-template-columns:120px 1fr 60px;gap:10px;align-items:center;padding:4px 0">' +
+      '<div style="font-weight:700;color:var(--text);font-size:13px">'+label+' <span style="color:'+arrowColor+'">'+arrow+'</span></div>' +
+      '<input type="range" min="0" max="100" value="'+topPct+'" oninput="_prioUpdFactorWeight(\''+key+'\', this.value); document.getElementById(\'prioFW_'+key+'\').textContent = this.value+\'%\'">' +
+      '<div style="text-align:right;font-weight:700;color:var(--accent);font-size:13px"><span id="prioFW_'+key+'">'+topPct+'%</span></div>' +
+    '</div>';
+    if(children.length){
+      html += '<div style="margin-top:8px;padding-left:12px;border-left:2px solid var(--border)">';
+      children.forEach(function(child, idx){
+        var crit = fwk.criteria.find(function(c){ return c.id === child.critId; });
+        var nm = crit ? crit.name : '(removed criterion)';
+        html += '<div style="display:grid;grid-template-columns:120px 1fr 60px 24px;gap:10px;align-items:center;padding:4px 0">' +
+          '<div style="font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+escHtml(nm)+'">'+escHtml(nm)+'</div>' +
+          '<input type="range" min="0" max="100" value="'+(child.weight||0)+'" oninput="_prioUpdChildWeight(\''+key+'\','+idx+', this.value); document.getElementById(\'prioCW_'+key+'_'+idx+'\').textContent = this.value+\'%\'">' +
+          '<div style="text-align:right;font-size:12px;color:var(--muted)"><span id="prioCW_'+key+'_'+idx+'">'+(child.weight||0)+'%</span></div>' +
+          '<button class="prio-btn" style="font-size:9px;padding:2px 4px;border:none;background:none;color:#dc2626;cursor:pointer" onclick="_prioRemoveChild(\''+key+'\','+idx+')" title="Remove">\u2715</button>' +
+        '</div>';
+      });
+      html += '</div>';
+    }
+    html += '<button class="prio-btn" style="margin-top:8px;font-size:11px;color:var(--accent);border:none;background:none;font-weight:600;cursor:pointer" onclick="_prioAddCriteriaToFactor(\''+key+'\')">+ Add criteria</button>';
+    html += '</div>';
+  });
+  return html;
+}
+
+function _prioRatingsFormulaHtml(fwk, cf){
+  var html = '<div style="font-size:12px;color:var(--muted);margin-bottom:10px">In this advanced mode, you can fully customize how each of your factor scores gets calculated. You can then also write your own equation to derive the priority score for your items. Use numbers, mathematical operators (+, -, *, /, ^), <code>sqrt</code>, <code>log</code>, <code>abs</code>, <code>min</code>, <code>max</code>, and variables (e.g. Y, Y1, Y1_ABS).</div>';
+  ['Y','X','R'].forEach(function(key){
+    var label = key==='Y' ? 'Value (Y)' : (key==='X' ? 'Effort (X)' : 'R factor (R)');
+    var arrowColor = key==='Y' ? '#16a34a' : (key==='X' ? '#dc2626' : '#16a34a');
+    html += '<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px">' +
+      '<div style="font-weight:700;color:var(--text);font-size:13px;margin-bottom:8px">'+label+' <span style="color:'+arrowColor+'">\u2197</span></div>' +
+      '<div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Formula</div>' +
+      '<input type="text" value="'+escHtml(cf.formulas[key]||'')+'" oninput="_prioUpdFormula(\''+key+'\', this.value)" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-family:monospace;font-size:12px;background:var(--white);color:var(--text);margin-bottom:10px" placeholder="e.g. ('+key+'1 + '+key+'2) / 2">' +
+      '<div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Criteria</div>';
+    var children = cf.factors[key] || [];
+    children.forEach(function(child, idx){
+      var crit = fwk.criteria.find(function(c){ return c.id === child.critId; });
+      var nm = crit ? crit.name : '(removed)';
+      html += '<div style="display:grid;grid-template-columns:36px 1fr 24px;gap:8px;align-items:center;margin-bottom:6px">' +
+        '<div style="background:var(--surface-low);border:1px solid var(--border);border-radius:6px;padding:5px;text-align:center;font-weight:700;font-size:11px;font-family:monospace">'+escHtml(child.varKey || (key+(idx+1)))+'</div>' +
+        '<div style="background:var(--surface-low);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+escHtml(nm)+'">'+escHtml(nm)+'</div>' +
+        '<button class="prio-btn" style="font-size:9px;padding:2px 4px;border:none;background:none;color:#dc2626;cursor:pointer" onclick="_prioRemoveChild(\''+key+'\','+idx+')" title="Remove">\u2715</button>' +
+      '</div>';
+    });
+    html += '<button class="prio-btn" style="margin-top:4px;font-size:11px;color:var(--accent);border:none;background:none;font-weight:600;cursor:pointer" onclick="_prioAddCriteriaToFactor(\''+key+'\')">+ Add criteria</button>';
+    html += '</div>';
+  });
+  html += '<div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Scoring formula</div>' +
+    '<input type="text" value="'+escHtml(cf.score||'')+'" oninput="_prioUpdScoreFormula(this.value)" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-family:monospace;font-size:12px;background:var(--white);color:var(--text)">';
+  return html;
+}
+
+function _prioUpdFactorWeight(key, val){
+  var fwk = getActiveFramework();
+  var cf = _prioGetCustomFormula(fwk);
+  cf.weights[key] = +val;
+}
+function _prioUpdChildWeight(key, idx, val){
+  var fwk = getActiveFramework();
+  var cf = _prioGetCustomFormula(fwk);
+  if(cf.factors[key] && cf.factors[key][idx]) cf.factors[key][idx].weight = +val;
+}
+function _prioUpdFormula(key, val){
+  var fwk = getActiveFramework();
+  var cf = _prioGetCustomFormula(fwk);
+  cf.formulas[key] = val || '';
+}
+function _prioUpdScoreFormula(val){
+  var fwk = getActiveFramework();
+  var cf = _prioGetCustomFormula(fwk);
+  cf.score = val || '';
+}
+function _prioRemoveChild(key, idx){
+  var fwk = getActiveFramework();
+  var cf = _prioGetCustomFormula(fwk);
+  if(cf.factors[key]) cf.factors[key].splice(idx, 1);
+  // Re-key Y1/Y2/... after removal
+  (cf.factors[key]||[]).forEach(function(c, i){ c.varKey = key+(i+1); });
+  _renderPriorityRatingsBody();
+}
+function _prioAddCriteriaToFactor(key){
+  var fwk = getActiveFramework();
+  var cf = _prioGetCustomFormula(fwk);
+  // Build list of criteria not yet assigned to ANY factor.
+  var assigned = {};
+  ['Y','X','R'].forEach(function(k){ (cf.factors[k]||[]).forEach(function(c){ assigned[c.critId] = true; }); });
+  var available = fwk.criteria.filter(function(c){ return !assigned[c.id]; });
+  if(!available.length){
+    showToast('All criteria are already assigned. Add a new criterion to the framework first.', 'info');
+    return;
+  }
+  // Show a tiny inline picker
+  var existing = document.getElementById('prioAddCritPopup');
+  if(existing) existing.remove();
+  var btn = event && event.target;
+  var rect = btn ? btn.getBoundingClientRect() : { left: 100, top: 100, height: 0 };
+  var pop = document.createElement('div');
+  pop.id = 'prioAddCritPopup';
+  pop.style.cssText = 'position:fixed;left:'+rect.left+'px;top:'+(rect.bottom+4)+'px;background:var(--white);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:9200;min-width:200px;padding:6px 0;font-size:12px';
+  available.forEach(function(c){
+    var item = document.createElement('div');
+    item.style.cssText = 'padding:8px 14px;cursor:pointer;color:var(--text);transition:background .12s';
+    item.onmouseover = function(){ this.style.background = 'var(--surface-low)'; };
+    item.onmouseout  = function(){ this.style.background = 'transparent'; };
+    item.textContent = c.name;
+    item.onclick = function(){
+      var arr = cf.factors[key] || (cf.factors[key] = []);
+      arr.push({ critId: c.id, weight: Math.round(100/(arr.length+1)), varKey: key+(arr.length+1) });
+      pop.remove();
+      _renderPriorityRatingsBody();
+    };
+    pop.appendChild(item);
+  });
+  document.body.appendChild(pop);
+  setTimeout(function(){
+    function _close(ev){ if(!pop.contains(ev.target)){ pop.remove(); document.removeEventListener('click', _close, true); } }
+    document.addEventListener('click', _close, true);
+  }, 0);
+}
+function _prioResetCustomFormula(){
+  if(!confirm('Reset this framework\'s custom formula and weights to defaults?')) return;
+  var fwk = getActiveFramework();
+  delete fwk.customFormula;
+  _prioGetCustomFormula(fwk);
+  _renderPriorityRatingsBody();
+}
+function _prioSaveRatings(){
+  // The factor weights are kept in cf.weights — they typically should sum to
+  // 100% but we don't enforce that to allow R-as-multiplier scenarios. Just
+  // persist and rerender.
+  persistData();
+  var ov = document.getElementById('prioRatingsOverlay');
+  if(ov) ov.remove();
+  if(_prioPage === 'matrix') renderPrioMatrixTab();
+  else if(_prioPage === 'top10') renderPrioTop10Tab();
+  showToast('Priority Ratings updated', 'success');
 }
 
 var KPI_TEMPLATE = [
