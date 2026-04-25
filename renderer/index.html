@@ -14981,7 +14981,7 @@ async function syncAllTemplateTasksEverywhere(opts){
   // Ensure bundled JSON is loaded as a fallback source.
   if((typeof _bundledPlatformTemplates === 'undefined' || !_bundledPlatformTemplates || !_bundledPlatformTemplates.length)){
     try {
-      var jsonUrl = (window.location.protocol === 'file:') ? 'data/platform-templates.json' : '/data/platform-templates.json';
+      var jsonUrl = (window.location.protocol === 'file:') ? '../data/platform-templates.json' : '/data/platform-templates.json';
       var resp = await fetch(jsonUrl);
       if(resp.ok) _bundledPlatformTemplates = await resp.json();
     } catch(e){ console.warn('[tpl-sync] bundled fetch failed:', e && e.message); }
@@ -15105,7 +15105,7 @@ async function seedTaskLibraryFromPlatformTemplates(onDone){
 
   if(!_bundledPlatformTemplates || !_bundledPlatformTemplates.length){
     try {
-      var jsonUrl = (window.location.protocol === 'file:') ? 'data/platform-templates.json' : '/data/platform-templates.json';
+      var jsonUrl = (window.location.protocol === 'file:') ? '../data/platform-templates.json' : '/data/platform-templates.json';
       var resp = await fetch(jsonUrl);
       if(resp.ok) _bundledPlatformTemplates = await resp.json();
     } catch(e){ console.warn('[taskLib] bundled fetch failed:', e && e.message); }
@@ -21458,6 +21458,9 @@ function renderPrioMatrixTab(){
   var fwk = getActiveFramework();
   var allFwks = getAllFrameworks();
   var ui = _prioMatrixUI();
+  // v1.42.3 — extend UI state for per-row expansion + extra label toggle.
+  if(typeof ui.expanded !== 'object' || !ui.expanded) ui.expanded = {};
+  if(typeof ui.showRowName !== 'boolean') ui.showRowName = false;
 
   actions.innerHTML =
     '<select class="prio-btn" style="padding:8px 30px 8px 14px" onchange="setActivePrioFramework(this.value)">' +
@@ -21465,20 +21468,25 @@ function renderPrioMatrixTab(){
     '</select>' +
     '<div style="position:relative;display:inline-block;margin-left:8px">' +
       '<button id="prioDisplayBtn" class="prio-btn" onclick="_prioToggleDisplayMenu(event)">Display \u25BE</button>' +
-      '<div id="prioDisplayMenu" style="display:none;position:fixed;min-width:260px;background:var(--white);border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 36px rgba(0,0,0,.28);z-index:10010;padding:12px 14px;color:var(--text);font-size:12px">' +
-        '<label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer"><input type="checkbox" '+(ui.showLabels?'checked':'')+' onchange="_prioSetMatrixOpt(\'showLabels\', this.checked)">Item labels</label>' +
-        '<label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer"><input type="checkbox" '+(ui.showGrid?'checked':'')+' onchange="_prioSetMatrixOpt(\'showGrid\', this.checked)">Gridlines</label>' +
-        '<label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer"><input type="checkbox" '+(ui.showQuadrants?'checked':'')+' onchange="_prioSetMatrixOpt(\'showQuadrants\', this.checked)">Quadrant tints</label>' +
-        '<div style="border-top:1px solid var(--border);margin:6px 0;padding-top:6px">' +
+      '<div id="prioDisplayMenu" style="display:none;position:fixed;min-width:280px;background:var(--white);border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 36px rgba(0,0,0,.28);z-index:10010;padding:12px 14px;color:var(--text);font-size:12px">' +
+        '<div style="font-weight:700;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Labels on the matrix</div>' +
+        '<label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer"><input type="checkbox" '+(ui.showLabels?'checked':'')+' onchange="_prioSetMatrixOpt(\'showLabels\', this.checked)">Show initiative title next to each point</label>' +
+        '<label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer"><input type="checkbox" '+(ui.showRowName?'checked':'')+' onchange="_prioSetMatrixOpt(\'showRowName\', this.checked)">Include parent row name in label</label>' +
+        '<div style="border-top:1px solid var(--border);margin:8px 0;padding-top:6px">' +
+          '<div style="font-weight:700;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Chart guides</div>' +
+          '<label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer"><input type="checkbox" '+(ui.showGrid?'checked':'')+' onchange="_prioSetMatrixOpt(\'showGrid\', this.checked)">Gridlines</label>' +
+          '<label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer"><input type="checkbox" '+(ui.showQuadrants?'checked':'')+' onchange="_prioSetMatrixOpt(\'showQuadrants\', this.checked)">Quadrant tints &amp; labels</label>' +
+        '</div>' +
+        '<div style="border-top:1px solid var(--border);margin:8px 0;padding-top:6px">' +
           '<div style="font-weight:700;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Bubble size</div>' +
           '<label style="display:flex;align-items:center;gap:8px;padding:2px 0"><input type="radio" name="prioBubble" '+(ui.bubbleSize==='fixed'?'checked':'')+' onchange="_prioSetMatrixOpt(\'bubbleSize\',\'fixed\')">Fixed</label>' +
           '<label style="display:flex;align-items:center;gap:8px;padding:2px 0"><input type="radio" name="prioBubble" '+(ui.bubbleSize==='score'?'checked':'')+' onchange="_prioSetMatrixOpt(\'bubbleSize\',\'score\')">Scaled by priority score</label>' +
         '</div>' +
-        '<div style="border-top:1px solid var(--border);margin:6px 0;padding-top:6px">' +
+        '<div style="border-top:1px solid var(--border);margin:8px 0;padding-top:6px">' +
           '<div style="font-weight:700;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Color by</div>' +
           '<label style="display:flex;align-items:center;gap:8px;padding:2px 0"><input type="radio" name="prioColor" '+(ui.colorBy==='section'?'checked':'')+' onchange="_prioSetMatrixOpt(\'colorBy\',\'section\')">Section</label>' +
           '<label style="display:flex;align-items:center;gap:8px;padding:2px 0"><input type="radio" name="prioColor" '+(ui.colorBy==='tier'?'checked':'')+' onchange="_prioSetMatrixOpt(\'colorBy\',\'tier\')">Priority tier</label>' +
-          '<label style="display:flex;align-items:center;gap:8px;padding:2px 0"><input type="radio" name="prioColor" '+(ui.colorBy==='single'?'checked':'')+' onchange="_prioSetMatrixOpt(\'colorBy\',\'single\')">Single accent</label>' +
+          '<label style="display:flex;align-items:center;gap:8px;padding:2px 0"><input type="radio" name="prioColor" '+(ui.colorBy==='single'?'checked':'')+' onchange="_prioSetMatrixOpt(\'colorBy\',\'single\')">Initiative status (bar color)</label>' +
         '</div>' +
       '</div>' +
     '</div>' +
@@ -21499,24 +21507,56 @@ function renderPrioMatrixTab(){
   var hiddenSet = {};
   (ui.hidden || []).forEach(function(id){ hiddenSet[id] = true; });
 
-  // Build (x,y) for each row — prefer override, else compute from criteria.
   function _yFromScores(s){
     var y = 0;
     valueCrits.forEach(function(c){ y += (+s[c.id] || 0) * (c.weight || 1); });
     return y;
   }
+
+  // v1.42.3: build one plot point per BAR (initiative) inside each row.
+  // Composite key 'rowId#barIdx' is used for hidden + override storage.
+  // Each bar inherits its row's score by default; an override pins it
+  // independently. Bars at identical coords get a tiny radial jitter so
+  // they all stay clickable even when stacked.
+  var BAR_STATUS = { g:'#22c55e', b:'#3b82f6', o:'#f59e0b', s:'#7c3aed', r:'#ef4444' };
+  var BAR_LABELS = { g:'Released', b:'In Progress', o:'Delayed', s:'Strategy', r:'At Risk' };
+  function _barKey(rowId, barIdx){ return rowId + '#' + barIdx; }
   var pts = [];
   rows.forEach(function(r){
     var s = (prioritizationData.scores || {})[r.id] || {};
-    var ov = ovs[r.id];
-    var x = ov ? ov.x : (+s[costCrit.id] || 0);
-    var y = ov ? ov.y : _yFromScores(s);
-    if((!x || x <= 0) && (!y || y <= 0) && !ov) return;  // unscored
-    pts.push({ row: r, x: x, y: y, override: !!ov, hidden: !!hiddenSet[r.id] });
+    var rowX = (+s[costCrit.id] || 0);
+    var rowY = _yFromScores(s);
+    var bars = Array.isArray(r.bars) && r.bars.length ? r.bars : [{ t: r.name, c: 'b', _virtual:true }];
+    bars.forEach(function(b, idx){
+      var key = _barKey(r.id, idx);
+      var ov = ovs[key];
+      var x = ov ? ov.x : rowX;
+      var y = ov ? ov.y : rowY;
+      if((!x || x <= 0) && (!y || y <= 0) && !ov) return;
+      pts.push({ row: r, bar: b, barIdx: idx, key: key, x: x, y: y, override: !!ov, hidden: !!hiddenSet[key] || !!hiddenSet[r.id] });
+    });
   });
 
-  // Determine plot bounds — use overrides + scores together so dragged dots
-  // don't fall off when the user moves the most extreme point.
+  // Jitter overlapping points (only when none in the group is pinned).
+  var groups = {};
+  pts.forEach(function(p){
+    var k = Math.round(p.x*1000) + ':' + Math.round(p.y*1000);
+    if(!groups[k]) groups[k] = [];
+    groups[k].push(p);
+  });
+  Object.keys(groups).forEach(function(k){
+    var g = groups[k];
+    if(g.length <= 1) return;
+    if(g.some(function(p){ return p.override; })) return;
+    var step = (2 * Math.PI) / g.length;
+    g.forEach(function(p, i){
+      var angle = step * i;
+      var rad = 0.025 * Math.max(p.x || 1, p.y || 1, 1);
+      p.x = p.x + Math.cos(angle) * rad;
+      p.y = p.y + Math.sin(angle) * rad;
+    });
+  });
+
   var visiblePts = pts.filter(function(p){ return !p.hidden; });
   var maxX = Math.max(1, Math.max.apply(null, visiblePts.length ? visiblePts.map(function(p){ return p.x || 0; }) : [1])) * 1.1;
   var maxY = Math.max(1, Math.max.apply(null, visiblePts.length ? visiblePts.map(function(p){ return p.y || 0; }) : [1])) * 1.1;
@@ -21527,7 +21567,11 @@ function renderPrioMatrixTab(){
   var allScores = rows.map(function(r){ return computePriorityScore(r, fwk); });
 
   function _color(p){
-    if(ui.colorBy === 'single') return 'var(--accent)';
+    if(ui.colorBy === 'single'){
+      // v1.42.3 — was a flat accent; with per-bar plotting it now mirrors
+      // the bar's status color so the chart can be read like the timeline.
+      return BAR_STATUS[(p.bar && p.bar.c) || 'b'] || 'var(--accent)';
+    }
     if(ui.colorBy === 'tier'){
       var sc = computePriorityScore(p.row, fwk);
       var tier = getPriorityTier(sc, allScores);
@@ -21545,6 +21589,13 @@ function renderPrioMatrixTab(){
       return 6 + 10 * (sc / mx);
     }
     return 9;
+  }
+  function _pointLabel(p){
+    var bt = (p.bar && p.bar.t) ? p.bar.t : (p.row.name || '');
+    if(!ui.showRowName) return bt.substring(0, 28);
+    var rn = p.row.name || '';
+    if(rn && rn !== bt) return (rn + ' \u2022 ' + bt).substring(0, 36);
+    return bt.substring(0, 28);
   }
 
   // Build SVG
@@ -21581,22 +21632,22 @@ function renderPrioMatrixTab(){
     svgParts.push('<text x="'+(PAD+(W-PAD*2)/4)+'" y="'+(H-PAD-8)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#64748b">FILLERS</text>');
     svgParts.push('<text x="'+(PAD+(W-PAD*2)*3/4)+'" y="'+(H-PAD-8)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#dc2626">MONEY PIT</text>');
   }
-  // Bubbles
+  // Bubbles — one per visible bar
   pts.forEach(function(p){
     if(p.hidden) return;
     var px = PAD + (p.x / maxX) * (W - PAD*2);
     var py = (H - PAD) - (p.y / maxY) * (H - PAD*2);
     var col = _color(p);
     var rad = _radius(p);
-    svgParts.push('<g class="prio-pt" data-row-id="'+escHtml(p.row.id)+'" style="cursor:grab">' +
+    svgParts.push('<g class="prio-pt" data-key="'+escHtml(p.key)+'" data-row-id="'+escHtml(p.row.id)+'" data-bar-idx="'+p.barIdx+'" style="cursor:grab">' +
       '<circle cx="'+px+'" cy="'+py+'" r="'+rad+'" fill="'+escHtml(col)+'" fill-opacity="0.9" stroke="#fff" stroke-width="2"/>' +
-      (p.override ? '<circle cx="'+(px-rad-2)+'" cy="'+(py-rad-2)+'" r="3" fill="#f59e0b" stroke="#fff" stroke-width="1"><title>Pinned (drag override active)</title></circle>' : '') +
-      (ui.showLabels ? '<text x="'+(px+rad+4)+'" y="'+(py+4)+'" font-size="10" font-weight="600" fill="#0f172a">'+escHtml((p.row.name||'').substring(0, 28))+'</text>' : '') +
+      (p.override ? '<circle cx="'+(px-rad-2)+'" cy="'+(py-rad-2)+'" r="3" fill="#f59e0b" stroke="#fff" stroke-width="1" pointer-events="none"/>' : '') +
+      (ui.showLabels ? '<text x="'+(px+rad+4)+'" y="'+(py+4)+'" font-size="10" font-weight="600" fill="#0f172a" pointer-events="none">'+escHtml(_pointLabel(p))+'</text>' : '') +
     '</g>');
   });
   svgParts.push('</svg>');
 
-  // Right-side items panel
+  // Right-side items panel — rows are expandable; bars are checkable.
   var sectionMap = {};
   sections.forEach(function(s){ sectionMap[s.id] = s; });
   var itemsHtml = rows.length
@@ -21604,24 +21655,55 @@ function renderPrioMatrixTab(){
         var sec = sectionMap[r.sec];
         var sc = computePriorityScore(r, fwk);
         var tier = getPriorityTier(sc, allScores);
-        var hidden = !!hiddenSet[r.id];
-        var pinned = !!ovs[r.id];
+        var rowHidden = !!hiddenSet[r.id];
         var tierColor = ({high:'#16a34a', medium:'#2563eb', low:'#dc2626', unscored:'#94a3b8'})[tier] || '#94a3b8';
-        return '<div class="prio-item" data-row-id="'+escHtml(r.id)+'" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border);font-size:12px;'+(hidden?'opacity:.4;':'')+'">' +
-          '<input type="checkbox" '+(hidden?'':'checked')+' onchange="_prioToggleMatrixHidden(\''+r.id+'\')" title="Show on chart">' +
-          '<span style="width:8px;height:8px;border-radius:50%;background:'+escHtml(sec?sec.color:'#94a3b8')+';flex-shrink:0"></span>' +
-          '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:var(--text);cursor:pointer" onclick="openEditModal(\''+r.id+'\')" title="'+escHtml(r.name||'')+'">'+escHtml(r.name||'(unnamed)')+'</span>' +
-          (pinned ? '<button class="prio-btn" style="font-size:9px;padding:2px 6px" onclick="_prioResetMatrixOverride(\''+r.id+'\')" title="Reset drag override">\u21BA</button>' : '') +
-          '<span style="background:'+tierColor+'22;color:'+tierColor+';border:1px solid '+tierColor+'44;font-size:10px;padding:2px 6px;border-radius:999px;font-weight:700;font-variant-numeric:tabular-nums">'+(sc==null?'\u2014':sc)+'</span>' +
-        '</div>';
+        var bars = Array.isArray(r.bars) ? r.bars : [];
+        var barCount = bars.length || 1;
+        var expanded = !!ui.expanded[r.id];
+        var caret =
+          '<button class="prio-btn" style="background:none;border:none;color:var(--muted);padding:2px;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;flex-shrink:0;cursor:pointer" onclick="_prioToggleRowExpanded(\''+r.id+'\')" title="Toggle initiatives">'+
+            '<svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transform:rotate('+(expanded?'0deg':'-90deg')+');transition:transform .12s"><path d="M6 9l6 6 6-6"/></svg>'+
+          '</button>';
+        var head =
+          '<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--border);font-size:12px;'+(rowHidden?'opacity:.4;':'')+'">' +
+            caret +
+            '<input type="checkbox" '+(rowHidden?'':'checked')+' onchange="_prioToggleMatrixHidden(\''+r.id+'\')" title="Show entire row on chart">' +
+            '<span style="width:8px;height:8px;border-radius:50%;background:'+escHtml(sec?sec.color:'#94a3b8')+';flex-shrink:0"></span>' +
+            '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:var(--text);cursor:pointer" onclick="openEditModal(\''+r.id+'\')" title="'+escHtml(r.name||'')+'">'+escHtml(r.name||'(unnamed)')+'</span>' +
+            '<span style="font-size:10px;color:var(--muted);font-weight:500">'+barCount+'</span>' +
+            '<span style="background:'+tierColor+'22;color:'+tierColor+';border:1px solid '+tierColor+'44;font-size:10px;padding:2px 6px;border-radius:999px;font-weight:700;font-variant-numeric:tabular-nums">'+(sc==null?'\u2014':sc)+'</span>' +
+          '</div>';
+        var body = '';
+        if(expanded){
+          if(!bars.length){
+            body = '<div style="padding:8px 10px 10px 40px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">No initiatives in this row yet. Add one from <strong>Edit row</strong>.</div>';
+          } else {
+            body = bars.map(function(b, i){
+              var key = _barKey(r.id, i);
+              var barHidden = rowHidden || !!hiddenSet[key];
+              var pinned = !!ovs[key];
+              var statusColor = BAR_STATUS[b.c||'b'] || '#3b82f6';
+              var statusLabel = BAR_LABELS[b.c||'b'] || '';
+              var title = (b.t && String(b.t).trim()) || ('Initiative '+(i+1));
+              return '<div style="display:flex;align-items:center;gap:6px;padding:6px 10px 6px 40px;border-bottom:1px solid var(--border);font-size:12px;'+(barHidden?'opacity:.4;':'')+'">' +
+                '<input type="checkbox" '+(barHidden?'':'checked')+(rowHidden?' disabled':'')+' onchange="_prioToggleMatrixHidden(\''+key+'\')" title="Show this initiative on chart">' +
+                '<span style="width:8px;height:8px;border-radius:2px;background:'+statusColor+';flex-shrink:0" title="'+escHtml(statusLabel)+'"></span>' +
+                '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)" title="'+escHtml(title)+'">'+escHtml(title)+'</span>' +
+                (pinned ? '<button class="prio-btn" style="font-size:9px;padding:2px 6px" onclick="_prioResetMatrixOverride(\''+key+'\')" title="Reset drag override">\u21BA</button>' : '') +
+              '</div>';
+            }).join('');
+          }
+        }
+        return head + body;
       }).join('')
     : '<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">No initiatives yet.</div>';
 
   content.innerHTML =
     '<div style="display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start">' +
-      '<div class="prio-matrix" style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px">' +
+      '<div class="prio-matrix" style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px;position:relative">' +
         svgParts.join('') +
-        '<div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center">Drag dots to pin a position. Pinned dots show an amber marker; reset via the items list.</div>' +
+        '<div id="prioMatrixTooltip" style="display:none;position:absolute;background:var(--white);color:var(--text);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 28px rgba(0,0,0,.22);padding:10px 12px;font-size:12px;pointer-events:none;z-index:50;max-width:280px;line-height:1.45"></div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center">Drag points to pin a position. Hover for details. Expand a row in the items list to plot specific initiatives.</div>' +
       '</div>' +
       '<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;max-height:600px">' +
         '<div style="padding:10px 12px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:flex;justify-content:space-between;align-items:center"><span>Items ('+rows.length+')</span><span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted)">'+visiblePts.length+' on chart</span></div>' +
@@ -21629,8 +21711,75 @@ function renderPrioMatrixTab(){
       '</div>' +
     '</div>';
 
-  // Wire drag handlers — single SVG-level pointermove keeps things light.
   _wirePrioMatrixDrag(W, H, PAD, maxX, maxY, costCrit, valueCrits);
+  _wirePrioMatrixHover(pts, fwk, costCrit);
+}
+
+// v1.42.3: items-panel row expansion.
+function _prioToggleRowExpanded(rowId){
+  var ui = _prioMatrixUI();
+  if(typeof ui.expanded !== 'object' || !ui.expanded) ui.expanded = {};
+  ui.expanded[rowId] = !ui.expanded[rowId];
+  persistData();
+  renderPrioMatrixTab();
+}
+
+// v1.42.3: hover tooltip on plot points. Single delegated listener — the
+// tooltip is an HTML overlay so descriptions wrap and dark-mode CSS tracks.
+function _wirePrioMatrixHover(pts, fwk, _costCrit){
+  var svg = document.getElementById('prioMatrixSvg');
+  var tip = document.getElementById('prioMatrixTooltip');
+  if(!svg || !tip) return;
+  var ptsByKey = {};
+  pts.forEach(function(p){ ptsByKey[p.key] = p; });
+  var BAR_LABELS = { g:'Released', b:'In Progress', o:'Delayed', s:'Strategy', r:'At Risk' };
+  var BAR_STATUS = { g:'#22c55e', b:'#3b82f6', o:'#f59e0b', s:'#7c3aed', r:'#ef4444' };
+
+  function showTip(p, ev){
+    var sc = computePriorityScore(p.row, fwk);
+    var statusColor = BAR_STATUS[(p.bar && p.bar.c) || 'b'] || '#3b82f6';
+    var statusLabel = BAR_LABELS[(p.bar && p.bar.c) || 'b'] || '';
+    var title = (p.bar && p.bar.t && String(p.bar.t).trim()) || (p.row.name || 'Initiative');
+    var sec = sections.find(function(s){ return s.id === p.row.sec; });
+    var dateRange = '';
+    if(p.bar && !p.bar._virtual && typeof fracToMonthDay === 'function' && typeof getMonthLabel === 'function'){
+      try {
+        var ms = fracToMonthDay(p.bar.s);
+        var me = fracToMonthDay(p.bar.e);
+        dateRange = (ms.day+' '+getMonthLabel(ms.mi))+' \u2192 '+(me.day+' '+getMonthLabel(me.mi));
+      } catch(_e){ dateRange = ''; }
+    }
+    var ownerLine = p.row.owner ? '<div style="font-size:11px;color:var(--muted);margin-top:4px">Owner: '+escHtml(p.row.owner)+'</div>' : '';
+    var revenueLine = (p.row.revenue && +p.row.revenue > 0) ? '<div style="font-size:11px;color:var(--muted);margin-top:2px">Est. revenue: $'+(+p.row.revenue).toLocaleString()+'</div>' : '';
+    var labelsLine = (Array.isArray(p.row.labels) && p.row.labels.length) ? '<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">'+p.row.labels.slice(0,5).map(function(l){ return '<span style="background:rgba(59,130,246,.12);color:var(--accent);font-size:10px;font-weight:600;padding:2px 6px;border-radius:10px">'+escHtml(l)+'</span>'; }).join('')+'</div>' : '';
+    var descLine = (p.bar && p.bar.desc) ? '<div style="font-size:12px;color:var(--text);margin-top:6px">'+escHtml(p.bar.desc)+'</div>' : '';
+    tip.innerHTML =
+      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="width:10px;height:10px;border-radius:2px;background:'+statusColor+'"></span><strong style="font-size:13px">'+escHtml(title)+'</strong></div>'+
+      '<div style="font-size:11px;color:var(--muted)">'+(sec?escHtml(sec.name)+' \u2022 ':'')+escHtml(p.row.name||'')+(statusLabel?' \u2022 '+escHtml(statusLabel):'')+'</div>'+
+      descLine +
+      (dateRange ? '<div style="font-size:11px;color:var(--muted);margin-top:4px">'+escHtml(dateRange)+'</div>' : '') +
+      ownerLine + revenueLine + labelsLine +
+      '<div style="font-size:11px;margin-top:8px;color:var(--muted)">Score: <strong style="color:var(--text)">'+(sc==null?'\u2014':sc)+'</strong> \u2022 X='+(+p.x).toFixed(1)+' Y='+(+p.y).toFixed(1)+(p.override?' \u2022 <span style="color:#f59e0b">pinned</span>':'')+'</div>';
+    var box = svg.parentElement.getBoundingClientRect();
+    var tw = 280, th = tip.offsetHeight || 100;
+    var x = ev.clientX - box.left + 14;
+    var y = ev.clientY - box.top + 14;
+    if(x + tw > box.width - 8) x = ev.clientX - box.left - tw - 14;
+    if(y + th > box.height - 8) y = ev.clientY - box.top - th - 14;
+    tip.style.left = Math.max(8, x) + 'px';
+    tip.style.top  = Math.max(8, y) + 'px';
+    tip.style.display = 'block';
+  }
+
+  svg.addEventListener('pointermove', function(ev){
+    var g = ev.target.closest && ev.target.closest('.prio-pt');
+    if(!g){ tip.style.display = 'none'; return; }
+    var key = g.getAttribute('data-key');
+    var p = ptsByKey[key];
+    if(!p){ tip.style.display = 'none'; return; }
+    showTip(p, ev);
+  });
+  svg.addEventListener('pointerleave', function(){ tip.style.display = 'none'; });
 }
 
 // v1.40.1: drag-handler wiring. Uses pointer events so it works with touch +
@@ -21660,7 +21809,12 @@ function _wirePrioMatrixDrag(W, H, PAD, maxX, maxY, costCrit, valueCrits){
   svg.addEventListener('pointerdown', function(e){
     var g = e.target.closest && e.target.closest('.prio-pt');
     if(!g) return;
-    dragging = { rowId: g.getAttribute('data-row-id'), g: g };
+    dragging = {
+      key: g.getAttribute('data-key'),
+      rowId: g.getAttribute('data-row-id'),
+      barIdx: g.getAttribute('data-bar-idx'),
+      g: g
+    };
     g.style.cursor = 'grabbing';
     try { svg.setPointerCapture(e.pointerId); } catch(_e){}
     e.preventDefault();
@@ -21681,18 +21835,23 @@ function _wirePrioMatrixDrag(W, H, PAD, maxX, maxY, costCrit, valueCrits){
     if(dragging._lastSvg){
       var v = pxToVal(dragging._lastSvg.px, dragging._lastSvg.py);
       var ovs = _prioMatrixOverrides();
-      ovs[dragging.rowId] = { x: v.x, y: v.y, ts: Date.now() };
-      // Also push values back into the dominant criteria so the priority
-      // score reflects the new position even when the override is later
-      // cleared. Y is split evenly across value criteria; X is set on the
-      // single cost criterion.
-      var scores = prioritizationData.scores || (prioritizationData.scores = {});
-      if(!scores[dragging.rowId]) scores[dragging.rowId] = {};
-      var totalWeight = valueCrits.reduce(function(s,c){ return s + (c.weight||1); }, 0) || 1;
-      valueCrits.forEach(function(c){
-        scores[dragging.rowId][c.id] = +(v.y * (c.weight||1) / totalWeight).toFixed(2);
-      });
-      scores[dragging.rowId][costCrit.id] = +v.x.toFixed(2);
+      // v1.42.3: per-bar override key. If the dragged dot is the only
+      // initiative on its row we ALSO update the row-level criteria scores
+      // so the priority badge reflects the new position; otherwise leave
+      // row scores alone (they're shared across siblings).
+      var key = dragging.key || dragging.rowId;
+      ovs[key] = { x: v.x, y: v.y, ts: Date.now() };
+      var row = rows.find(function(r){ return r.id === dragging.rowId; });
+      var sole = row && Array.isArray(row.bars) ? row.bars.length <= 1 : true;
+      if(sole && dragging.rowId){
+        var scores = prioritizationData.scores || (prioritizationData.scores = {});
+        if(!scores[dragging.rowId]) scores[dragging.rowId] = {};
+        var totalWeight = valueCrits.reduce(function(s,c){ return s + (c.weight||1); }, 0) || 1;
+        valueCrits.forEach(function(c){
+          scores[dragging.rowId][c.id] = +(v.y * (c.weight||1) / totalWeight).toFixed(2);
+        });
+        scores[dragging.rowId][costCrit.id] = +v.x.toFixed(2);
+      }
       persistData();
     }
     if(dragging.g) dragging.g.style.cursor = 'grab';
@@ -28029,10 +28188,12 @@ function openCapacity(){
   _ensureTmpCapIQTemplates();
   // v1.43.0 — pull every task from every template (CapacityIQ, platform
   // DB, bundled JSON, custom) into both Task Library AND capData.taskTypes
-  // so the Task Reference page reflects the full catalogue.
+  // so the Task Reference + Templates pages reflect the full catalogue.
   syncAllTemplateTasksEverywhere({ toast: false }).then(function(res){
-    // Re-render the active CapacityIQ page if new task types were added.
-    if(res && res.ttAdded > 0 && typeof capNav === 'function'){
+    // Always re-render after the async load — template list / counts may
+    // have changed even when nothing new was upserted (e.g. _tplCache just
+    // hydrated from bundled JSON).
+    if(typeof capNav === 'function'){
       var ov = document.getElementById('capOverlay');
       if(ov && ov.classList.contains('open')) capNav(_capPage);
     }
@@ -28602,7 +28763,7 @@ async function _ensureTmpCapIQTemplates(){
   // Lazy-load the bundled JSON if the template library hasn't been opened yet.
   if(!_bundledPlatformTemplates || !_bundledPlatformTemplates.length){
     try {
-      var jsonUrl = (window.location.protocol === 'file:') ? 'data/platform-templates.json' : '/data/platform-templates.json';
+      var jsonUrl = (window.location.protocol === 'file:') ? '../data/platform-templates.json' : '/data/platform-templates.json';
       var resp = await fetch(jsonUrl);
       if(resp.ok) _bundledPlatformTemplates = await resp.json();
     } catch(e){ console.warn('[capIQ] bundled template fetch failed:', e.message); }
@@ -29476,7 +29637,17 @@ function deleteCapInitiative(id){
 }
 
 function renderCapTaskTypes(content,actions){
-  actions.innerHTML='';
+  actions.innerHTML =
+    '<button class="cap-btn primary" id="capResyncTplBtn" onclick="manualResyncTemplateTasks()" title="Pull every task from every template into this list and the Task Library">' +
+      '<span id="capResyncTplLbl">↻ Re-sync template tasks</span>' +
+    '</button>';
+  var totalTT = capData.taskTypes.length;
+  var totalLib = (typeof taskLibrary !== 'undefined' && taskLibrary) ? taskLibrary.length : 0;
+  var summary = document.createElement('div');
+  summary.style.cssText = 'margin-bottom:10px;font-size:12px;color:var(--muted)';
+  summary.innerHTML = totalTT + ' task type' + (totalTT===1?'':'s') + ' across ' + Object.keys((function(){var c={};capData.taskTypes.forEach(function(t){c[t.category||'General']=1;});return c;})()).length + ' categories · Task Library has ' + totalLib + ' entries';
+  content.appendChild(summary);
+
   var cats={};
   capData.taskTypes.forEach(function(tt){
     if(!cats[tt.category]) cats[tt.category]=[];
@@ -29495,6 +29666,32 @@ function renderCapTaskTypes(content,actions){
     card.innerHTML+=tbl;
     content.appendChild(card);
   });
+}
+
+// v1.43.0 — manual trigger for the unified template-task sync. Wired to the
+// "Re-sync template tasks" button on the CapacityIQ Task Reference page.
+async function manualResyncTemplateTasks(){
+  var btn = document.getElementById('capResyncTplBtn');
+  var lbl = document.getElementById('capResyncTplLbl');
+  if(btn) btn.disabled = true;
+  if(lbl) lbl.textContent = 'Syncing…';
+  try {
+    var res = await syncAllTemplateTasksEverywhere({ toast: false });
+    if(typeof showToast === 'function'){
+      var added = (res.libAdded||0) + (res.ttAdded||0);
+      if(added > 0){
+        showToast('Synced ' + res.tasks + ' task' + (res.tasks===1?'':'s') + ' from ' + res.templates + ' template' + (res.templates===1?'':'s') + ' · +' + res.libAdded + ' Library, +' + res.ttAdded + ' CapacityIQ', 'success');
+      } else {
+        showToast('Already in sync · ' + res.tasks + ' task' + (res.tasks===1?'':'s') + ' across ' + res.templates + ' template' + (res.templates===1?'':'s'), 'info');
+      }
+    }
+    if(typeof capNav === 'function') capNav(_capPage); // re-render to refresh counts
+  } catch(e){
+    console.warn('[manualResync] failed:', e && e.message);
+    if(typeof showToast === 'function') showToast('Sync failed: ' + (e && e.message ? e.message : 'unknown error'), 'error');
+    if(btn) btn.disabled = false;
+    if(lbl) lbl.textContent = '↻ Re-sync template tasks';
+  }
 }
 
 // ── EDIT MEMBERSHIPS (assign users to multiple teams) ──
@@ -29602,6 +29799,26 @@ function renderCapTemplates(content,actions){
     '<input id="capTplSearch" type="search" placeholder="Search templates..." oninput="_capFilterTemplates(this.value)" style="flex:1;max-width:240px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--white);color:var(--text);margin-right:8px" value="'+escHtml(_capTplQuery||'')+'">'+
     '<button class="cap-btn" onclick="openTemplateBuilder(\'capacityiq\')">+ Build New Template</button>' +
     '<button class="cap-btn primary" onclick="showCreateTemplate()" style="margin-left:6px">+ Create (Advanced)</button>';
+
+  // v1.43.0 — if neither template source has loaded yet, kick off a load and
+  // re-render. Without this, the page shows only the few templates that
+  // happen to live in capData.templates, even though Plans / Library see
+  // 35+ via getAllTemplates() once the bundled JSON is fetched.
+  var tplCacheReady = (typeof _tplCache !== 'undefined' && _tplCache && _tplCache.length);
+  var bundledReady  = (typeof _bundledPlatformTemplates !== 'undefined' && _bundledPlatformTemplates && _bundledPlatformTemplates.length);
+  if(!tplCacheReady && !bundledReady){
+    var loading = document.createElement('div');
+    loading.style.cssText = 'font-size:12px;color:var(--muted);padding:24px;text-align:center';
+    loading.textContent = 'Loading templates…';
+    content.appendChild(loading);
+    if(typeof loadTemplateLibrary === 'function'){
+      loadTemplateLibrary().then(function(){
+        // Re-render only if we're still on this page
+        if(_capPage === 'templates' && typeof capNav === 'function') capNav('templates');
+      }).catch(function(e){ console.warn('[capTpl] load failed:', e && e.message); });
+    }
+    return;
+  }
 
   var all = (typeof getAllTemplates === 'function') ? getAllTemplates() : [];
   // Fall back to the legacy CapacityIQ-only list if getAllTemplates isn't available yet.
@@ -32900,7 +33117,7 @@ async function loadTemplateLibrary() {
       try {
         if (_bundledPlatformTemplates.length === 0) {
           // Try fetch for web, or use electronAPI for Electron
-          var jsonUrl = (window.location.protocol === 'file:') ? 'data/platform-templates.json' : '/data/platform-templates.json';
+          var jsonUrl = (window.location.protocol === 'file:') ? '../data/platform-templates.json' : '/data/platform-templates.json';
           var resp = await fetch(jsonUrl);
           if (resp.ok) {
             _bundledPlatformTemplates = await resp.json();
