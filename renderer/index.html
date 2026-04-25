@@ -1331,6 +1331,30 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
 
 /* Feedback Inbox overlay */
 #feedbackOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
+#billingOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
+#billingOverlay.open,#feedbackOverlay.open{display:flex}
+.bill-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px}
+.bill-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.bill-plan{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:8px;position:relative;transition:all .15s}
+.bill-plan.current{border-color:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,.12)}
+.bill-plan.recommended{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+.bill-plan-tag{position:absolute;top:-10px;right:14px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:3px 10px;border-radius:9999px}
+.bill-plan-tag.current{background:#16a34a;color:#fff}
+.bill-plan-tag.save{background:#6366f1;color:#fff}
+.bill-status-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:9999px;text-transform:uppercase;letter-spacing:.04em}
+.bill-status-active{background:#dcfce7;color:#15803d}
+.bill-status-trialing{background:#dbeafe;color:#1e40af}
+.bill-status-past_due{background:#fef3c7;color:#92400e}
+.bill-status-cancelled{background:#fee2e2;color:#b91c1c}
+.bill-status-none{background:#f1f5f9;color:#475569}
+.bill-faq{border-bottom:1px solid var(--border);padding:14px 0}
+.bill-faq:last-child{border-bottom:none}
+.bill-faq summary{font-weight:600;font-size:13px;color:var(--text);cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between}
+.bill-faq summary::-webkit-details-marker{display:none}
+.bill-faq summary::after{content:'+';font-size:18px;color:var(--muted);font-weight:300;margin-left:10px}
+.bill-faq[open] summary::after{content:'−'}
+.bill-faq-answer{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6}
+body.dark-mode .bill-card,body.dark-mode .bill-plan{background:var(--white);border-color:var(--border)}
 #feedbackOverlay.open{display:flex}
 .fb-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:18px 22px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.04);transition:all .15s}
 .fb-card:hover{box-shadow:0 4px 14px rgba(15,27,61,.06)}
@@ -1754,16 +1778,33 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
 .onboard-actions button:hover{filter:brightness(.92)}
 body.dark-mode .onboard-card{background:#1e293b}
 
-.loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:99990;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;background:rgba(15,23,42,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .2s}
+.loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:99990;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:rgba(15,23,42,.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .2s}
 .loading-overlay.active{opacity:1;pointer-events:auto}
-.loading-spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,.15);border-top-color:#3b82f6;border-radius:50%;animation:loadSpin .7s linear infinite}
+.loading-overlay .loading-logo{width:64px;height:64px;border-radius:14px;background:rgba(59,130,246,.12);display:flex;align-items:center;justify-content:center;animation:loadPulse 2s ease-in-out infinite}
+.loading-overlay .loading-logo svg{width:40px;height:40px}
+@keyframes loadPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.78;transform:scale(.95)}}
+.loading-spinner{width:38px;height:38px;border:3px solid rgba(255,255,255,.15);border-top-color:#3b82f6;border-radius:50%;animation:loadSpin .7s linear infinite}
 @keyframes loadSpin{to{transform:rotate(360deg)}}
 .loading-overlay .loading-msg{font-size:13px;font-weight:600;color:#e2e8f0;letter-spacing:.01em}
+.loading-overlay .loading-brand{font-size:11px;font-weight:700;color:rgba(226,232,240,.6);text-transform:uppercase;letter-spacing:.18em}
 </style>
 </head>
 <body>
-<!-- v1.32.0: Global loading overlay — used by JSON upload, Excel import, sync, backup restore, template import -->
-<div id="loadingOverlay" class="loading-overlay" aria-live="polite"><div class="loading-spinner"></div><div class="loading-msg" id="loadingMsg">Loading...</div></div>
+<!-- v1.42.0: Global loading overlay — branded with the Roadmap OS mark. -->
+<div id="loadingOverlay" class="loading-overlay" aria-live="polite">
+  <div class="loading-logo" aria-hidden="true">
+    <svg viewBox="0 0 32 32" fill="none">
+      <rect width="32" height="32" rx="7" fill="#3b82f6"/>
+      <rect x="4" y="6"  width="24" height="5" rx="2.5" fill="rgba(255,255,255,.92)"/>
+      <rect x="4" y="14" width="15" height="5" rx="2.5" fill="#22c55e"/>
+      <rect x="4" y="21" width="10" height="5" rx="2.5" fill="rgba(255,255,255,.55)"/>
+      <rect x="17" y="21" width="11" height="5" rx="2.5" fill="rgba(255,255,255,.3)"/>
+    </svg>
+  </div>
+  <div class="loading-spinner"></div>
+  <div class="loading-msg" id="loadingMsg">Loading...</div>
+  <div class="loading-brand">Roadmap OS</div>
+</div>
 <a href="#mainContent" class="skip-to-main" onclick="event.preventDefault();var el=document.getElementById('mainContent')||document.getElementById('appContent');if(el){el.setAttribute('tabindex','-1');el.focus();}">Skip to main content</a>
 
 <!-- AUTH OVERLAY (2-column split: marketing hero left, sign-in form right) -->
@@ -2032,6 +2073,10 @@ body.dark-mode .onboard-card{background:#1e293b}
   <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openFeedback()">
     <svg viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
     Feedback
+  </button>
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openBilling()">
+    <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><path d="M7 15h4"/></svg>
+    Billing
   </button>
   <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openCompetitiveAnalysis()">
     <svg viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -2359,6 +2404,33 @@ body.dark-mode .onboard-card{background:#1e293b}
       </select>
     </div>
 
+    <!-- v1.42.0: revenue / labels / owner / timestamps -->
+    <div class="form-row">
+      <label>Revenue / ROI <span style="font-weight:400;color:var(--muted);opacity:.7">(optional)</span></label>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="color:var(--muted);font-weight:600">$</span>
+        <input id="fRevenue" type="number" min="0" step="100" placeholder="0" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--text);background:var(--white)">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label>Labels</label>
+      <div id="fLabelsBox" style="display:flex;flex-wrap:wrap;gap:6px;padding:6px;border:1px solid var(--border);border-radius:6px;background:var(--white);min-height:38px"></div>
+      <input id="fLabelInput" list="fLabelSuggest" placeholder="Type a label and press Enter…" style="margin-top:6px;width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--text);background:var(--white)">
+      <datalist id="fLabelSuggest"></datalist>
+    </div>
+
+    <div class="form-row">
+      <label>Initiative Owner</label>
+      <select id="fOwnerEmail" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--text)"></select>
+    </div>
+
+    <div id="fMetaRow" class="form-row" style="display:none;font-size:11px;color:var(--muted)">
+      <span id="fMetaCreated"></span>
+      <span style="margin:0 8px">&middot;</span>
+      <span id="fMetaUpdated"></span>
+    </div>
+
     <hr style="border:none;border-top:1px solid #e8edf7;margin:16px 0">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Product Initiatives (Timeline Bars)</label>
@@ -2404,6 +2476,17 @@ body.dark-mode .onboard-card{background:#1e293b}
       <div id="modalPlansLink"></div>
       <div id="modalTodoLink"></div>
       <div id="modalTodoOutstanding"></div>
+    </div>
+
+    <!-- v1.42.0: in-row comments thread -->
+    <hr style="border:none;border-top:1px solid var(--border);margin:18px 0">
+    <div id="rowCommentsSection" style="display:none">
+      <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:10px">Comments <span id="rowCommentCount" style="color:var(--accent)"></span></label>
+      <div id="rowCommentsList"></div>
+      <div style="margin-top:10px;display:flex;gap:8px;align-items:flex-start">
+        <textarea id="rowCommentInput" rows="2" placeholder="Add a comment…" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--text);background:var(--white);resize:vertical;font-family:inherit"></textarea>
+        <button class="btn-save" onclick="postRowComment()" style="white-space:nowrap">Post</button>
+      </div>
     </div>
   </div>
   <div class="modal-footer">
@@ -2700,6 +2783,22 @@ body.dark-mode .onboard-card{background:#1e293b}
   </div>
 </div>
 
+<!-- ── BILLING OVERLAY ───────────────────────────────────────────────────── -->
+<div id="billingOverlay">
+  <div style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+    <div class="prio-topbar" style="background:rgba(249,249,250,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0">
+      <h2 style="color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em;display:flex;align-items:center;gap:10px">
+        <svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><path d="M7 15h4"/></svg>
+        Billing &amp; Subscription
+      </h2>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <button class="prio-btn" onclick="closeBilling()">&larr; Back to Roadmap</button>
+      </div>
+    </div>
+    <div class="prio-content" id="billingContent" style="flex:1;overflow-y:auto;padding:24px 28px;background:var(--bg)"></div>
+  </div>
+</div>
+
 <!-- ── FEEDBACK OVERLAY ──────────────────────────────────────────────────── -->
 <div id="feedbackOverlay">
   <div style="display:flex;flex-direction:column;flex:1;overflow:hidden">
@@ -2757,6 +2856,9 @@ body.dark-mode .onboard-card{background:#1e293b}
           <button class="prio-btn" onclick="openTemplateBuilder('plans',{planId:_activePlanId})" title="Browse templates and import tasks into this plan" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>Templates</button>
           <button class="prio-btn" onclick="openExcelImportPicker()" title="Import tasks from an Excel file (MS Project, MS Planner, Asana, Jira, ClickUp, etc.)" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M9 17v-2a4 4 0 014-4h4M9 17l3-3m-3 3l-3-3m12 6V7a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2h6"/></svg>Upload Excel</button>
           <button class="prio-btn" onclick="saveCurrentPlanAsTemplate()" title="Save this plan's structure as a reusable template" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M5 5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V5z M14 3v5h5 M9 13h6 M9 17h4"/></svg>Save as template</button>
+          <!-- v1.42.0: share + follow -->
+          <button class="prio-btn" id="planFollowBtn" onclick="togglePlanFollow()" title="Follow this plan to get alerts on changes" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 20 20" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M1 10s4-6 9-6 9 6 9 6-4 6-9 6-9-6-9-6z"/><circle cx="10" cy="10" r="3"/></svg><span id="planFollowLabel">Follow</span></button>
+          <button class="prio-btn" onclick="openSharePlanModal()" title="Share this plan with teammates" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 20 20" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><circle cx="15" cy="4" r="3"/><circle cx="5" cy="10" r="3"/><circle cx="15" cy="16" r="3"/><line x1="7.5" y1="8.5" x2="12.5" y2="5.5"/><line x1="7.5" y1="11.5" x2="12.5" y2="14.5"/></svg>Share</button>
           <button class="prio-btn primary" onclick="openAddTaskModal()">+ Add task</button>
         </div>
       </div>
@@ -3095,6 +3197,25 @@ var GRADIENTS={g:"linear-gradient(90deg,#16a34a,#22c55e)",b:"linear-gradient(90d
 // ── QUARTER ENGINE ────────────────────────────────────────────
 // Each quarter: {label, year, q, months:[str,...], qBg}
 var Q_BG=["#0F1B3D","#162244","#1a3060","#1e3f7c"];
+
+// v1.42.0: catalog of suggested initiative labels. Free-form additions are
+// allowed; this list just powers autocomplete + chip styling on the Edit
+// modal.
+var INITIATIVE_LABELS = ['UX','UI','Frontend','Backend','Hardware','Data','Security','Infrastructure','DevOps','Marketing','Sales','Support','Legal','Finance','Operations','Mobile','Web','API','Integration','Analytics'];
+
+// Resolve an email to a display name using local profile + cap members.
+function _resolveOwnerName(email){
+  if(!email) return (typeof userProfile!=='undefined' && userProfile && userProfile.name) || 'You';
+  var e = String(email).toLowerCase();
+  if(typeof _currentUser !== 'undefined' && _currentUser && (_currentUser.email||'').toLowerCase() === e){
+    return (typeof userProfile!=='undefined' && userProfile && userProfile.name) || _currentUser.email;
+  }
+  if(typeof capData === 'object' && capData && Array.isArray(capData.members)){
+    var m = capData.members.find(function(x){ return (x.email||'').toLowerCase() === e; });
+    if(m) return m.name || m.email;
+  }
+  return email;
+}
 var ALL_MONTHS=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
 // v1.36.0: FY start month is configurable via configureFYStart(). Default
 // is March (month 3) — the historical hard-coded start. Q_MONTH_MAP is
@@ -3506,6 +3627,18 @@ function openRowKebab(event, rowId){
       '<svg viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>'+
       'Comments'+
       (badgeText ? '<span class="badge">'+escHtml(badgeText)+'</span>' : '')+
+    '</button>'+
+    '<button onclick="closeRowKebab();duplicateRow(\''+escHtml(rowId)+'\')">'+
+      '<svg viewBox="0 0 24 24"><path d="M8 7v10a2 2 0 002 2h7M8 7V5a2 2 0 012-2h6.586a2 2 0 011.414.586l3.414 3.414A2 2 0 0122 8.414V17a2 2 0 01-2 2h-2"/></svg>'+
+      'Duplicate'+
+    '</button>'+
+    '<button onclick="closeRowKebab();toggleRowWatch(\''+escHtml(rowId)+'\')">'+
+      '<svg viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>'+
+      (_isRowWatched(rowId) ? 'Stop watching' : 'Watch')+
+    '</button>'+
+    '<button onclick="closeRowKebab();archiveRow(\''+escHtml(rowId)+'\')">'+
+      '<svg viewBox="0 0 24 24"><path d="M5 8h14m-12 0V6a2 2 0 012-2h6a2 2 0 012 2v2m-9 4h6m-9-4v12a2 2 0 002 2h10a2 2 0 002-2V8"/></svg>'+
+      'Archive'+
     '</button>'+
     '<button class="danger" onclick="closeRowKebab();deleteRow(\''+escHtml(rowId)+'\')">'+
       '<svg viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>'+
@@ -4110,6 +4243,9 @@ function openEditModal(rowId){
   renderAttachmentsForm(row.attachments||[]);
   renderInitiativeLinks(row.initiativeLinks||[]);
   renderModalIntegration(row.name, row.id);
+  // v1.42.0: revenue / labels / owner / timestamps + comments
+  _populateRowExtraFields(row);
+  _renderRowComments(row);
   document.getElementById('rowModal').classList.remove('hidden');
   addVoiceToRowModal();
 }
@@ -4130,8 +4266,215 @@ function openAddRowModal(secId){
   renderLinksForm([]);
   renderAttachmentsForm([]);
   renderInitiativeLinks([]);
+  // v1.42.0: blank revenue / labels / owner; hide meta + comments on new row
+  _populateRowExtraFields(null);
+  var cs = document.getElementById('rowCommentsSection'); if(cs) cs.style.display='none';
   document.getElementById('rowModal').classList.remove('hidden');
   addVoiceToRowModal();
+}
+
+// v1.42.0: populate the new fields. row=null means we're in Add mode.
+function _populateRowExtraFields(row){
+  // Revenue
+  var revInp = document.getElementById('fRevenue');
+  if(revInp) revInp.value = row && row.revenue != null ? row.revenue : '';
+  // Owner dropdown — current user + cap members
+  var ownerSel = document.getElementById('fOwnerEmail');
+  if(ownerSel){
+    var meEmail = (typeof userProfile!=='undefined' && userProfile && userProfile.email) || (_currentUser && _currentUser.email) || '';
+    var meName  = (typeof userProfile!=='undefined' && userProfile && userProfile.name) || meEmail || 'You';
+    var opts = '<option value="'+escHtml(meEmail)+'">'+escHtml(meName)+' (You)</option>';
+    if(typeof capData==='object' && capData && Array.isArray(capData.members)){
+      capData.members.forEach(function(m){
+        if(!m.email || (m.email||'').toLowerCase() === (meEmail||'').toLowerCase()) return;
+        opts += '<option value="'+escHtml(m.email)+'">'+escHtml(m.name||m.email)+'</option>';
+      });
+    }
+    ownerSel.innerHTML = opts;
+    ownerSel.value = (row && row.ownerEmail) || meEmail;
+  }
+  // Labels
+  var box = document.getElementById('fLabelsBox');
+  var inp = document.getElementById('fLabelInput');
+  var dl  = document.getElementById('fLabelSuggest');
+  if(box){
+    box.innerHTML = '';
+    var labs = (row && Array.isArray(row.labels)) ? row.labels.slice() : [];
+    labs.forEach(_addLabelChip);
+  }
+  if(dl){
+    dl.innerHTML = INITIATIVE_LABELS.map(function(l){ return '<option value="'+escHtml(l)+'">'; }).join('');
+  }
+  if(inp){
+    inp.value = '';
+    inp.onkeydown = function(e){
+      if(e.key === 'Enter' || e.key === ','){
+        e.preventDefault();
+        var v = (inp.value || '').trim().replace(/,$/,'').trim();
+        if(v) _addLabelChip(v);
+        inp.value = '';
+      }
+    };
+  }
+  // Timestamps
+  var meta = document.getElementById('fMetaRow');
+  if(meta){
+    if(row && (row.createdAt || row.updatedAt)){
+      meta.style.display = 'block';
+      var c = row.createdAt ? new Date(row.createdAt).toLocaleString() : '';
+      var u = row.updatedAt ? new Date(row.updatedAt).toLocaleString() : '';
+      var cEl = document.getElementById('fMetaCreated'); if(cEl) cEl.textContent = c ? 'Created: '+c : '';
+      var uEl = document.getElementById('fMetaUpdated'); if(uEl) uEl.textContent = u ? 'Updated: '+u : '';
+    } else {
+      meta.style.display = 'none';
+    }
+  }
+}
+
+function _addLabelChip(label){
+  var box = document.getElementById('fLabelsBox');
+  if(!box) return;
+  // de-dupe
+  var have = Array.prototype.some.call(box.querySelectorAll('[data-label]'), function(el){ return (el.getAttribute('data-label')||'').toLowerCase() === (label||'').toLowerCase(); });
+  if(have) return;
+  var chip = document.createElement('span');
+  chip.setAttribute('data-label', label);
+  chip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;background:rgba(59,130,246,.12);color:var(--accent);font-size:11px;font-weight:600';
+  chip.innerHTML = escHtml(label) + '<button type="button" aria-label="Remove" style="background:none;border:none;color:inherit;opacity:.7;cursor:pointer;padding:0 0 0 2px;font-size:14px;line-height:1">&times;</button>';
+  chip.querySelector('button').onclick = function(){ chip.remove(); };
+  box.appendChild(chip);
+}
+
+// v1.42.0: render comments thread on the row edit modal. Existing
+// commenting infrastructure (postComment, threaded replies on the timeline
+// bars) lives elsewhere — this is a lightweight per-row inline thread
+// stored on row.comments[].
+function _renderRowComments(row){
+  var sec = document.getElementById('rowCommentsSection');
+  var list = document.getElementById('rowCommentsList');
+  var count = document.getElementById('rowCommentCount');
+  var input = document.getElementById('rowCommentInput');
+  if(!sec || !list) return;
+  sec.style.display = 'block';
+  if(input) input.value = '';
+  var cs = Array.isArray(row.comments) ? row.comments : [];
+  if(count) count.textContent = cs.length ? '('+cs.length+')' : '';
+  if(!cs.length){
+    list.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px 0">No comments yet. Be the first to share your thoughts.</div>';
+    return;
+  }
+  var meEmail = ((_currentUser && _currentUser.email) || (typeof userProfile!=='undefined' && userProfile && userProfile.email) || '').toLowerCase();
+  list.innerHTML = cs.map(function(c){
+    var when = c.createdAt ? _timeAgo(c.createdAt) : '';
+    var likedBy = Array.isArray(c.likedBy) ? c.likedBy : [];
+    var iLiked = meEmail && likedBy.indexOf(meEmail) >= 0;
+    var mine = (c.userEmail || '').toLowerCase() === meEmail;
+    var replies = Array.isArray(c.replies) ? c.replies : [];
+    var repliesHtml = replies.map(function(r){
+      return '<div style="padding:6px 0 6px 12px;border-left:2px solid var(--border);margin-top:6px;font-size:12px">'+
+        '<div style="display:flex;align-items:center;gap:6px;color:var(--muted)"><strong style="color:var(--text)">'+escHtml(r.userName||r.userEmail||'')+'</strong><span>'+_timeAgo(r.createdAt)+'</span></div>'+
+        '<div style="margin-top:2px">'+escHtml(r.content||'')+'</div>'+
+      '</div>';
+    }).join('');
+    return '<div data-comment-id="'+escHtml(c.id)+'" style="padding:10px 0;border-bottom:1px solid var(--border)">'+
+      '<div style="display:flex;align-items:center;gap:8px"><strong style="font-size:12px;color:var(--text)">'+escHtml(c.userName||c.userEmail||'Someone')+'</strong>'+
+        '<span style="font-size:11px;color:var(--muted)">'+escHtml(when)+'</span></div>'+
+      '<div style="font-size:13px;color:var(--text);margin:4px 0 6px">'+escHtml(c.content||'')+'</div>'+
+      '<div style="display:flex;gap:10px;font-size:11px">'+
+        '<button type="button" onclick="toggleRowCommentLike(\''+escHtml(c.id)+'\')" style="background:none;border:none;color:'+(iLiked?'var(--accent)':'var(--muted)')+';cursor:pointer;font-weight:600">\u2665 '+(c.likes||0)+'</button>'+
+        '<button type="button" onclick="showRowCommentReply(\''+escHtml(c.id)+'\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-weight:600">Reply</button>'+
+        (mine ? '<button type="button" onclick="deleteRowComment(\''+escHtml(c.id)+'\')" style="background:none;border:none;color:#dc2626;cursor:pointer;font-weight:600">Delete</button>' : '')+
+      '</div>'+
+      repliesHtml +
+      '<div id="rowReplyForm_'+escHtml(c.id)+'" style="display:none;margin-top:6px;display:none;gap:6px"><input type="text" placeholder="Write a reply…" style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--white);color:var(--text)"><button type="button" class="btn-save" onclick="postRowCommentReply(\''+escHtml(c.id)+'\')">Reply</button></div>'+
+    '</div>';
+  }).join('');
+}
+
+function _timeAgo(iso){
+  if(!iso) return '';
+  var d = new Date(iso); if(isNaN(d)) return '';
+  var s = Math.floor((Date.now() - d.getTime())/1000);
+  if(s < 60) return 'just now';
+  if(s < 3600) return Math.floor(s/60)+'m ago';
+  if(s < 86400) return Math.floor(s/3600)+'h ago';
+  return Math.floor(s/86400)+'d ago';
+}
+
+function postRowComment(){
+  if(!editingRowId) return;
+  var row = rows.find(function(r){ return r.id === editingRowId; });
+  if(!row) return;
+  var inp = document.getElementById('rowCommentInput');
+  var content = (inp && inp.value || '').trim();
+  if(!content) return;
+  if(!Array.isArray(row.comments)) row.comments = [];
+  var meEmail = (_currentUser && _currentUser.email) || (typeof userProfile!=='undefined' && userProfile && userProfile.email) || '';
+  var meName = (typeof userProfile!=='undefined' && userProfile && userProfile.name) || meEmail || 'You';
+  row.comments.push({
+    id: 'c_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+    userEmail: meEmail, userName: meName,
+    content: content, likes: 0, likedBy: [], replies: [],
+    createdAt: new Date().toISOString()
+  });
+  row.updatedAt = new Date().toISOString();
+  persistData();
+  _renderRowComments(row);
+  if(typeof _notifyRowWatchers === 'function') _notifyRowWatchers(editingRowId, 'comment', { summary: meName + ' commented on "'+row.name+'"' });
+}
+
+function toggleRowCommentLike(commentId){
+  var row = rows.find(function(r){ return r.id === editingRowId; });
+  if(!row || !row.comments) return;
+  var c = row.comments.find(function(x){ return x.id === commentId; });
+  if(!c) return;
+  if(!Array.isArray(c.likedBy)) c.likedBy = [];
+  var meEmail = ((_currentUser && _currentUser.email) || (typeof userProfile!=='undefined' && userProfile && userProfile.email) || '').toLowerCase();
+  var i = c.likedBy.indexOf(meEmail);
+  if(i >= 0){ c.likedBy.splice(i,1); c.likes = Math.max(0, (c.likes||0)-1); }
+  else      { c.likedBy.push(meEmail); c.likes = (c.likes||0)+1; }
+  persistData();
+  _renderRowComments(row);
+}
+
+function showRowCommentReply(commentId){
+  var f = document.getElementById('rowReplyForm_'+commentId);
+  if(!f) return;
+  f.style.display = (f.style.display === 'flex' ? 'none' : 'flex');
+  if(f.style.display === 'flex'){ var i = f.querySelector('input'); if(i) i.focus(); }
+}
+
+function postRowCommentReply(commentId){
+  var row = rows.find(function(r){ return r.id === editingRowId; });
+  if(!row) return;
+  var c = (row.comments||[]).find(function(x){ return x.id === commentId; });
+  if(!c) return;
+  var f = document.getElementById('rowReplyForm_'+commentId);
+  var inp = f && f.querySelector('input');
+  var content = (inp && inp.value || '').trim();
+  if(!content) return;
+  if(!Array.isArray(c.replies)) c.replies = [];
+  var meEmail = (_currentUser && _currentUser.email) || (typeof userProfile!=='undefined' && userProfile && userProfile.email) || '';
+  var meName = (typeof userProfile!=='undefined' && userProfile && userProfile.name) || meEmail || 'You';
+  c.replies.push({
+    id: 'cr_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+    userEmail: meEmail, userName: meName, content: content,
+    createdAt: new Date().toISOString()
+  });
+  row.updatedAt = new Date().toISOString();
+  persistData();
+  _renderRowComments(row);
+  if(typeof _notifyRowWatchers === 'function') _notifyRowWatchers(editingRowId, 'reply', { summary: meName + ' replied on "'+row.name+'"' });
+}
+
+function deleteRowComment(commentId){
+  if(!confirm('Delete this comment?')) return;
+  var row = rows.find(function(r){ return r.id === editingRowId; });
+  if(!row || !row.comments) return;
+  row.comments = row.comments.filter(function(c){ return c.id !== commentId; });
+  row.updatedAt = new Date().toISOString();
+  persistData();
+  _renderRowComments(row);
 }
 
 function closeModal(){ document.getElementById('rowModal').classList.add('hidden'); }
@@ -4681,6 +5024,19 @@ function saveRow(){
     });
   }
 
+  // v1.42.0: extra initiative fields — revenue, labels, owner, timestamps.
+  var _revInp = document.getElementById('fRevenue');
+  var _ownerInp = document.getElementById('fOwnerEmail');
+  var _revenue = _revInp ? (parseFloat(_revInp.value) || 0) : undefined;
+  var _ownerEmail = _ownerInp ? (_ownerInp.value || '').trim() : undefined;
+  var _labels = (function(){
+    var box = document.getElementById('fLabelsBox');
+    if(!box) return undefined;
+    return Array.prototype.slice.call(box.querySelectorAll('[data-label]'))
+      .map(function(el){ return el.getAttribute('data-label'); });
+  })();
+  var _now = new Date().toISOString();
+
   if(editingRowId){
     var row=rows.find(function(r){return r.id===editingRowId});
     var _prevName = row.name;
@@ -4690,12 +5046,33 @@ function saveRow(){
     row.bars=bars; row.priorities=priorities; row.deliverables=deliverables;
     row.links=links; row.attachments=attachments; row.initiativeLinks=initLinks;
     row.parentRowId = parentRowId;
+    if(_revenue !== undefined) row.revenue = _revenue;
+    if(_labels !== undefined) row.labels = _labels;
+    if(_ownerEmail !== undefined){
+      row.ownerEmail = _ownerEmail;
+      row.owner = _resolveOwnerName(_ownerEmail);
+    }
+    if(!row.createdAt) row.createdAt = _now;
+    row.updatedAt = _now;
     _appendChangeLog('edit', editingRowId, _prevName!==name ? ('Renamed "'+_prevName+'" \u2192 "'+name+'"') : ('Edited "'+name+'"'));
+    if(typeof _notifyRowWatchers === 'function'){
+      _notifyRowWatchers(editingRowId, 'edit', { summary: 'Edited "'+name+'"' });
+    }
     if(!_prevHadG && _newHasG && typeof pushLocalNotification==='function'){
       pushLocalNotification('ship', 'Shipped: '+name, 'An initiative bar moved to Released.', 'row:'+editingRowId);
+      if(typeof _notifyRowWatchers === 'function'){
+        _notifyRowWatchers(editingRowId, 'shipped', { summary: '"'+name+'" shipped' });
+      }
     }
   } else {
-    var newRow={id:'r'+Date.now(),sec:secId,name:name,sub:sub,priority:priority,bars:bars,priorities:priorities,deliverables:deliverables,links:links,attachments:attachments,initiativeLinks:initLinks,parentRowId:parentRowId};
+    var newRow={id:'r'+Date.now(),sec:secId,name:name,sub:sub,priority:priority,bars:bars,priorities:priorities,deliverables:deliverables,links:links,attachments:attachments,initiativeLinks:initLinks,parentRowId:parentRowId,
+      revenue: _revenue || 0,
+      labels: Array.isArray(_labels) ? _labels : [],
+      ownerEmail: _ownerEmail || ((typeof userProfile!=='undefined' && userProfile && userProfile.email) || (_currentUser && _currentUser.email) || ''),
+      owner: _resolveOwnerName(_ownerEmail),
+      watchers: [],
+      createdAt: _now, updatedAt: _now
+    };
     _appendChangeLog('create', newRow.id, 'Created "'+name+'"');
     // Insert after the last row in this section (not at array end)
     var lastIdxInSec=-1;
@@ -4741,6 +5118,159 @@ function deleteRow(rowId){
   if(gone) _appendChangeLog('delete', rowId, 'Deleted "'+(gone.name||rowId)+'"');
   render();
   persistData();
+}
+
+// v1.42.0: Duplicate / Archive / Watch helpers + viewer.
+function duplicateRow(rowId){
+  if(!canEdit('roadmap')){ showToast("Read-only — can't duplicate",'error'); return; }
+  var src = rows.find(function(r){ return r.id === rowId; });
+  if(!src){ showToast('Row not found','error'); return; }
+  var copy = JSON.parse(JSON.stringify(src));
+  copy.id = 'r'+Date.now()+'_'+Math.random().toString(36).slice(2,5);
+  copy.name = (src.name || 'Untitled') + ' (Copy)';
+  copy.comments = [];
+  copy.watchers = [];
+  copy.createdAt = new Date().toISOString();
+  copy.updatedAt = copy.createdAt;
+  // Regenerate IDs on nested initiatives
+  (copy.initiativeLinks || []).forEach(function(){});
+  // Insert right after the source
+  var idx = rows.indexOf(src);
+  rows.splice(idx + 1, 0, copy);
+  _appendChangeLog('create', copy.id, 'Duplicated "'+(src.name||'')+'"');
+  render();
+  persistData();
+  showToast('"'+src.name+'" duplicated', 'success');
+}
+
+function archiveRow(rowId){
+  if(!canEdit('roadmap')){ showToast("Read-only — can't archive",'error'); return; }
+  var src = rows.find(function(r){ return r.id === rowId; });
+  if(!src) return;
+  if(!confirm('Archive "'+(src.name||'this row')+'"? You can restore it later from the archive.')) return;
+  if(!Array.isArray(currentArchiveList())) initArchiveList();
+  var sec = sections.find(function(s){ return s.id === src.sec; });
+  var archEntry = JSON.parse(JSON.stringify(src));
+  archEntry.archivedAt = new Date().toISOString();
+  archEntry.archivedFromSectionId = src.sec || '';
+  archEntry.archivedFromSectionName = sec ? sec.name : '';
+  currentArchiveList().push(archEntry);
+  rows = rows.filter(function(r){ return r.id !== rowId; });
+  _appendChangeLog('archive', rowId, 'Archived "'+(src.name||'')+'"');
+  render();
+  persistData();
+  showToast('"'+src.name+'" archived', 'info');
+}
+
+function currentArchiveList(){
+  // The archive list lives inside the global data blob. Initialize on demand.
+  if(typeof window._roadmapArchive === 'undefined'){ window._roadmapArchive = []; }
+  return window._roadmapArchive;
+}
+function initArchiveList(){ window._roadmapArchive = []; }
+
+function showRowArchive(){
+  var list = currentArchiveList();
+  var existing = document.getElementById('archiveOverlay');
+  if(existing) existing.remove();
+  var ov = document.createElement('div');
+  ov.id = 'archiveOverlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9100;display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
+  var panel = document.createElement('div');
+  panel.style.cssText = 'background:var(--white);color:var(--text);border:1px solid var(--border);border-radius:14px;width:100%;max-width:600px;max-height:82vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.35)';
+  var rowsHtml = list.length
+    ? list.map(function(it){
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);gap:10px">'+
+          '<div style="flex:1;min-width:0">'+
+            '<div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(it.name||'(unnamed)')+'</div>'+
+            '<div style="font-size:11px;color:var(--muted);margin-top:2px">From '+escHtml(it.archivedFromSectionName||'—')+' &middot; Archived '+_timeAgo(it.archivedAt)+'</div>'+
+          '</div>'+
+          '<button class="prio-btn" onclick="restoreArchivedRow(\''+escHtml(it.id)+'\')" style="font-size:11px;padding:5px 10px">Restore</button>'+
+          '<button class="prio-btn" onclick="deleteArchivedRow(\''+escHtml(it.id)+'\')" style="font-size:11px;padding:5px 10px;color:#dc2626;border-color:#fca5a5">Delete</button>'+
+        '</div>';
+      }).join('')
+    : '<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px">No archived rows.</div>';
+  panel.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)"><h3 style="margin:0;font-size:16px;font-weight:700">Archived rows ('+list.length+')</h3><button onclick="document.getElementById(\'archiveOverlay\').remove()" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer">&times;</button></div>'+
+    '<div style="overflow-y:auto;flex:1">'+rowsHtml+'</div>';
+  ov.appendChild(panel);
+  document.body.appendChild(ov);
+}
+
+function restoreArchivedRow(rowId){
+  var list = currentArchiveList();
+  var it = list.find(function(x){ return x.id === rowId; });
+  if(!it) return;
+  var sec = sections.find(function(s){ return s.id === it.archivedFromSectionId; });
+  if(!sec) sec = sections[0];
+  if(!sec){
+    sec = { id: 's_restore_'+Date.now(), name: 'Restored', color: '#6b7280' };
+    sections.push(sec);
+  }
+  var restored = JSON.parse(JSON.stringify(it));
+  delete restored.archivedAt;
+  delete restored.archivedFromSectionId;
+  delete restored.archivedFromSectionName;
+  restored.sec = sec.id;
+  restored.updatedAt = new Date().toISOString();
+  rows.push(restored);
+  window._roadmapArchive = list.filter(function(x){ return x.id !== rowId; });
+  _appendChangeLog('restore', rowId, 'Restored "'+(restored.name||'')+'"');
+  persistData();
+  render();
+  var ov = document.getElementById('archiveOverlay');
+  if(ov) ov.remove();
+  showToast('"'+restored.name+'" restored', 'success');
+}
+
+function deleteArchivedRow(rowId){
+  if(!confirm('Permanently delete this archived row?')) return;
+  window._roadmapArchive = currentArchiveList().filter(function(x){ return x.id !== rowId; });
+  persistData();
+  showRowArchive();
+  showToast('Permanently deleted', 'info');
+}
+
+function _isRowWatched(rowId){
+  var row = rows.find(function(r){ return r.id === rowId; });
+  if(!row || !Array.isArray(row.watchers)) return false;
+  var meEmail = ((_currentUser && _currentUser.email) || (typeof userProfile!=='undefined' && userProfile && userProfile.email) || '').toLowerCase();
+  return row.watchers.some(function(w){ return (w.email||'').toLowerCase() === meEmail; });
+}
+
+function toggleRowWatch(rowId){
+  var row = rows.find(function(r){ return r.id === rowId; });
+  if(!row) return;
+  if(!Array.isArray(row.watchers)) row.watchers = [];
+  var meEmail = (_currentUser && _currentUser.email) || (typeof userProfile!=='undefined' && userProfile && userProfile.email) || '';
+  var meName = (typeof userProfile!=='undefined' && userProfile && userProfile.name) || meEmail || 'You';
+  var meEmailLc = meEmail.toLowerCase();
+  var i = row.watchers.findIndex(function(w){ return (w.email||'').toLowerCase() === meEmailLc; });
+  if(i >= 0){
+    row.watchers.splice(i,1);
+    showToast('Stopped watching this row', 'info');
+  } else {
+    row.watchers.push({ email: meEmail, name: meName, watchedAt: new Date().toISOString() });
+    showToast('Watching this row — you\u2019ll get alerts on changes', 'success');
+  }
+  persistData();
+}
+
+// v1.42.0: notify watchers of a row change. Pushes a local notification
+// for every watcher except the actor. Server-side fanout would need an
+// edge function call — here we just record locally so the watcher sees it
+// the next time they sign in on this device.
+function _notifyRowWatchers(rowId, eventType, details){
+  var row = rows.find(function(r){ return r.id === rowId; });
+  if(!row || !Array.isArray(row.watchers) || !row.watchers.length) return;
+  var meEmail = ((_currentUser && _currentUser.email) || (typeof userProfile!=='undefined' && userProfile && userProfile.email) || '').toLowerCase();
+  row.watchers.forEach(function(w){
+    if((w.email||'').toLowerCase() === meEmail) return;
+    if(typeof pushLocalNotification === 'function'){
+      pushLocalNotification('row_'+eventType, (details && details.summary) || 'Row updated', '"'+row.name+'" was updated', 'row:'+rowId);
+    }
+  });
 }
 
 // ── SECTION ───────────────────────────────────────────────────────────────────
@@ -6914,6 +7444,12 @@ async function handleMicrosoftAuth(){
 }
 async function onAuthSuccess(user){
   hideAuthOverlay();
+  // v1.42.0: reset the navigation history so the first Back press after
+  // sign-in stays inside the SPA instead of going to the login screen.
+  if(typeof _pmrSeedAfterLogin === 'function'){ try { _pmrSeedAfterLogin(); } catch(_){} }
+  // v1.42.0: if the user just signed in via a shared-plan deep link, the
+  // target is in sessionStorage. Honor it after data load below by calling
+  // _consumeSharedPlanDeepLink.
 
   // ── STEP 1: Kill all pending timers from previous session ──
   if(_syncTimer) { clearTimeout(_syncTimer); _syncTimer=null; }
@@ -7057,6 +7593,8 @@ async function onAuthSuccess(user){
   setTimeout(function(){ if(typeof _redeemInviteFromUrl === 'function') _redeemInviteFromUrl(); }, 900);
   setTimeout(checkShowTour, 2500);
   setTimeout(checkOnboarding, 1500); // v1.32.0 FIX 15: trigger onboarding for new users
+  // v1.42.0: honor shared-plan deep links once data is loaded.
+  if(typeof _consumeSharedPlanDeepLink === 'function') setTimeout(_consumeSharedPlanDeepLink, 800);
   console.log('Signed in successfully');  // v1.25.0: PII removed from log
   // v1.33.0 — if the user just returned from a "Connect Calendar" OAuth
   // round-trip, jump them straight back to Capacity instead of the default
@@ -7274,6 +7812,9 @@ function applyDataPayload(d){
   if(typeof d.roadmapRangePreset === 'string') _roadmapRangePreset = d.roadmapRangePreset;
   if(Array.isArray(d.roadmapChangeLog)) _roadmapChangeLog = d.roadmapChangeLog;
   if(Array.isArray(d.localNotifications)) _localNotifications = d.localNotifications;
+  if(Array.isArray(d.roadmapArchive)) window._roadmapArchive = d.roadmapArchive;
+  if(Array.isArray(d.planFollowers)) window._planFollowers = d.planFollowers;
+  if(Array.isArray(d.planShares)) window._planShares = d.planShares;
   if(Array.isArray(d.projectPlans)){
     projectPlans = d.projectPlans;
     if(!_activePlanId && projectPlans.length) _activePlanId = projectPlans[0].id;
@@ -7333,7 +7874,7 @@ function applyDataPayload(d){
   if(aTab&&aTab.sections){sections=aTab.sections;rows=aTab.rows;if(aTab.quarters)quarters=aTab.quarters;}
 }
 function buildDataPayload(){
-  return {sections:sections,rows:rows,quarters:quarters,tabs_data:tabs_data,activeTabId:activeTabId,g2mData:g2mAllData,todoData:todoAllData,kpiData:kpiAllData,timesheetData:timesheetData,ucrData:ucrAllData,artifactsData:artifactsData,brandGuideData:brandGuideData,artTemplates:artTemplates,capData:capData,prioritization:prioritizationData,roadmapSortBy:_roadmapSortBy,projectPlans:projectPlans,planTemplates:planTemplates,okrs:okrsData,roadmapView:_roadmapView,roadmapRangePreset:_roadmapRangePreset,roadmapChangeLog:_roadmapChangeLog,localNotifications:_localNotifications,taskLibrary:taskLibrary,taskLibrarySeeded:_taskLibrarySeeded,_usageStats:_usageStats,
+  return {sections:sections,rows:rows,quarters:quarters,tabs_data:tabs_data,activeTabId:activeTabId,g2mData:g2mAllData,todoData:todoAllData,kpiData:kpiAllData,timesheetData:timesheetData,ucrData:ucrAllData,artifactsData:artifactsData,brandGuideData:brandGuideData,artTemplates:artTemplates,capData:capData,prioritization:prioritizationData,roadmapSortBy:_roadmapSortBy,projectPlans:projectPlans,planTemplates:planTemplates,okrs:okrsData,roadmapView:_roadmapView,roadmapRangePreset:_roadmapRangePreset,roadmapChangeLog:_roadmapChangeLog,localNotifications:_localNotifications,roadmapArchive:(typeof window!=='undefined'?window._roadmapArchive:undefined)||[],planFollowers:(typeof window!=='undefined'?window._planFollowers:undefined)||[],planShares:(typeof window!=='undefined'?window._planShares:undefined)||[],taskLibrary:taskLibrary,taskLibrarySeeded:_taskLibrarySeeded,_usageStats:_usageStats,
     // v1.33.0 — sync capacity + integrations across devices.
     settings:{
       capacity: (appSettings&&appSettings.capacity) || {hoursPerWeek:40,hoursPerDay:8,workDays:5},
@@ -16593,6 +17134,145 @@ function closePlans(){
   var ov = document.getElementById('plansOverlay');
   if(ov) ov.classList.remove('open');
 }
+
+// v1.42.0: Plan share + follow.
+// `currentData.planFollowers` is an array of { planId, email } records that
+// rides along in the user's data blob. Followers get an in-app alert on
+// any plan change; only assignees get an email when the change touches a
+// task they own.
+function togglePlanFollow(){
+  if(!_activePlanId){ showToast('Open a plan first','warning'); return; }
+  if(!Array.isArray(window._planFollowers)) window._planFollowers = [];
+  var meEmail = ((_currentUser && _currentUser.email) || (typeof userProfile!=='undefined' && userProfile && userProfile.email) || '').toLowerCase();
+  if(!meEmail){ showToast('Sign in to follow plans','warning'); return; }
+  var idx = window._planFollowers.findIndex(function(f){ return f.planId === _activePlanId && (f.email||'').toLowerCase() === meEmail; });
+  if(idx >= 0){
+    window._planFollowers.splice(idx, 1);
+    showToast('Stopped following this plan','info');
+  } else {
+    window._planFollowers.push({ planId: _activePlanId, email: meEmail, followedAt: new Date().toISOString() });
+    showToast('Following this plan — you\u2019ll get alerts on changes','success');
+  }
+  persistData();
+  _updatePlanFollowBtn();
+}
+
+function _isPlanFollowed(planId){
+  if(!Array.isArray(window._planFollowers)) return false;
+  var meEmail = ((_currentUser && _currentUser.email) || (typeof userProfile!=='undefined' && userProfile && userProfile.email) || '').toLowerCase();
+  return window._planFollowers.some(function(f){ return f.planId === planId && (f.email||'').toLowerCase() === meEmail; });
+}
+
+function _updatePlanFollowBtn(){
+  var lbl = document.getElementById('planFollowLabel');
+  var btn = document.getElementById('planFollowBtn');
+  if(!lbl || !btn || !_activePlanId) return;
+  var following = _isPlanFollowed(_activePlanId);
+  lbl.textContent = following ? 'Following' : 'Follow';
+  btn.style.background = following ? '#dbeafe' : '';
+  btn.style.borderColor = following ? '#bfdbfe' : '';
+  btn.style.color = following ? 'var(--navy)' : '';
+}
+
+function openSharePlanModal(){
+  if(!_activePlanId){ showToast('Open a plan first','warning'); return; }
+  var plan = (typeof projectPlans !== 'undefined') ? projectPlans.find(function(p){ return p.id === _activePlanId; }) : null;
+  if(!plan){ showToast('Plan not found','error'); return; }
+  var existing = document.getElementById('sharePlanOverlay');
+  if(existing) existing.remove();
+  var ov = document.createElement('div');
+  ov.id = 'sharePlanOverlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9100;display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
+  var panel = document.createElement('div');
+  panel.style.cssText = 'background:var(--white);color:var(--text);border:1px solid var(--border);border-radius:14px;width:100%;max-width:520px;max-height:88vh;overflow:auto;box-shadow:0 24px 64px rgba(0,0,0,.35);padding:22px';
+  panel.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><h3 style="margin:0;font-size:16px;font-weight:700">Share \u201C'+escHtml(plan.name||'Untitled plan')+'\u201D</h3><button onclick="document.getElementById(\'sharePlanOverlay\').remove()" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer">&times;</button></div>'+
+    '<label style="display:block;margin-bottom:10px"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Share with (email)</div>'+
+      '<div id="sharePlanList" style="display:flex;flex-direction:column;gap:6px"><div class="share-plan-row" style="display:flex;gap:6px"><input type="email" placeholder="email@company.com" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--white);color:var(--text)"><button type="button" onclick="_addSharePlanRow()" style="padding:6px 12px;border:1px solid var(--border);border-radius:8px;background:var(--white);color:var(--text);font-size:14px;cursor:pointer">+</button></div></div>'+
+    '</label>'+
+    '<label style="display:block;margin-bottom:10px"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Permission</div>'+
+      '<select id="sharePlanPerm" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--white);color:var(--text)">'+
+        '<option value="view">View only</option><option value="comment">Can comment</option><option value="edit">Can edit</option>'+
+      '</select>'+
+    '</label>'+
+    '<label style="display:block;margin-bottom:14px"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Message (optional)</div>'+
+      '<textarea id="sharePlanMsg" rows="3" placeholder="Add a note for the recipients\u2026" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--white);color:var(--text);font-family:inherit;resize:vertical"></textarea>'+
+    '</label>'+
+    '<div style="font-size:11px;color:var(--muted);margin-bottom:12px">External users without an account get a sign-up link. After onboarding, they\u2019ll land on this plan automatically.</div>'+
+    '<div style="display:flex;justify-content:flex-end;gap:8px"><button class="prio-btn" onclick="document.getElementById(\'sharePlanOverlay\').remove()">Cancel</button><button class="prio-btn primary" onclick="sendSharePlanInvites(\''+escHtml(_activePlanId)+'\')">Send</button></div>';
+  ov.appendChild(panel);
+  document.body.appendChild(ov);
+}
+
+function _addSharePlanRow(){
+  var list = document.getElementById('sharePlanList'); if(!list) return;
+  var row = document.createElement('div');
+  row.className = 'share-plan-row'; row.style.cssText = 'display:flex;gap:6px';
+  row.innerHTML = '<input type="email" placeholder="email@company.com" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--white);color:var(--text)"><button type="button" onclick="this.parentElement.remove()" style="padding:6px 12px;border:1px solid var(--border);border-radius:8px;background:var(--white);color:var(--text);font-size:14px;cursor:pointer">x</button>';
+  list.appendChild(row);
+  var inp = row.querySelector('input'); if(inp) inp.focus();
+}
+
+async function sendSharePlanInvites(planId){
+  var emails = Array.from(document.querySelectorAll('#sharePlanList input'))
+    .map(function(i){ return (i.value||'').trim(); })
+    .filter(function(e){ return e && e.indexOf('@') > 0; });
+  if(!emails.length){ showToast('Enter at least one email','warning'); return; }
+  var perm = (document.getElementById('sharePlanPerm')||{}).value || 'view';
+  var msg  = (document.getElementById('sharePlanMsg')||{}).value || '';
+  var deepLink = (window.location.origin || 'https://app.pmroadmapper.com') + '/#plans?planId=' + encodeURIComponent(planId);
+  showLoading('Sharing plan\u2026');
+  if(!Array.isArray(window._planShares)) window._planShares = [];
+  var ok = 0, fail = 0;
+  for(var i = 0; i < emails.length; i++){
+    try {
+      var r = await _dbReq('/functions/v1/send-invite', 'POST', {
+        email: emails[i],
+        kind: 'plan_share',
+        planId: planId,
+        permission: perm,
+        message: msg,
+        link: deepLink
+      });
+      if(r && r.ok) ok++; else fail++;
+      window._planShares.push({ planId: planId, email: emails[i], permission: perm, sharedAt: new Date().toISOString() });
+    } catch(e){ fail++; console.warn('[share-plan]', emails[i], e && e.message); }
+  }
+  persistData();
+  hideLoading();
+  var ov = document.getElementById('sharePlanOverlay'); if(ov) ov.remove();
+  if(ok) showToast('Plan shared with '+ok+' '+(ok===1?'person':'people'),'success');
+  if(fail) showToast(fail+' invite'+(fail>1?'s':'')+' failed','error');
+}
+
+// On a fresh sign-in, if the URL hash carries `#plans?planId=...`, stash the
+// target so post-onboarding we can land the user directly on that plan.
+function _captureSharedPlanDeepLink(){
+  try {
+    var hash = (window.location.hash || '').replace(/^#/,'');
+    if(hash.indexOf('plans?planId=') !== 0) return;
+    var pid = new URLSearchParams(hash.split('?')[1] || '').get('planId');
+    if(pid) sessionStorage.setItem('pmr_post_signin_target', JSON.stringify({ view:'plans', planId: pid }));
+  } catch(_){}
+}
+_captureSharedPlanDeepLink();
+
+function _consumeSharedPlanDeepLink(){
+  try {
+    var raw = sessionStorage.getItem('pmr_post_signin_target');
+    if(!raw) return;
+    sessionStorage.removeItem('pmr_post_signin_target');
+    var t = JSON.parse(raw);
+    if(t && t.view === 'plans'){
+      if(typeof openPlans === 'function') openPlans();
+      if(t.planId){
+        _activePlanId = t.planId;
+        if(typeof renderPlanMain === 'function') setTimeout(renderPlanMain, 50);
+      }
+    }
+  } catch(_){}
+}
 function planCreateAndFocus(){
   // v1.21.0: if the user has any saved plan templates, give them a chooser
   // (blank vs from-template) before creating. With zero templates we just
@@ -16696,6 +17376,360 @@ function openFeedback(){
 function closeFeedback(){
   var ov = document.getElementById('feedbackOverlay');
   if(ov) ov.classList.remove('open');
+}
+
+// ── Billing & Subscription page ────────────────────────────────────────
+// Pricing constants — keep in sync with /lib/links.ts on the marketing site
+// (https://github.com/VelaV33/pm-roadmapper-site/blob/main/lib/links.ts).
+var BILLING_LINKS = {
+  paystackStandardMonthly: 'https://paystack.shop/pay/pmroadmapper',
+  paystackProMonthly:      'https://paystack.shop/pay/roadmapos',
+  // Yearly plans aren't on Paystack hosted yet — submit a switch_plan request
+  // and the team converts via the Paystack API. Same for retention discount.
+  contactSalesUrl:         'https://pmroadmapper.com/contact?topic=sales',
+  pricingPageUrl:          'https://pmroadmapper.com/pricing'
+};
+
+var BILLING_PLANS = [
+  { id:'standard_monthly', tier:'standard', cycle:'monthly', name:'Standard', price:17,  unit:'/mo',  paystackUrl:BILLING_LINKS.paystackStandardMonthly, perks:['Visual Roadmap','G2M Readiness','Tasks &amp; Kanban','KPI Scorecard','CapacityIQ','Local-first + cloud sync'] },
+  { id:'pro_monthly',      tier:'pro',      cycle:'monthly', name:'Pro',      price:25,  unit:'/mo',  paystackUrl:BILLING_LINKS.paystackProMonthly,      perks:['Everything in Standard','AI Artifacts','Shared roadmaps','Role-based permissions','SSO (Google, Microsoft)','Priority support (24h SLA)'] },
+  { id:'standard_yearly',  tier:'standard', cycle:'yearly',  name:'Standard (yearly)', price:170, unit:'/yr', paystackUrl:null, perks:['Same as Standard monthly','Save ~17% — 2 months free','Single annual invoice'], saveLabel:'Save $34/yr' },
+  { id:'pro_yearly',       tier:'pro',      cycle:'yearly',  name:'Pro (yearly)',      price:250, unit:'/yr', paystackUrl:null, perks:['Same as Pro monthly','Save ~17% — 2 months free','Single annual invoice'],     saveLabel:'Save $50/yr' }
+];
+
+var _billingState = null;     // last fetched my_subscription_state() row
+var _billingSeatCount = null; // computed from team_invites + capData where useful
+
+function openBilling(){
+  if(typeof trackPageView === 'function') trackPageView('Billing');
+  var ov = document.getElementById('billingOverlay');
+  if(ov) ov.classList.add('open');
+  _renderBillingPage();
+}
+
+function closeBilling(){
+  var ov = document.getElementById('billingOverlay');
+  if(ov) ov.classList.remove('open');
+}
+
+async function _renderBillingPage(){
+  var c = document.getElementById('billingContent');
+  if(!c) return;
+  c.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px">Loading your subscription…</div>';
+
+  // Fetch the authoritative subscription snapshot via my_subscription_state RPC.
+  var sub = null;
+  try {
+    var r = await window.electronAPI.supaRequest({
+      path:   '/rest/v1/rpc/my_subscription_state',
+      method: 'POST',
+      body:   {},
+      token:  _accessToken || null
+    });
+    if(r && r.ok && Array.isArray(r.data) && r.data.length){ sub = r.data[0]; }
+  } catch(_){}
+  _billingState = sub || { subscription_status:'none', tier:null, tier_expires_at:null, trial_started_at:null, is_lapsed:false };
+
+  // Fetch outstanding requests so we can show "Cancellation pending" etc.
+  var pending = [];
+  try {
+    var pr = await window.electronAPI.supaRequest({
+      path:   '/rest/v1/billing_requests?select=id,request_type,status,created_at,payload&status=eq.pending&order=created_at.desc',
+      method: 'GET',
+      token:  _accessToken || null
+    });
+    if(pr && pr.ok && Array.isArray(pr.data)) pending = pr.data;
+  } catch(_){}
+
+  // Seat count — number of accepted invites for this user as inviter, plus self.
+  var seats = 1;
+  try {
+    var sr = await window.electronAPI.supaRequest({
+      path:   '/rest/v1/team_invites?select=id,status&status=eq.accepted',
+      method: 'GET',
+      token:  _accessToken || null
+    });
+    if(sr && sr.ok && Array.isArray(sr.data)) seats = 1 + sr.data.length;
+  } catch(_){}
+  _billingSeatCount = seats;
+
+  c.innerHTML = _billingPageHtml(sub, pending, seats);
+}
+
+function _billingFmtDate(iso){
+  if(!iso) return '—';
+  try { return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); } catch(_){ return iso; }
+}
+
+function _billingStatusLabel(status){
+  return ({ active:'Active', trialing:'Trial', past_due:'Past due', cancelled:'Cancelled', none:'No subscription' })[status] || status;
+}
+
+function _billingDaysRemaining(iso){
+  if(!iso) return null;
+  var ms = new Date(iso).getTime() - Date.now();
+  return Math.max(0, Math.ceil(ms / (24*3600*1000)));
+}
+
+function _billingPageHtml(sub, pending, seats){
+  var status = sub.subscription_status || 'none';
+  var tier   = sub.tier || 'basic';
+  var lapsed = !!sub.is_lapsed;
+  var expiresAt = sub.tier_expires_at || null;
+  var daysLeft  = _billingDaysRemaining(expiresAt);
+
+  var hasCancelPending = pending.some(function(p){ return p.request_type === 'cancel'; });
+  var hasDiscountPending = pending.some(function(p){ return p.request_type === 'retention_discount'; });
+  var hasSwitchPending = pending.some(function(p){ return p.request_type === 'switch_plan'; });
+  var hasSeatsPending = pending.some(function(p){ return p.request_type === 'add_seats'; });
+
+  var pendingBanner = '';
+  if(hasCancelPending){
+    pendingBanner = '<div class="bill-card" style="background:#fef2f2;border-color:#fecaca;color:#b91c1c">' +
+      '<strong>Cancellation requested.</strong> Your subscription will run until ' + _billingFmtDate(expiresAt) + '. Email <a href="mailto:billing@pmroadmapper.com" style="color:#b91c1c;text-decoration:underline">billing@pmroadmapper.com</a> if you change your mind.' +
+    '</div>';
+  } else if(hasDiscountPending){
+    pendingBanner = '<div class="bill-card" style="background:#ecfdf5;border-color:#bbf7d0;color:#15803d">' +
+      '<strong>Discount accepted!</strong> The 50% off will land on your next invoice within 24 hours.' +
+    '</div>';
+  }
+
+  // Header card — current plan
+  var statusBadge = '<span class="bill-status-badge bill-status-'+status+'">' + _billingStatusLabel(status) + '</span>';
+  var nextLine = (status === 'trialing')
+    ? 'Trial ends '+ _billingFmtDate(expiresAt) +' (' + (daysLeft||0) + ' day' + (daysLeft===1?'':'s') + ' left)'
+    : (status === 'active')
+      ? 'Renews '+ _billingFmtDate(expiresAt)
+      : (status === 'past_due')
+        ? 'Past due since '+ _billingFmtDate(expiresAt)
+        : (status === 'cancelled')
+          ? 'Access ends '+ _billingFmtDate(expiresAt)
+          : 'No active subscription';
+
+  var headerCard =
+    '<div class="bill-card" style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:18px">' +
+      '<div style="flex:1;min-width:260px">' +
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">' +
+          '<h3 style="margin:0;font-size:16px;font-weight:800;color:var(--text)">Current plan</h3>' +
+          statusBadge +
+        '</div>' +
+        '<div style="font-size:24px;font-weight:800;color:var(--text);text-transform:capitalize">' + (tier || '—') + '</div>' +
+        '<div style="font-size:12px;color:var(--muted);margin-top:4px">' + nextLine + '</div>' +
+        '<div style="font-size:12px;color:var(--muted);margin-top:2px">' + seats + ' seat' + (seats===1?'':'s') + ' on this account</div>' +
+      '</div>' +
+      '<div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">' +
+        (status === 'active' || status === 'trialing'
+          ? '<button class="prio-btn" onclick="_billingUpdatePayment()">Update payment method</button>' +
+            (hasCancelPending ? '' : '<button class="prio-btn" style="color:#b91c1c" onclick="_billingStartCancel()">Cancel subscription</button>')
+          : '<a class="prio-btn primary" href="' + BILLING_LINKS.pricingPageUrl + '" target="_blank" rel="noopener">View pricing</a>') +
+      '</div>' +
+    '</div>';
+
+  // Plans grid
+  var plansHtml = BILLING_PLANS.map(function(p){
+    var isCurrent = (status === 'active' && tier === p.tier && p.cycle === 'monthly');  // monthly is what Paystack tracks today
+    var classes = 'bill-plan' + (isCurrent ? ' current' : '') + (p.cycle === 'yearly' ? ' recommended' : '');
+    var tag = isCurrent
+      ? '<span class="bill-plan-tag current">Your plan</span>'
+      : (p.saveLabel ? '<span class="bill-plan-tag save">' + p.saveLabel + '</span>' : '');
+    var ctaLabel = isCurrent ? 'Current' : (p.paystackUrl ? 'Switch to ' + p.name : 'Switch to yearly');
+    var ctaAttr = p.paystackUrl
+      ? 'onclick="_billingSwitchPlanPaystack(\'' + p.paystackUrl + '\',\'' + p.id + '\')"'
+      : 'onclick="_billingRequestSwitch(\'' + p.id + '\')"';
+    var disabledAttr = (isCurrent || hasSwitchPending) ? 'disabled' : '';
+    var perksHtml = '<ul style="margin:8px 0 14px;padding-left:18px;font-size:12px;color:var(--text);line-height:1.55">' +
+      p.perks.map(function(x){ return '<li>'+x+'</li>'; }).join('') +
+    '</ul>';
+    return '<div class="' + classes + '">' +
+      tag +
+      '<div style="font-size:13px;font-weight:700;color:var(--text);text-transform:capitalize">' + p.name + '</div>' +
+      '<div style="font-size:24px;font-weight:800;color:var(--text)">$' + p.price + '<span style="font-size:11px;color:var(--muted);font-weight:600">' + p.unit + '</span></div>' +
+      perksHtml +
+      '<button class="prio-btn ' + (isCurrent ? '' : 'primary') + '" ' + ctaAttr + ' ' + disabledAttr + ' style="margin-top:auto">' + ctaLabel + '</button>' +
+    '</div>';
+  }).join('');
+
+  var plansCard =
+    '<div class="bill-card">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">' +
+        '<h3 style="margin:0;font-size:16px;font-weight:800;color:var(--text)">Plans</h3>' +
+        '<a href="' + BILLING_LINKS.pricingPageUrl + '" target="_blank" rel="noopener" style="font-size:11px;color:var(--accent);text-decoration:none">Compare full features &rarr;</a>' +
+      '</div>' +
+      '<div class="bill-grid">' + plansHtml + '</div>' +
+      (hasSwitchPending ? '<div style="font-size:11px;color:#92400e;margin-top:10px">A plan-switch request is being processed.</div>' : '') +
+    '</div>';
+
+  // Seats card
+  var seatsCard =
+    '<div class="bill-card">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:8px">' +
+        '<h3 style="margin:0;font-size:16px;font-weight:800;color:var(--text)">Seats &amp; team members</h3>' +
+        '<span style="font-size:11px;color:var(--muted)">' + seats + ' active seat' + (seats===1?'':'s') + '</span>' +
+      '</div>' +
+      '<div style="font-size:12px;color:var(--muted);margin-bottom:12px">' +
+        'Invite teammates to start collaborating. Manage individual invites under <a href="#" onclick="closeBilling();openCapacity();setTimeout(function(){capNav(\'teams\');},150);return false;" style="color:var(--accent);font-weight:600">CapacityIQ &rarr; Teams</a>.' +
+      '</div>' +
+      '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
+        '<input id="billingSeatCount" type="number" min="1" max="200" value="' + (seats+1) + '" style="width:110px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--white);color:var(--text);font-size:13px">' +
+        '<button class="prio-btn primary" onclick="_billingRequestSeats()" ' + (hasSeatsPending ? 'disabled' : '') + '>Request seat change</button>' +
+        (hasSeatsPending ? '<span style="font-size:11px;color:#92400e">Pending review.</span>' : '') +
+      '</div>' +
+    '</div>';
+
+  // FAQs
+  var faqs = [
+    { q:'What happens when I switch from monthly to yearly?',
+      a:'We prorate your remaining monthly balance against the new yearly invoice. You’ll only pay the difference today, and your next charge will be 12 months from now.' },
+    { q:'Can I downgrade?',
+      a:'Yes, anytime. The downgrade takes effect at the end of your current billing cycle so you keep paid features until then.' },
+    { q:'How do refunds work?',
+      a:'Within the first 14 days of any new paid plan, email billing@pmroadmapper.com for a no-questions-asked refund. After 14 days we credit unused time toward future invoices.' },
+    { q:'How is the per-seat price calculated?',
+      a:'Standard is $17/seat/month, Pro is $25/seat/month. Yearly plans are the equivalent of 10 months’ cost up-front (you save 2 months).' },
+    { q:'Will my data be deleted if I cancel?',
+      a:'No — your local data stays on your machine. Cloud-synced data is retained for 90 days after cancellation. Within that window, resubscribe and everything reactivates.' },
+    { q:'Do you offer team / volume discounts?',
+      a:'Yes. For 10+ seats or annual prepay, talk to sales for a custom quote.' },
+    { q:'Are taxes included?',
+      a:'Prices are USD ex-VAT. Local sales tax / VAT is added at checkout based on your billing country.' }
+  ];
+  var faqsHtml = '<div class="bill-card">' +
+    '<h3 style="margin:0 0 8px;font-size:16px;font-weight:800;color:var(--text)">Frequently asked questions</h3>' +
+    faqs.map(function(f){
+      return '<details class="bill-faq"><summary>' + f.q + '</summary><div class="bill-faq-answer">' + f.a + '</div></details>';
+    }).join('') +
+  '</div>';
+
+  // Sales / contact CTA
+  var salesCard =
+    '<div class="bill-card" style="background:linear-gradient(135deg,#1a1464 0%,#3b2faa 100%);color:#fff;border:none">' +
+      '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px">' +
+        '<div style="flex:1;min-width:240px">' +
+          '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;opacity:.75;margin-bottom:6px">Need something custom?</div>' +
+          '<div style="font-size:18px;font-weight:800;margin-bottom:4px">Talk to sales for volume, SSO &amp; SOC 2 questions</div>' +
+          '<div style="font-size:12px;opacity:.85">Reply within 24 hours. Priced for teams of 10+.</div>' +
+        '</div>' +
+        '<a class="prio-btn" href="' + BILLING_LINKS.contactSalesUrl + '" target="_blank" rel="noopener" style="background:#fff;color:#1a1464;font-weight:700">Contact sales &rarr;</a>' +
+        '<button class="prio-btn" onclick="_billingContactSalesQuick()" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,.4)">Or have us call you</button>' +
+      '</div>' +
+    '</div>';
+
+  return pendingBanner + headerCard + plansCard + seatsCard + faqsHtml + salesCard;
+}
+
+// ── Action handlers ────────────────────────────────────────────────────
+async function _billingPostRequest(requestType, payload){
+  if(!_currentUser || !_accessToken){ showToast('Please sign in first','error'); return null; }
+  try {
+    var r = await window.electronAPI.supaRequest({
+      path:   '/rest/v1/billing_requests',
+      method: 'POST',
+      body:   {
+        user_id:      _currentUser.id,
+        email:        (_currentUser.email || '').toLowerCase(),
+        request_type: requestType,
+        payload:      payload || {}
+      },
+      token:  _accessToken || null
+    });
+    return r;
+  } catch(err){
+    showToast('Network error: ' + (err && err.message || err), 'error');
+    return null;
+  }
+}
+
+function _billingUpdatePayment(){
+  // Paystack hosted page — re-using the active subscription's checkout URL
+  // is the cleanest "update card" path because it triggers a charge that
+  // re-saves the new card.
+  var url = (_billingState && _billingState.tier === 'pro') ? BILLING_LINKS.paystackProMonthly : BILLING_LINKS.paystackStandardMonthly;
+  window.open(url, '_blank', 'noopener');
+  _billingPostRequest('update_payment', { tier: _billingState && _billingState.tier });
+  showToast('Opened Paystack — complete the card update there.', 'info');
+}
+
+function _billingSwitchPlanPaystack(url, planId){
+  _billingPostRequest('switch_plan', { plan: planId, via: 'paystack' });
+  window.open(url, '_blank', 'noopener');
+  showToast('Opened Paystack to switch plans.', 'info');
+}
+
+async function _billingRequestSwitch(planId){
+  var r = await _billingPostRequest('switch_plan', { plan: planId });
+  if(r && r.ok){
+    showToast('Switch to '+planId+' requested. We’ll email you within 24h.', 'success');
+    _renderBillingPage();
+  } else {
+    showToast('Could not submit switch request.', 'error');
+  }
+}
+
+async function _billingRequestSeats(){
+  var inp = document.getElementById('billingSeatCount');
+  var n = parseInt(inp && inp.value || '0', 10);
+  if(!n || n < 1 || n > 200){ showToast('Pick a seat count between 1 and 200', 'error'); return; }
+  var r = await _billingPostRequest('add_seats', { requested_seats: n, current_seats: _billingSeatCount });
+  if(r && r.ok){
+    showToast('Seat-change request submitted ('+n+' seats).', 'success');
+    _renderBillingPage();
+  } else {
+    showToast('Could not submit seat request.', 'error');
+  }
+}
+
+async function _billingContactSalesQuick(){
+  var r = await _billingPostRequest('contact_sales', { source: 'billing_page' });
+  if(r && r.ok){ showToast('Sales will reach out within 24 hours.', 'success'); }
+  else { showToast('Could not submit request — try the Contact form instead.', 'error'); }
+}
+
+// Cancel flow with retention modal — 50% discount offer first.
+function _billingStartCancel(){
+  var existing = document.getElementById('billingRetentionModal');
+  if(existing) existing.remove();
+  var ov = document.createElement('div');
+  ov.id = 'billingRetentionModal';
+  ov.className = 'modal-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9300;display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.onclick = function(e){ if(e.target === ov) ov.remove(); };
+  ov.innerHTML =
+    '<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;width:100%;max-width:460px;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.35);color:var(--text)">' +
+      '<div style="padding:24px 24px 6px">' +
+        '<div style="display:inline-flex;align-items:center;gap:6px;background:#fef3c7;color:#92400e;padding:4px 10px;border-radius:9999px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px">One-time offer</div>' +
+        '<h2 style="margin:0;font-size:22px;font-weight:800;line-height:1.2">Stay with us — get 50% off for the next 3 months</h2>' +
+        '<p style="margin:12px 0 0;font-size:13px;color:var(--muted);line-height:1.6">Sorry to see you considering leaving. If pricing’s the blocker, take half off your next 3 invoices and keep everything you’ve built.</p>' +
+      '</div>' +
+      '<div style="padding:18px 24px 22px;display:flex;flex-direction:column;gap:8px">' +
+        '<button class="prio-btn primary" style="padding:11px 18px;font-size:13px;font-weight:700" onclick="_billingAcceptRetention()">Yes — apply 50% off for 3 months</button>' +
+        '<button class="prio-btn" style="padding:11px 18px;font-size:13px;color:#b91c1c" onclick="_billingConfirmCancel()">No thanks, cancel my subscription</button>' +
+        '<button class="prio-btn" style="padding:9px 18px;font-size:12px;background:transparent;border:none;color:var(--muted)" onclick="document.getElementById(\'billingRetentionModal\').remove()">Take me back</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(ov);
+}
+
+async function _billingAcceptRetention(){
+  var r = await _billingPostRequest('retention_discount', { percent_off: 50, months: 3 });
+  var m = document.getElementById('billingRetentionModal'); if(m) m.remove();
+  if(r && r.ok){
+    showToast('Discount accepted — applied to your next invoice within 24 hours.', 'success');
+    _renderBillingPage();
+  } else {
+    showToast('Could not apply discount — please email billing@pmroadmapper.com.', 'error');
+  }
+}
+
+async function _billingConfirmCancel(){
+  if(!confirm('Confirm: cancel your subscription? Access continues until your current billing cycle ends.')) return;
+  var r = await _billingPostRequest('cancel', { reason: '' });
+  var m = document.getElementById('billingRetentionModal'); if(m) m.remove();
+  if(r && r.ok){
+    showToast('Cancellation requested. We’ll process it within 24 hours.', 'success');
+    _renderBillingPage();
+  } else {
+    showToast('Could not submit cancellation — please email billing@pmroadmapper.com.', 'error');
+  }
 }
 
 async function loadFeedbackInbox(){
@@ -17040,6 +18074,8 @@ function renderPlanMain(){
 
   // v1.37.0 — sprint/agile bar (goal + DoD + DoR toggle + live stats)
   renderPlanSprintBar(p);
+  // v1.42.0 — refresh follow-button state for the active plan
+  if(typeof _updatePlanFollowBtn === 'function') _updatePlanFollowBtn();
 }
 
 // v1.37.0 — render sprint/agile controls above the plan view.
@@ -22300,7 +23336,7 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 
 function closeAllOverlays(){
-  ['g2mOverlay','todoOverlay','kpiOverlay','ucrOverlay','capOverlay','artOverlay','previewOverlay','reportsOverlay','insightsOverlay','adminOverlay','platformAdminOverlay','prioritizationOverlay','plansOverlay','feedbackOverlay','templateLibraryOverlay','integrationsOverlay'].forEach(function(id){
+  ['g2mOverlay','todoOverlay','kpiOverlay','ucrOverlay','capOverlay','artOverlay','previewOverlay','reportsOverlay','insightsOverlay','adminOverlay','platformAdminOverlay','prioritizationOverlay','plansOverlay','feedbackOverlay','templateLibraryOverlay','integrationsOverlay','billingOverlay'].forEach(function(id){
     var el=document.getElementById(id);
     if(el) el.classList.remove('open');
   });
@@ -27843,7 +28879,7 @@ function removeCapTeam(id){
 }
 
 // Per-team Edit modal: manage members of a single team AND invite new people
-// by email. Invitees get a 30-day trial on first sign-in (server-side state
+// by email. Invitees land in onboarding on first sign-in (server-side state
 // lives in public.team_invites / public.user_profiles).
 function openCapTeamEdit(teamId){
   var team = (capData.teams || []).find(function(t){ return t.id === teamId; });
@@ -27882,7 +28918,7 @@ function openCapTeamEdit(teamId){
     : '<div style="font-size:11px;color:var(--muted);margin-top:4px">All existing members are already on this team.</div>';
 
   // v1.40.0: Editable name + description + color, no horizontal scroll on
-  // member table (word-wrap in cells). 30-day trial copy preserved.
+  // member table (word-wrap in cells). v1.42.0 — trial copy removed.
   ov.innerHTML =
     '<div style="background:var(--white);border:1px solid var(--border);border-radius:14px;width:100%;max-width:640px;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.35);color:var(--text)">' +
       '<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">' +
@@ -27910,7 +28946,7 @@ function openCapTeamEdit(teamId){
         addExistingBlock +
 
         '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:18px 0 6px">Invite by email</div>' +
-        '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Send a signup link — invitees get a <strong>30-day free trial</strong> on first sign-in.</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Send a signup link so they can join your team.</div>' +
         '<div style="display:flex;gap:8px;align-items:stretch">' +
           '<input id="capTeamEditInviteEmail" type="email" class="cap-input" placeholder="name@company.com" style="flex:1;min-width:0" onkeydown="if(event.key===\'Enter\') _capTeamSendInvite(\'' + teamId + '\')">' +
           '<button id="capTeamEditInviteBtn" class="cap-btn primary" onclick="_capTeamSendInvite(\'' + teamId + '\')">Send invite</button>' +
@@ -28000,7 +29036,7 @@ async function _capTeamSendInvite(teamId){
     });
     if(r.ok && r.data && r.data.ok){
       status.textContent = r.data.email_sent
-        ? 'Invite sent to ' + email + ' — 30-day trial starts when they sign in.'
+        ? 'Invite sent to ' + email + '.'
         : 'Invite saved but email could not be sent (check Resend config).';
       status.style.color = r.data.email_sent ? '#16a34a' : '#f59e0b';
       input.value = '';
@@ -28066,7 +29102,8 @@ async function _redeemInviteFromUrl(){
 
     if(r && r.ok && r.data && r.data.ok){
       if(r.data.trial_granted){
-        showToast('Welcome! Your 30-day free trial has started.', 'success');
+        // v1.42.0: trial mention removed from the welcome toast.
+        showToast('Welcome to Roadmap OS!', 'success');
       } else if(r.data.already_accepted){
         // no-op — silently swallow dup redemptions
       } else {
@@ -32729,7 +33766,7 @@ async function init() {
 var _onboardingSteps = [
   {title:'Welcome to Roadmap OS', body:'Your all-in-one product roadmap tool. This quick tour will help you get started in under 2 minutes.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>'},
   {title:'Create Your Roadmap', body:'Click "+ Add Product" in the main view to add initiatives. Drag bars on the timeline to set durations. Organize by sections like Engineering, Product, or Design.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h2M8 18h6"/></svg>'},
-  {title:'Set Up Your Team', body:'Open CapacityIQ from the sidebar to add teams and members. Track capacity, sprints, and initiatives in one place.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>'},
+  {title:'Set Up Your Team', kind:'team', body:'Name your team and add a few teammates so you can collaborate from day one. Skip if you\u2019re flying solo for now.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>'},
   {title:'Invite Your Teammates', kind:'invite', body:'Optional — collaborate with colleagues on the same roadmap. You can always invite people later from Settings.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>'},
   {title:'Import Tasks', body:'Use the Template Library to import pre-built project templates with 25+ tasks each. Or upload your own Excel/CSV files to populate tasks instantly.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>'},
   {title:'Explore Features', body:'Plans for Gantt charts and project planning. Prioritisation for scoring and ranking. Checklist for go-to-market readiness. ToDo for daily task management. Insights for AI-powered analysis.', icon:'<svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto 16px"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>'},
@@ -32750,8 +33787,19 @@ function showOnboarding(){
     }).join('');
 
     // v1.34.0 Fix 5 — special body for the "invite" step.
+    // v1.42.0 Fix 1 — special body for the "team" step.
     var customBody = '';
-    if(s.kind === 'invite'){
+    if(s.kind === 'team'){
+      customBody =
+        '<div style="display:flex;flex-direction:column;gap:8px;margin:8px 0 6px;text-align:left">' +
+          '<input id="onbTeamName" type="text" placeholder="Team name (e.g. Product Engineering)" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--bg);color:var(--text);box-sizing:border-box">' +
+          '<input id="onbTeamDesc" type="text" placeholder="What does this team do? (optional)" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg);color:var(--text);box-sizing:border-box">' +
+          '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:6px">Invite teammates by email</div>' +
+          '<div id="onbTeamMembers" style="display:flex;flex-direction:column;gap:6px">' +
+            '<div class="onb-team-row" style="display:flex;gap:6px"><input type="email" placeholder="teammate@company.com" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg);color:var(--text);box-sizing:border-box"><button type="button" onclick="_onbAddTeamRow()" title="Add another" style="padding:6px 12px;border:1px solid var(--border);border-radius:8px;background:var(--white);color:var(--text);font-size:14px;cursor:pointer">+</button></div>' +
+          '</div>' +
+        '</div>';
+    } else if(s.kind === 'invite'){
       customBody =
         '<div id="onbInviteList" style="display:flex;flex-direction:column;gap:6px;margin:10px 0 6px">' +
           '<div class="onb-invite-row" style="display:flex;gap:6px">' +
@@ -32783,12 +33831,72 @@ function showOnboarding(){
       '<div class="onboard-dots">'+dots+'</div>'+
       '<div class="onboard-actions">'+
         (step < _onboardingSteps.length - 1
-          ? (s.kind === 'invite'
-             ? '<button onclick="_nextOnboardStep()">Skip for now</button><button class="primary" onclick="_onbSendInvites()">Send Invites</button>'
-             : '<button onclick="document.getElementById(\'onboardingOverlay\').remove();_completeOnboarding()">Skip</button><button class="primary" onclick="_nextOnboardStep()">Next</button>')
+          ? (s.kind === 'team'
+             ? '<button onclick="_nextOnboardStep()">Skip for now</button><button class="primary" onclick="_onbCreateTeam()">Create team &amp; continue</button>'
+             : (s.kind === 'invite'
+                ? '<button onclick="_nextOnboardStep()">Skip for now</button><button class="primary" onclick="_onbSendInvites()">Send Invites</button>'
+                : '<button onclick="document.getElementById(\'onboardingOverlay\').remove();_completeOnboarding()">Skip</button><button class="primary" onclick="_nextOnboardStep()">Next</button>'))
           : '<button class="primary" onclick="document.getElementById(\'onboardingOverlay\').remove();_completeOnboarding()">Get Started</button>')+
       '</div></div></div>';
   }
+
+  // v1.42.0 Fix 1 — team setup helpers
+  window._onbAddTeamRow = function(){
+    var list = document.getElementById('onbTeamMembers'); if(!list) return;
+    var row = document.createElement('div');
+    row.className = 'onb-team-row';
+    row.style.cssText = 'display:flex;gap:6px';
+    row.innerHTML =
+      '<input type="email" placeholder="teammate@company.com" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg);color:var(--text);box-sizing:border-box">' +
+      '<button type="button" onclick="this.parentElement.remove()" title="Remove" style="padding:6px 12px;border:1px solid var(--border);border-radius:8px;background:var(--white);color:var(--text);font-size:14px;cursor:pointer">x</button>';
+    list.appendChild(row);
+    var inp = row.querySelector('input'); if(inp) inp.focus();
+  };
+
+  window._onbCreateTeam = async function(){
+    var nameEl = document.getElementById('onbTeamName');
+    var descEl = document.getElementById('onbTeamDesc');
+    var name = nameEl ? (nameEl.value || '').trim() : '';
+    var desc = descEl ? (descEl.value || '').trim() : '';
+    if(!name){ showToast('Enter a team name (or skip)', 'warning'); return; }
+    if(!capData) capData = { teams:[], members:[], sprints:[], taskTypes:[], templates:[], initiatives:[], tasks:[] };
+    if(!Array.isArray(capData.teams)) capData.teams = [];
+    if(!Array.isArray(capData.members)) capData.members = [];
+    var teamId = (typeof _newId === 'function') ? _newId('team_') : ('team_'+Date.now());
+    capData.teams.push({ id: teamId, name: name, description: desc, color: '#3b82f6', createdAt: Date.now() });
+    // Add the current user as lead
+    var meEmail = (_currentUser && _currentUser.email) || (typeof userProfile!=='undefined' && userProfile && userProfile.email) || '';
+    var meName  = (typeof userProfile!=='undefined' && userProfile && userProfile.name) || meEmail || 'You';
+    if(meEmail){
+      capData.members.push({
+        id: 'mem_'+Date.now(), name: meName, email: meEmail, teamId: teamId, teams:[teamId],
+        role: 'Lead', hoursPerDay: 8, productivityFactor: 1, isActive: true, createdAt: Date.now()
+      });
+    }
+    // Collect emails + send invites
+    var emails = Array.from(document.querySelectorAll('#onbTeamMembers input'))
+      .map(function(i){ return (i.value || '').trim(); })
+      .filter(function(e){ return e && e.indexOf('@') > 0 && e.toLowerCase() !== meEmail.toLowerCase(); });
+    showLoading('Setting up team...');
+    var ok = 0, fail = 0;
+    for(var i = 0; i < emails.length; i++){
+      capData.members.push({
+        id: 'mem_'+Date.now()+'_'+i, name: emails[i].split('@')[0], email: emails[i],
+        teamId: teamId, teams:[teamId], status:'invited', role:'Member', hoursPerDay: 8,
+        productivityFactor: 1, isActive: true, createdAt: Date.now()
+      });
+      try {
+        var r = await _dbReq('/functions/v1/send-invite','POST',{ email: emails[i] });
+        if(r && r.ok) ok++; else fail++;
+      } catch(e){ fail++; console.warn('[onb team invite]', emails[i], e && e.message); }
+    }
+    persistData();
+    hideLoading();
+    if(ok) showToast('Team "'+name+'" created with '+ok+' invite'+(ok>1?'s':'')+' sent','success');
+    else showToast('Team "'+name+'" created','success');
+    if(fail) showToast(fail+' invite'+(fail>1?'s':'')+' failed','error');
+    _nextOnboardStep();
+  };
 
   window._onbAddInviteRow = function(){
     var list = document.getElementById('onbInviteList'); if(!list) return;
@@ -32887,17 +33995,140 @@ function _completeOnboarding(){
     var uid = _currentUser ? _currentUser.id : 'default';
     localStorage.setItem('pmr_onboarding_'+uid, 'done');
   } catch(e){}
+  // v1.42.0: after the tour, offer sample data so the first roadmap view
+  // isn't an empty canvas. The user can dismiss or clear from the banner.
+  if(typeof maybeSeedSampleData === 'function') maybeSeedSampleData();
 }
 
 function checkOnboarding(){
   try {
     var uid = _currentUser ? _currentUser.id : 'default';
     var done = localStorage.getItem('pmr_onboarding_'+uid);
-    if(done) return;
+    if(done){
+      // Returning users with no data still get the banner offering sample data
+      if(typeof maybeSeedSampleData === 'function') maybeSeedSampleData();
+      return;
+    }
     // Only show if user has no data
     if(rows && rows.length > 0) return;
     setTimeout(showOnboarding, 500);
   } catch(e){}
+}
+
+// v1.42.0: sample-data seeder. Loaded once per user when their roadmap is
+// empty AND they haven't already declined. Stored on the user data blob
+// (key `_sampleDataState`: 'seeded' | 'dismissed' | undefined).
+function maybeSeedSampleData(){
+  try {
+    var hasData = (rows && rows.length > 0) ||
+                  (typeof projectPlans !== 'undefined' && projectPlans && projectPlans.length > 0);
+    if(hasData) return;
+    if(typeof appSettings !== 'undefined' && appSettings && appSettings._sampleDataState === 'dismissed') return;
+    // Show the offer banner — user picks Load or Dismiss.
+    showSampleDataBanner();
+  } catch(e){ console.warn('maybeSeedSampleData', e && e.message); }
+}
+
+function showSampleDataBanner(){
+  if(document.getElementById('pmrSampleBanner')) return;
+  var bar = document.createElement('div');
+  bar.id = 'pmrSampleBanner';
+  bar.style.cssText = 'position:sticky;top:0;z-index:5500;background:linear-gradient(90deg,#1d4ed8,#3b82f6);color:#fff;padding:10px 18px;display:flex;align-items:center;gap:14px;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,.12)';
+  bar.innerHTML =
+    '<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>'+
+    '<span style="flex:1">New here? Load a sample roadmap with realistic sections, initiatives, tasks and KPIs to explore the app.</span>'+
+    '<button onclick="loadSampleData()" style="padding:6px 14px;background:#fff;color:#1d4ed8;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">Load sample data</button>'+
+    '<button onclick="dismissSampleBanner()" style="padding:6px 10px;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:8px;font-size:12px;cursor:pointer">Not now</button>';
+  document.body.insertBefore(bar, document.body.firstChild);
+}
+
+function dismissSampleBanner(){
+  var b = document.getElementById('pmrSampleBanner'); if(b) b.remove();
+  try {
+    if(!appSettings) appSettings = {};
+    appSettings._sampleDataState = 'dismissed';
+    persistData();
+  } catch(_){}
+}
+
+function loadSampleData(){
+  var b = document.getElementById('pmrSampleBanner'); if(b) b.remove();
+  try {
+    var nowIso = new Date().toISOString();
+    var meEmail = (_currentUser && _currentUser.email) || (typeof userProfile!=='undefined' && userProfile && userProfile.email) || '';
+    var meName  = (typeof userProfile!=='undefined' && userProfile && userProfile.name) || meEmail || 'You';
+    // Seed sections
+    sections = [
+      { id:'sec_sample_mobile',   name:'Mobile Platform',     color:'#3b82f6' },
+      { id:'sec_sample_core',     name:'Core Platform',       color:'#8b5cf6' },
+      { id:'sec_sample_growth',   name:'Growth & Marketing',  color:'#22c55e' }
+    ];
+    function _row(id, sec, name, sub, status, priority, revenue, labels, sStart, sEnd){
+      return {
+        id:id, sec:sec, name:name, sub:sub, priority:priority,
+        bars:[{ s:sStart, e:sEnd, c:status, t:name, desc:sub }],
+        priorities:[], deliverables:[], links:[], attachments:[], initiativeLinks:[],
+        revenue:revenue, labels:labels,
+        ownerEmail:meEmail, owner:meName,
+        watchers:[], comments:[],
+        createdAt:nowIso, updatedAt:nowIso, _sample:true
+      };
+    }
+    rows = [
+      _row('r_sample_1','sec_sample_mobile','Mobile App v2.0 Launch','Complete redesign of the mobile experience.','b','P1',250000,['Mobile','UX','Frontend'], 0, 6),
+      _row('r_sample_2','sec_sample_mobile','Push Notification System','Real-time push for task assignments.','s','P2',50000,['Mobile','Backend'], 4, 9),
+      _row('r_sample_3','sec_sample_core','API v3 Migration','Move all REST endpoints to v3.','b','P1',0,['Backend','Security','API'], 0, 5),
+      _row('r_sample_4','sec_sample_core','Analytics Dashboard','Customer-facing analytics with real-time metrics.','s','P2',180000,['Data','Frontend','Analytics'], 6, 11),
+      _row('r_sample_5','sec_sample_growth','Self-Serve Onboarding','Cut signup-to-activation from 7 days to 1.','g','P1',320000,['UX','Marketing'], -3, 1)
+    ];
+    // Seed a sample plan so the Plans page isn\u2019t empty
+    if(!Array.isArray(projectPlans)) projectPlans = [];
+    projectPlans.push({
+      id:'plan_sample_1', name:'Mobile App v2.0 Sprint',
+      description:'Sample sprint plan — rename or delete once you create your first real plan.',
+      createdAt:nowIso, updatedAt:nowIso, linkedRowIds:['r_sample_1'],
+      tasks:[
+        { id:'tsk_sample_1', name:'Write Mobile v2.0 PRD',  status:'done',        durationDays:3, sortIndex:0, percentComplete:100, owner:meName },
+        { id:'tsk_sample_2', name:'Design new navigation',   status:'in-progress', durationDays:5, sortIndex:1, percentComplete:60,  owner:meName },
+        { id:'tsk_sample_3', name:'Backend push prototype',  status:'not-started', durationDays:8, sortIndex:2, percentComplete:0,   owner:meName }
+      ],
+      activeView:'list', _sample:true
+    });
+    if(!appSettings) appSettings = {};
+    appSettings._sampleDataState = 'seeded';
+    recomputeTimeline();
+    renderTableHeader();
+    render();
+    persistData();
+    showToast('Sample roadmap loaded. Edit or clear it any time.', 'success');
+    showClearSampleBanner();
+  } catch(e){ console.warn('loadSampleData', e && e.message); showToast('Sample data load failed', 'error'); }
+}
+
+function showClearSampleBanner(){
+  if(document.getElementById('pmrSampleClearBanner')) return;
+  var bar = document.createElement('div');
+  bar.id = 'pmrSampleClearBanner';
+  bar.style.cssText = 'position:sticky;top:0;z-index:5500;background:rgba(59,130,246,.12);color:var(--text);padding:8px 18px;display:flex;align-items:center;gap:14px;font-size:12px;border-bottom:1px solid var(--border)';
+  bar.innerHTML =
+    '<span style="flex:1;color:var(--muted)">You\u2019re viewing sample data. <strong style="color:var(--text)">Roadmap OS</strong> seeded a few rows + a plan to help you explore.</span>'+
+    '<button onclick="clearSampleData()" style="padding:5px 10px;background:transparent;color:#dc2626;border:1px solid #fca5a5;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">Clear sample data</button>'+
+    '<button onclick="this.parentElement.remove()" style="padding:5px 10px;background:var(--white);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:11px;cursor:pointer">Keep exploring</button>';
+  document.body.insertBefore(bar, document.body.firstChild);
+}
+
+function clearSampleData(){
+  if(!confirm('Clear all sample data? This removes the demo sections, rows, and the sample plan.')) return;
+  rows = (rows || []).filter(function(r){ return !r._sample; });
+  sections = (sections || []).filter(function(s){ return s.id.indexOf('sec_sample_') !== 0; });
+  if(Array.isArray(projectPlans)) projectPlans = projectPlans.filter(function(p){ return !p._sample; });
+  if(appSettings) appSettings._sampleDataState = 'cleared';
+  recomputeTimeline();
+  renderTableHeader();
+  render();
+  persistData();
+  var b = document.getElementById('pmrSampleClearBanner'); if(b) b.remove();
+  showToast('Sample data cleared. Start building your roadmap.', 'success');
 }
 
 // v1.32.0 FIX 13: Upload Template from Excel/CSV
@@ -33656,6 +34887,7 @@ var _PMR_OVERLAY_MAP = {
   prioritization:{ open:'openPrioritization',close:'closePrioritization',id:'prioritizationOverlay',  nav:'' },
   templates:    { open:'openTemplateLibrary',close:'closeTemplateLibrary',id:'templateLibraryOverlay',nav:'' },
   feedback:     { open:'openFeedback',       close:'closeFeedback',      id:'feedbackOverlay',        nav:'' },
+  billing:      { open:'openBilling',        close:'closeBilling',       id:'billingOverlay',         nav:'' },
   admin:        { open:'openAdmin',          close:'closeAdmin',         id:'adminOverlay',           nav:'' },
   platformAdmin:{ open:'openPlatformAdmin',  close:'closePlatformAdmin', id:'platformAdminOverlay',   nav:'' },
   integrations: { open:'openIntegrations',   close:'closeIntegrations',  id:'integrationsOverlay',    nav:'Integrations' }
@@ -33712,15 +34944,25 @@ function _pmrCloseAnyOpenOverlay(){
 
 // Wrap a single openX function so calling it pushes a #view history entry
 // AND syncs the top-nav highlight. Idempotent — won't double-wrap.
+// v1.42.0: heavy pages flash a branded loading overlay so a slow render
+// doesn't look like a frozen click.
+var _PMR_HEAVY_VIEWS = { capacity:1, reports:1, integrations:1, plans:1 };
 function _pmrWrapOpen(key, entry){
   if(!entry.open) return;
   var orig = window[entry.open];
   if(typeof orig !== 'function' || orig._pmrWrapped) return;
   var wrapped = function(){
+    var heavy = _PMR_HEAVY_VIEWS[key];
+    if(heavy && typeof showLoading === 'function'){
+      try { showLoading('Opening ' + (entry.nav || key) + '\u2026'); } catch(_){}
+    }
     var r = orig.apply(this, arguments);
     _pmrPushView(key);
     if (typeof updateNavActive === 'function') {
       try { updateNavActive(entry.nav || ''); } catch(_){}
+    }
+    if(heavy && typeof hideLoading === 'function'){
+      try { requestAnimationFrame(function(){ requestAnimationFrame(hideLoading); }); } catch(_){ try { hideLoading(); } catch(_e){} }
     }
     return r;
   };
@@ -33732,21 +34974,21 @@ function _pmrWrapOpen(key, entry){
 // history.back() — the popstate handler is the single source of truth for
 // navigation. When close is invoked DURING a popstate (overlay teardown),
 // we skip the back() to avoid an infinite loop and just run the original.
+// v1.42.0 fix: previously we decremented _pmrPushCount BEFORE calling
+// history.back(), and the popstate handler decrements again — that
+// double-decrement made the counter go negative on long navigation
+// sessions, which broke the "do we have an SPA entry to fall back to?"
+// check. Now we ONLY decrement in popstate.
 function _pmrWrapClose(entry){
   if(!entry.close) return;
   var orig = window[entry.close];
   if(typeof orig !== 'function' || orig._pmrWrapped) return;
   var wrapped = function(){
     if(_pmrHistoryPopping){
-      // popstate-driven close — just hide the overlay, no history work.
       return orig.apply(this, arguments);
     }
-    // User-initiated close: rely on browser back so URL + UI stay in sync.
-    // Only call back() if we know we have an SPA-internal entry to land on
-    // (otherwise back() takes the user OUT of the app to whatever page
-    // brought them here). Track our own pushes to make this reliable.
     if(_pmrPushCount > 0){
-      try { _pmrPushCount--; window.history.back(); return; } catch(_){}
+      try { window.history.back(); return; } catch(_){}
     }
     orig.apply(this, arguments);
     _pmrReplaceView('roadmap');
@@ -33765,7 +35007,8 @@ function _pmrWireHistory(){
 
   window.addEventListener('popstate', function(ev){
     _pmrHistoryPopping = true;
-    if(_pmrPushCount > 0) _pmrPushCount--;
+    // Decrement once per popstate, never below zero. v1.42.0 fix.
+    _pmrPushCount = Math.max(0, _pmrPushCount - 1);
     try {
       // 1) Generic modal open? Just close it and re-push the current view so
       // the back button can still leave the page on the next press.
@@ -33804,6 +35047,20 @@ function _pmrWireHistory(){
   if(initialHash && initialHash !== 'roadmap' && _PMR_OVERLAY_MAP[initialHash] && typeof window[_PMR_OVERLAY_MAP[initialHash].open] === 'function'){
     setTimeout(function(){ window[_PMR_OVERLAY_MAP[initialHash].open](); }, 500);
   }
+}
+
+// v1.42.0: call this after a successful sign-in to reset the navigation
+// state. Without it, the browser-level back stack still points at /login,
+// so the first Back press after a fresh sign-in drops the user out of the
+// authenticated app.
+function _pmrSeedAfterLogin(){
+  if(!_pmrHistoryEnabled) return;
+  try {
+    _pmrPushCount = 0;
+    var hash = (window.location.hash || '').replace(/^#/, '').split('?')[0];
+    var landing = (hash && _PMR_OVERLAY_MAP[hash]) ? hash : 'roadmap';
+    history.replaceState({ pmrView: landing }, '', '#' + landing);
+  } catch(_){}
 }
 
 // Set of static modal IDs that closeAllOverlays() preserves — the popstate
