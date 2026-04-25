@@ -59,6 +59,35 @@ body.dark-mode {
 - Dark mode: toggle and check EVERY new element
 - Zero emoji: `grep -Pc '[\x{1F300}-\x{1FAFF}]' renderer/index.html` should be 0
 
+## v1.43.0 — Closing-the-loop schema (release notes + outcomes)
+
+Each `row` may carry two new optional containers:
+
+```js
+row.expectedOutcomes = [
+  { id, metric, target, units, timeframe, hypothesis }
+];
+row.launchOutcomes = {
+  releasedAt:    '<ISO>',                          // optional
+  releaseNotes:  { dev: '', customer: '', internal: '' },
+  actualMetrics: [
+    { id, expectedId, metric, value, units, source, capturedAt, capturedBy }
+  ],
+  feedback: [
+    { id, source: 'pm'|'customer'|'data'|'sales'|'support',
+      sentiment: 'positive'|'neutral'|'negative',
+      ts, user, text }
+  ],
+  successCriteria: { [expectedId]: 'met'|'partial'|'missed'|'pending' }
+};
+```
+
+Both are part of the public contract and round-trip through the JSONB blob. Modal-side fields (release notes + releasedAt) are edited in the row edit modal; `actualMetrics` and `feedback` are managed on the Launch Outcomes report and must be preserved across saves — `_collectLaunchOutcomes(prev)` already does this.
+
+## App version bumps
+
+`APP_VERSION` (a single `var APP_VERSION = 'v1.X.Y'` near the top of `renderer/index.html`) drives the login footer, the JSON backup `_appVersion`, and the in-app What's New badge logic. **Bump it alongside `package.json` whenever you cut a release**, and add the corresponding `## vX.Y` entry to `CHANGELOG.md` so the What's New modal has fresh content. The web build copies `CHANGELOG.md` to `public/`; remember to also copy it into `pm-roadmapper-site/public/CHANGELOG.md` for the marketing-site `/changelog` page.
+
 ## v1.33.0 — Capacity + Calendar integration shapes
 Two sub-objects on `appSettings` are part of the public data contract and
 round-trip through both localStorage and the cloud JSONB blob:

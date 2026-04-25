@@ -125,9 +125,20 @@ if (fs.existsSync(dataSrc)) {
   }
 }
 
+// 9. Copy CHANGELOG.md into public/ so the in-app What's New modal and the
+//    marketing site /changelog page can fetch it from the same origin.
+const changelogSrc  = path.join(root, 'CHANGELOG.md');
+const changelogDest = path.join(publicDir, 'CHANGELOG.md');
+let changelogCopied = false;
+if (fs.existsSync(changelogSrc)) {
+  fs.copyFileSync(changelogSrc, changelogDest);
+  changelogCopied = true;
+}
+
 console.log('[web build] OK — public/ written');
 console.log('[web build]   index.html: ' + (html.length / 1024).toFixed(1) + ' KB');
 console.log('[web build]   vendor/:    ' + fs.readdirSync(vendorDest).length + ' files');
 console.log('[web build]   shim/:      ' + fs.readdirSync(shimDest).length + ' files');
 console.log('[web build]   static/:    ' + staticCount + ' files');
 console.log('[web build]   data/:      ' + dataCount + ' files');
+console.log('[web build]   CHANGELOG.md: ' + (changelogCopied ? 'copied' : 'missing'));
