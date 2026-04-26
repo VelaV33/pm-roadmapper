@@ -57,6 +57,24 @@ Fix: Attach the outside-click listener only when the dropdown is actually shown,
 Risk: Low — guarded so only one listener is active at a time per input; removed reliably on close.
 Verified: syntax check OK.
 
+## [pass-3 #1] renderer/index.html:14153 — G2M radio onchange uses raw g2mCurrentProduct, breaks if product name has an apostrophe
+Symptom: Three onchange handlers on the Yes/No/N-A radio inputs interpolate `g2mCurrentProduct` directly (raw, unescaped) into a single-quoted JS string. If a product/initiative name contains an apostrophe, the resulting onchange attribute closes early and breaks the row's interactivity. The same loop already builds an `escapedProduct` for sibling onchanges; these three were missed.
+Fix: Replaced the three raw uses with `escapedProduct`.
+Risk: Low — same data, just escaped consistently.
+Verified: syntax check OK.
+
+## [pass-4 #1] renderer/index.html:13359 — Toasts overlap on stacked calls
+Symptom: showToast renders each toast at `bottom:24px` with the same fixed transform; back-to-back calls (e.g. sync flow toasts in quick succession) overlap each other and the user only sees the last one.
+Fix: Existing toasts get bumped upward by 56px each before the new one is appended; the bottom transition makes it feel natural.
+Risk: Very low — purely visual.
+Verified: syntax check OK.
+
+## [pass-5 #3] renderer/index.html:12946 — _compTimer interval can leak if showAnalysisLoading runs twice
+Symptom: `_compTimer = setInterval(...)` overwrites without clearing. If the analysis loading screen is rendered twice (e.g. user clicks Run, then a guard check rejects + retries), the first interval becomes orphaned and keeps firing forever, mutating an element ID that may belong to a stale page.
+Fix: Clear `_compTimer` before assigning a new one.
+Risk: Low — defensive only.
+Verified: syntax check OK.
+
 ## [pass-5 #2] renderer/index.html:17337 — attachOwnerAutocomplete leaks a document mousedown listener per input
 Symptom: Same pattern as #pass-5 #1, applied separately to the owner autocomplete used in plan tables and G2M assignee fields.
 Fix: Same approach — gate the document listener behind dropdown lifecycle.

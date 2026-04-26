@@ -12943,6 +12943,7 @@ function showAnalysisLoading(container){
     '<p id="compElapsed" style="font-size:11px;color:var(--muted);margin-top:8px">0s elapsed</p>';
   container.appendChild(wrap);
   var start=Date.now();
+  if(_compTimer) clearInterval(_compTimer);
   _compTimer=setInterval(function(){
     var el=document.getElementById('compElapsed');
     if(el)el.textContent=Math.round((Date.now()-start)/1000)+'s elapsed';
@@ -13361,8 +13362,18 @@ function showToast(msg, kind){
   // v1.26.11: Toasts get role="status" + aria-live="polite" so screen readers
   // announce them. Errors use role="alert" for an assertive announcement.
   var color = kind === 'error' ? '#dc2626' : kind === 'success' ? '#16a34a' : 'var(--navy)';
+  // Stack multiple toasts so back-to-back fires don't overlap each other.
+  // Existing toasts get nudged upward; new toast lands at the base.
+  try {
+    var existing = document.querySelectorAll('.pmr-toast');
+    var bumpBy = 56; // px per existing toast
+    existing.forEach(function(el, i){
+      el.style.bottom = (24 + (existing.length - i) * bumpBy) + 'px';
+    });
+  } catch(_e){}
   var t=document.createElement('div');
-  t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:'+color+';color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.3);transition:opacity .3s';
+  t.className='pmr-toast';
+  t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:'+color+';color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.3);transition:opacity .3s, bottom .25s;max-width:80vw';
   t.setAttribute('role', kind === 'error' ? 'alert' : 'status');
   t.setAttribute('aria-live', kind === 'error' ? 'assertive' : 'polite');
   t.setAttribute('aria-atomic', 'true');
@@ -14139,9 +14150,9 @@ function renderG2M(){
         '<td style="font-size:10px;font-weight:600;color:var(--muted);text-align:center">'+globalNum+'</td>'+
         '<td style="text-align:center"><button onclick="toggleG2MMilestone(\''+escapedProduct+'\','+idx+')" style="background:none;border:none;cursor:pointer;font-size:14px;padding:0;line-height:1;color:'+(isMilestone?'#f59e0b':'#d1d5db')+'">'+(isMilestone?'★':'☆')+'</button></td>'+
         '<td style="font-size:12px'+(isMilestone?';font-weight:600':'')+'">'+item.text+(isMilestone?' <span style="font-size:7px;font-weight:600;padding:1px 5px;border-radius:6px;background:#fef3c7;color:#92400e;vertical-align:middle">MILESTONE</span>':'')+'</td>'+
-        '<td class="g2m-yn"><input type="radio" name="'+uid+'" class="g2m-radio" id="'+uid+'_y" value="yes" '+(item.value==='yes'?'checked':'')+' onchange="setG2MVal(\''+g2mCurrentProduct+'\','+idx+',\'yes\')"><label for="'+uid+'_y" class="g2m-radio-label g2m-yes">✓</label></td>'+
-        '<td class="g2m-yn"><input type="radio" name="'+uid+'" class="g2m-radio" id="'+uid+'_n" value="no" '+(item.value==='no'?'checked':'')+' onchange="setG2MVal(\''+g2mCurrentProduct+'\','+idx+',\'no\')"><label for="'+uid+'_n" class="g2m-radio-label g2m-no-btn">✕</label></td>'+
-        '<td class="g2m-yn"><input type="radio" name="'+uid+'" class="g2m-radio" id="'+uid+'_na" value="na" '+(item.value==='na'?'checked':'')+' onchange="setG2MVal(\''+g2mCurrentProduct+'\','+idx+',\'na\')"><label for="'+uid+'_na" class="g2m-radio-label g2m-na">—</label></td>'+
+        '<td class="g2m-yn"><input type="radio" name="'+uid+'" class="g2m-radio" id="'+uid+'_y" value="yes" '+(item.value==='yes'?'checked':'')+' onchange="setG2MVal(\''+escapedProduct+'\','+idx+',\'yes\')"><label for="'+uid+'_y" class="g2m-radio-label g2m-yes">✓</label></td>'+
+        '<td class="g2m-yn"><input type="radio" name="'+uid+'" class="g2m-radio" id="'+uid+'_n" value="no" '+(item.value==='no'?'checked':'')+' onchange="setG2MVal(\''+escapedProduct+'\','+idx+',\'no\')"><label for="'+uid+'_n" class="g2m-radio-label g2m-no-btn">✕</label></td>'+
+        '<td class="g2m-yn"><input type="radio" name="'+uid+'" class="g2m-radio" id="'+uid+'_na" value="na" '+(item.value==='na'?'checked':'')+' onchange="setG2MVal(\''+escapedProduct+'\','+idx+',\'na\')"><label for="'+uid+'_na" class="g2m-radio-label g2m-na">—</label></td>'+
         '<td><input type="text" class="g2m-assignee-input" value="'+escHtml(item.assignee||'')+'" placeholder="Name..." onchange="setG2MItemField(\''+escapedProduct+'\','+idx+',\'assignee\',this.value)" style="width:100%;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:10px;color:var(--text);font-family:inherit"></td>'+
         '<td><input type="date" value="'+startDate+'" onchange="setG2MItemField(\''+escapedProduct+'\','+idx+',\'startDate\',this.value)" style="width:100%;padding:3px 4px;border:1px solid var(--border);border-radius:6px;font-size:10px;color:var(--text);font-family:inherit"></td>'+
         '<td><input type="date" value="'+endDate+'" onchange="setG2MItemField(\''+escapedProduct+'\','+idx+',\'endDate\',this.value)" style="width:100%;padding:3px 4px;border:1px solid var(--border);border-radius:6px;font-size:10px;color:var(--text);font-family:inherit"></td>'+
