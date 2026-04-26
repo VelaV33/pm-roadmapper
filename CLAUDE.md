@@ -7,29 +7,10 @@ Roadmap OS (formerly PM Roadmapper) is a product roadmap tool that ships as both
 - **renderer/index.html** is a 23,445-line single-file SPA. ALL UI, logic, and styles live here. Do NOT split it into separate files.
 - The renderer calls `window.electronAPI.*` for platform ops. Two implementations exist: `main.js`/`preload.js` (Electron) and `web/shim/electronAPI.js` (browser).
 - Data is stored as one JSONB blob per user in the `roadmap_data` Supabase table.
-- Dark mode uses CSS variables and a `.dark-mode` class toggle on `<body>`. Every new UI element MUST support dark mode.
-- Navigation uses individual open/close functions per feature (openPlans, openG2M, openCapacity, openTodo, etc.) — there is NO centralized `showPage()` router.
+- Dark mode uses CSS variables and a class toggle. Every new UI element MUST support dark mode.
+- Navigation uses a `showPage('pageId')` pattern. Pages are `<div>` sections toggled by display.
 - 15 Supabase Edge Functions (Deno) in `supabase/functions/`.
 - Supabase project ID: `nigusoyssktoebzscbwe` (eu-west-1).
-
-## Dark Mode Variables (lines 38-52)
-```css
-body.dark-mode {
-  --navy: #e2e8f0;       /* WARNING: inverted for text, NOT for backgrounds */
-  --bg: #0f172a;
-  --white: #1e293b;       /* dark surface — confusing name, but this IS the dark card bg */
-  --border: #334155;
-  --text: #e2e8f0;
-  --muted: #94a3b8;
-  --surface-low: #1e293b;
-  --surface-high: #334155;
-  --outline-var: #475569;
-  --light-blue-bg: #1e3a8a;
-  --toolbar-bg: rgba(15,23,42,.92);
-}
-```
-
-**CRITICAL:** `--navy` flips to LIGHT in dark mode (for text inversion). Do NOT use `var(--navy)` as a background in dark mode — it will be light. Use `#0f172a` or `var(--bg)` for dark backgrounds instead.
 
 ## Coding Standards
 - Match existing patterns exactly: indentation, naming, CSS structure.
@@ -39,77 +20,39 @@ body.dark-mode {
 - All Supabase tables use `FORCE ROW LEVEL SECURITY`.
 - Edge functions must verify JWT at both gateway and application level.
 
-## Design Rules
-1. **ZERO EMOJI.** No Unicode emoji anywhere in the app. Use clean, minimal SVG icons (stroke-based, 1.5-2px stroke, `currentColor`, matching sidebar nav style).
-2. **Dark mode is mandatory** for every element. No white backgrounds in dark mode.
-3. **UI consistency:** All pages must match the main roadmap page's design language — border-radius: 12px on cards, subtle shadows, consistent spacing.
-4. **Dropdowns must be dark-mode-aware.**
+## Design Rules (CRITICAL)
+1. **ZERO EMOJI.** No Unicode emoji anywhere in the app. Use clean, minimal SVG icons (stroke-based, 1.5-2px stroke, `currentColor`, matching sidebar nav style). This is non-negotiable.
+2. **Dark mode is mandatory** for every element. No white backgrounds in dark mode. Use CSS variables: `var(--page-bg)`, `var(--card-bg)`, `var(--surface-bg)`, `var(--text-primary)`, `var(--text-secondary)`, `var(--border-color)`, `var(--input-bg)`, `var(--modal-bg)`.
+3. **UI consistency:** All pages must match the main roadmap page's design language — border-radius: 12px on cards, subtle shadows, consistent spacing (16-20px padding), same typography.
+4. **Dropdowns must be dark-mode-aware:** `<select>`, `<option>`, and custom dropdowns need explicit dark background + light text in dark mode.
 
 ## Common Patterns
-- **Dark mode override:** Add rules after line ~97 in the dark-mode CSS section
-- **SVG icons:** `viewBox="0 0 20 20"`, `stroke="currentColor"`, `stroke-width="1.5"`, `fill="none"`. Wrap in `<span class="icon">`
-- **Saving data:** Merge into the user's JSONB blob and call the sync function
-- **Edge functions:** Follow `_shared/auth.ts` pattern
+- **Adding a new page:** Create `<div id="my-page" class="page" style="display:none">`, add nav button with `onclick="showPage('my-page')"`, add case in `showPage()` function.
+- **Saving data:** Merge into the user's JSONB blob and call the sync function.
+- **Dark mode:** Check how existing `.dark-mode` selectors work. New elements need explicit dark mode overrides.
+- **Edge functions:** Follow the pattern in `supabase/functions/_shared/auth.ts` for auth + rate limiting.
+- **SVG icons:** Use inline SVGs with `viewBox="0 0 20 20"`, `stroke="currentColor"`, `stroke-width="1.5"`, `fill="none"`. Wrap in `<span class="icon">`.
+- **Task Library:** When creating tasks ANYWHERE in the app (To-Do, Plans, G2M), also call `addToTaskLibrary(taskData)` to keep the central task library in sync.
+
+## Data Model Extensions
+- `currentData.taskLibrary[]` — Central task registry fed by To-Do, Plans, G2M
+- `currentData.documentRepository` — `{ folders: [], documents: [] }` with Supabase Storage for files
+- `row.links[]` — Initiative linking (dependencies + references, own roadmap + shared)
+- User profile picture stored in Supabase Storage or as base64 in settings
 
 ## Testing
-- `npm test` — runs both test files:
-  - `tests/capacity.test.js` — pure helpers (getCapHours, _getTodosForWeek, event normalizers)
-  - `tests/renderer.parse.test.js` — V8 parse-check of the full inline renderer JS, catches hand-editing syntax errors
-- Web build: `npm run build:web` (alias for `cd web && node scripts/build.js`) — must succeed
-- Dark mode: toggle and check EVERY new element
-- Zero emoji: `grep -Pc '[\x{1F300}-\x{1FAFF}]' renderer/index.html` should be 0
+- Syntax check: `node -e "require('fs').readFileSync('renderer/index.html','utf8')"` (ensures file isn't corrupted)
+- Emoji check: `grep -Pc '[\x{1F300}-\x{1FAFF}]' renderer/index.html` (must be 0)
+- White background check: `grep -c "background.*white\|background.*#fff" renderer/index.html` (each must have a dark mode override)
+- Web build: `cd web && npm run build` — must succeed without errors
 
-## v1.43.0 — Closing-the-loop schema (release notes + outcomes)
-
-Each `row` may carry two new optional containers:
-
-```js
-row.expectedOutcomes = [
-  { id, metric, target, units, timeframe, hypothesis }
-];
-row.launchOutcomes = {
-  releasedAt:    '<ISO>',                          // optional
-  releaseNotes:  { dev: '', customer: '', internal: '' },
-  actualMetrics: [
-    { id, expectedId, metric, value, units, source, capturedAt, capturedBy }
-  ],
-  feedback: [
-    { id, source: 'pm'|'customer'|'data'|'sales'|'support',
-      sentiment: 'positive'|'neutral'|'negative',
-      ts, user, text }
-  ],
-  successCriteria: { [expectedId]: 'met'|'partial'|'missed'|'pending' }
-};
-```
-
-Both are part of the public contract and round-trip through the JSONB blob. Modal-side fields (release notes + releasedAt) are edited in the row edit modal; `actualMetrics` and `feedback` are managed on the Launch Outcomes report and must be preserved across saves — `_collectLaunchOutcomes(prev)` already does this.
-
-## App version bumps
-
-`APP_VERSION` (a single `var APP_VERSION = 'v1.X.Y'` near the top of `renderer/index.html`) drives the login footer, the JSON backup `_appVersion`, and the in-app What's New badge logic. **Bump it alongside `package.json` whenever you cut a release**, and add the corresponding `## vX.Y` entry to `CHANGELOG.md` so the What's New modal has fresh content. The web build copies `CHANGELOG.md` to `public/`; remember to also copy it into `pm-roadmapper-site/public/CHANGELOG.md` for the marketing-site `/changelog` page.
-
-## v1.33.0 — Capacity + Calendar integration shapes
-Two sub-objects on `appSettings` are part of the public data contract and
-round-trip through both localStorage and the cloud JSONB blob:
-
-```js
-appSettings.capacity = {
-  hoursPerWeek: 40,   // user-configurable; drives capacity view + timesheet target
-  hoursPerDay:  8,
-  workDays:     5     // Mon–Fri
-};
-appSettings.integrations = {
-  google:    { connected, token, refreshToken, expiresAt, email },
-  microsoft: { connected, token, refreshToken, expiresAt, email }
-};
-```
-
-Always read capacity values through `getCapHours()` — never reach into
-`appSettings.capacity` directly. The legacy `_capacityHoursPerWeek` global
-is a live getter, so existing callsites keep working but new code should
-prefer `getCapHours().hpw`.
-
-Calendar tokens are captured in `_processOAuthFragment` from the
-`provider_token` URL fragment and only when
-`sessionStorage.pmr_oauth_intent === 'calendar:<provider>'`. Never stash
-provider tokens outside that flow.
+## Autonomous Operation
+When working on a fix queue:
+1. Never ask for clarification — make the best decision and log it in FIX_LOG.md
+2. Never stop between fixes — complete one, move to the next
+3. Self-review after each fix — re-read changes, check for syntax errors, verify logic
+4. Preserve existing patterns — match the codebase style exactly
+5. Dark mode everything — every new element must support dark mode
+6. Keep the single-file SPA pattern — all UI changes go into renderer/index.html
+7. Zero emoji — replace any emoji encountered while working
+8. Reference the roadmap page as the UI gold standard

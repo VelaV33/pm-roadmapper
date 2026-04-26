@@ -1,5 +1,17 @@
 # Roadmap OS — Changelog
 
+## v1.43.3 — Integrations placement + OAuth landing fix
+
+- **Integrations moved from top nav to the burger sidebar.** Top nav now ends at Insights; sidebar gets a chain-link icon entry below Insights.
+- **OAuth callback now lands on the Integrations page**, not the dashboard. Provider callbacks redirect to `#integrations?connected=<provider>`, but the init-time hash router was matching the literal string `'integrations?connected=jira'` against `_PMR_OVERLAY_MAP` and falling through to the default roadmap view. Init now strips the `?…` query before the lookup and preserves it in the URL so `_handleIntegrationCallback()` can still read the `connected=` / `error=` params.
+- **Single contact address.** All user-facing mailtos (refund, cancellation, support button, legacy static pages) now route to `hello@pmroadmapper.com`. Previously `billing@`, `support@`, and the legacy gmail address were sprinkled across the renderer and `web/static/*.html`. Admin/super-admin identity allowlists in the renderer and Supabase Edge functions are unchanged — those are auth checks, not contact addresses.
+
+## v1.43.2 — verification pass
+
+- Audited the historical 16-fix queue (`ROADMAP_OS_FIXES.md`) against the live build. All 16 items were already live (15 implemented, 1 — public Change Request nav entry — intentionally retired in v1.38.0). Findings logged in `FIX_LOG.md`.
+- `APP_VERSION` constant in the renderer now matches `package.json` so `_appVersion` in fresh backup exports reflects the actual build.
+- No functional or UI changes shipped.
+
 ## v1.43.1 — v12 polish batch
 
 - **Add Task → Select All** on the Library, To-Do, and G2M source tabs (with per-source category checkboxes on G2M).

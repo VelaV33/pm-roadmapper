@@ -2017,7 +2017,6 @@ body.dark-mode .pmr-tip::after{background:var(--surface-low);color:var(--text);b
       <a onclick="closeAllOverlays();openCapacity();updateNavActive('CapacityIQ');return false;">CapacityIQ</a>
       <a onclick="closeAllOverlays();_rptCurrentReport='initiative-health';openReports();updateNavActive('Reports');return false;">Reports</a>
       <a onclick="closeAllOverlays();openInsights();updateNavActive('Insights');return false;">Insights</a>
-      <a onclick="closeAllOverlays();openIntegrations();updateNavActive('Integrations');return false;">Integrations</a>
     </nav>
     <div style="margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
       <!-- Cloud sync status (click to force sync) -->
@@ -2098,6 +2097,11 @@ body.dark-mode .pmr-tip::after{background:var(--surface-low);color:var(--text);b
   <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openInsights()">
     <svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
     Insights
+  </button>
+  <!-- v1.43.3: Integrations moved from top nav to sidebar. -->
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openIntegrations()">
+    <svg viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+    Integrations
   </button>
   <!-- v1.36.0: Roadmap + Data actions moved to legend dropdowns.
        v1.36.3: Settings moved from sidebar into the Account/profile panel. -->
@@ -3581,7 +3585,7 @@ function buildDayOptions(mname,selectedDay){
 // v1.43.0 — single source of truth for the app version. Bump this with every
 // release alongside package.json. Used by the login footer, the JSON backup
 // metadata, and the in-app What's New modal (lastSeenAppVersion comparison).
-var APP_VERSION = 'v1.43.1';
+var APP_VERSION = 'v1.43.3';
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 var sections=[
@@ -18081,7 +18085,7 @@ function _billingPageHtml(sub, pending, seats){
   var pendingBanner = '';
   if(hasCancelPending){
     pendingBanner = '<div class="bill-card" style="background:#fef2f2;border-color:#fecaca;color:#b91c1c">' +
-      '<strong>Cancellation requested.</strong> Your subscription will run until ' + _billingFmtDate(expiresAt) + '. Email <a href="mailto:billing@pmroadmapper.com" style="color:#b91c1c;text-decoration:underline">billing@pmroadmapper.com</a> if you change your mind.' +
+      '<strong>Cancellation requested.</strong> Your subscription will run until ' + _billingFmtDate(expiresAt) + '. Email <a href="mailto:hello@pmroadmapper.com" style="color:#b91c1c;text-decoration:underline">hello@pmroadmapper.com</a> if you change your mind.' +
     '</div>';
   } else if(hasDiscountPending){
     pendingBanner = '<div class="bill-card" style="background:#ecfdf5;border-color:#bbf7d0;color:#15803d">' +
@@ -18178,7 +18182,7 @@ function _billingPageHtml(sub, pending, seats){
     { q:'Can I downgrade?',
       a:'Yes, anytime. The downgrade takes effect at the end of your current billing cycle so you keep paid features until then.' },
     { q:'How do refunds work?',
-      a:'Within the first 14 days of any new paid plan, email billing@pmroadmapper.com for a no-questions-asked refund. After 14 days we credit unused time toward future invoices.' },
+      a:'Within the first 14 days of any new paid plan, email hello@pmroadmapper.com for a no-questions-asked refund. After 14 days we credit unused time toward future invoices.' },
     { q:'How is the per-seat price calculated?',
       a:'Standard is $17/seat/month, Pro is $25/seat/month. Yearly plans are the equivalent of 10 months’ cost up-front (you save 2 months).' },
     { q:'Will my data be deleted if I cancel?',
@@ -18311,7 +18315,7 @@ async function _billingAcceptRetention(){
     showToast('Discount accepted — applied to your next invoice within 24 hours.', 'success');
     _renderBillingPage();
   } else {
-    showToast('Could not apply discount — please email billing@pmroadmapper.com.', 'error');
+    showToast('Could not apply discount — please email hello@pmroadmapper.com.', 'error');
   }
 }
 
@@ -18323,7 +18327,7 @@ async function _billingConfirmCancel(){
     showToast('Cancellation requested. We’ll process it within 24 hours.', 'success');
     _renderBillingPage();
   } else {
-    showToast('Could not submit cancellation — please email billing@pmroadmapper.com.', 'error');
+    showToast('Could not submit cancellation — please email hello@pmroadmapper.com.', 'error');
   }
 }
 
@@ -24215,7 +24219,7 @@ function _submitHelpRequest(kind){
   var userEmail = (_currentUser && _currentUser.email) || (userProfile && userProfile.email) || 'anonymous';
   var labels = { bug:'Bug', feature:'Feature request', help:'Help', ticket:'Ticket' };
   var bodyText = 'Type: '+(labels[kind]||kind)+'\nPriority: '+prio+'\nUser: '+userEmail+'\n\n'+desc;
-  var mailto = 'mailto:support@pmroadmapper.com?subject='+encodeURIComponent('[Roadmap OS] '+subj)+'&body='+encodeURIComponent(bodyText);
+  var mailto = 'mailto:hello@pmroadmapper.com?subject='+encodeURIComponent('[Roadmap OS] '+subj)+'&body='+encodeURIComponent(bodyText);
   try {
     if(window.electronAPI && window.electronAPI.openExternal) window.electronAPI.openExternal(mailto);
     else window.location.href = mailto;
@@ -36712,13 +36716,23 @@ function _pmrWireHistory(){
 
   // Seed the initial history entry so the first Back press doesn't drop the
   // user back to login. Respect an initial hash if present.
+  // v1.43.3: strip query string before looking up in _PMR_OVERLAY_MAP, so OAuth
+  // callbacks like #integrations?connected=jira route to the integrations page
+  // (and not the dashboard). Preserve the query in the URL so the per-page
+  // callback handler (e.g. _handleIntegrationCallback) can still read it.
   var initialHash = (window.location.hash || '').replace(/^#/, '');
-  var initialView = (initialHash && _PMR_OVERLAY_MAP[initialHash]) ? initialHash : 'roadmap';
-  _pmrReplaceView(initialView);
+  var initialHashBase = initialHash.split('?')[0];
+  var initialView = (initialHashBase && _PMR_OVERLAY_MAP[initialHashBase]) ? initialHashBase : 'roadmap';
+  if(initialHash.indexOf('?') >= 0){
+    // Seed history state without rewriting the URL — keep the query intact.
+    try { history.replaceState({ pmrView: initialView }, '', window.location.hash); } catch(_){}
+  } else {
+    _pmrReplaceView(initialView);
+  }
   _pmrHistorySeeded = true;
 
-  if(initialHash && initialHash !== 'roadmap' && _PMR_OVERLAY_MAP[initialHash] && typeof window[_PMR_OVERLAY_MAP[initialHash].open] === 'function'){
-    setTimeout(function(){ window[_PMR_OVERLAY_MAP[initialHash].open](); }, 500);
+  if(initialHashBase && initialHashBase !== 'roadmap' && _PMR_OVERLAY_MAP[initialHashBase] && typeof window[_PMR_OVERLAY_MAP[initialHashBase].open] === 'function'){
+    setTimeout(function(){ window[_PMR_OVERLAY_MAP[initialHashBase].open](); }, 500);
   }
 }
 
