@@ -13836,6 +13836,11 @@ document.addEventListener('keydown', function(e){
     if(['rowModal','barModal','quartersModal'].indexOf(top.id) !== -1){
       top.classList.add('hidden');
     } else {
+      // Voice command modal needs to stop the mic stream and timer when
+      // closed via Escape, otherwise the recording silently continues.
+      if(top.id === 'voiceCmdModal' && typeof stopVoiceRecording === 'function'){
+        try { stopVoiceRecording(); } catch(_){}
+      }
       top.remove();
     }
     return;

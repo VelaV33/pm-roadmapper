@@ -5,7 +5,24 @@ Base: `main` @ v1.45.1
 
 ---
 
-(Summary will be filled in at the end.)
+## Summary
+
+- **Total fixes applied:** 13
+- **Passes run:** all 5 (static/syntax, dark mode, logic bugs, UX, performance)
+- **Deferred items:** 0 (no major design decisions needed; everything found was a small, contained patch)
+- **Areas with no findings (i.e. checked, considered clean):**
+  - Dark mode catch-all coverage at lines ~132–164 already handles `[style*="background:#fff"]`, `[style*="background:white"]`, `[style*="background:var(--navy)"]`, `[style*="color:#1a1464"]` etc.; sampling confirmed no inline rule reaches the user without coverage.
+  - localStorage parsing for `pmr_session`, `pmr_saved_analyses`, `g2m_templates`, `pmr_custom_presets` — all wrapped in try/catch in current callers.
+  - Notification arrays (`_notifications`, `_localNotifications`, `_roadmapChangeLog`) are bounded.
+  - Global Escape-to-close handler at line ~13817 already covers `.modal-overlay` and `.plan-modal-backdrop`.
+  - Auto-sync timer + cloud push/pull error paths are protected with try/catch and surface via `showSyncBadge`.
+  - Auth flow signup/forgot/reset-code paths all wrap supaRequest in try/catch.
+  - All existing setInterval timers are paired with clearInterval at known teardown points (auto sync, badge refresh, notif poll, voice timer, comp timer, oauth poll).
+  - No undefined onclick handler functions remain (script audit returned 0 unknown identifiers in inline event-attribute call positions).
+  - No emoji in renderer/index.html (post-fix scan: 0).
+
+The fixes prioritized: defensive wrapping of async error paths so the UI doesn't get stuck, removing one referenced-but-undefined function (`addG2MRow`), fixing string-escaping in dynamically-generated onchange handlers (G2M radios), patching listener-leak patterns in the autocomplete helpers, and tightening modal lifecycle (voice mic shutdown on Esc, toast stacking).
+
 
 ---
 
@@ -85,5 +102,11 @@ Verified: syntax check OK.
 Symptom: The browser-fallback branch of `_sbFetch` doesn't catch transport errors. Many callers branch on `res.ok` rather than try/catch, so a network blip surfaces as an unhandled rejection.
 Fix: Wrapped the fallback in try/catch returning `{ok:false, status:0, data:{error:'network error'}}` to match the shape callers expect.
 Risk: Low — preserves the success-path return shape.
+Verified: syntax check OK.
+
+## [pass-3 #2] renderer/index.html:13838 — Voice command modal closed via Esc leaks the mic stream
+Symptom: The voice-command modal (`#voiceCmdModal`) is created with the `.modal-overlay` class. The global Esc handler in `keydown` removes the overlay via `top.remove()` but does NOT call `stopVoiceRecording()`, so `_voiceTimerInterval` keeps ticking and the MediaRecorder stream stays live. The mic indicator stays on in the OS taskbar. The Cancel button calls stopVoiceRecording explicitly — Esc does not.
+Fix: When the global Esc handler removes a modal whose id is `voiceCmdModal`, call `stopVoiceRecording()` first.
+Risk: Low — wrapped in try/catch and gated on the function existing.
 Verified: syntax check OK.
 
