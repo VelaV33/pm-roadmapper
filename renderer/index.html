@@ -8162,17 +8162,23 @@ async function _sbFetch(path, method, body, token){
     });
   }
   // Browser fallback (preview mode)
-  var res = await fetch(SUPABASE_URL + path, {
-    method: method||'GET',
-    headers: {
-      'Content-Type':  'application/json',
-      'apikey':        SUPABASE_ANON,
-      'Authorization': 'Bearer '+(token||_accessToken||SUPABASE_ANON),
-    },
-    body: body ? JSON.stringify(body) : undefined
-  });
-  var data = await res.json().catch(function(){ return {}; });
-  return { ok: res.ok, status: res.status, data: data };
+  try {
+    var res = await fetch(SUPABASE_URL + path, {
+      method: method||'GET',
+      headers: {
+        'Content-Type':  'application/json',
+        'apikey':        SUPABASE_ANON,
+        'Authorization': 'Bearer '+(token||_accessToken||SUPABASE_ANON),
+      },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    var data = await res.json().catch(function(){ return {}; });
+    return { ok: res.ok, status: res.status, data: data };
+  } catch(e){
+    // Network error — return a structured failure so callers can branch
+    // on .ok like they do for other Supabase calls.
+    return { ok:false, status:0, data:{ error: (e && e.message) || 'network error' } };
+  }
 }
 
 function _saveSession(d){
@@ -8439,6 +8445,10 @@ async function checkOAuthRedirect(){
             history.replaceState(null, '', window.location.pathname);
             msg.remove();
             if(ok && _currentUser) onAuthSuccess(_currentUser);
+          }).catch(function(e){
+            console.warn('[oauth] fallback processOAuthFragment failed:', e && e.message || e);
+            history.replaceState(null, '', window.location.pathname);
+            msg.remove();
           });
         };
       } catch(_){}
@@ -8751,10 +8761,17 @@ async function handleAuthPrimary(){
     return;
   }
 
-  var result = await _supabase.auth.signInWithPassword({email:email,password:password});
+  var result;
+  try {
+    result = await _supabase.auth.signInWithPassword({email:email,password:password});
+  } catch(e){
+    setAuthLoading(false);
+    showAuthError('Connection error. Please check your internet and try again.');
+    return;
+  }
   setAuthLoading(false);
   if(result.error){
-    var msg=result.error.message;
+    var msg=result.error.message||'';
     if(msg.indexOf('Invalid login')>=0) msg='Invalid email or password. Please check your credentials.';
     else if(msg.indexOf('rate limit')>=0) msg='Too many attempts. Please wait a few minutes.';
     showAuthError(msg);
@@ -9981,8 +9998,14 @@ function openProfile(){
       var email=userProfile.email||(prompt('Enter your account email:'));
       if(!email) return;
       if(_supabase){
-        _supabase.auth.resetPasswordForEmail(email).then(function(){
-          showToast('Password reset email sent','success');
+        _supabase.auth.resetPasswordForEmail(email).then(function(res){
+          if(res && res.error){
+            showToast('Could not send reset email: '+(res.error.message||'unknown error'),'error');
+          } else {
+            showToast('Password reset email sent','success');
+          }
+        }).catch(function(e){
+          showToast('Could not send reset email: '+(e && e.message || e),'error');
         });
       } else { showToast('Auth not configured','error'); }
     }
@@ -10045,7 +10068,11 @@ function openProfile(){
           }
         } else {
           showToast('Sync failed: ' + (res&&res.reason||'unknown'),'error');
+          if(typeof showSyncBadge === 'function') showSyncBadge('error');
         }
+      }).catch(function(e){
+        showToast('Sync failed: ' + (e && e.message || e),'error');
+        if(typeof showSyncBadge === 'function') showSyncBadge('error');
       });
     }
   ));
@@ -10478,6 +10505,11 @@ function openComments(evt, rowId){
   }
   loadComments(rowId).then(function(cs){
     renderThread(rowId, cs, thread);
+  }).catch(function(e){
+    console.warn('[loadComments] failed', e && e.message || e);
+    if(thread && (!cached || !cached.length)){
+      thread.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px">Could not load comments. Try again later.</div>';
+    }
   });
 }
 
@@ -14128,7 +14160,7 @@ function renderG2M(){
       empty.style.cssText='padding:16px 20px;text-align:center;color:var(--muted);font-size:12px;border:1px dashed var(--border);border-radius:8px;margin:8px 0';
       var escapedProduct2=g2mCurrentProduct.replace(/'/g,"\\'");
       var escapedCatName2=cat.name.replace(/'/g,"\\'");
-      empty.innerHTML='No items in this category. <a style="color:var(--accent);cursor:pointer;font-weight:600" onclick="addG2MRow(\''+escapedProduct2+'\',\''+escapedCatName2+'\')">+ Add item</a>';
+      empty.innerHTML='No items in this category. <a style="color:var(--accent);cursor:pointer;font-weight:600" onclick="showG2MAddRowForm(\''+escapedCatName2+'\')">+ Add item</a>';
       div.appendChild(empty);
     }
     body.appendChild(div);
@@ -14716,7 +14748,7 @@ function delG2MRow(product,idx){
   }
 }
 
-function showG2MAddRowForm(){
+function showG2MAddRowForm(preselectCat){
   if(!g2mCurrentProduct){showToast('Select a product initiative first','error');return;}
   var form=document.getElementById('g2mAddRowForm');
   form.style.display='block';
@@ -14729,8 +14761,13 @@ function showG2MAddRowForm(){
     o.style.cssText='background:#fff;color:var(--text)';
     catSel.appendChild(o);
   });
-  // Default to Additional Notes
-  catSel.value='Additional Notes';
+  // Default to provided category, or Additional Notes if none specified
+  if(preselectCat && typeof preselectCat === 'string'){
+    var hasMatch = G2M_CATEGORIES.some(function(c){ return c.name === preselectCat; });
+    catSel.value = hasMatch ? preselectCat : 'Additional Notes';
+  } else {
+    catSel.value='Additional Notes';
+  }
   var textInp=document.getElementById('g2mNewRowText');
   textInp.value='';
   textInp.focus();
@@ -17307,8 +17344,13 @@ function attachOwnerAutocomplete(input){
   }
 
   var dropdown = null;
+  var _onOutside = null;
   function closeDropdown(){
     if(dropdown){ dropdown.remove(); dropdown = null; }
+    if(_onOutside){
+      document.removeEventListener('mousedown', _onOutside);
+      _onOutside = null;
+    }
   }
   function showDropdown(){
     closeDropdown();
@@ -17355,15 +17397,21 @@ function attachOwnerAutocomplete(input){
       dropdown.appendChild(item);
     });
     document.body.appendChild(dropdown);
+    // Attach outside-click only while dropdown is visible; closeDropdown
+    // removes the listener so we don't accumulate one per input across
+    // re-renders.
+    if(!_onOutside){
+      _onOutside = function(e){
+        if(dropdown && !dropdown.contains(e.target) && e.target !== input){
+          closeDropdown();
+        }
+      };
+      document.addEventListener('mousedown', _onOutside);
+    }
   }
   input.addEventListener('input', showDropdown);
   input.addEventListener('focus', showDropdown);
   input.addEventListener('blur', function(){ setTimeout(closeDropdown, 200); });
-  document.addEventListener('mousedown', function(e){
-    if(dropdown && !dropdown.contains(e.target) && e.target !== input){
-      closeDropdown();
-    }
-  });
 }
 
 // ── Reusable library autocomplete ──────────────────────────────────────────
@@ -17380,11 +17428,16 @@ function attachLibraryAutocomplete(input, onSelect){
   input._libAutocomplete = true;
 
   var dropdown = null;
+  var _onOutside = null;
 
   function closeDropdown(){
     if(dropdown){
       dropdown.remove();
       dropdown = null;
+    }
+    if(_onOutside){
+      document.removeEventListener('mousedown', _onOutside);
+      _onOutside = null;
     }
   }
 
@@ -17447,17 +17500,26 @@ function attachLibraryAutocomplete(input, onSelect){
     document.body.appendChild(dropdown);
   }
 
+  // Wrap showDropdown so the outside-click listener is attached only while
+  // the dropdown is actually visible and removed in closeDropdown.
+  var _origShow = showDropdown;
+  showDropdown = function(){
+    _origShow();
+    if(dropdown && !_onOutside){
+      _onOutside = function(e){
+        if(dropdown && !dropdown.contains(e.target) && e.target !== input){
+          closeDropdown();
+        }
+      };
+      document.addEventListener('mousedown', _onOutside);
+    }
+  };
+
   input.addEventListener('input', showDropdown);
   input.addEventListener('focus', showDropdown);
   input.addEventListener('blur', function(){
     // Delay so a click on the dropdown can register first
     setTimeout(closeDropdown, 200);
-  });
-  // Close on outside click
-  document.addEventListener('mousedown', function(e){
-    if(dropdown && !dropdown.contains(e.target) && e.target !== input){
-      closeDropdown();
-    }
   });
 }
 
@@ -27638,12 +27700,18 @@ function _pollForConnection(provider){
   var attempts = 0; var max = 60;
   var iv = setInterval(async function(){
     attempts++; if(attempts > max){ clearInterval(iv); return; }
-    var statuses = await fetchIntegrationStatuses();
-    var c = statuses.find(function(s){ return s.provider === provider; });
-    if(c && c.status === 'connected'){
-      clearInterval(iv);
-      renderIntegrationsPage();
-      showToast(provider.charAt(0).toUpperCase()+provider.slice(1)+' connected.', 'success');
+    try {
+      var statuses = await fetchIntegrationStatuses();
+      if(!Array.isArray(statuses)) return;
+      var c = statuses.find(function(s){ return s.provider === provider; });
+      if(c && c.status === 'connected'){
+        clearInterval(iv);
+        renderIntegrationsPage();
+        showToast(provider.charAt(0).toUpperCase()+provider.slice(1)+' connected.', 'success');
+      }
+    } catch(e){
+      // Network blip — keep polling, but log for visibility
+      console.warn('[_pollForConnection]', provider, e && e.message || e);
     }
   }, 5000);
 }
