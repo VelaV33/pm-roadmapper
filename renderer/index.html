@@ -4026,7 +4026,7 @@ function buildDayOptions(mname,selectedDay){
 // v1.43.0 — single source of truth for the app version. Bump this with every
 // release alongside package.json. Used by the login footer, the JSON backup
 // metadata, and the in-app What's New modal (lastSeenAppVersion comparison).
-var APP_VERSION = 'v1.45.0';
+var APP_VERSION = 'v1.45.1';
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 var sections=[
@@ -27477,7 +27477,7 @@ var INTEGRATION_DEFS = [
     docsUrl:'https://docs.github.com/en/rest' },
   { id:'slack',  name:'Slack',  color:'#4A154B', category:'feedback',
     description:'Push notifications to Slack channels. Capture feedback from messages.',
-    iconSvg:'<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="3" height="3" rx="1.5"/><rect x="11" y="3" width="3" height="3" rx="1.5"/><rect x="11" y="18" width="3" height="3" rx="1.5"/><rect x="18" y="11" width="3" height="3" rx="1.5"/><rect x="8" y="11" width="8" height="3" rx="1.5"/><rect x="11" y="8" width="3" height="8" rx="1.5"/></svg>',
+    iconSvg:'<svg viewBox="0 0 122.8 122.8" width="32" height="32" xmlns="http://www.w3.org/2000/svg"><path d="M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9zM32.3 77.6c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9z" fill="#E01E5A"/><path d="M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9zM45.2 32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H12.9C5.8 58.1 0 52.3 0 45.2s5.8-12.9 12.9-12.9z" fill="#36C5F0"/><path d="M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97zM90.5 45.2c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V12.9C64.7 5.8 70.5 0 77.6 0s12.9 5.8 12.9 12.9z" fill="#2EB67D"/><path d="M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97zM77.6 90.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9z" fill="#ECB22E"/></svg>',
     features:['Send notifications','Capture feedback','Channel sync'],
     docsUrl:'https://api.slack.com/' },
   { id:'asana',  name:'Asana',  color:'#F06A6A', category:'project',
@@ -38760,9 +38760,17 @@ function _pmrSeedAfterLogin(){
   if(!_pmrHistoryEnabled) return;
   try {
     _pmrPushCount = 0;
-    var hash = (window.location.hash || '').replace(/^#/, '').split('?')[0];
-    var landing = (hash && _PMR_OVERLAY_MAP[hash]) ? hash : 'roadmap';
-    history.replaceState({ pmrView: landing }, '', '#' + landing);
+    var rawHash = (window.location.hash || '').replace(/^#/, '');
+    var hashBase = rawHash.split('?')[0];
+    var landing = (hashBase && _PMR_OVERLAY_MAP[hashBase]) ? hashBase : 'roadmap';
+    // v1.45.1: preserve the original hash including any query string so OAuth
+    // callbacks (e.g. #integrations?connected=asana) keep their params for the
+    // per-page handler. Also open the target overlay if the landing isn't roadmap.
+    var preservedUrl = rawHash ? '#' + rawHash : '#' + landing;
+    history.replaceState({ pmrView: landing }, '', preservedUrl);
+    if(landing !== 'roadmap' && _PMR_OVERLAY_MAP[landing] && typeof window[_PMR_OVERLAY_MAP[landing].open] === 'function'){
+      setTimeout(function(){ window[_PMR_OVERLAY_MAP[landing].open](); }, 500);
+    }
   } catch(_){}
 }
 

@@ -1,5 +1,12 @@
 # Roadmap OS — Changelog
 
+## v1.45.1 — Post-V14 polish
+
+- **Official Slack icon** in the Integrations grid (replaces the placeholder hash-grid SVG).
+- **OAuth deep-link survives login.** `_pmrSeedAfterLogin()` now preserves the original hash including any query string (`#integrations?connected=asana`) and proactively opens the target overlay 500ms after seeding history. Pairs with the v1.43.3 init-time fix to handle every entry path — fresh tab, post-OAuth callback, or signed-in deep-link.
+- **CHANGELOG cleanup.** Removed a duplicate `## v1.43.3` header that wrongly labelled a v1.44.0 Phase 1 description.
+- **FIX_LOG_V14.md** appended with a session reconciliation note confirming all 13 V14 fixes are in code (32 `// v14 Fix N` markers verified, tooltip `title="` count at 218 vs the 215 promised).
+
 ## v1.45.0 — Matrix plotting, drag-drop, kanban initiatives, merge roadmaps, tooltips refresh (V14 fix queue)
 
 A 13-fix sweep across the roadmap, matrix, kanban, checklist, and edit-product surfaces.
@@ -66,18 +73,6 @@ A dedicated **Products** page in the top nav (between Roadmap and Checklist) —
 - New Bug form (title, description, severity, status, affected version, reporter, repro steps)
 - New History entry form (type, date, title, description) — the bug-status select on the Releases tab also auto-logs to history
 - Every save calls `pushCloudData()` and re-renders the active tab inline; helpers `_productPersistAndRefresh()` and `logProductHistory()` handle the round-trip
-
-## v1.43.3 — Integrations placement + OAuth landing fix
-
-A dedicated **Products** page in the top nav (between Roadmap and Checklist) — single source of truth for every product. Phase 1 ships the list view and data model:
-
-- **Products = rows.** Each row in `rows[]` is treated as a product. New product fields (`productCode`, `version`, `productType`, `productFamily`, `tagline`, `pricingModel`, `pricePoints`, `revenueProjected/Actual`, `lifecycleStage`, `launchDatePlanned/Actual`, `releaseNotes[]`, `bugs[]`, `productHistory[]`, `hardwareInfo`, `digitalInfo`, `qualityMetrics`) are populated lazily by `ensureProductFields(row)` so existing data is preserved.
-- **Two views.** Table (sortable columns: name, code, type, status, stage, priority, owner, revenue, open bugs, version) and card grid (responsive auto-fill).
-- **Filters & search.** Type / lifecycle stage / status dropdowns plus free-text search across name, code, family, owner, tagline.
-- **Summary bar.** Total products, In Development, Live (GA), Beta, total revenue, open bugs.
-- **Status & stage inferred from existing data.** `_productInferStatus(row)` derives Released/In Progress/Delayed/At Risk/Strategy from the last bar's colour; `_productInferLifecycle(row)` maps that to a default lifecycle stage. Override-friendly — manually setting `lifecycleStage` wins.
-- **History helper shipped.** `logProductHistory(rowId, {type, title, description, ...})` is callable now; auto-log hooks at row-edit / status-change sites land in Phase 3.
-- **Clicking a product** routes to the existing edit modal for now. Phase 2 replaces this with a dedicated 8-tab detail page (overview, commercial, releases & bugs, plan, specs, history, docs, discussion).
 
 ## v1.43.3 — Integrations placement + OAuth landing fix
 

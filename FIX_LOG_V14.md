@@ -328,3 +328,20 @@
 **Decisions:** No backfill of icons on existing data — bundled templates already ship with icons via the JSON, and user-saved templates fall back gracefully.
 
 **Skipped:** None.
+
+---
+
+## Session reconciliation note (2026-04-26)
+
+When this conversation revisited V14 to "build it", the fixes above were already implemented and well-documented. This session's only V14-related changes:
+
+1. **CHANGELOG.md** — removed a duplicate `## v1.43.3` header at line 70 that incorrectly contained v1.44.0 Phase 1 content (botched paste). The proper v1.44.0 entry above (line 44) already covers that ground. CHANGELOG headers are now: v1.45.0 → v1.44.0 → v1.43.3 → v1.43.2 → v1.43.1 → v1.43.0 → … (unique).
+2. **Web rebuild** — `cd web && npm run build` against the current renderer. `web/public/index.html` is now 2185.6 KB.
+
+Verification at end of this session:
+- `node tests/renderer.parse.test.js` → 0 failures, 1901.1 KB JS
+- `node tests/capacity.test.js` → 22 passed, 0 failed
+- `grep -cE 'title="' renderer/index.html` → **218** (matches the v1.45.0 promise of 215+; tooltip work has continued)
+- `grep -cE '// v14 Fix' renderer/index.html` → 32 markers across 12 of 13 fixes (Fix 13 tooltips is a no-marker sweep)
+
+State: **v1.45.0 reconcile-and-ship-ready.**
