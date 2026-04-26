@@ -1800,6 +1800,108 @@ body.dark-mode .pmr-tip::after{background:var(--surface-low);color:var(--text);b
 @keyframes loadSpin{to{transform:rotate(360deg)}}
 .loading-overlay .loading-msg{font-size:13px;font-weight:600;color:#e2e8f0;letter-spacing:.01em}
 .loading-overlay .loading-brand{font-size:11px;font-weight:700;color:rgba(226,232,240,.6);text-transform:uppercase;letter-spacing:.18em}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * v1.44.0 — Products page (V13 fix queue)
+ * Single source of truth for every product. Aggregates across the app.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+#productsOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
+#productsOverlay.open{display:flex}
+.products-header{background:var(--toolbar-bg);backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0}
+.products-header h2{font-size:20px;font-weight:800;letter-spacing:-0.03em;color:var(--text);margin:0;display:flex;align-items:center;gap:8px}
+.products-header h2 svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.products-header .pclose{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer}
+.products-toolbar{padding:12px 28px;display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0}
+.products-toolbar input,.products-toolbar select{background:var(--white);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12px;font-family:inherit}
+.products-toolbar input{flex:1;min-width:200px;max-width:340px}
+.products-toolbar input:focus,.products-toolbar select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,91,177,.12)}
+.products-view-toggle{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--white)}
+.products-view-toggle .view-btn{padding:6px 10px;background:none;border:none;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.products-view-toggle .view-btn.active{background:var(--accent);color:#fff}
+.products-view-toggle .view-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5}
+.products-summary-bar{display:flex;flex-wrap:wrap;gap:0;padding:14px 28px;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0}
+.products-summary-bar .summary-stat{display:flex;flex-direction:column;gap:2px;padding:6px 22px 6px 0;margin-right:22px;border-right:1px solid var(--border)}
+.products-summary-bar .summary-stat:last-child{border-right:none}
+.products-summary-bar .summary-value{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.02em;font-family:'Barlow Condensed',sans-serif}
+.products-summary-bar .summary-value.bug-count{color:#dc2626}
+.products-summary-bar .summary-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+#productsContainer{flex:1;overflow:auto;padding:18px 28px 28px}
+.products-empty{padding:48px 24px;text-align:center;color:var(--muted);font-size:13px}
+/* Table view */
+.products-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;font-size:12px}
+.products-table thead th{background:var(--surface-low);color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;text-align:left;padding:10px 14px;border-bottom:1px solid var(--border);white-space:nowrap}
+.products-table thead th.sortable{cursor:pointer;user-select:none}
+.products-table thead th.sortable:hover{color:var(--text)}
+.products-table thead th .sort-arrow{display:inline-block;width:10px;color:var(--accent);margin-left:4px}
+.products-table tbody tr{cursor:pointer;transition:background .12s}
+.products-table tbody tr:hover{background:var(--surface-low)}
+.products-table tbody td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+.products-table tbody tr:last-child td{border-bottom:none}
+.products-table .monospace{font-family:'SF Mono','Menlo','Monaco',monospace;font-size:11px;color:var(--muted)}
+.products-table .actions-cell{text-align:right;white-space:nowrap}
+.product-name-cell{display:flex;align-items:center;gap:10px;min-width:220px}
+.product-thumb,.product-thumb-placeholder,.product-card-img,.product-detail-img{width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--surface-low);display:flex;align-items:center;justify-content:center;color:var(--accent)}
+.product-thumb-placeholder svg,.product-card-icon svg{width:22px;height:22px}
+.product-name-cell .product-name{display:block;font-weight:600;color:var(--text)}
+.product-name-cell .product-tagline{display:block;font-size:11px;color:var(--muted);margin-top:1px}
+.product-family-badge{display:inline-block;font-size:9px;font-weight:700;color:var(--accent);background:rgba(0,91,177,.1);padding:1px 6px;border-radius:4px;margin-top:3px;text-transform:uppercase;letter-spacing:.05em}
+.type-badge,.stage-badge,.status-badge,.version-badge,.code-label{display:inline-block;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;letter-spacing:.04em;white-space:nowrap}
+.type-badge{background:rgba(124,58,237,.12);color:#7c3aed;text-transform:uppercase}
+.type-badge.type-hardware{background:rgba(234,88,12,.12);color:#ea580c}
+.type-badge.type-firmware{background:rgba(202,138,4,.14);color:#a16207}
+.type-badge.type-hybrid{background:rgba(13,148,136,.12);color:#0d9488}
+.stage-badge{background:var(--surface-low);color:var(--muted);text-transform:uppercase;border:1px solid var(--border)}
+.status-badge{background:var(--surface-low);color:var(--text);text-transform:uppercase}
+.status-badge.status-released,.status-badge.status-ga{background:rgba(16,185,129,.14);color:#047857}
+.status-badge.status-in-progress{background:rgba(0,91,177,.12);color:#0369a1}
+.status-badge.status-delayed{background:rgba(245,158,11,.14);color:#b45309}
+.status-badge.status-at-risk{background:rgba(239,68,68,.14);color:#b91c1c}
+.status-badge.status-strategy{background:rgba(124,58,237,.12);color:#6d28d9}
+.version-badge{background:rgba(0,91,177,.1);color:var(--accent);font-family:'SF Mono','Menlo',monospace}
+.code-label{background:var(--surface-low);color:var(--muted);font-family:'SF Mono','Menlo',monospace;font-weight:600;text-transform:none}
+.priority-dot{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--text)}
+.priority-dot:before{content:'';width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
+.priority-dot.priority-high:before{background:#dc2626}
+.priority-dot.priority-med:before,.priority-dot.priority-medium:before{background:#f59e0b}
+.priority-dot.priority-low:before{background:#10b981}
+.bug-count{display:inline-block;background:rgba(239,68,68,.14);color:#b91c1c;font-size:11px;font-weight:700;padding:2px 8px;border-radius:9999px;min-width:22px;text-align:center}
+.btn-icon-sm{background:none;border:1px solid var(--border);color:var(--muted);padding:4px 7px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .12s}
+.btn-icon-sm:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+/* Card view */
+.products-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.product-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow-card)}
+.product-card:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,0,0,.06);border-color:var(--accent)}
+.product-card-header{display:flex;align-items:flex-start;gap:10px}
+.product-card-img,.product-card-icon{width:42px;height:42px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--surface-low);color:var(--accent)}
+.product-card-title{flex:1;min-width:0}
+.product-card-title h4{font-size:15px;font-weight:700;color:var(--text);margin:0 0 3px;letter-spacing:-0.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.product-card-tagline{font-size:12px;color:var(--muted);margin:0;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.product-card-meta{display:flex;flex-wrap:wrap;gap:6px}
+.product-card-labels{display:flex;flex-wrap:wrap;gap:4px}
+.label-pill-sm{font-size:10px;font-weight:600;padding:2px 7px;border-radius:9999px;background:var(--surface-low);color:var(--muted);border:1px solid var(--border)}
+.label-pill-sm.more{background:var(--accent);color:#fff;border-color:var(--accent)}
+.product-card-stats{display:flex;flex-wrap:wrap;gap:14px;padding:8px 0;border-top:1px solid var(--border)}
+.product-card-stats .stat-item{display:flex;flex-direction:column;gap:2px}
+.product-card-stats .stat-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.product-card-stats .stat-value{font-size:14px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif}
+.product-card-stats .stat-value.bug-count{display:inline-block;background:none;color:#dc2626;padding:0;font-size:14px;border-radius:0;font-weight:700}
+.product-card-footer{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--muted)}
+/* Dark mode overrides */
+body.dark-mode .products-table{background:var(--white);border-color:var(--border)}
+body.dark-mode .products-table thead th{background:#0f172a;color:var(--muted)}
+body.dark-mode .products-table tbody tr:hover{background:#0f172a}
+body.dark-mode .product-card{background:var(--white);border-color:var(--border)}
+body.dark-mode .product-card:hover{background:var(--surface-high);border-color:var(--accent)}
+body.dark-mode .stage-badge,body.dark-mode .status-badge,body.dark-mode .code-label{background:var(--surface-high);color:var(--text);border-color:var(--border)}
+body.dark-mode .status-badge.status-released,body.dark-mode .status-badge.status-ga{background:rgba(16,185,129,.18);color:#6ee7b7}
+body.dark-mode .status-badge.status-in-progress{background:rgba(45,107,244,.2);color:#93c5fd}
+body.dark-mode .status-badge.status-delayed{background:rgba(245,158,11,.18);color:#fcd34d}
+body.dark-mode .status-badge.status-at-risk{background:rgba(239,68,68,.18);color:#fca5a5}
+body.dark-mode .status-badge.status-strategy{background:rgba(124,58,237,.2);color:#c4b5fd}
+body.dark-mode .label-pill-sm{background:var(--surface-high);color:var(--text);border-color:var(--border)}
+body.dark-mode .products-toolbar input,body.dark-mode .products-toolbar select{background:var(--white);color:var(--text);border-color:var(--border)}
+body.dark-mode .btn-icon-sm{background:var(--white);color:var(--muted);border-color:var(--border)}
+body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -2011,6 +2113,7 @@ body.dark-mode .pmr-tip::after{background:var(--surface-low);color:var(--text);b
     <nav class="toolbar-nav" id="mainNav" aria-label="Primary">
       <a onclick="showDashboard();return false;">Dashboard</a>
       <a class="active" onclick="showRoadmapView();return false;">Roadmap</a>
+      <a onclick="closeAllOverlays();openProducts();updateNavActive('Products');return false;">Products</a>
       <a onclick="closeAllOverlays();openG2M();updateNavActive('Checklist');return false;">Checklist</a>
       <a onclick="closeAllOverlays();openPlans();updateNavActive('Plans');return false;">Plans</a>
       <a onclick="closeAllOverlays();openTodo();updateNavActive('To-Do');return false;">To-Do</a>
@@ -2981,6 +3084,57 @@ body.dark-mode .pmr-tip::after{background:var(--surface-low);color:var(--text);b
   </div>
 </div>
 
+<!-- ── PRODUCTS OVERLAY (v1.44.0 — V13 fix queue) ─────────────────────── -->
+<div id="productsOverlay">
+  <div class="products-header">
+    <h2>
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      Products
+    </h2>
+    <button class="pclose" onclick="closeProducts()" aria-label="Close">&times;</button>
+  </div>
+  <div class="products-toolbar">
+    <input type="text" id="productsSearchInput" placeholder="Search products by name, code, family, owner..." oninput="filterProducts()">
+    <select id="productsFilterType" onchange="filterProducts()" title="Filter by product type">
+      <option value="">All Types</option>
+      <option value="digital">Digital</option>
+      <option value="hardware">Hardware</option>
+      <option value="firmware">Firmware</option>
+      <option value="hybrid">Hybrid</option>
+    </select>
+    <select id="productsFilterStage" onchange="filterProducts()" title="Filter by lifecycle stage">
+      <option value="">All Stages</option>
+      <option value="concept">Concept</option>
+      <option value="discovery">Discovery</option>
+      <option value="development">Development</option>
+      <option value="alpha">Alpha</option>
+      <option value="beta">Beta</option>
+      <option value="ga">General Availability</option>
+      <option value="mature">Mature</option>
+      <option value="eol">End of Life</option>
+      <option value="deprecated">Deprecated</option>
+    </select>
+    <select id="productsFilterStatus" onchange="filterProducts()" title="Filter by status">
+      <option value="">All Statuses</option>
+      <option value="Strategy">Strategy</option>
+      <option value="In Progress">In Progress</option>
+      <option value="Released">Released</option>
+      <option value="Delayed">Delayed</option>
+      <option value="At Risk">At Risk</option>
+    </select>
+    <div class="products-view-toggle" role="group" aria-label="View mode">
+      <button class="view-btn active" data-view="table" onclick="setProductsView('table')" aria-label="Table view" title="Table view">
+        <svg viewBox="0 0 16 16"><line x1="2" y1="4" x2="14" y2="4"/><line x1="2" y1="8" x2="14" y2="8"/><line x1="2" y1="12" x2="14" y2="12"/></svg>
+      </button>
+      <button class="view-btn" data-view="cards" onclick="setProductsView('cards')" aria-label="Card view" title="Card view">
+        <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="products-summary-bar" id="productsSummary"></div>
+  <div id="productsContainer"></div>
+</div>
+
 <div id="tourOverlay"><div class="tour-spotlight" id="tourSpot"></div><div class="tour-tooltip" id="tourTip"></div></div>
 </div><!-- /app-content -->
 
@@ -3585,7 +3739,7 @@ function buildDayOptions(mname,selectedDay){
 // v1.43.0 — single source of truth for the app version. Bump this with every
 // release alongside package.json. Used by the login footer, the JSON backup
 // metadata, and the in-app What's New modal (lastSeenAppVersion comparison).
-var APP_VERSION = 'v1.43.3';
+var APP_VERSION = 'v1.44.0';
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 var sections=[
@@ -24413,7 +24567,7 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 
 function closeAllOverlays(){
-  ['g2mOverlay','todoOverlay','kpiOverlay','ucrOverlay','capOverlay','artOverlay','previewOverlay','reportsOverlay','insightsOverlay','adminOverlay','platformAdminOverlay','prioritizationOverlay','plansOverlay','feedbackOverlay','templateLibraryOverlay','integrationsOverlay','billingOverlay'].forEach(function(id){
+  ['g2mOverlay','todoOverlay','kpiOverlay','ucrOverlay','capOverlay','artOverlay','previewOverlay','reportsOverlay','insightsOverlay','adminOverlay','platformAdminOverlay','prioritizationOverlay','plansOverlay','feedbackOverlay','templateLibraryOverlay','integrationsOverlay','billingOverlay','productsOverlay'].forEach(function(id){
     var el=document.getElementById(id);
     if(el) el.classList.remove('open');
   });
@@ -26814,6 +26968,344 @@ async function disconnectIntegration(provider){
   } catch(e){
     showToast('Disconnect failed: '+(e && e.message || e),'error');
   }
+}
+
+// ═════════════════════════════════════════════════════════════════════════
+// PRODUCTS PAGE (v1.44.0 — V13 fix queue)
+// Single source of truth for every product. Products ARE rows[]; we extend
+// each row with PRODUCT_FIELD_DEFAULTS via ensureProductFields() on first
+// open, and the Roadmap and Products page write to the same objects.
+// ═════════════════════════════════════════════════════════════════════════
+var _productsViewMode = 'table';      // 'table' | 'cards'
+var _productsSortBy   = 'name';
+var _productsSortDir  = 'asc';        // 'asc' | 'desc'
+var _currentProductDetailId = null;   // populated in Phase 2
+
+var PRODUCT_FIELD_DEFAULTS = {
+  productCode:'', version:'', productType:'digital', productFamily:'', productImage:null, tagline:'',
+  pricingModel:'', pricePoints:[], targetMarket:'', targetCustomer:'',
+  revenueProjected:0, revenueActual:0, costToBuild:0, grossMargin:null,
+  licensingTerms:'', salesChannel:'',
+  lifecycleStage:'', launchDatePlanned:null, launchDateActual:null,
+  endOfLifeDate:null, supportEndDate:null,
+  releaseNotes:[], bugs:[], productHistory:[]
+};
+var PRODUCT_HARDWARE_DEFAULTS = {
+  bomReference:'', firmwareVersion:'', hardwareRevision:'',
+  manufacturingLocation:'', certifications:[], serialNumberRange:'',
+  warrantyPeriod:'', unitsShipped:0, unitsInField:0,
+  fieldFailureRate:null, rmaRate:null
+};
+var PRODUCT_DIGITAL_DEFAULTS = {
+  techStack:[], hosting:'', uptimeSLA:'', apiVersion:'',
+  supportedPlatforms:[], activeUsersDAU:0, activeUsersMAU:0,
+  complianceStatus:[], thirdPartyDeps:[]
+};
+var PRODUCT_QUALITY_DEFAULTS = {
+  csatScore:null, npsScore:null, supportTicketsOpen:0,
+  avgResolutionTime:'', slaCompliance:null
+};
+
+function _productInferStatus(row){
+  if(!row || !row.bars || !row.bars.length) return 'Strategy';
+  // Last bar's colour is the most recent state
+  var last = row.bars[row.bars.length-1];
+  var map = { g:'Released', b:'In Progress', o:'Delayed', r:'At Risk', s:'Strategy', y:'Planned' };
+  return map[last.c] || 'Strategy';
+}
+function _productInferLifecycle(row){
+  var s = _productInferStatus(row);
+  if(s === 'Released') return 'ga';
+  if(s === 'In Progress' || s === 'Delayed' || s === 'At Risk') return 'development';
+  if(s === 'Planned') return 'discovery';
+  return 'concept';
+}
+
+function ensureProductFields(row){
+  if(!row) return;
+  // Top-level scalar/array defaults — only set if undefined to preserve data
+  Object.keys(PRODUCT_FIELD_DEFAULTS).forEach(function(k){
+    if(row[k] === undefined){
+      var v = PRODUCT_FIELD_DEFAULTS[k];
+      row[k] = (v && typeof v === 'object') ? JSON.parse(JSON.stringify(v)) : v;
+    }
+  });
+  if(!row.lifecycleStage) row.lifecycleStage = _productInferLifecycle(row);
+  // Migrate legacy revenue field (added in v1.42)
+  if(!row.revenueProjected && typeof row.revenue === 'number') row.revenueProjected = row.revenue;
+  // Nested objects
+  if(!row.hardwareInfo || typeof row.hardwareInfo !== 'object') row.hardwareInfo = JSON.parse(JSON.stringify(PRODUCT_HARDWARE_DEFAULTS));
+  else Object.keys(PRODUCT_HARDWARE_DEFAULTS).forEach(function(k){ if(row.hardwareInfo[k] === undefined) row.hardwareInfo[k] = JSON.parse(JSON.stringify(PRODUCT_HARDWARE_DEFAULTS[k])); });
+  if(!row.digitalInfo || typeof row.digitalInfo !== 'object') row.digitalInfo = JSON.parse(JSON.stringify(PRODUCT_DIGITAL_DEFAULTS));
+  else Object.keys(PRODUCT_DIGITAL_DEFAULTS).forEach(function(k){ if(row.digitalInfo[k] === undefined) row.digitalInfo[k] = JSON.parse(JSON.stringify(PRODUCT_DIGITAL_DEFAULTS[k])); });
+  if(!row.qualityMetrics || typeof row.qualityMetrics !== 'object') row.qualityMetrics = JSON.parse(JSON.stringify(PRODUCT_QUALITY_DEFAULTS));
+  else Object.keys(PRODUCT_QUALITY_DEFAULTS).forEach(function(k){ if(row.qualityMetrics[k] === undefined) row.qualityMetrics[k] = PRODUCT_QUALITY_DEFAULTS[k]; });
+}
+
+function logProductHistory(rowId, entry){
+  if(!rowId || !entry) return;
+  var row = (rows || []).find(function(r){ return r.id === rowId; });
+  if(!row) return;
+  ensureProductFields(row);
+  var actor = (typeof userProfile!=='undefined' && userProfile && userProfile.name)
+            || ((typeof _currentUser!=='undefined' && _currentUser && _currentUser.email))
+            || 'You';
+  row.productHistory.push({
+    id: 'ph-' + Date.now() + '-' + Math.random().toString(36).slice(2,7),
+    date: new Date().toISOString(),
+    type: entry.type || 'custom',
+    title: String(entry.title || ''),
+    description: String(entry.description || ''),
+    actor: actor,
+    metadata: entry.metadata || {},
+    autoGenerated: entry.autoGenerated !== false
+  });
+  // Cap at 200 entries per product
+  if(row.productHistory.length > 200) row.productHistory = row.productHistory.slice(-200);
+}
+
+function _productGetTypeIcon(type){
+  var icons = {
+    digital:  '<svg viewBox="0 0 20 20" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="2" width="14" height="12" rx="2"/><line x1="7" y1="18" x2="13" y2="18"/><line x1="10" y1="14" x2="10" y2="18"/></svg>',
+    hardware: '<svg viewBox="0 0 20 20" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="16" height="16" rx="2"/><circle cx="10" cy="10" r="3"/><line x1="10" y1="2" x2="10" y2="7"/><line x1="10" y1="13" x2="10" y2="18"/><line x1="2" y1="10" x2="7" y2="10"/><line x1="13" y1="10" x2="18" y2="10"/></svg>',
+    firmware: '<svg viewBox="0 0 20 20" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="12" height="16" rx="1"/><line x1="7" y1="6" x2="13" y2="6"/><line x1="7" y1="9" x2="13" y2="9"/><line x1="7" y1="12" x2="10" y2="12"/><circle cx="10" cy="15" r="1"/></svg>',
+    hybrid:   '<svg viewBox="0 0 20 20" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="10" r="5"/><circle cx="13" cy="10" r="5"/></svg>'
+  };
+  return icons[type] || icons.digital;
+}
+function _productFormatType(type){
+  return ({digital:'Digital', hardware:'Hardware', firmware:'Firmware', hybrid:'Hybrid'})[type] || 'Digital';
+}
+function _productFormatStage(stage){
+  return ({concept:'Concept', discovery:'Discovery', development:'Development',
+           alpha:'Alpha', beta:'Beta', ga:'GA', mature:'Mature',
+           eol:'End of Life', deprecated:'Deprecated'})[stage] || (stage || '—');
+}
+function _productFormatCurrency(n){
+  if(!n || isNaN(Number(n))) return '—';
+  return '$' + Number(n).toLocaleString();
+}
+function _productFormatDate(iso){
+  if(!iso) return '';
+  var d = new Date(iso); if(isNaN(d)) return '';
+  return d.toLocaleDateString(undefined, {year:'numeric',month:'short',day:'numeric'});
+}
+function _productGetCompletion(row){
+  // Look up linked plan via row.linkedPlanId or planId, fall back to projectPlans matching
+  if(typeof projectPlans === 'undefined' || !projectPlans || !projectPlans.length) return null;
+  var plan = null;
+  if(row.linkedPlanId) plan = projectPlans.find(function(p){ return p.id === row.linkedPlanId; });
+  if(!plan){
+    // Heuristic: plan whose name matches the product name
+    plan = projectPlans.find(function(p){ return p && p.name && row.name && p.name.toLowerCase() === row.name.toLowerCase(); });
+  }
+  if(!plan || !plan.tasks || !plan.tasks.length) return null;
+  var done = plan.tasks.filter(function(t){ var s=(t.status||'').toLowerCase(); return s==='done'||s==='complete'; }).length;
+  return Math.round((done / plan.tasks.length) * 100);
+}
+
+function _productGetAll(){
+  var out = (rows || []).slice();
+  out.forEach(ensureProductFields);
+  return out;
+}
+
+function _productApplyFilters(list){
+  var q       = (document.getElementById('productsSearchInput') || {}).value || '';
+  var typeF   = (document.getElementById('productsFilterType')  || {}).value || '';
+  var stageF  = (document.getElementById('productsFilterStage') || {}).value || '';
+  var statusF = (document.getElementById('productsFilterStatus')|| {}).value || '';
+  var qLower  = q.toLowerCase().trim();
+  return list.filter(function(p){
+    if(typeF && (p.productType || 'digital') !== typeF) return false;
+    if(stageF && (p.lifecycleStage || '') !== stageF) return false;
+    if(statusF && _productInferStatus(p) !== statusF) return false;
+    if(qLower){
+      var hay = ((p.name||'')+' '+(p.productCode||'')+' '+(p.productFamily||'')+' '+(p.owner||'')+' '+(p.tagline||'')+' '+(p.sub||'')).toLowerCase();
+      if(hay.indexOf(qLower) < 0) return false;
+    }
+    return true;
+  });
+}
+
+function _productSort(list){
+  var key = _productsSortBy; var dir = _productsSortDir === 'desc' ? -1 : 1;
+  function val(p){
+    if(key === 'status')        return _productInferStatus(p);
+    if(key === 'lifecycleStage')return _productFormatStage(p.lifecycleStage);
+    if(key === 'productType')   return _productFormatType(p.productType);
+    if(key === 'bugs')          return (p.bugs||[]).filter(function(b){return b.status==='open'||b.status==='investigating';}).length;
+    if(key === 'revenueProjected') return Number(p.revenueProjected || p.revenue || 0);
+    return (p[key] || '');
+  }
+  return list.slice().sort(function(a,b){
+    var va = val(a); var vb = val(b);
+    if(typeof va === 'number' && typeof vb === 'number') return (va - vb) * dir;
+    return String(va).localeCompare(String(vb)) * dir;
+  });
+}
+
+function openProducts(){
+  trackPageView && trackPageView('Products');
+  var ov = document.getElementById('productsOverlay'); if(!ov) return;
+  ov.classList.add('open');
+  // If a previous detail view was open, just re-render the list — Phase 1
+  // doesn't have detail view yet; openProductDetail() is a stub.
+  renderProductsPage();
+  updateNavActive('Products');
+}
+function closeProducts(){
+  var ov = document.getElementById('productsOverlay'); if(ov) ov.classList.remove('open');
+}
+
+function renderProductsPage(){
+  var summary = document.getElementById('productsSummary');
+  var body    = document.getElementById('productsContainer');
+  if(!summary || !body) return;
+  var all = _productGetAll();
+  var filtered = _productSort(_productApplyFilters(all));
+  summary.innerHTML = renderProductsSummary(all);
+  if(!filtered.length){
+    body.innerHTML = '<div class="products-empty">No products match the current filters. Add initiatives on the Roadmap to see them here, or clear filters above.</div>';
+    return;
+  }
+  body.innerHTML = (_productsViewMode === 'cards') ? renderProductsCards(filtered) : renderProductsTable(filtered);
+}
+
+function renderProductsSummary(all){
+  var total = all.length;
+  var byStage = {};
+  var totalRevenue = 0;
+  var openBugs = 0;
+  all.forEach(function(p){
+    var s = p.lifecycleStage || _productInferLifecycle(p);
+    byStage[s] = (byStage[s] || 0) + 1;
+    totalRevenue += Number(p.revenueProjected || p.revenue || 0);
+    openBugs += (p.bugs || []).filter(function(b){return b.status==='open'||b.status==='investigating';}).length;
+  });
+  return ''+
+    '<div class="summary-stat"><span class="summary-value">'+total+'</span><span class="summary-label">Total Products</span></div>'+
+    '<div class="summary-stat"><span class="summary-value">'+(byStage.development||0)+'</span><span class="summary-label">In Development</span></div>'+
+    '<div class="summary-stat"><span class="summary-value">'+(byStage.ga||0)+'</span><span class="summary-label">Live (GA)</span></div>'+
+    '<div class="summary-stat"><span class="summary-value">'+(byStage.beta||0)+'</span><span class="summary-label">Beta</span></div>'+
+    '<div class="summary-stat"><span class="summary-value">'+_productFormatCurrency(totalRevenue)+'</span><span class="summary-label">Total Revenue</span></div>'+
+    '<div class="summary-stat"><span class="summary-value '+(openBugs>0?'bug-count':'')+'">'+openBugs+'</span><span class="summary-label">Open Bugs</span></div>';
+}
+
+function _productSortArrow(key){
+  if(_productsSortBy !== key) return '';
+  return '<span class="sort-arrow">'+(_productsSortDir==='asc'?'↑':'↓')+'</span>';
+}
+
+function renderProductsTable(products){
+  var head = ''+
+    '<thead><tr>'+
+      '<th class="sortable" onclick="sortProducts(\'name\')">Product'+_productSortArrow('name')+'</th>'+
+      '<th class="sortable" onclick="sortProducts(\'productCode\')">Code'+_productSortArrow('productCode')+'</th>'+
+      '<th class="sortable" onclick="sortProducts(\'productType\')">Type'+_productSortArrow('productType')+'</th>'+
+      '<th class="sortable" onclick="sortProducts(\'status\')">Status'+_productSortArrow('status')+'</th>'+
+      '<th class="sortable" onclick="sortProducts(\'lifecycleStage\')">Stage'+_productSortArrow('lifecycleStage')+'</th>'+
+      '<th class="sortable" onclick="sortProducts(\'priority\')">Priority'+_productSortArrow('priority')+'</th>'+
+      '<th class="sortable" onclick="sortProducts(\'owner\')">Owner'+_productSortArrow('owner')+'</th>'+
+      '<th class="sortable" onclick="sortProducts(\'revenueProjected\')">Revenue'+_productSortArrow('revenueProjected')+'</th>'+
+      '<th class="sortable" onclick="sortProducts(\'bugs\')">Bugs'+_productSortArrow('bugs')+'</th>'+
+      '<th class="sortable" onclick="sortProducts(\'version\')">Version'+_productSortArrow('version')+'</th>'+
+      '<th></th>'+
+    '</tr></thead>';
+  var body = '<tbody>' + products.map(function(p){
+    var status = _productInferStatus(p);
+    var openBugs = (p.bugs||[]).filter(function(b){return b.status==='open'||b.status==='investigating';}).length;
+    var pri = (p.priority || '').toLowerCase();
+    return '<tr onclick="openProductDetail(\''+escHtml(p.id)+'\')">'+
+      '<td><div class="product-name-cell">'+
+        (p.productImage
+          ? '<img class="product-thumb" src="'+escHtml(p.productImage)+'" alt="">'
+          : '<div class="product-thumb-placeholder">'+_productGetTypeIcon(p.productType)+'</div>')+
+        '<div><span class="product-name">'+escHtml(p.name||'Untitled')+'</span>'+
+          (p.tagline ? '<span class="product-tagline">'+escHtml(p.tagline)+'</span>'
+                     : (p.sub ? '<span class="product-tagline">'+escHtml(p.sub)+'</span>' : ''))+
+          (p.productFamily ? '<span class="product-family-badge">'+escHtml(p.productFamily)+'</span>' : '')+
+        '</div></div></td>'+
+      '<td class="monospace">'+escHtml(p.productCode||'—')+'</td>'+
+      '<td><span class="type-badge type-'+(p.productType||'digital')+'">'+_productFormatType(p.productType)+'</span></td>'+
+      '<td><span class="status-badge status-'+status.toLowerCase().replace(/\s/g,'-')+'">'+status+'</span></td>'+
+      '<td><span class="stage-badge">'+_productFormatStage(p.lifecycleStage)+'</span></td>'+
+      '<td><span class="priority-dot priority-'+pri+'">'+escHtml(p.priority||'—')+'</span></td>'+
+      '<td>'+escHtml(p.owner||'—')+'</td>'+
+      '<td>'+_productFormatCurrency(p.revenueProjected || p.revenue)+'</td>'+
+      '<td>'+(openBugs>0 ? '<span class="bug-count">'+openBugs+'</span>' : '—')+'</td>'+
+      '<td class="monospace">'+escHtml(p.version||'—')+'</td>'+
+      '<td class="actions-cell" onclick="event.stopPropagation()">'+
+        '<button class="btn-icon-sm" onclick="openProductDetail(\''+escHtml(p.id)+'\')" title="View details">'+
+          '<svg viewBox="0 0 16 16" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>'+
+        '</button>'+
+      '</td>'+
+    '</tr>';
+  }).join('') + '</tbody>';
+  return '<table class="products-table">'+head+body+'</table>';
+}
+
+function renderProductsCards(products){
+  return '<div class="products-card-grid">' + products.map(function(p){
+    var status = _productInferStatus(p);
+    var openBugs = (p.bugs||[]).filter(function(b){return b.status==='open'||b.status==='investigating';}).length;
+    var completion = _productGetCompletion(p);
+    var labels = (p.labels && p.labels.length) ? p.labels : [];
+    return '<div class="product-card" onclick="openProductDetail(\''+escHtml(p.id)+'\')">'+
+      '<div class="product-card-header">'+
+        (p.productImage
+          ? '<img class="product-card-img" src="'+escHtml(p.productImage)+'" alt="">'
+          : '<div class="product-card-icon">'+_productGetTypeIcon(p.productType)+'</div>')+
+        '<div class="product-card-title">'+
+          '<h4>'+escHtml(p.name||'Untitled')+'</h4>'+
+          (p.productCode ? '<span class="code-label">'+escHtml(p.productCode)+'</span>' : '')+
+        '</div>'+
+        '<span class="status-badge status-'+status.toLowerCase().replace(/\s/g,'-')+'">'+status+'</span>'+
+      '</div>'+
+      ((p.tagline||p.sub) ? '<p class="product-card-tagline">'+escHtml(p.tagline||p.sub)+'</p>' : '')+
+      '<div class="product-card-meta">'+
+        '<span class="type-badge type-'+(p.productType||'digital')+'">'+_productFormatType(p.productType)+'</span>'+
+        '<span class="stage-badge">'+_productFormatStage(p.lifecycleStage)+'</span>'+
+        (p.version ? '<span class="version-badge">v'+escHtml(p.version)+'</span>' : '')+
+      '</div>'+
+      (labels.length
+        ? '<div class="product-card-labels">'+
+            labels.slice(0,4).map(function(l){return '<span class="label-pill-sm">'+escHtml(l)+'</span>';}).join('')+
+            (labels.length>4 ? '<span class="label-pill-sm more">+'+(labels.length-4)+'</span>' : '')+
+          '</div>'
+        : '')+
+      '<div class="product-card-stats">'+
+        ((p.revenueProjected||p.revenue) ? '<div class="stat-item"><span class="stat-label">Revenue</span><span class="stat-value">'+_productFormatCurrency(p.revenueProjected||p.revenue)+'</span></div>' : '')+
+        (openBugs>0 ? '<div class="stat-item"><span class="stat-label">Open Bugs</span><span class="stat-value bug-count">'+openBugs+'</span></div>' : '')+
+        (completion !== null ? '<div class="stat-item"><span class="stat-label">Progress</span><span class="stat-value">'+completion+'%</span></div>' : '')+
+      '</div>'+
+      '<div class="product-card-footer">'+
+        '<span>'+escHtml(p.owner||'Unassigned')+'</span>'+
+        '<span>'+(p.updatedAt ? _intgTimeAgo(p.updatedAt) : '')+'</span>'+
+      '</div>'+
+    '</div>';
+  }).join('') + '</div>';
+}
+
+function setProductsView(mode){
+  if(mode !== 'table' && mode !== 'cards') return;
+  _productsViewMode = mode;
+  var btns = document.querySelectorAll('#productsOverlay .view-btn');
+  btns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-view') === mode); });
+  renderProductsPage();
+}
+function filterProducts(){ renderProductsPage(); }
+function sortProducts(key){
+  if(_productsSortBy === key) _productsSortDir = (_productsSortDir === 'asc' ? 'desc' : 'asc');
+  else { _productsSortBy = key; _productsSortDir = 'asc'; }
+  renderProductsPage();
+}
+
+// Phase-2 stub — opens detail view. For Phase 1, route the user to the
+// existing edit modal so the click is never a dead-end.
+function openProductDetail(productId){
+  if(typeof openEditModal === 'function'){ openEditModal(productId); return; }
+  showToast && showToast('Product detail view coming in v1.44 Phase 2', 'info');
 }
 
 function renderInsights(){
@@ -36567,7 +37059,8 @@ var _PMR_OVERLAY_MAP = {
   billing:      { open:'openBilling',        close:'closeBilling',       id:'billingOverlay',         nav:'' },
   admin:        { open:'openAdmin',          close:'closeAdmin',         id:'adminOverlay',           nav:'' },
   platformAdmin:{ open:'openPlatformAdmin',  close:'closePlatformAdmin', id:'platformAdminOverlay',   nav:'' },
-  integrations: { open:'openIntegrations',   close:'closeIntegrations',  id:'integrationsOverlay',    nav:'Integrations' }
+  integrations: { open:'openIntegrations',   close:'closeIntegrations',  id:'integrationsOverlay',    nav:'Integrations' },
+  products:     { open:'openProducts',       close:'closeProducts',      id:'productsOverlay',        nav:'Products' }
 };
 
 function _pmrCurrentView(){

@@ -1,5 +1,17 @@
 # Roadmap OS — Changelog
 
+## v1.44.0 — Products page (V13 fix queue, Phase 1)
+
+A dedicated **Products** page in the top nav (between Roadmap and Checklist) — single source of truth for every product. Phase 1 ships the list view and data model:
+
+- **Products = rows.** Each row in `rows[]` is treated as a product. New product fields (`productCode`, `version`, `productType`, `productFamily`, `tagline`, `pricingModel`, `pricePoints`, `revenueProjected/Actual`, `lifecycleStage`, `launchDatePlanned/Actual`, `releaseNotes[]`, `bugs[]`, `productHistory[]`, `hardwareInfo`, `digitalInfo`, `qualityMetrics`) are populated lazily by `ensureProductFields(row)` so existing data is preserved.
+- **Two views.** Table (sortable columns: name, code, type, status, stage, priority, owner, revenue, open bugs, version) and card grid (responsive auto-fill).
+- **Filters & search.** Type / lifecycle stage / status dropdowns plus free-text search across name, code, family, owner, tagline.
+- **Summary bar.** Total products, In Development, Live (GA), Beta, total revenue, open bugs.
+- **Status & stage inferred from existing data.** `_productInferStatus(row)` derives Released/In Progress/Delayed/At Risk/Strategy from the last bar's colour; `_productInferLifecycle(row)` maps that to a default lifecycle stage. Override-friendly — manually setting `lifecycleStage` wins.
+- **History helper shipped.** `logProductHistory(rowId, {type, title, description, ...})` is callable now; auto-log hooks at row-edit / status-change sites land in Phase 3.
+- **Clicking a product** routes to the existing edit modal for now. Phase 2 replaces this with a dedicated 8-tab detail page (overview, commercial, releases & bugs, plan, specs, history, docs, discussion).
+
 ## v1.43.3 — Integrations placement + OAuth landing fix
 
 - **Integrations moved from top nav to the burger sidebar.** Top nav now ends at Insights; sidebar gets a chain-link icon entry below Insights.
