@@ -1,6 +1,73 @@
 # Roadmap OS — Changelog
 
-## v1.44.0 — Products page (V13 fix queue, Phase 1)
+## v1.45.0 — Matrix plotting, drag-drop, kanban initiatives, merge roadmaps, tooltips refresh (V14 fix queue)
+
+A 13-fix sweep across the roadmap, matrix, kanban, checklist, and edit-product surfaces.
+
+**Roadmap timeline & rows**
+- **Drag-and-drop now actually moves rows between sections.** Drop indicators show the exact landing position. Drop on a section header to drop into that section. No displacement of other rows.
+- **Sort keeps section titles visible.** Sorting by name / start / end / priority now reorders rows _within_ each section instead of flattening the list.
+- **Range filter narrows the timeline columns AND filters rows.** This Quarter / This FY / YTD / etc. now shrink the visible quarters/months instead of leaving empty columns around the filtered initiatives.
+- **Today line stays in Timeline view only.** Switching to Kanban removes the line; switching back redraws it.
+
+**Prioritisation Matrix**
+- **Items now plot.** Rows with no priority scores get a sensible default position (X = midpoint, Y = derived from priority) so they appear as draggable dots immediately. Drag to pin a custom score.
+- **Select All checkbox** at the top of the items list toggles every row on/off the chart.
+- **Display panel + items sidebar fit on screen.** Tightened the chart/items grid (`min-width:0` on both columns, items column trimmed from 320px → 280px) so the chart can breathe.
+
+**Kanban view**
+- **Cards are initiatives now**, not products. Each card carries the parent product name + section + priority. Cards drag between status columns to update the underlying initiative's status.
+- **Today line is hidden** in Kanban view.
+
+**Edit Product modal**
+- **Initiative pill click → full editor.** Clicking a timeline pill now opens the complete row editor (revenue, labels, owner, comments, expected outcomes, attachments) with the clicked initiative scrolled into view + briefly highlighted. The trimmed bar modal still exists for legacy code paths.
+- **Currency selector on Revenue/ROI** — 14 currencies. Preference persists in `appSettings.currency`.
+- **Recording boxes removed** + the description / product-label fields stack vertically again (label-above-input).
+- **Attachments now download.** Falls back from Electron to data/blob/HTTP URL to Supabase Storage download. Each attachment row has a dedicated download icon.
+
+**Checklist**
+- **Confetti + jingle when every item is Yes / N/A** — Web Audio API arpeggio (C5 / E5 / G5 / C6) wrapped in try/catch for autoplay-block browsers; auto-dismiss after 6s; fires once per transition to complete.
+- **GTM Templates button → unified template library** (browse, select, import, save) instead of the saved-templates manager.
+
+**CapacityIQ + Templates**
+- **Every template card has a relevant SVG icon** — the unified library now respects each template's `icon` field instead of a single hard-coded glyph.
+
+**Multi-roadmap**
+- **Merge Roadmaps** option appears next to "+ New Tab" when 2+ roadmaps exist. Stack mode appends every section; Merge mode combines sections by name. Source/target re-id everything to avoid clashes.
+
+**Follow / notifications**
+- **Row kebab now reads "Follow product" / "Unfollow product"** with an accompanying **Follow section** entry. Section follow-state rides on `section.followers[]`. Section header has its own Follow icon-button.
+
+**Tooltips**
+- **Sidebar nav, dashboard cards, view toggles, dropdowns, modal Save/Cancel buttons** all have descriptive `title=` tooltips now (sweep across ~70 buttons). Tooltip count rose from 144 → 215.
+
+## v1.44.0 — Products page (V13 fix queue, Phases 1-3)
+
+A dedicated **Products** page in the top nav (between Roadmap and Checklist) — single source of truth for every product. Products *are* roadmap rows; new fields are populated lazily by `ensureProductFields(row)` so existing data is preserved.
+
+**List view** (Phase 1):
+- Two views — sortable table (11 columns) and responsive card grid
+- Filters: type / lifecycle stage / status / free-text search across name+code+family+owner+tagline
+- Summary bar: total / In Development / Live (GA) / Beta / total revenue / open bugs
+- Status & lifecycle stage are derived from the existing `bars[]` colours; manual override wins
+
+**Detail view** (Phase 2): clicking a product opens a hero header (image/icon + name + tagline + meta badges + Edit / Watch buttons) and an 8-tab body —
+- **Overview** — visual lifecycle bar, snapshot stats, profile fields, recent activity list
+- **Commercial** — revenue/cost/margin stat cards, pricing model fields, price-points table
+- **Releases & Bugs** — release-note cards (version tag, features/fixes/improvements/breaking changes/known issues), bug tracker rows with severity dots and status select
+- **Plan & Tasks** — pulls the linked plan, status-grouped stat cards, progress bar, top-12 task table
+- **Specs** — conditional Hardware section (BOM/firmware/units/failure rate/RMA) for hardware/firmware/hybrid; Digital section (tech stack/hosting/SLA/DAU/MAU/compliance) for digital/hybrid; Quality & Support always shown
+- **History** — vertical timeline with type-specific marker icons, filter chips for 10 event types
+- **Documents** — auto-aggregates `documentRepository[]` items where `initiativeId === row.id`
+- **Discussion** — read-only view of `row.comments[]`, with a CTA to add via the existing edit-modal flow
+
+**Forms & state changes** (Phase 3):
+- New / edit Release form (version, type, date, title, multi-line features / bug fixes / improvements / breaking changes / known issues, notes; delete from the same modal)
+- New Bug form (title, description, severity, status, affected version, reporter, repro steps)
+- New History entry form (type, date, title, description) — the bug-status select on the Releases tab also auto-logs to history
+- Every save calls `pushCloudData()` and re-renders the active tab inline; helpers `_productPersistAndRefresh()` and `logProductHistory()` handle the round-trip
+
+## v1.43.3 — Integrations placement + OAuth landing fix
 
 A dedicated **Products** page in the top nav (between Roadmap and Checklist) — single source of truth for every product. Phase 1 ships the list view and data model:
 

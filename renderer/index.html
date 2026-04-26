@@ -1801,6 +1801,15 @@ body.dark-mode .pmr-tip::after{background:var(--surface-low);color:var(--text);b
 .loading-overlay .loading-msg{font-size:13px;font-weight:600;color:#e2e8f0;letter-spacing:.01em}
 .loading-overlay .loading-brand{font-size:11px;font-weight:700;color:rgba(226,232,240,.6);text-transform:uppercase;letter-spacing:.18em}
 
+/* v14 Fix 4: checklist completion celebration */
+#celebration-overlay{position:fixed;inset:0;background:rgba(8,12,24,.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:99999;transition:opacity .3s}
+#celebration-overlay .confetti-container{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+#celebration-overlay .celebration-message{background:var(--white);color:var(--text);border:1px solid var(--border);border-radius:16px;padding:36px 40px;box-shadow:0 24px 60px rgba(0,0,0,.35);position:relative;z-index:1;text-align:center;max-width:420px}
+#celebration-overlay .celebration-message h2{color:var(--text);font-size:24px;font-weight:800;margin:8px 0 6px;letter-spacing:-.01em}
+#celebration-overlay .celebration-message p{color:var(--muted);font-size:13px;margin:0 0 18px;line-height:1.5}
+body.dark-mode #celebration-overlay .celebration-message{background:var(--white);color:var(--text);border-color:var(--border)}
+@keyframes confettiFall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+
 /* ═══════════════════════════════════════════════════════════════════════════
  * v1.44.0 — Products page (V13 fix queue)
  * Single source of truth for every product. Aggregates across the app.
@@ -1902,6 +1911,128 @@ body.dark-mode .label-pill-sm{background:var(--surface-high);color:var(--text);b
 body.dark-mode .products-toolbar input,body.dark-mode .products-toolbar select{background:var(--white);color:var(--text);border-color:var(--border)}
 body.dark-mode .btn-icon-sm{background:var(--white);color:var(--muted);border-color:var(--border)}
 body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+/* ─── Product detail page (V13 Phase 2) ─── */
+.product-detail{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.btn-back{align-self:flex-start;background:none;border:1px solid var(--border);color:var(--muted);padding:6px 12px 6px 8px;border-radius:9999px;cursor:pointer;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;font-family:inherit;transition:all .12s}
+.btn-back:hover{background:var(--surface-low);color:var(--text);border-color:var(--accent)}
+.btn-back svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.product-detail-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:20px;box-shadow:var(--shadow-card)}
+.product-header-left{display:flex;align-items:flex-start;gap:14px;flex:1;min-width:280px}
+.product-detail-img,.product-detail-icon-lg{width:64px;height:64px;border-radius:12px;background:var(--surface-low);display:flex;align-items:center;justify-content:center;color:var(--accent);flex-shrink:0;object-fit:cover}
+.product-detail-icon-lg svg{width:36px;height:36px}
+.product-detail-name{font-size:24px;font-weight:800;letter-spacing:-0.025em;color:var(--text);margin:0 0 4px}
+.product-detail-tagline{font-size:13px;color:var(--muted);margin:0 0 10px;line-height:1.5}
+.product-header-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.product-header-right{display:flex;gap:8px;align-items:center}
+.product-detail-btn{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--white);color:var(--text);transition:all .12s;display:inline-flex;align-items:center;gap:6px}
+.product-detail-btn:hover{background:var(--surface-low);border-color:var(--accent)}
+.product-detail-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.product-detail-btn.primary:hover{filter:brightness(1.06);background:var(--accent)}
+.product-detail-btn.active{background:rgba(0,91,177,.12);color:var(--accent);border-color:var(--accent)}
+.product-detail-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.product-tabs{display:flex;flex-wrap:wrap;gap:2px;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:6px;box-shadow:var(--shadow-card)}
+.product-tab{background:none;border:none;color:var(--muted);font-size:12px;font-weight:600;padding:8px 14px;border-radius:8px;cursor:pointer;font-family:inherit;transition:all .12s;white-space:nowrap}
+.product-tab:hover{background:var(--surface-low);color:var(--text)}
+.product-tab.active{background:var(--accent);color:#fff}
+#productTabContent{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:22px;box-shadow:var(--shadow-card);min-height:200px}
+.detail-section{margin-bottom:24px}
+.detail-section:last-child{margin-bottom:0}
+.detail-section-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.detail-section-header h3{font-size:14px;font-weight:800;color:var(--text);margin:0;letter-spacing:.01em;text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em}
+.detail-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px}
+.detail-stat-card{background:var(--surface-low);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.detail-stat-card .label{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+.detail-stat-card .value{display:block;font-size:18px;font-weight:800;color:var(--text);font-family:'Barlow Condensed',sans-serif;letter-spacing:-0.01em}
+.detail-stat-card .delta{font-size:11px;font-weight:600;margin-left:6px}
+.detail-field-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px 22px}
+.detail-field{display:flex;flex-direction:column;gap:3px}
+.detail-field .label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.detail-field .value{font-size:13px;color:var(--text);font-weight:500;word-break:break-word}
+.detail-field .value.muted{color:var(--muted);font-style:italic}
+.lifecycle-bar{display:flex;gap:0;background:var(--surface-low);border:1px solid var(--border);border-radius:9999px;padding:3px;margin-bottom:18px;overflow:hidden;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.lifecycle-bar .stage{flex:1;padding:6px 8px;text-align:center;color:var(--muted);border-radius:9999px;transition:all .12s;white-space:nowrap}
+.lifecycle-bar .stage.active{background:var(--accent);color:#fff}
+.lifecycle-bar .stage.past{background:rgba(0,91,177,.12);color:var(--accent)}
+.empty-state{padding:32px 12px;text-align:center;color:var(--muted);font-size:13px;background:var(--surface-low);border-radius:10px;border:1px dashed var(--border)}
+/* Releases & bugs */
+.releases-bugs-tab > div{margin-bottom:28px}
+.release-card{background:var(--surface-low);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.release-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.release-version{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.release-version h4{font-size:14px;margin:0;font-weight:700;color:var(--text);font-family:'SF Mono','Menlo',monospace}
+.release-title{color:var(--muted);font-size:12px}
+.version-tag{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:5px;background:var(--accent);color:#fff}
+.version-tag.minor{background:#0d9488}
+.version-tag.patch{background:#a16207}
+.version-tag.hotfix{background:#dc2626}
+.release-meta{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.release-group{margin-top:10px}
+.release-group h5{font-size:10px;font-weight:700;color:var(--muted);margin:0 0 4px;text-transform:uppercase;letter-spacing:.06em}
+.release-group ul{margin:0;padding-left:20px;font-size:12px;color:var(--text);line-height:1.55}
+.release-group.breaking h5{color:#dc2626}
+.release-group.known-issues h5{color:#a16207}
+.release-notes-text{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--text);line-height:1.55}
+.bug-summary-badges{display:flex;gap:6px;align-items:center}
+.bug-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:9999px;text-transform:uppercase;letter-spacing:.04em}
+.bug-badge.open{background:rgba(239,68,68,.14);color:#b91c1c}
+.bug-badge.resolved{background:rgba(16,185,129,.14);color:#047857}
+.bugs-list{display:flex;flex-direction:column;gap:6px}
+.bug-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface-low);border:1px solid var(--border);border-radius:10px}
+.bug-row[data-status="resolved"],.bug-row[data-status="wont_fix"],.bug-row[data-status="duplicate"]{opacity:.6}
+.bug-severity{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.bug-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.bug-title{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bug-meta{font-size:11px;color:var(--muted)}
+.bug-status-select{background:var(--white);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:11px;font-family:inherit;cursor:pointer}
+.btn-sm{padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--white);color:var(--text);transition:all .12s}
+.btn-sm.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-sm:hover{background:var(--surface-low);border-color:var(--accent)}
+.btn-sm.btn-primary:hover{filter:brightness(1.07);background:var(--accent)}
+/* History timeline */
+.history-filters{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.filter-chip{font-size:11px;font-weight:600;padding:5px 11px;border-radius:9999px;border:1px solid var(--border);background:var(--white);color:var(--muted);cursor:pointer;font-family:inherit;transition:all .12s}
+.filter-chip:hover{background:var(--surface-low);color:var(--text)}
+.filter-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.history-timeline{position:relative;padding-left:8px}
+.timeline-entry{position:relative;display:flex;gap:14px;padding-bottom:18px}
+.timeline-entry:last-child{padding-bottom:0}
+.timeline-marker{position:relative;flex-shrink:0;width:30px;display:flex;flex-direction:column;align-items:center}
+.timeline-icon{width:28px;height:28px;border-radius:50%;background:var(--white);border:2px solid var(--accent);color:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:2}
+.timeline-icon svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.timeline-line{position:absolute;top:30px;bottom:-18px;left:14px;width:2px;background:var(--border);z-index:1}
+.timeline-entry:last-child .timeline-line{display:none}
+.timeline-entry[data-type="bug"] .timeline-icon{border-color:#dc2626;color:#dc2626}
+.timeline-entry[data-type="release"] .timeline-icon{border-color:#0d9488;color:#0d9488}
+.timeline-entry[data-type="pricing"] .timeline-icon{border-color:#7c3aed;color:#7c3aed}
+.timeline-entry[data-type="incident"] .timeline-icon{border-color:#dc2626;color:#dc2626}
+.timeline-entry[data-type="compliance"] .timeline-icon{border-color:#0369a1;color:#0369a1}
+.timeline-content{flex:1;min-width:0;background:var(--surface-low);border:1px solid var(--border);border-radius:10px;padding:10px 14px}
+.timeline-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:3px}
+.timeline-title{font-size:12px;font-weight:700;color:var(--text)}
+.timeline-date{font-size:11px;color:var(--muted);white-space:nowrap}
+.timeline-description{font-size:12px;color:var(--text);margin:4px 0 4px;line-height:1.5}
+.timeline-actor{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+/* Documents tab */
+.docs-list{display:flex;flex-direction:column;gap:6px}
+.doc-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface-low);border:1px solid var(--border);border-radius:10px}
+.doc-row .doc-icon{width:30px;height:30px;border-radius:8px;background:var(--white);color:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--border)}
+.doc-row .doc-info{flex:1;min-width:0}
+.doc-row .doc-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc-row .doc-meta{font-size:11px;color:var(--muted)}
+/* Pricing table */
+.pricing-table{width:100%;border-collapse:collapse;font-size:12px;background:var(--surface-low);border-radius:10px;overflow:hidden}
+.pricing-table th,.pricing-table td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+.pricing-table th{background:var(--white);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.pricing-table tr:last-child td{border-bottom:none}
+/* Dark mode */
+body.dark-mode .product-detail-header,body.dark-mode .product-tabs,body.dark-mode #productTabContent{background:var(--white);border-color:var(--border)}
+body.dark-mode .detail-stat-card,body.dark-mode .release-card,body.dark-mode .bug-row,body.dark-mode .timeline-content,body.dark-mode .doc-row,body.dark-mode .empty-state,body.dark-mode .pricing-table{background:#0f172a;border-color:var(--border)}
+body.dark-mode .pricing-table th{background:var(--white)}
+body.dark-mode .doc-row .doc-icon,body.dark-mode .timeline-icon{background:var(--white)}
+body.dark-mode .filter-chip,body.dark-mode .product-detail-btn,body.dark-mode .btn-sm,body.dark-mode .btn-back,body.dark-mode .bug-status-select{background:var(--white);color:var(--text);border-color:var(--border)}
+body.dark-mode .product-detail-btn.primary,body.dark-mode .btn-sm.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+body.dark-mode .lifecycle-bar{background:#0f172a;border-color:var(--border)}
+body.dark-mode .lifecycle-bar .stage.past{background:rgba(45,107,244,.2);color:#93c5fd}
 </style>
 </head>
 <body>
@@ -2066,15 +2197,15 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
     </div>
 
     <!-- Primary button -->
-    <button class="auth-btn" id="authPrimaryBtn" onclick="handleAuthPrimary()">Sign In</button>
+    <button class="auth-btn" id="authPrimaryBtn" onclick="handleAuthPrimary()" title="Sign in or sign up with email and password">Sign In</button>
 
     <!-- Google OAuth -->
     <div class="auth-divider" id="authDivider">or</div>
-    <button class="auth-btn google" id="authGoogleBtn" onclick="handleGoogleAuth()">
+    <button class="auth-btn google" id="authGoogleBtn" onclick="handleGoogleAuth()" title="Sign in with Google">
       <svg viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.566 2.684-3.874 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/><path d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
       Continue with Google
     </button>
-    <button class="auth-btn microsoft" id="authMicrosoftBtn" onclick="handleMicrosoftAuth()">
+    <button class="auth-btn microsoft" id="authMicrosoftBtn" onclick="handleMicrosoftAuth()" title="Sign in with Microsoft / Outlook">
       <svg viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
       Continue with Microsoft
     </button>
@@ -2152,57 +2283,57 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
 <!-- LEFT SIDEBAR (v1.26.12: aria-label so screen readers describe the landmark) -->
 <nav class="app-sidebar" id="appSidebar" aria-label="Modules and roadmap actions">
   <div class="sidebar-section">Modules</div>
-  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openReports()">
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openReports()" title="Open Reports — quarterly summaries and snapshots">
     <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
     Reports
   </button>
-  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openG2M()">
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openG2M()" title="Open the Go-to-Market readiness checklist">
     <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
     Checklist
   </button>
   <!-- v1.38.0: ToDo List removed from sidebar (lives in top nav) -->
-  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openKPI()">
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openKPI()" title="Open KPI Scorecard — weekly metrics + timesheet">
     <svg viewBox="0 0 24 24"><path d="M16 8v8m-4-5v5m-4-2v2m-2 4h16a2 2 0 002-2V5a2 2 0 00-2-2H4a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
     KPI Scorecard
   </button>
   <!-- v1.38.0: Change Requests (UCR) removed from sidebar. Data preserved
        in ucrAllData in the JSONB blob — only the UI entry point is gone. -->
-  <button class="sidebar-item" onclick="closeDds();var sb=document.getElementById('appSidebar');if(sb)sb.classList.add('collapsed');closeAllOverlays();openArtifacts()">
+  <button class="sidebar-item" onclick="closeDds();var sb=document.getElementById('appSidebar');if(sb)sb.classList.add('collapsed');closeAllOverlays();openArtifacts()" title="Open Artifacts — design files, ICDs, BOMs, and assets">
     <svg viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
     Artifacts
   </button>
   <!-- v1.38.0: CapacityIQ moved to the top nav (see header/topnav). -->
 
-  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openPrioritization()">
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openPrioritization()" title="Open Prioritization — score, rank, and plot initiatives">
     <svg viewBox="0 0 24 24"><path d="M3 4h18M3 12h12M3 20h6"/></svg>
     Prioritization
   </button>
-  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openPlans()">
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openPlans()" title="Open Project Plans — Gantt, Kanban, sprints">
     <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h.01M9 12h.01M15 12h.01m-6 4h6"/></svg>
     Plans
   </button>
-  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openTemplateLibrary()">
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openTemplateLibrary()" title="Browse, save, and import templates">
     <svg viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
     Template Library
   </button>
-  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openFeedback()">
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openFeedback()" title="Send feedback to the Roadmap OS team">
     <svg viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
     Feedback
   </button>
-  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openBilling()">
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openBilling()" title="View subscription tier and billing details">
     <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><path d="M7 15h4"/></svg>
     Billing
   </button>
-  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openCompetitiveAnalysis()">
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openCompetitiveAnalysis()" title="Open Competitive Intelligence — track competitors, trends, comparisons">
     <svg viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
     Competitive Intel
   </button>
-  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openInsights()">
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openInsights()" title="Open Insights — AI-driven roadmap suggestions and risks">
     <svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
     Insights
   </button>
   <!-- v1.43.3: Integrations moved from top nav to sidebar. -->
-  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openIntegrations()">
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openIntegrations()" title="Connect Google, Outlook, Slack, and other integrations">
     <svg viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
     Integrations
   </button>
@@ -2210,11 +2341,11 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
        v1.36.3: Settings moved from sidebar into the Account/profile panel. -->
   <div class="sidebar-divider"></div>
   <div class="sidebar-divider" id="adminSidebarDivider" style="display:none"></div>
-  <button class="sidebar-item" id="adminSidebarBtn" style="display:none" onclick="closeDds();closeAllOverlays();openAdmin()">
+  <button class="sidebar-item" id="adminSidebarBtn" style="display:none" onclick="closeDds();closeAllOverlays();openAdmin()" title="Manage organisation users and roles">
     <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
     User Management
   </button>
-  <button class="sidebar-item" id="platformAdminSidebarBtn" style="display:none" onclick="closeDds();closeAllOverlays();openPlatformAdmin()">
+  <button class="sidebar-item" id="platformAdminSidebarBtn" style="display:none" onclick="closeDds();closeAllOverlays();openPlatformAdmin()" title="Platform admin — leads, organisations, plans">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.09 6.26L20 9.27l-4.91 3.82L16.18 20 12 16.77 7.82 20l1.09-6.91L4 9.27l5.91-1.01L12 2z"/></svg>
     Platform Admin
     <span id="newLeadsSidebarBadge" style="display:none;margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:9999px;min-width:18px;text-align:center" title="New leads awaiting review">0</span>
@@ -2228,8 +2359,8 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
 <div class="add-sec-form" id="addSecForm">
   <input id="newSecName" placeholder="Section name e.g. New Feature Track" />
   <input id="newSecColor" type="color" value="#0F1B3D" style="width:42px;height:36px;padding:2px;border:1px solid var(--border);border-radius:6px;cursor:pointer">
-  <button class="btn green" onclick="addSection()">Add Section</button>
-  <button class="btn" onclick="toggleAddSection()">Cancel</button>
+  <button class="btn green" onclick="addSection()" title="Create the new section">Add Section</button>
+  <button class="btn" onclick="toggleAddSection()" title="Discard and close the new-section form">Cancel</button>
 </div>
 </div>
 
@@ -2260,9 +2391,9 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
         <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.5)">Quick Actions</span>
         <h3 style="font-size:18px;font-weight:700;margin:8px 0 16px;letter-spacing:-0.02em;color:#fff">What would you like to do?</h3>
         <div style="display:flex;flex-direction:column;gap:8px">
-          <button onclick="closeAllOverlays();openAddRowModal(null)" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;text-align:left;transition:all .12s;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">+ Add Initiative</button>
-          <button onclick="closeAllOverlays();openG2M()" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;text-align:left;transition:all .12s;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">Checklist</button>
-          <button onclick="closeAllOverlays();openReports()" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;text-align:left;transition:all .12s;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">View Reports</button>
+          <button onclick="closeAllOverlays();openAddRowModal(null)" title="Add a new product (roadmap row)" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;text-align:left;transition:all .12s;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">+ Add Initiative</button>
+          <button onclick="closeAllOverlays();openG2M()" title="Open the Go-to-Market readiness checklist" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;text-align:left;transition:all .12s;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">Checklist</button>
+          <button onclick="closeAllOverlays();openReports()" title="View quarterly reports and snapshots" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;text-align:left;transition:all .12s;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">View Reports</button>
         </div>
       </div>
       <!-- Capacity Mini -->
@@ -2275,22 +2406,22 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
 
   <!-- Bottom Grid (v1.26.10: real <button> elements for keyboard a11y) -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
-    <button class="dash-card" onclick="closeAllOverlays();openTodo()" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);text-align:left;font-family:inherit" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+    <button class="dash-card" onclick="closeAllOverlays();openTodo()" title="Open the ToDo list" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);text-align:left;font-family:inherit" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
       <div style="margin-bottom:8px;color:var(--accent)"><span class="ico" aria-hidden="true" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></span></div>
       <h5 style="font-weight:700;font-size:13px;margin-bottom:4px">ToDo List</h5>
       <p style="font-size:11px;color:var(--muted)" id="dashTodoSummary">—</p>
     </button>
-    <button class="dash-card" onclick="closeAllOverlays();openKPI()" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);text-align:left;font-family:inherit" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+    <button class="dash-card" onclick="closeAllOverlays();openKPI()" title="Open KPI Scorecard" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);text-align:left;font-family:inherit" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
       <div style="margin-bottom:8px;color:var(--accent)"><span class="ico" aria-hidden="true" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path d="M16 8v8m-4-5v5m-4-2v2m-2 4h16a2 2 0 002-2V5a2 2 0 00-2-2H4a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></span></div>
       <h5 style="font-weight:700;font-size:13px;margin-bottom:4px">KPI Scorecard</h5>
       <p style="font-size:11px;color:var(--muted)">Track performance metrics</p>
     </button>
-    <button class="dash-card" onclick="closeAllOverlays();openCapacity()" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);text-align:left;font-family:inherit" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+    <button class="dash-card" onclick="closeAllOverlays();openCapacity()" title="Open CapacityIQ — team capacity planning" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);text-align:left;font-family:inherit" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
       <div style="margin-bottom:8px;color:var(--accent)"><span class="ico" aria-hidden="true" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></span></div>
       <h5 style="font-weight:700;font-size:13px;margin-bottom:4px">CapacityIQ</h5>
       <p style="font-size:11px;color:var(--muted)">Team capacity planning</p>
     </button>
-    <button class="dash-card" onclick="closeAllOverlays();openPlans()" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);text-align:left;font-family:inherit" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
+    <button class="dash-card" onclick="closeAllOverlays();openPlans()" title="Open Project Plans" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);text-align:left;font-family:inherit" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
       <div style="margin-bottom:8px;color:var(--accent)"><span class="ico" aria-hidden="true" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg></span></div>
       <h5 style="font-weight:700;font-size:13px;margin-bottom:4px">Plans Overview</h5>
       <p style="font-size:11px;color:var(--muted)" id="dashPlansSummary">—</p>
@@ -2345,8 +2476,8 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
   <span style="display:flex;align-items:center;gap:6px;margin-left:14px">
     <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)">View</label>
     <div style="display:flex;background:#f1f5f9;border-radius:9999px;padding:3px">
-      <button id="viewTimelineBtn" class="rmap-view-toggle active" onclick="setRoadmapView('timeline')">Timeline</button>
-      <button id="viewKanbanBtn" class="rmap-view-toggle" onclick="setRoadmapView('kanban')">Kanban</button>
+      <button id="viewTimelineBtn" class="rmap-view-toggle active" onclick="setRoadmapView('timeline')" title="Show roadmap as a quarterly timeline">Timeline</button>
+      <button id="viewKanbanBtn" class="rmap-view-toggle" onclick="setRoadmapView('kanban')" title="Show roadmap as a Kanban board grouped by status">Kanban</button>
     </div>
   </span>
   <span style="display:flex;align-items:center;gap:6px;margin-left:10px">
@@ -2375,26 +2506,26 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
   </span>
   <!-- v1.36.0: Roadmap + Data dropdowns (moved from sidebar, plus new FY controls) -->
   <span class="legend-dd" style="display:flex;align-items:center;gap:6px;margin-left:10px;position:relative">
-    <button onclick="toggleLegendMenu('lmRoadmap',event)" class="rmap-view-toggle" style="font-size:11px;font-weight:600;border:1px solid var(--border);border-radius:9999px;padding:4px 12px;background:var(--white);color:var(--text);cursor:pointer">Roadmap &#9662;</button>
+    <button onclick="toggleLegendMenu('lmRoadmap',event)" class="rmap-view-toggle" title="Roadmap actions menu" style="font-size:11px;font-weight:600;border:1px solid var(--border);border-radius:9999px;padding:4px 12px;background:var(--white);color:var(--text);cursor:pointer">Roadmap &#9662;</button>
     <div id="lmRoadmap" class="legend-dd-menu" role="menu" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;min-width:220px;background:var(--white);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:6000;padding:4px 0">
-      <button class="legend-dd-item" onclick="closeLegendMenus();openAddRowModal(null)">+ Add Product</button>
-      <button class="legend-dd-item" onclick="closeLegendMenus();toggleAddSection()">+ Add Section</button>
-      <button class="legend-dd-item" onclick="closeLegendMenus();openPasteFromSpreadsheet()">Paste from Spreadsheet</button>
+      <button class="legend-dd-item" onclick="closeLegendMenus();openAddRowModal(null)" title="Add a new product (roadmap row)">+ Add Product</button>
+      <button class="legend-dd-item" onclick="closeLegendMenus();toggleAddSection()" title="Add a new section (lane) to the roadmap">+ Add Section</button>
+      <button class="legend-dd-item" onclick="closeLegendMenus();openPasteFromSpreadsheet()" title="Paste rows from Excel or Google Sheets">Paste from Spreadsheet</button>
       <div style="height:1px;background:var(--border);margin:4px 0"></div>
-      <button class="legend-dd-item" onclick="closeLegendMenus();addQuarter()">+ Add Quarter</button>
-      <button class="legend-dd-item" onclick="closeLegendMenus();addFinancialYear()">+ Add Financial Year</button>
-      <button class="legend-dd-item" onclick="closeLegendMenus();configureFYStart()">Configure FY start month&hellip;</button>
-      <button class="legend-dd-item" onclick="closeLegendMenus();removeLastQuarter()" style="color:#dc2626">Remove last quarter</button>
+      <button class="legend-dd-item" onclick="closeLegendMenus();addQuarter()" title="Add the next quarter to the timeline">+ Add Quarter</button>
+      <button class="legend-dd-item" onclick="closeLegendMenus();addFinancialYear()" title="Add four quarters covering the next financial year">+ Add Financial Year</button>
+      <button class="legend-dd-item" onclick="closeLegendMenus();configureFYStart()" title="Set which calendar month your financial year starts in">Configure FY start month&hellip;</button>
+      <button class="legend-dd-item" onclick="closeLegendMenus();removeLastQuarter()" title="Remove the most recently added quarter" style="color:#dc2626">Remove last quarter</button>
     </div>
   </span>
   <span class="legend-dd" style="display:flex;align-items:center;gap:6px;margin-left:6px;position:relative">
-    <button onclick="toggleLegendMenu('lmData',event)" class="rmap-view-toggle" style="font-size:11px;font-weight:600;border:1px solid var(--border);border-radius:9999px;padding:4px 12px;background:var(--white);color:var(--text);cursor:pointer">Data &#9662;</button>
+    <button onclick="toggleLegendMenu('lmData',event)" class="rmap-view-toggle" title="Data actions menu — edit timeline, export, backup" style="font-size:11px;font-weight:600;border:1px solid var(--border);border-radius:9999px;padding:4px 12px;background:var(--white);color:var(--text);cursor:pointer">Data &#9662;</button>
     <div id="lmData" class="legend-dd-menu" role="menu" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;min-width:200px;background:var(--white);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:6000;padding:4px 0">
-      <button class="legend-dd-item" onclick="closeLegendMenus();openEditQuarters()">Edit Timeline</button>
-      <button class="legend-dd-item" onclick="closeLegendMenus();exportExcel()">Export Excel</button>
-      <button class="legend-dd-item" onclick="closeLegendMenus();exportPDF()">Export PDF</button>
-      <button class="legend-dd-item" onclick="closeLegendMenus();exportBackup()">Save Backup</button>
-      <button class="legend-dd-item" onclick="closeLegendMenus();importBackup()">Import Data</button>
+      <button class="legend-dd-item" onclick="closeLegendMenus();openEditQuarters()" title="Edit quarter labels, years, and months">Edit Timeline</button>
+      <button class="legend-dd-item" onclick="closeLegendMenus();exportExcel()" title="Export this roadmap to Excel">Export Excel</button>
+      <button class="legend-dd-item" onclick="closeLegendMenus();exportPDF()" title="Export this roadmap to PDF">Export PDF</button>
+      <button class="legend-dd-item" onclick="closeLegendMenus();exportBackup()" title="Download a JSON backup of all your data">Save Backup</button>
+      <button class="legend-dd-item" onclick="closeLegendMenus();importBackup()" title="Restore data from a JSON backup">Import Data</button>
     </div>
   </span>
 </div>
@@ -2422,7 +2553,7 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
     <span id="previewTitle">Preview</span>
     <div>
       <button class="pbtn dl-btn" id="previewDlBtn">⬇ Download</button>
-      <button class="pbtn close-btn" onclick="closePreview()">✕ Close</button>
+      <button class="pbtn close-btn" onclick="closePreview()" title="Close preview">✕ Close</button>
     </div>
   </div>
   <iframe id="previewFrame"></iframe>
@@ -2433,7 +2564,7 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
 <div class="modal" style="width:440px">
   <div class="modal-hdr">
     <h2>Edit Initiative</h2>
-    <button class="close" onclick="closeBarModal()">✕</button>
+    <button class="close" onclick="closeBarModal()" title="Close without saving">✕</button>
   </div>
   <div class="modal-body">
     <div class="form-row">
@@ -2472,8 +2603,8 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
   <div class="modal-footer" style="justify-content:space-between">
     <button class="btn-cancel" style="background:#fee2e2;color:#dc2626;border-color:#fca5a5" onclick="deleteBarFromModal()" title="Permanently remove this initiative bar from the timeline"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:-2px;margin-right:4px"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>Delete</button>
     <div style="display:flex;gap:8px">
-      <button class="btn-cancel" onclick="closeBarModal()">Cancel</button>
-      <button class="btn-save" onclick="saveBarModal()">Save</button>
+      <button class="btn-cancel" onclick="closeBarModal()" title="Discard changes and close">Cancel</button>
+      <button class="btn-save" onclick="saveBarModal()" title="Save changes to this initiative">Save</button>
     </div>
   </div>
 </div>
@@ -2484,7 +2615,7 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
 <div class="modal">
   <div class="modal-hdr">
     <h2 id="modalTitle">Edit Product</h2>
-    <button class="close" onclick="closeModal()">✕</button>
+    <button class="close" onclick="closeModal()" title="Close without saving">✕</button>
   </div>
   <div class="modal-body">
     <div class="form-row">
@@ -2525,10 +2656,26 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
     </div>
 
     <!-- v1.42.0: revenue / labels / owner / timestamps -->
+    <!-- v14 Fix 3 Part B: currency selector next to the Revenue/ROI input. -->
     <div class="form-row">
       <label>Revenue / ROI <span style="font-weight:400;color:var(--muted);opacity:.7">(optional)</span></label>
       <div style="display:flex;align-items:center;gap:6px">
-        <span style="color:var(--muted);font-weight:600">$</span>
+        <select id="fRevenueCurrency" title="Choose currency for revenue/ROI" style="width:120px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--text);background:var(--white)">
+          <option value="USD">$ USD</option>
+          <option value="ZAR">R ZAR</option>
+          <option value="EUR">&euro; EUR</option>
+          <option value="GBP">&pound; GBP</option>
+          <option value="KES">KSh KES</option>
+          <option value="ZMW">ZK ZMW</option>
+          <option value="MWK">MK MWK</option>
+          <option value="NGN">&#x20A6; NGN</option>
+          <option value="INR">&#x20B9; INR</option>
+          <option value="AUD">A$ AUD</option>
+          <option value="CAD">C$ CAD</option>
+          <option value="JPY">&yen; JPY</option>
+          <option value="CNY">&yen; CNY</option>
+          <option value="BRL">R$ BRL</option>
+        </select>
         <input id="fRevenue" type="number" min="0" step="100" placeholder="0" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--text);background:var(--white)">
       </div>
     </div>
@@ -2627,8 +2774,8 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
     </div>
   </div>
   <div class="modal-footer">
-    <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-    <button class="btn-save" onclick="saveRow()">Save</button>
+    <button class="btn-cancel" onclick="closeModal()" title="Discard changes and close">Cancel</button>
+    <button class="btn-save" onclick="saveRow()" title="Save the product and all its initiatives">Save</button>
   </div>
 </div>
 </div>
@@ -2661,7 +2808,7 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
     <div style="margin-left:auto;display:flex;gap:6px">
       <button onclick="convertG2MtoPlan()" title="Create a new project plan with all checklist items as tasks" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:9999px;background:#16a34a;color:#fff;border:1px solid #16a34a;font-size:12px;font-weight:700;cursor:pointer;transition:filter .12s" onmouseover="this.style.filter='brightness(.92)'" onmouseout="this.style.filter='none'"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>Convert to Plan</button>
       <button onclick="openTemplateLibrary('g2m')" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:9999px;background:var(--white);color:var(--text);border:1px solid var(--outline-var);font-size:12px;font-weight:700;cursor:pointer;transition:background .12s" onmouseover="this.style.background='var(--surface-low)'" onmouseout="this.style.background='var(--white)'"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>Browse Templates</button>
-      <button onclick="openG2MTemplateBuilder()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:9999px;background:var(--white);color:var(--accent);border:1px solid var(--accent);font-size:12px;font-weight:700;cursor:pointer;transition:background .12s" onmouseover="this.style.background='var(--light-blue-bg)'" onmouseout="this.style.background='var(--white)'"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>G2M Templates</button>
+      <button onclick="openChecklistTemplateLibrary()" title="Browse, import, and save checklist templates" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:9999px;background:var(--white);color:var(--accent);border:1px solid var(--accent);font-size:12px;font-weight:700;cursor:pointer;transition:background .12s" onmouseover="this.style.background='var(--light-blue-bg)'" onmouseout="this.style.background='var(--white)'"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>G2M Templates</button>
       <button onclick="showG2MAddRowForm()" style="padding:9px 18px;border-radius:9999px;background:var(--accent);color:#fff;border:1px solid var(--accent);font-size:12px;font-weight:700;cursor:pointer;transition:filter .12s" onmouseover="this.style.filter='brightness(.92)'" onmouseout="this.style.filter='none'">+ Add Custom Row</button>
     </div>
   </div>
@@ -2675,8 +2822,8 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
       <input id="g2mNewRowText" placeholder="Type a task name or pick from library..." style="flex:2;min-width:200px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--white);color:var(--text);font-family:inherit">
       <button onclick="openG2MLibraryPicker()" title="Pick from task library" style="padding:8px 14px;border-radius:9999px;background:var(--white);color:var(--accent);border:1px solid var(--accent);font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2"/></svg>From Library</button>
       <select id="g2mNewRowCat" style="flex:1;min-width:160px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--white);color:var(--text);font-family:inherit"></select>
-      <button class="btn green" onclick="confirmG2MAddRow()" style="padding:6px 14px;font-size:11px">Add</button>
-      <button class="btn" onclick="document.getElementById('g2mAddRowForm').style.display='none'" style="padding:6px 10px;font-size:11px">Cancel</button>
+      <button class="btn green" onclick="confirmG2MAddRow()" title="Add this task to the active checklist" style="padding:6px 14px;font-size:11px">Add</button>
+      <button class="btn" onclick="document.getElementById('g2mAddRowForm').style.display='none'" title="Discard and close" style="padding:6px 10px;font-size:11px">Cancel</button>
     </div>
   </div>
   <div class="g2m-body" id="g2mBody"></div>
@@ -2694,14 +2841,14 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
     <div style="display:flex;gap:8px;align-items:center">
       <!-- v1.40.0: My Capacity removed — now covered by CapacityIQ dashboard -->
       <div style="display:flex;background:#f1f5f9;border-radius:9999px;padding:3px;margin-right:4px" id="todoCrossTabs">
-        <button class="ts-view-btn active" data-todo-tab="todo" onclick="switchTodoTab('todo')">To-Do</button>
-        <button class="ts-view-btn" data-todo-tab="timesheet" onclick="switchTodoTab('timesheet')">Timesheet</button>
+        <button class="ts-view-btn active" data-todo-tab="todo" onclick="switchTodoTab('todo')" title="Switch to the ToDo list view">To-Do</button>
+        <button class="ts-view-btn" data-todo-tab="timesheet" onclick="switchTodoTab('timesheet')" title="Switch to the timesheet view">Timesheet</button>
       </div>
-      <button class="btn green" onclick="addTodoItem()">+ Add Task</button>
+      <button class="btn green" onclick="addTodoItem()" title="Add a new task to the ToDo list">+ Add Task</button>
       <button class="btn" onclick="openTemplateBuilder('todo',{initiativeName:(document.getElementById('todoFilterSelect')&&document.getElementById('todoFilterSelect').value)||'Template Imports'})" title="Multi-select tasks from templates and the task library" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:-2px;margin-right:4px"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>From Library</button>
       <button class="btn" onclick="openTemplateLibrary('todo')" title="Browse saved templates" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:-2px;margin-right:4px"><path d="M4 4h16v16H4V4zM4 10h16M10 4v16"/></svg>Templates</button>
-      <button class="btn" onclick="toggleTodoView()" id="todoViewToggle" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:-2px;margin-right:4px"><path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Kanban</button>
-      <button class="btn" id="todoBackBtn" onclick="closeTodo()" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)">← Back to Roadmap</button>
+      <button class="btn" onclick="toggleTodoView()" id="todoViewToggle" title="Switch ToDo list to Kanban or list view" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:-2px;margin-right:4px"><path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Kanban</button>
+      <button class="btn" id="todoBackBtn" onclick="closeTodo()" title="Return to the main roadmap view" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)">← Back to Roadmap</button>
     </div>
   </div>
   <div class="todo-toolbar">
@@ -2730,8 +2877,8 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
       <select id="todoNewKPI" style="padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:11px;background:#3b2d7c;color:#fff;max-width:160px">
         <option value="" style="background:var(--white);color:var(--text)">— KPI —</option>
       </select>
-      <button class="btn green" onclick="confirmAddTodo()" style="padding:6px 14px;font-size:11px">Add</button>
-      <button class="btn" onclick="document.getElementById('todoAddForm').style.display='none'" style="padding:6px 10px;font-size:11px">Cancel</button>
+      <button class="btn green" onclick="confirmAddTodo()" title="Save this task to the ToDo list" style="padding:6px 14px;font-size:11px">Add</button>
+      <button class="btn" onclick="document.getElementById('todoAddForm').style.display='none'" title="Discard and close" style="padding:6px 10px;font-size:11px">Cancel</button>
     </div>
   </div>
   <div class="todo-body" id="todoBody"></div>
@@ -2742,9 +2889,9 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
   <div class="art-header">
     <h2><svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:-3px;margin-right:6px"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Product Artifacts &amp; Collateral</h2>
     <div style="display:flex;gap:8px">
-      <button class="btn green" onclick="addNewArtifact()">+ New Artifact</button>
+      <button class="btn green" onclick="addNewArtifact()" title="Add a new artifact (design, ICD, BOM, etc.)">+ New Artifact</button>
       <button class="btn" onclick="openBrandGuide()" style="background:var(--accent);border-color:var(--accent);color:#fff"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:-2px;margin-right:4px"><path d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>Brand Guide</button>
-      <button class="btn" onclick="closeArtifacts()" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)">← Back to Roadmap</button>
+      <button class="btn" onclick="closeArtifacts()" title="Return to the main roadmap view" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)">← Back to Roadmap</button>
     </div>
   </div>
   <div class="art-toolbar">
@@ -2766,21 +2913,21 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
   <div class="kpi-header">
     <h2><svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:-3px;margin-right:6px"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>KPI Scorecard</h2>
     <div class="ts-view-toggle">
-      <button class="ts-view-btn active" id="kpiViewScorecard" onclick="setKPIView('scorecard')">Scorecard</button>
-      <button class="ts-view-btn" id="kpiViewTimesheet" onclick="setKPIView('timesheet')">Timesheet</button>
+      <button class="ts-view-btn active" id="kpiViewScorecard" onclick="setKPIView('scorecard')" title="Show KPI scorecard view">Scorecard</button>
+      <button class="ts-view-btn" id="kpiViewTimesheet" onclick="setKPIView('timesheet')" title="Show timesheet view">Timesheet</button>
       <!-- v1.40.0: My Capacity tab removed — CapacityIQ dashboard now covers personal capacity -->
     </div>
     <div id="kpiOverallScore" style="margin-left:auto;margin-right:8px"></div>
     <select id="kpiQuarterSelect" onchange="renderKPI()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--text);font-size:13px;font-weight:500;font-family:inherit;min-width:100px">
     </select>
     <div class="ts-week-nav" id="tsWeekNav" style="display:none">
-      <button onclick="tsNavWeek(-1)">&#9664;</button>
+      <button onclick="tsNavWeek(-1)" title="Previous week">&#9664;</button>
       <span class="ts-week-label" id="tsWeekLabel"></span>
-      <button onclick="tsNavWeek(1)">&#9654;</button>
+      <button onclick="tsNavWeek(1)" title="Next week">&#9654;</button>
     </div>
     <div style="display:flex;gap:8px">
-      <button class="btn accent" id="kpiAddBtn" onclick="showAddCustomKPI()">+ Add KPI</button>
-      <button class="btn" onclick="closeKPI()" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)">← Back to Roadmap</button>
+      <button class="btn accent" id="kpiAddBtn" onclick="showAddCustomKPI()" title="Add a new custom KPI to the scorecard">+ Add KPI</button>
+      <button class="btn" onclick="closeKPI()" title="Return to the main roadmap view" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)">← Back to Roadmap</button>
     </div>
   </div>
   <!-- Add custom KPI form -->
@@ -2789,8 +2936,8 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
       <input id="kpiNewName" placeholder="KPI name..." style="flex:2;min-width:180px;padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:12px;background:rgba(255,255,255,.1);color:#fff;font-family:inherit">
       <select id="kpiNewGroup" style="padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:12px;background:rgba(0,0,0,.25);color:#fff"></select>
       <input id="kpiNewTool" placeholder="Tool/Source..." style="flex:1;min-width:100px;padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:12px;background:rgba(255,255,255,.1);color:#fff;font-family:inherit">
-      <button class="btn green" onclick="confirmAddCustomKPI()" style="padding:6px 14px;font-size:11px">Add</button>
-      <button class="btn" onclick="document.getElementById('kpiAddForm').style.display='none'" style="padding:6px 10px;font-size:11px">Cancel</button>
+      <button class="btn green" onclick="confirmAddCustomKPI()" title="Save this custom KPI" style="padding:6px 14px;font-size:11px">Add</button>
+      <button class="btn" onclick="document.getElementById('kpiAddForm').style.display='none'" title="Discard and close" style="padding:6px 10px;font-size:11px">Cancel</button>
     </div>
     <textarea id="kpiNewDesc" placeholder="KPI description..." style="width:100%;margin-top:6px;padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:12px;background:rgba(255,255,255,.1);color:#fff;font-family:inherit;height:40px;resize:vertical"></textarea>
   </div>
@@ -2802,8 +2949,8 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
   <div class="ucr-header">
     <h2><svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:-3px;margin-right:6px"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>User Change Requests</h2>
     <div style="display:flex;gap:8px">
-      <button class="btn green" onclick="addNewUCR()">+ New UCR</button>
-      <button class="btn" onclick="closeUCR()" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)">← Back to Roadmap</button>
+      <button class="btn green" onclick="addNewUCR()" title="Create a new user change request">+ New UCR</button>
+      <button class="btn" onclick="closeUCR()" title="Return to the main roadmap view" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)">← Back to Roadmap</button>
     </div>
   </div>
   <div class="ucr-toolbar">
@@ -2826,7 +2973,7 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
 <div id="adminOverlay">
   <div style="background:rgba(249,249,250,.9);backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0">
     <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.03em;color:var(--text);margin:0">User Management</h2>
-    <button onclick="closeAdmin()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;align-self:center">&times;</button>
+    <button onclick="closeAdmin()" title="Close" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;align-self:center">&times;</button>
   </div>
   <div id="adminBody" style="flex:1;overflow-y:auto;padding:28px 32px"></div>
 </div>
@@ -2835,7 +2982,7 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
 <div id="platformAdminOverlay">
   <div style="background:rgba(249,249,250,.9);backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0">
     <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.03em;color:var(--text);margin:0">Platform Admin</h2>
-    <button onclick="closePlatformAdmin()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;align-self:center">&times;</button>
+    <button onclick="closePlatformAdmin()" title="Close" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;align-self:center">&times;</button>
   </div>
   <div id="platformAdminBody" style="flex:1;overflow-y:auto;padding:28px 32px"></div>
 </div>
@@ -2844,7 +2991,7 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
 <div id="insightsOverlay">
   <div style="background:rgba(249,249,250,.9);backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0">
     <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.03em;color:var(--text);margin:0">Insights</h2>
-    <button onclick="closeInsights()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;align-self:center">&times;</button>
+    <button onclick="closeInsights()" title="Close" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;align-self:center">&times;</button>
   </div>
   <div id="insightsBody" style="flex:1;overflow-y:auto;padding:28px 32px"></div>
 </div>
@@ -2856,7 +3003,7 @@ body.dark-mode .btn-icon-sm:hover{background:var(--accent);color:#fff;border-col
       <svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><line x1="8.5" y1="8.5" x2="15.5" y2="15.5"/></svg>
       Integrations
     </h2>
-    <button onclick="closeIntegrations()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;align-self:center">&times;</button>
+    <button onclick="closeIntegrations()" title="Close" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;align-self:center">&times;</button>
   </div>
   <div style="padding:18px 32px 0;font-size:13px;color:var(--muted)">Connect your tools to sync data with Roadmap OS. Two-way sync, webhooks, and manual triggers.</div>
   <div class="intg-grid" id="integrationsGrid"></div>
@@ -3209,6 +3356,16 @@ function renderTabs(){
   addBtn.title = 'Add a new roadmap tab';
   addBtn.onclick = openAddTabModal;
   el.appendChild(addBtn);
+  // v14 Fix 10: Merge Roadmaps button — only visible when 2+ tabs exist.
+  if(tabs_data.length >= 2){
+    var mergeBtn = document.createElement('button');
+    mergeBtn.className = 'tab-add';
+    mergeBtn.textContent = 'Merge Roadmaps';
+    mergeBtn.title = 'Stack one roadmap on top of another, or combine sections with matching names';
+    mergeBtn.style.marginLeft = '6px';
+    mergeBtn.onclick = openMergeRoadmaps;
+    el.appendChild(mergeBtn);
+  }
   // Re-add shared roadmap tabs (they get cleared by innerHTML='')
   if(_sharedToMe&&_sharedToMe.length) renderSharedTabs();
 }
@@ -3263,6 +3420,134 @@ function closeTab(tabId){
   if(activeTabId === tabId) activeTabId = tabs_data[0].id;
   renderTabs();
   persistData();
+}
+
+// v14 Fix 10: Merge two roadmap tabs. Stack mode appends source sections to
+// the target. Merge mode combines sections by name (case-insensitive).
+function openMergeRoadmaps(){
+  var existing = document.getElementById('mergeRoadmapsModal');
+  if(existing) existing.remove();
+  // Snapshot the active tab's data so the source list is current.
+  var curTab = tabs_data.find(function(t){ return t.id === activeTabId; });
+  if(curTab && !curTab.stacked){
+    curTab.sections = sections.map(function(s){ return JSON.parse(JSON.stringify(s)); });
+    curTab.rows     = rows.map(function(r){ return JSON.parse(JSON.stringify(r)); });
+    curTab.quarters = quarters.map(function(q){ return JSON.parse(JSON.stringify(q)); });
+  }
+  var ov = document.createElement('div');
+  ov.id = 'mergeRoadmapsModal'; ov.className = 'modal-overlay';
+  var modal = document.createElement('div'); modal.className = 'modal'; modal.style.width = '520px';
+  var hdr = document.createElement('div'); hdr.className = 'modal-hdr';
+  hdr.innerHTML = '<h2>Merge Roadmaps</h2><button class="close" onclick="document.getElementById(\'mergeRoadmapsModal\').remove()">✕</button>';
+  modal.appendChild(hdr);
+  var body = document.createElement('div'); body.className = 'modal-body';
+  var opts = tabs_data.map(function(t){ return '<option value="'+escHtml(t.id)+'">'+escHtml(t.name)+'</option>'; }).join('');
+  body.innerHTML =
+    '<div class="form-row">'+
+      '<label>Source Roadmap (merge FROM)</label>'+
+      '<select id="mergeSourceTab">'+opts+'</select>'+
+    '</div>'+
+    '<div class="form-row">'+
+      '<label>Target Roadmap (merge INTO)</label>'+
+      '<select id="mergeTargetTab">'+opts+'</select>'+
+    '</div>'+
+    '<div class="form-row">'+
+      '<label>Merge type</label>'+
+      '<div style="display:flex;flex-direction:column;gap:10px">'+
+        '<label style="display:flex;align-items:flex-start;gap:10px;padding:10px;border:1px solid var(--border);border-radius:8px;cursor:pointer"><input type="radio" name="mergeType" value="stack" checked style="margin-top:3px"><span><strong>Stack</strong><div style="font-size:12px;color:var(--muted);margin-top:2px">Append every section from the source onto the target. All sections stay separate.</div></span></label>'+
+        '<label style="display:flex;align-items:flex-start;gap:10px;padding:10px;border:1px solid var(--border);border-radius:8px;cursor:pointer"><input type="radio" name="mergeType" value="merge" style="margin-top:3px"><span><strong>Merge</strong><div style="font-size:12px;color:var(--muted);margin-top:2px">Combine sections with matching names. Non-matching sections become new sections in the target.</div></span></label>'+
+      '</div>'+
+    '</div>';
+  modal.appendChild(body);
+  var ftr = document.createElement('div'); ftr.className = 'modal-footer';
+  ftr.innerHTML = '<button class="btn-cancel" onclick="document.getElementById(\'mergeRoadmapsModal\').remove()">Cancel</button><button class="btn-save" onclick="executeMergeRoadmaps()">Merge</button>';
+  modal.appendChild(ftr);
+  ov.appendChild(modal);
+  document.body.appendChild(ov);
+  // Pre-select target = active tab; source = first non-active tab.
+  var trgSel = document.getElementById('mergeTargetTab'); if(trgSel) trgSel.value = activeTabId;
+  var srcSel = document.getElementById('mergeSourceTab');
+  if(srcSel){
+    var firstOther = tabs_data.find(function(t){ return t.id !== activeTabId; });
+    if(firstOther) srcSel.value = firstOther.id;
+  }
+}
+
+function executeMergeRoadmaps(){
+  var srcId = document.getElementById('mergeSourceTab').value;
+  var trgId = document.getElementById('mergeTargetTab').value;
+  var typeEl = document.querySelector('input[name="mergeType"]:checked');
+  var mergeType = typeEl ? typeEl.value : 'stack';
+  if(srcId === trgId){ showToast('Source and target must be different roadmaps','warning'); return; }
+  var src = tabs_data.find(function(t){ return t.id === srcId; });
+  var trg = tabs_data.find(function(t){ return t.id === trgId; });
+  if(!src || !trg){ showToast('Roadmap not found','error'); return; }
+  if(src.stacked || trg.stacked){ showToast('Stacked roadmaps cannot be merged — switch them off first','warning'); return; }
+  // Source sections / rows — pull from snapshot (or live state if it's the active tab).
+  var srcSections, srcRows;
+  if(srcId === activeTabId){
+    srcSections = sections.map(function(s){ return JSON.parse(JSON.stringify(s)); });
+    srcRows     = rows.map(function(r){ return JSON.parse(JSON.stringify(r)); });
+  } else {
+    srcSections = (src.sections || []).map(function(s){ return JSON.parse(JSON.stringify(s)); });
+    srcRows     = (src.rows || []).map(function(r){ return JSON.parse(JSON.stringify(r)); });
+  }
+  // Target sections / rows — same logic.
+  var trgSections, trgRows;
+  if(trgId === activeTabId){
+    trgSections = sections.slice();
+    trgRows     = rows.slice();
+  } else {
+    trgSections = (trg.sections || []);
+    trgRows     = (trg.rows || []);
+  }
+  function _newSecId(){ return 's' + Date.now() + Math.floor(Math.random()*1000); }
+  function _newRowId(){ return 'r' + Date.now() + Math.floor(Math.random()*1000); }
+  if(mergeType === 'stack'){
+    // Append every source section + its rows. Re-id everything to avoid id clashes.
+    srcSections.forEach(function(srcSec){
+      var newSecId = _newSecId();
+      var copy = Object.assign({}, srcSec, { id: newSecId });
+      trgSections.push(copy);
+      srcRows.filter(function(r){ return r.sec === srcSec.id; }).forEach(function(r){
+        var rcopy = Object.assign({}, r, { id: _newRowId(), sec: newSecId });
+        trgRows.push(rcopy);
+      });
+    });
+  } else {
+    // Merge: combine sections that match by name (case-insensitive). Add
+    // unmatched sections as new sections.
+    srcSections.forEach(function(srcSec){
+      var match = trgSections.find(function(ts){ return (ts.name||'').toLowerCase().trim() === (srcSec.name||'').toLowerCase().trim(); });
+      if(match){
+        srcRows.filter(function(r){ return r.sec === srcSec.id; }).forEach(function(r){
+          trgRows.push(Object.assign({}, r, { id: _newRowId(), sec: match.id }));
+        });
+      } else {
+        var newSecId = _newSecId();
+        trgSections.push(Object.assign({}, srcSec, { id: newSecId }));
+        srcRows.filter(function(r){ return r.sec === srcSec.id; }).forEach(function(r){
+          trgRows.push(Object.assign({}, r, { id: _newRowId(), sec: newSecId }));
+        });
+      }
+    });
+  }
+  // Write back into the target tab. If it was the active one, update the
+  // live globals; otherwise just update the snapshot.
+  if(trgId === activeTabId){
+    sections = trgSections;
+    rows     = trgRows;
+    if(typeof recomputeTimeline === 'function') recomputeTimeline();
+    if(typeof renderTableHeader === 'function') renderTableHeader();
+    render();
+  } else {
+    trg.sections = trgSections;
+    trg.rows     = trgRows;
+  }
+  persistData();
+  var modal = document.getElementById('mergeRoadmapsModal');
+  if(modal) modal.remove();
+  showToast('Roadmaps '+(mergeType === 'stack' ? 'stacked' : 'merged')+' successfully', 'success');
 }
 
 function openAddTabModal(){
@@ -3594,12 +3879,14 @@ function renderTableHeader(){
   r1+='</tr>';
 
   // Row 2: MONTH + month headers
+  // v14 Fix 12: tag every month header with its flat column index so the
+  // range filter can match it to the same data-mi attribute on the body row.
   var r2='<tr><th class="th-lbl">MONTH</th>';
   var col=0;
   quarters.forEach(function(q){
     q.months.forEach(function(m,mi){
       var isLast=(mi===q.months.length-1);
-      r2+='<th class="mh'+(isLast?' qb':'')+'">'+m+'</th>';
+      r2+='<th class="mh'+(isLast?' qb':'')+'" data-mi="'+col+'">'+m+'</th>';
       col++;
     });
   });
@@ -3739,7 +4026,7 @@ function buildDayOptions(mname,selectedDay){
 // v1.43.0 — single source of truth for the app version. Bump this with every
 // release alongside package.json. Used by the login footer, the JSON backup
 // metadata, and the in-app What's New modal (lastSeenAppVersion comparison).
-var APP_VERSION = 'v1.44.0';
+var APP_VERSION = 'v1.45.0';
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 var sections=[
@@ -3826,9 +4113,13 @@ function openRowKebab(event, rowId){
       '<svg viewBox="0 0 24 24"><path d="M8 7v10a2 2 0 002 2h7M8 7V5a2 2 0 012-2h6.586a2 2 0 011.414.586l3.414 3.414A2 2 0 0122 8.414V17a2 2 0 01-2 2h-2"/></svg>'+
       'Duplicate'+
     '</button>'+
-    '<button onclick="closeRowKebab();toggleRowWatch(\''+escHtml(rowId)+'\')">'+
+    '<button onclick="closeRowKebab();toggleRowWatch(\''+escHtml(rowId)+'\')" title="Follow this product to be notified about changes">'+
       '<svg viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>'+
-      (_isRowWatched(rowId) ? 'Stop watching' : 'Watch')+
+      (_isRowWatched(rowId) ? 'Unfollow product' : 'Follow product')+
+    '</button>'+
+    '<button onclick="closeRowKebab();toggleSectionFollow_FromRow(\''+escHtml(rowId)+'\')" title="Follow this section to be notified when any product in it changes">'+
+      '<svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>'+
+      (_isSectionFollowedFromRow(rowId) ? 'Unfollow section' : 'Follow section')+
     '</button>'+
     '<button onclick="closeRowKebab();archiveRow(\''+escHtml(rowId)+'\')">'+
       '<svg viewBox="0 0 24 24"><path d="M5 8h14m-12 0V6a2 2 0 012-2h6a2 2 0 012 2v2m-9 4h6m-9-4v12a2 2 0 002 2h10a2 2 0 002-2V8"/></svg>'+
@@ -4005,6 +4296,73 @@ function _rowInRange(row, range){
   return false;
 }
 
+// v14 Fix 12: hide out-of-range month columns and the quarters that contain
+// only out-of-range months. Uses display:none on <th>/<td> cells indexed by
+// month so the visible timeline reflows around the filtered range. When
+// `range` is null we restore everything.
+function _applyTimelineRangeColumns(range){
+  var table = document.getElementById('roadmap');
+  if(!table) return;
+  // Restore everything first so successive calls don't compound.
+  var monthHeaders = table.querySelectorAll('th.mh');
+  monthHeaders.forEach(function(th){ th.style.display = ''; });
+  var quarterHeaders = table.querySelectorAll('th.qh');
+  quarterHeaders.forEach(function(th){
+    th.style.display = '';
+    if(th.dataset && th.dataset._origColspan){
+      th.colSpan = parseInt(th.dataset._origColspan, 10);
+      delete th.dataset._origColspan;
+    }
+  });
+  if(!range){
+    // Restore full timeline — also reset month-cell hiding on body rows.
+    table.querySelectorAll('td.td-mo[data-mi]').forEach(function(td){ td.style.display = ''; });
+    // Reset cached "_origColspan" for section headers too.
+    table.querySelectorAll('tr.sec-hdr td').forEach(function(td){
+      if(td.dataset && td.dataset._origColspan){
+        td.colSpan = parseInt(td.dataset._origColspan, 10);
+        delete td.dataset._origColspan;
+      }
+    });
+    return;
+  }
+  var startCol = range.start;
+  var endCol = range.end; // exclusive
+  var visibleCount = Math.max(0, endCol - startCol);
+  // Hide month headers + cells outside [start, end).
+  monthHeaders.forEach(function(th, idx){
+    if(idx < startCol || idx >= endCol) th.style.display = 'none';
+  });
+  // Hide / shrink quarter headers based on how many of their months are in range.
+  quarterHeaders.forEach(function(th){
+    var qi = parseInt(th.dataset.qi || '-1', 10);
+    if(qi < 0) return;
+    var q = quarters[qi]; if(!q) return;
+    // Compute the flat month-index range this quarter covers.
+    var qStart = 0;
+    for(var i=0; i<qi; i++){ qStart += quarters[i].months.length; }
+    var qEnd = qStart + q.months.length;
+    var visible = Math.max(0, Math.min(qEnd, endCol) - Math.max(qStart, startCol));
+    if(!th.dataset._origColspan) th.dataset._origColspan = String(th.colSpan || q.months.length);
+    if(visible <= 0){
+      th.style.display = 'none';
+    } else {
+      th.colSpan = visible;
+    }
+  });
+  // Hide td-mo body cells outside the range and shrink section header
+  // colspans so they still cover only the visible months + the label col.
+  table.querySelectorAll('td.td-mo[data-mi]').forEach(function(td){
+    var mi = parseInt(td.dataset.mi, 10);
+    if(mi < startCol || mi >= endCol) td.style.display = 'none';
+    else td.style.display = '';
+  });
+  table.querySelectorAll('tr.sec-hdr td').forEach(function(td){
+    if(!td.dataset._origColspan) td.dataset._origColspan = String(td.colSpan || (NM + 1));
+    td.colSpan = visibleCount + 1;
+  });
+}
+
 // View toggle: Timeline or Kanban
 function setRoadmapView(view){
   _roadmapView = view || 'timeline';
@@ -4026,6 +4384,8 @@ function setRoadmapView(view){
       if(tableWrap) tableWrap.appendChild(kanbanWrap);
     }
     kanbanWrap.style.display = 'block';
+    // v14 Fix 8: hide today line in Kanban view (only Timeline shows it).
+    document.querySelectorAll('.today-line').forEach(function(el){ el.remove(); });
     renderKanbanBoard();
   } else {
     if(tbl) tbl.style.display = '';
@@ -4057,12 +4417,41 @@ function renderKanbanBoard(){
   var wrap = document.getElementById('kanbanWrap');
   if(!wrap) return;
 
-  // Group rows by dominant status
+  // v14 Fix 8: kanban now renders INITIATIVES (bars), not products (rows).
+  // Each card carries its parent product name + section so users keep
+  // context at a glance.
   var byStatus = { s:[], b:[], o:[], r:[], g:[] };
   rows.forEach(function(row){
-    var st = _dominantStatus(row);
-    if(!byStatus[st]) byStatus[st] = [];
-    byStatus[st].push(row);
+    var sec = sections.find(function(s){ return s.id === row.sec; });
+    var bars = Array.isArray(row.bars) && row.bars.length ? row.bars : null;
+    if(bars){
+      bars.forEach(function(bar, idx){
+        var st = bar.c || 'b';
+        if(!byStatus[st]) byStatus[st] = [];
+        byStatus[st].push({
+          row: row,
+          bar: bar,
+          barIdx: idx,
+          sec: sec,
+          name: bar.t || ('Initiative '+(idx+1)),
+          parentName: row.name || 'Untitled',
+          isInitiative: true
+        });
+      });
+    } else {
+      // Row with no bars \u2014 still surface it so it's not lost.
+      var st2 = _dominantStatus(row);
+      if(!byStatus[st2]) byStatus[st2] = [];
+      byStatus[st2].push({
+        row: row,
+        bar: null,
+        barIdx: -1,
+        sec: sec,
+        name: row.name || 'Untitled',
+        parentName: row.name || 'Untitled',
+        isInitiative: false
+      });
+    }
   });
 
   var html = '<div class="kanban-board">';
@@ -4075,20 +4464,22 @@ function renderKanbanBoard(){
     html += '<span class="kanban-col-count">'+col.length+'</span>';
     html += '</div>';
     html += '<div class="kanban-col-body">';
-    col.forEach(function(row){
-      var sec = sections.find(function(s){ return s.id === row.sec; });
-      var secColor = sec ? sec.color : '#64748b';
-      var secName = sec ? sec.name : '\u2014';
-      html += '<div class="kanban-card" draggable="true" data-row-id="'+escHtml(row.id)+'" ondragstart="onKanbanDragStart(event,\''+escHtml(row.id)+'\')" ondragend="onKanbanDragEnd(event)" onclick="openEditModal(\''+escHtml(row.id)+'\')" style="border-left-color:'+escHtml(secColor)+'">';
-      html += '<div class="kanban-card-name">'+escHtml(row.name||'Untitled')+'</div>';
+    col.forEach(function(item){
+      var secColor = item.sec ? item.sec.color : '#64748b';
+      var secName = item.sec ? item.sec.name : '\u2014';
+      var dragKey = item.row.id + (item.barIdx >= 0 ? '#' + item.barIdx : '');
+      html += '<div class="kanban-card" draggable="true" data-row-id="'+escHtml(item.row.id)+'" data-bar-idx="'+item.barIdx+'" ondragstart="onKanbanDragStart(event,\''+escHtml(dragKey)+'\')" ondragend="onKanbanDragEnd(event)" onclick="onKanbanCardClick(\''+escHtml(item.row.id)+'\','+item.barIdx+')" style="border-left-color:'+escHtml(secColor)+'">';
+      html += '<div class="kanban-card-name">'+escHtml(item.name)+'</div>';
+      // v14 Fix 8: show parent product name on every card so users always
+      // know which product the initiative belongs to.
+      if(item.isInitiative){
+        html += '<div class="kanban-card-product" style="font-size:11px;color:var(--muted);margin-top:2px">Product: <strong style="color:var(--text);font-weight:600">'+escHtml(item.parentName)+'</strong></div>';
+      }
       html += '<div class="kanban-card-meta">';
       html += '<span class="kanban-card-section"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+escHtml(secColor)+'"></span>'+escHtml(secName)+'</span>';
-      if(row.priority){
-        var prioColor = row.priority === 'P1' ? '#dc2626' : row.priority === 'P2' ? '#f59e0b' : '#16a34a';
-        html += '<span style="display:inline-block;font-size:9px;font-weight:700;padding:1px 7px;border-radius:9999px;color:#fff;background:'+prioColor+'">'+escHtml(row.priority)+'</span>';
-      }
-      if(row.bars && row.bars.length){
-        html += '<span style="font-size:10px;color:var(--muted)">'+row.bars.length+' bar'+(row.bars.length!==1?'s':'')+'</span>';
+      if(item.row.priority){
+        var prioColor = item.row.priority === 'P1' ? '#dc2626' : item.row.priority === 'P2' ? '#f59e0b' : '#16a34a';
+        html += '<span style="display:inline-block;font-size:9px;font-weight:700;padding:1px 7px;border-radius:9999px;color:#fff;background:'+prioColor+'">'+escHtml(item.row.priority)+'</span>';
       }
       html += '</div>';
       html += '</div>';
@@ -4101,19 +4492,42 @@ function renderKanbanBoard(){
   });
   html += '</div>';
   wrap.innerHTML = html;
+  // v14 Fix 8: ensure the today line is removed when Kanban view is active.
+  // The today line is created in `.table-wrap` independently of kanbanWrap,
+  // so we strip any existing one (it'll be redrawn when the user switches
+  // back to the Timeline view via render()).
+  try {
+    document.querySelectorAll('.today-line').forEach(function(el){ el.remove(); });
+  } catch(_e){}
+}
+
+// v14 Fix 8: clicking an initiative card opens the FULL row editor and
+// scrolls to the matching bar form (matching the same Fix 2 behavior on the
+// timeline pills).
+function onKanbanCardClick(rowId, barIdx){
+  if(typeof barIdx === 'number' && barIdx >= 0){
+    var row = rows.find(function(r){ return r.id === rowId; });
+    if(row && Array.isArray(row.bars) && row.bars[barIdx]){
+      try { _editFocusBarStart = row.bars[barIdx].s; } catch(_e){}
+    }
+  }
+  if(typeof openEditModal === 'function') openEditModal(rowId);
 }
 
 // Kanban drag-and-drop (between status columns)
-var _kanbanDragRowId = null;
-function onKanbanDragStart(e, rowId){
-  _kanbanDragRowId = rowId;
+// v14 Fix 8: dragKey is "rowId" or "rowId#barIdx". When a bar idx is present
+// we change just that bar's status; otherwise we fall back to the legacy
+// dominant-bar behavior so rows with no bars still work.
+var _kanbanDragKey = null;
+function onKanbanDragStart(e, dragKey){
+  _kanbanDragKey = dragKey;
   e.currentTarget.classList.add('dragging');
   if(e.dataTransfer){ e.dataTransfer.effectAllowed = 'move'; }
 }
 function onKanbanDragEnd(e){
   e.currentTarget.classList.remove('dragging');
   document.querySelectorAll('.kanban-col.drag-over').forEach(function(c){ c.classList.remove('drag-over'); });
-  _kanbanDragRowId = null;
+  _kanbanDragKey = null;
 }
 function onKanbanDragOver(e){
   e.preventDefault();
@@ -4128,19 +4542,31 @@ function onKanbanDragLeave(e){
 function onKanbanDrop(e, newStatus){
   e.preventDefault();
   e.currentTarget.classList.remove('drag-over');
-  if(!_kanbanDragRowId) return;
-  var row = rows.find(function(r){ return r.id === _kanbanDragRowId; });
-  if(!row || !row.bars || !row.bars.length){ _kanbanDragRowId = null; return; }
-  // Find the dominant bar (the one used to compute current status) and change its colour.
-  var sorted = row.bars.slice().sort(function(a,b){
-    return ((b.e||0) - (b.s||0)) - ((a.e||0) - (a.s||0));
-  });
-  var domBar = sorted[0];
-  if(domBar.c === newStatus){ _kanbanDragRowId = null; return; }
-  domBar.c = newStatus;
+  if(!_kanbanDragKey){ return; }
+  var key = _kanbanDragKey;
+  _kanbanDragKey = null;
+  var hashIdx = key.indexOf('#');
+  var rowId = hashIdx > 0 ? key.substring(0, hashIdx) : key;
+  var barIdx = hashIdx > 0 ? parseInt(key.substring(hashIdx + 1), 10) : -1;
+  var row = rows.find(function(r){ return r.id === rowId; });
+  if(!row) return;
+  if(!Array.isArray(row.bars) || !row.bars.length){
+    return; // no bars to change status on
+  }
+  if(barIdx >= 0 && row.bars[barIdx]){
+    if(row.bars[barIdx].c === newStatus) return;
+    row.bars[barIdx].c = newStatus;
+  } else {
+    // Legacy fallback: change the dominant bar.
+    var sorted = row.bars.slice().sort(function(a,b){
+      return ((b.e||0) - (b.s||0)) - ((a.e||0) - (a.s||0));
+    });
+    var domBar = sorted[0];
+    if(domBar.c === newStatus) return;
+    domBar.c = newStatus;
+  }
   persistData();
   renderKanbanBoard();
-  _kanbanDragRowId = null;
 }
 // Walk the parent/child tree (within each section) and produce a flat list of
 // rows in tree order with a `_depth` annotation. Used by render() so children
@@ -4180,33 +4606,61 @@ function getOrderedRowsForRender(){
     // (preserving section grouping in the parent walker).
     return _treeOrderRows(rows.slice());
   }
-  var copy = rows.slice();
+  // v14 Fix 9: build a per-key comparator and apply it WITHIN each section so
+  // section headers stay visible. We preserve the original section order
+  // (driven by the sequence sections appear in `sections[]`) and only
+  // reorder rows inside each section's group.
+  var cmp;
   if(_roadmapSortBy === 'name'){
-    copy.sort(function(a,b){ return (a.name||'').localeCompare(b.name||''); });
+    cmp = function(a,b){ return (a.name||'').localeCompare(b.name||''); };
   } else if(_roadmapSortBy === 'startMonth'){
     var startOf = function(r){
       if(!r.bars || !r.bars.length) return Infinity;
       return Math.min.apply(null, r.bars.map(function(b){ return typeof b.s==='number'?b.s:Infinity; }));
     };
-    copy.sort(function(a,b){ return startOf(a)-startOf(b); });
+    cmp = function(a,b){ return startOf(a)-startOf(b); };
   } else if(_roadmapSortBy === 'endMonth'){
     var endOf = function(r){
       if(!r.bars || !r.bars.length) return -1;
       return Math.max.apply(null, r.bars.map(function(b){ return typeof b.e==='number'?b.e:-1; }));
     };
-    copy.sort(function(a,b){ return endOf(b)-endOf(a); });
+    cmp = function(a,b){ return endOf(b)-endOf(a); };
   } else if(_roadmapSortBy === 'priority'){
     var fwk = getActiveFramework();
-    copy.sort(function(a,b){
+    cmp = function(a,b){
       var sa = computePriorityScore(a, fwk);
       var sb = computePriorityScore(b, fwk);
       if(sa == null && sb == null) return 0;
       if(sa == null) return 1;
       if(sb == null) return -1;
       return sb - sa;
-    });
+    };
+  } else {
+    cmp = function(){ return 0; };
   }
-  return copy;
+  // Group rows by section in the section-order they appear in `sections[]`,
+  // sort each group, then concatenate.
+  var bySec = {};
+  rows.forEach(function(r){
+    var key = r.sec || '__no_sec__';
+    if(!bySec[key]) bySec[key] = [];
+    bySec[key].push(r);
+  });
+  var out = [];
+  (sections || []).forEach(function(sec){
+    var group = bySec[sec.id];
+    if(!group || !group.length) return;
+    group.sort(cmp);
+    group.forEach(function(r){ r._depth = 0; out.push(r); });
+  });
+  // Append rows whose section no longer exists.
+  Object.keys(bySec).forEach(function(k){
+    if(k === '__no_sec__' || !(sections || []).some(function(s){ return s.id === k; })){
+      bySec[k].sort(cmp);
+      bySec[k].forEach(function(r){ r._depth = 0; if(out.indexOf(r) < 0) out.push(r); });
+    }
+  });
+  return out;
 }
 
 function render(){
@@ -4235,7 +4689,15 @@ function render(){
   if(_range){
     orderedRows = orderedRows.filter(function(r){ return _rowInRange(r, _range); });
   }
-  var groupBySection = (_roadmapSortBy === 'default');
+  // v14 Fix 12: also narrow the timeline COLUMNS to the active range so
+  // empty quarters don't bleed in around filtered initiatives. We hide the
+  // out-of-range header + month cells via CSS rather than rebuilding NM,
+  // since NM is referenced by export paths and other consumers.
+  _applyTimelineRangeColumns(_range);
+  // v14 Fix 9: ALWAYS group by section so section headers stay visible
+  // regardless of the active sort. getOrderedRowsForRender already sorts
+  // rows within each section, so the visual result is sorted-within-section.
+  var groupBySection = true;
   // Pre-compute priority scores once if we're sorted by priority — used for the inline badge.
   var prioFwk = getActiveFramework();
   var allPrioScores = (_roadmapSortBy === 'priority') ? rows.map(function(r){ return computePriorityScore(r, prioFwk); }) : null;
@@ -4261,11 +4723,17 @@ function render(){
         '</span>'+
         '<span class="sec-actions">'+
           '<button onclick="openAddRowModal(\''+sec.id+'\')" title="Add a new row to this section">+ Row</button>'+
+          '<button onclick="toggleSectionFollow(\''+sec.id+'\')" title="'+(_isSectionFollowed(sec.id)?'Stop following this section':'Follow this section to get alerts on changes')+'">'+svgIcon('eye',{size:14})+'</button>'+
           '<button onclick="openEditSection(\''+sec.id+'\')" title="Edit section">'+svgIcon('edit',{size:14})+'</button>'+
           '<button onclick="editSectionColor(\''+sec.id+'\')" title="Change section colour">'+svgIcon('palette',{size:14})+'</button>'+
           '<button onclick="deleteSection(\''+sec.id+'\')" style="color:#fca5a5" title="Delete this entire section and all its rows">✕ Section</button>'+
         '</span>';
       sh.appendChild(std);
+      // v14 Fix 7: allow dropping a row onto a section header to move it into
+      // that section (placed at the top of the section).
+      sh.dataset.secId = sec.id;
+      sh.addEventListener('dragover', onSectionHeaderDragOver);
+      sh.addEventListener('drop', onSectionHeaderDrop);
       tbody.appendChild(sh);
     }
 
@@ -4368,6 +4836,9 @@ function render(){
       var isQB=QB.indexOf(mi)>=0;
       var td=document.createElement('td');
       td.className='td td-mo'+(isQB?' qb':'');
+      // v14 Fix 12: tag the column index so the range filter can hide
+      // out-of-range cells without rebuilding the whole table.
+      td.dataset.mi = mi;
       td.style.cssText='padding:0;position:relative;vertical-align:top;overflow:visible';
       var host=document.createElement('div');
       host.className='lane-host';
@@ -4445,6 +4916,26 @@ function openEditModal(rowId){
   renderLaunchOutcomesForm(row);
   document.getElementById('rowModal').classList.remove('hidden');
   addVoiceToRowModal();
+  // v14 Fix 2: when the user clicked a pill/bar, scroll that bar's form row
+  // into view + flash a highlight so they land on the right initiative.
+  try {
+    if(_editFocusBarStart != null && row && Array.isArray(row.bars)){
+      var targetBar = row.bars.find(function(b){ return Math.abs(b.s - _editFocusBarStart) < 0.001; });
+      if(targetBar && targetBar.id){
+        setTimeout(function(){
+          var el = document.querySelector('#barsContainer [data-bid="'+targetBar.id+'"]');
+          if(el){
+            try { el.scrollIntoView({ behavior:'smooth', block:'center' }); } catch(_e){}
+            var prev = el.style.boxShadow;
+            el.style.transition = 'box-shadow .25s';
+            el.style.boxShadow = '0 0 0 3px rgba(45,107,244,.45)';
+            setTimeout(function(){ el.style.boxShadow = prev || ''; }, 1800);
+          }
+        }, 80);
+      }
+    }
+  } catch(_err){}
+  _editFocusBarStart = null;
 }
 
 function openAddRowModal(secId){
@@ -4478,6 +4969,22 @@ function _populateRowExtraFields(row){
   // Revenue
   var revInp = document.getElementById('fRevenue');
   if(revInp) revInp.value = row && row.revenue != null ? row.revenue : '';
+  // v14 Fix 3 Part B: currency selector — restore from row, then app default.
+  var curSel = document.getElementById('fRevenueCurrency');
+  if(curSel){
+    var defaultCur = (typeof appSettings === 'object' && appSettings && appSettings.currency) || 'USD';
+    var curVal = (row && row.revenueCurrency) || defaultCur;
+    curSel.value = curVal;
+    // Persist user's currency preference whenever they change it.
+    curSel.onchange = function(){
+      try {
+        if(typeof appSettings === 'object' && appSettings){
+          appSettings.currency = curSel.value;
+          if(typeof persistData === 'function') persistData();
+        }
+      } catch(_e){}
+    };
+  }
   // Owner dropdown — current user + cap members
   var ownerSel = document.getElementById('fOwnerEmail');
   if(ownerSel){
@@ -5453,17 +5960,63 @@ function attachRow(name,storedName){
   var ico=document.createElement('span');
   ico.className='att-icon'; ico.innerHTML=svgIcon('paperclip',{size:14});
   var nameSpan=document.createElement('span');
-  nameSpan.className='att-name'; nameSpan.textContent=name; nameSpan.title='Click to open';
-  nameSpan.onclick=function(){
-    if(window.electronAPI && window.electronAPI.openAttachment) window.electronAPI.openAttachment(storedName);
-  };
+  nameSpan.className='att-name'; nameSpan.textContent=name; nameSpan.title='Click to open / download attachment';
+  nameSpan.style.cursor='pointer';
+  nameSpan.onclick=function(){ openAttachmentFile(name, storedName); };
   li.setAttribute('data-att-name',name);
   li.setAttribute('data-att-stored',storedName);
+  // v14 Fix 3 Part F: explicit download icon next to the file name. Clicking
+  // either the name or the icon opens/downloads the file.
+  var dlBtn=document.createElement('button');
+  dlBtn.title='Download attachment';
+  dlBtn.style.cssText='background:none;border:none;color:var(--accent);cursor:pointer;padding:2px;flex-shrink:0';
+  dlBtn.innerHTML='<svg viewBox="0 0 16 16" width="14" height="14" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v9M4 8l4 4 4-4"/><line x1="2" y1="14" x2="14" y2="14"/></svg>';
+  dlBtn.onclick=function(e){ e.stopPropagation(); openAttachmentFile(name, storedName); };
   var rmBtn=document.createElement('button');
   rmBtn.innerHTML='✕'; rmBtn.title='Remove attachment';
   rmBtn.onclick=function(){ li.remove(); };
-  li.appendChild(ico); li.appendChild(nameSpan); li.appendChild(rmBtn);
+  li.appendChild(ico); li.appendChild(nameSpan); li.appendChild(dlBtn); li.appendChild(rmBtn);
   return li;
+}
+
+// v14 Fix 3 Part F: unified attachment opener. Tries Electron first, then
+// Supabase Storage, then falls back to whatever URL we have. Errors are
+// surfaced via showToast so the user knows why a click did nothing.
+function openAttachmentFile(name, storedName){
+  if(!storedName){ showToast('No file attached', 'warning'); return; }
+  // 1) Electron desktop path.
+  if(window.electronAPI && typeof window.electronAPI.openAttachment === 'function'){
+    try { window.electronAPI.openAttachment(storedName); return; } catch(_e){}
+  }
+  // 2) Data-URL or absolute URL — open straight to a download.
+  if(/^(data:|https?:|blob:)/i.test(storedName)){
+    var a = document.createElement('a');
+    a.href = storedName;
+    a.download = name || 'attachment';
+    a.target = '_blank';
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ try { document.body.removeChild(a); } catch(_e){} }, 0);
+    return;
+  }
+  // 3) Supabase Storage path — pull from the attachments bucket.
+  try {
+    var sb = (typeof _supabase !== 'undefined') ? _supabase : (typeof window !== 'undefined' ? window._supabase : null);
+    if(sb && sb.storage){
+      sb.storage.from('attachments').download(storedName).then(function(res){
+        if(res && res.error){ showToast('Download failed: '+res.error.message, 'error'); return; }
+        if(!res || !res.data){ showToast('Download failed: no data', 'error'); return; }
+        var url = URL.createObjectURL(res.data);
+        var a = document.createElement('a');
+        a.href = url; a.download = name || 'attachment';
+        document.body.appendChild(a); a.click();
+        setTimeout(function(){ try { document.body.removeChild(a); URL.revokeObjectURL(url); } catch(_e){} }, 0);
+      }).catch(function(err){
+        showToast('Download failed: '+(err && err.message ? err.message : err), 'error');
+      });
+      return;
+    }
+  } catch(_err){}
+  showToast('Cannot open attachment in this environment', 'warning');
 }
 function pickAndAttach(){
   if(!window.electronAPI || !window.electronAPI.pickAttachments){
@@ -5673,7 +6226,9 @@ function saveRow(){
   // v1.42.0: extra initiative fields — revenue, labels, owner, timestamps.
   var _revInp = document.getElementById('fRevenue');
   var _ownerInp = document.getElementById('fOwnerEmail');
+  var _curInp = document.getElementById('fRevenueCurrency');
   var _revenue = _revInp ? (parseFloat(_revInp.value) || 0) : undefined;
+  var _revenueCurrency = _curInp ? (_curInp.value || '').trim() : undefined;
   var _ownerEmail = _ownerInp ? (_ownerInp.value || '').trim() : undefined;
   var _labels = (function(){
     var box = document.getElementById('fLabelsBox');
@@ -5693,6 +6248,7 @@ function saveRow(){
     row.links=links; row.attachments=attachments; row.initiativeLinks=initLinks;
     row.parentRowId = parentRowId;
     if(_revenue !== undefined) row.revenue = _revenue;
+    if(_revenueCurrency !== undefined && _revenueCurrency) row.revenueCurrency = _revenueCurrency;
     if(_labels !== undefined) row.labels = _labels;
     if(_ownerEmail !== undefined){
       row.ownerEmail = _ownerEmail;
@@ -5717,6 +6273,7 @@ function saveRow(){
   } else {
     var newRow={id:'r'+Date.now(),sec:secId,name:name,sub:sub,priority:priority,bars:bars,priorities:priorities,deliverables:deliverables,links:links,attachments:attachments,initiativeLinks:initLinks,parentRowId:parentRowId,
       revenue: _revenue || 0,
+      revenueCurrency: _revenueCurrency || ((typeof appSettings === 'object' && appSettings && appSettings.currency) || 'USD'),
       labels: Array.isArray(_labels) ? _labels : [],
       ownerEmail: _ownerEmail || ((typeof userProfile!=='undefined' && userProfile && userProfile.email) || (_currentUser && _currentUser.email) || ''),
       owner: _resolveOwnerName(_ownerEmail),
@@ -5890,6 +6447,43 @@ function _isRowWatched(rowId){
   if(!row || !Array.isArray(row.watchers)) return false;
   var meEmail = ((_currentUser && _currentUser.email) || (typeof userProfile!=='undefined' && userProfile && userProfile.email) || '').toLowerCase();
   return row.watchers.some(function(w){ return (w.email||'').toLowerCase() === meEmail; });
+}
+
+// v14 Fix 11: section-level follow. Stores followers on the section object
+// itself so the data rides with each section in the user's blob.
+function _isSectionFollowed(secId){
+  var sec = sections.find(function(s){ return s.id === secId; });
+  if(!sec || !Array.isArray(sec.followers)) return false;
+  var meEmail = ((_currentUser && _currentUser.email) || (typeof userProfile!=='undefined' && userProfile && userProfile.email) || '').toLowerCase();
+  return sec.followers.some(function(f){ return (f.email||'').toLowerCase() === meEmail; });
+}
+function _isSectionFollowedFromRow(rowId){
+  var row = rows.find(function(r){ return r.id === rowId; });
+  if(!row) return false;
+  return _isSectionFollowed(row.sec);
+}
+function toggleSectionFollow(secId){
+  var sec = sections.find(function(s){ return s.id === secId; });
+  if(!sec) return;
+  if(!Array.isArray(sec.followers)) sec.followers = [];
+  var meEmail = (_currentUser && _currentUser.email) || (typeof userProfile!=='undefined' && userProfile && userProfile.email) || '';
+  var meName = (typeof userProfile!=='undefined' && userProfile && userProfile.name) || meEmail || 'You';
+  var meEmailLc = meEmail.toLowerCase();
+  var i = sec.followers.findIndex(function(f){ return (f.email||'').toLowerCase() === meEmailLc; });
+  if(i >= 0){
+    sec.followers.splice(i,1);
+    showToast('Stopped following section "'+(sec.name||'')+'"', 'info');
+  } else {
+    sec.followers.push({ email: meEmail, name: meName, followedAt: new Date().toISOString() });
+    showToast('Following section "'+(sec.name||'')+'" — you will get alerts on changes', 'success');
+  }
+  persistData();
+  render();
+}
+function toggleSectionFollow_FromRow(rowId){
+  var row = rows.find(function(r){ return r.id === rowId; });
+  if(!row) return;
+  toggleSectionFollow(row.sec);
 }
 
 function toggleRowWatch(rowId){
@@ -6097,42 +6691,138 @@ function onBarMouseUp(){
   if(wasDragged){
     persistData();
   } else {
-    // It was a click — open bar edit modal
-    openBarModal(rowId, barStart);
+    // v14 Fix 2: clicking a pill/bar opens the FULL row editor (revenue,
+    // labels, owner, comments all included) rather than the trimmed bar
+    // modal. We stash the bar identifier so the editor can scroll to /
+    // highlight that specific initiative on open.
+    try { _editFocusBarStart = barStart; } catch(_e){}
+    openEditModal(rowId);
   }
 }
+var _editFocusBarStart = null;
 
 // ── ROW DRAG & DROP ───────────────────────────────────────────────────────────
+// v14 Fix 7: products can now move between sections without disturbing other
+// items. We splice from the source position, calculate an exact insert index
+// in the target, and update row.sec to the section the user dropped into.
+// A horizontal indicator line shows where the row will land.
 function onDragStart(e){
   dragSrcRow=this;
   this.classList.add('dragging');
   e.dataTransfer.effectAllowed='move';
   e.dataTransfer.setData('text/plain',this.dataset.id);
 }
+function _clearDropIndicators(){
+  document.querySelectorAll('.row-drop-indicator').forEach(function(el){ el.remove(); });
+}
 function onDragOver(e){
   if(e.preventDefault) e.preventDefault();
   e.dataTransfer.dropEffect='move';
-  document.querySelectorAll('.data-row').forEach(function(r){r.classList.remove('drag-over')});
+  document.querySelectorAll('.data-row').forEach(function(r){ r.classList.remove('drag-over'); });
   this.classList.add('drag-over');
+  // v14 Fix 7: render a thin horizontal indicator above or below this row to
+  // show where the dragged item will land.
+  _clearDropIndicators();
+  var rect = this.getBoundingClientRect();
+  var midY = rect.top + rect.height/2;
+  var ind = document.createElement('tr');
+  ind.className = 'row-drop-indicator';
+  var td = document.createElement('td');
+  td.colSpan = (typeof NM === 'number' ? NM + 1 : 25);
+  td.style.cssText = 'padding:0;height:2px;background:var(--accent);box-shadow:0 0 0 2px rgba(45,107,244,.18)';
+  ind.appendChild(td);
+  if(e.clientY < midY){
+    this.parentNode.insertBefore(ind, this);
+  } else {
+    this.parentNode.insertBefore(ind, this.nextSibling);
+  }
   return false;
 }
 function onDrop(e){
   if(e.stopPropagation) e.stopPropagation();
   var targetId=this.dataset.id;
   var srcId=dragSrcRow&&dragSrcRow.dataset.id;
+  _clearDropIndicators();
   if(srcId&&targetId&&srcId!==targetId){
-    var si=rows.findIndex(function(r){return r.id===srcId});
-    var ti=rows.findIndex(function(r){return r.id===targetId});
-    var moved=rows.splice(si,1)[0];
-    rows.splice(ti,0,moved);
+    var si=rows.findIndex(function(r){return r.id===srcId;});
+    var ti=rows.findIndex(function(r){return r.id===targetId;});
+    if(si < 0 || ti < 0) return false;
+    var moved=rows[si];
+    var targetRow=rows[ti];
+    // Determine drop position (above/below the target row).
+    var rect = this.getBoundingClientRect();
+    var midY = rect.top + rect.height/2;
+    var dropAbove = e.clientY < midY;
+    // Splice out source first; recompute target index because removal may
+    // have shifted indices.
+    rows.splice(si, 1);
+    var newTi = rows.findIndex(function(r){ return r.id === targetId; });
+    var insertIndex = dropAbove ? newTi : newTi + 1;
+    // v14 Fix 7: re-parent to the target's section so cross-section drops
+    // actually move the row, not just reorder it.
+    if(targetRow && moved.sec !== targetRow.sec){
+      var prevSec = moved.sec;
+      moved.sec = targetRow.sec;
+      try {
+        if(typeof _appendChangeLog === 'function'){
+          var pSec = sections.find(function(s){ return s.id === prevSec; });
+          var tSec = sections.find(function(s){ return s.id === targetRow.sec; });
+          _appendChangeLog('move', moved.id, 'Moved "'+(moved.name||'')+'" from "'+(pSec?pSec.name:prevSec)+'" → "'+(tSec?tSec.name:targetRow.sec)+'"');
+        }
+      } catch(_e){}
+    }
+    rows.splice(insertIndex, 0, moved);
     render();
     persistData();
   }
   return false;
 }
 function onDragEnd(){
-  document.querySelectorAll('.data-row').forEach(function(r){r.classList.remove('dragging','drag-over')});
+  document.querySelectorAll('.data-row').forEach(function(r){ r.classList.remove('dragging','drag-over'); });
+  _clearDropIndicators();
   dragSrcRow=null;
+}
+// v14 Fix 7: section-header drop targets so users can drop directly into a
+// section (placed at the top of that section's row list).
+function onSectionHeaderDragOver(e){
+  if(e.preventDefault) e.preventDefault();
+  e.dataTransfer.dropEffect='move';
+  _clearDropIndicators();
+  this.classList.add('drag-over');
+  return false;
+}
+function onSectionHeaderDrop(e){
+  if(e.stopPropagation) e.stopPropagation();
+  if(e.preventDefault) e.preventDefault();
+  this.classList.remove('drag-over');
+  _clearDropIndicators();
+  var srcId = dragSrcRow && dragSrcRow.dataset.id;
+  var secId = this.dataset.secId;
+  if(!srcId || !secId) return false;
+  var si = rows.findIndex(function(r){ return r.id === srcId; });
+  if(si < 0) return false;
+  var moved = rows.splice(si, 1)[0];
+  var prevSec = moved.sec;
+  moved.sec = secId;
+  // Insert at the start of the section so the user sees it land where they dropped.
+  var firstInSecIdx = rows.findIndex(function(r){ return r.sec === secId; });
+  if(firstInSecIdx < 0){
+    rows.push(moved);
+  } else {
+    rows.splice(firstInSecIdx, 0, moved);
+  }
+  if(prevSec !== secId){
+    try {
+      if(typeof _appendChangeLog === 'function'){
+        var pSec = sections.find(function(s){ return s.id === prevSec; });
+        var tSec = sections.find(function(s){ return s.id === secId; });
+        _appendChangeLog('move', moved.id, 'Moved "'+(moved.name||'')+'" from "'+(pSec?pSec.name:prevSec)+'" → "'+(tSec?tSec.name:secId)+'"');
+      }
+    } catch(_e){}
+  }
+  render();
+  persistData();
+  return false;
 }
 
 // ── TABS rendered in init after data load ────────────────────────────────────
@@ -7277,7 +7967,8 @@ var _svgPaths = {
   'exclamation':'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
   target:'M12 12m-3 0a3 3 0 106 0 3 3 0 10-6 0M12 12m-7 0a7 7 0 1014 0 7 7 0 10-14 0M12 12m-11 0a11 11 0 1022 0 11 11 0 10-22 0',
   doc:'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
-  list:'M4 6h16M4 10h16M4 14h16M4 18h16'
+  list:'M4 6h16M4 10h16M4 14h16M4 18h16',
+  eye:'M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z|M12 9a3 3 0 100 6 3 3 0 000-6z'
 };
 function svgIcon(name, opts) {
   if (typeof opts === 'number') opts = {size: opts};
@@ -11129,23 +11820,22 @@ function applyAiActions(actions){
 
 // ── VOICE TO TEXT ────────────────────────────────────────────────────────────
 function addVoiceToRowModal(){
-  // Add voice buttons to row name and description fields
-  var fName=document.getElementById('fName');
-  var fSub=document.getElementById('fSub');
-  // Remove any existing voice buttons first
-  document.querySelectorAll('.row-modal-voice').forEach(function(b){b.remove();});
-  if(fName&&!fName.nextElementSibling?.classList?.contains('row-modal-voice')){
-    var vb=addVoiceButton(fName);vb.className='row-modal-voice';
-    fName.parentElement.style.cssText='display:flex;gap:6px;align-items:center';
-    fName.style.flex='1';
-    fName.parentElement.appendChild(vb);
-  }
-  if(fSub&&!fSub.nextElementSibling?.classList?.contains('row-modal-voice')){
-    var vb2=addVoiceButton(fSub);vb2.className='row-modal-voice';
-    fSub.parentElement.style.cssText='display:flex;gap:6px;align-items:flex-start';
-    fSub.style.flex='1';
-    fSub.parentElement.appendChild(vb2);
-  }
+  // v14 Fix 3 (Part D + A + E): voice/recording boxes removed from the edit
+  // product modal so the Description and Product Label fields stack vertically
+  // (label-above-input) like the rest of the form. We also undo any inline
+  // flex styling that older builds applied to the parent .form-row so the
+  // textarea sits below its title.
+  ['fName','fSub'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(!el || !el.parentElement) return;
+    var p = el.parentElement;
+    if(p.style.display === 'flex'){
+      p.style.cssText = '';
+    }
+    el.style.flex = '';
+  });
+  // Remove any leftover voice buttons that earlier renders may have added.
+  document.querySelectorAll('.row-modal-voice').forEach(function(b){ b.remove(); });
 }
 
 var _voiceRecognition=null;
@@ -13461,6 +14151,19 @@ function _saveG2MTemplates(){
   try { localStorage.setItem(_lsKey('g2m_templates'),JSON.stringify(g2mTemplates)); } catch(e){}
 }
 
+// v14 Fix 5: GTM Templates button opens the unified template library
+// (browse, select, import, save) when available. Falls back to the
+// custom-saved-templates manager if the unified builder isn't loaded yet.
+function openChecklistTemplateLibrary(){
+  try {
+    if(typeof openTemplateBuilder === 'function'){
+      openTemplateBuilder('checklist', { initiativeName: (typeof g2mCurrentProduct !== 'undefined' ? g2mCurrentProduct : null) });
+      return;
+    }
+  } catch(_e){}
+  if(typeof openG2MTemplateBuilder === 'function') openG2MTemplateBuilder();
+}
+
 function openG2MTemplateBuilder(){
   _loadG2MTemplates();
   var ex=document.getElementById('g2mTplModal'); if(ex) ex.remove();
@@ -13904,6 +14607,98 @@ function setG2MVal(product,idx,val){
   if(items[idx]) items[idx].value=val;
   persistG2M();
   renderG2M();
+  // v14 Fix 4: trigger confetti + jingle when every applicable checklist item
+  // is now Yes (N/A counts as completed-equivalent).
+  try { _maybeFireChecklistCelebration(product); } catch(_e){}
+}
+
+// v14 Fix 4: confetti + Web Audio jingle when the active checklist is fully
+// complete (every item is "yes" or "na"). Only fires when the change toggled
+// the list from incomplete to complete to avoid replaying on edits afterwards.
+var _g2mLastCelebratedFor = {};
+function _maybeFireChecklistCelebration(product){
+  var items = getG2MItems(product) || [];
+  if(!items.length) return;
+  var applicable = items.filter(function(i){ return i && i.value !== 'na' && i.value !== 'not_applicable'; });
+  // If every item is N/A there's nothing to celebrate.
+  if(!applicable.length){ _g2mLastCelebratedFor[product] = false; return; }
+  var done = applicable.every(function(i){
+    var v = (i && i.value) || '';
+    return v === 'yes' || v === 'complete' || v === 'done';
+  });
+  if(done && !_g2mLastCelebratedFor[product]){
+    _g2mLastCelebratedFor[product] = true;
+    showChecklistCelebration(product);
+  } else if(!done){
+    _g2mLastCelebratedFor[product] = false;
+  }
+}
+
+function showChecklistCelebration(product){
+  // Tear down any previous celebration overlay.
+  var existing = document.getElementById('celebration-overlay');
+  if(existing) existing.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'celebration-overlay';
+  overlay.innerHTML =
+    '<div class="confetti-container" id="confetti-container"></div>'+
+    '<div class="celebration-message">'+
+      '<svg viewBox="0 0 64 64" width="64" height="64" class="celebration-icon" style="display:block;margin:0 auto 4px"><circle cx="32" cy="32" r="30" fill="none" stroke="#22c55e" stroke-width="3"/><polyline points="20 32 28 40 44 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>'+
+      '<h2>Congratulations!</h2>'+
+      '<p>You have completed every item on the '+escHtml(product||'')+' checklist. Ready to launch.</p>'+
+      '<button onclick="dismissCelebration()" class="btn accent" style="padding:10px 22px;font-size:13px;font-weight:700">Continue</button>'+
+    '</div>';
+  document.body.appendChild(overlay);
+
+  // Generate confetti pieces.
+  var container = document.getElementById('confetti-container');
+  var colors = ['#3b82f6','#22c55e','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4'];
+  for(var i=0; i<80; i++){
+    var piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    var size = Math.floor(Math.random()*10)+5;
+    var color = colors[Math.floor(Math.random()*colors.length)];
+    var rot = Math.floor(Math.random()*360);
+    var dur = (Math.random()*2 + 1.5).toFixed(2);
+    var delay = (Math.random()*0.5).toFixed(2);
+    piece.style.cssText = 'position:absolute;width:'+size+'px;height:'+size+'px;background:'+color+';left:'+Math.floor(Math.random()*100)+'%;top:-20px;border-radius:'+(Math.random()>0.5?'50%':'2px')+';animation:confettiFall '+dur+'s ease-in '+delay+'s forwards;transform:rotate('+rot+'deg)';
+    container.appendChild(piece);
+  }
+
+  playCelebrationSound();
+  setTimeout(function(){ dismissCelebration(); }, 6000);
+}
+
+function dismissCelebration(){
+  var overlay = document.getElementById('celebration-overlay');
+  if(!overlay) return;
+  overlay.style.opacity = '0';
+  setTimeout(function(){ try { overlay.remove(); } catch(_e){} }, 300);
+}
+
+function playCelebrationSound(){
+  // Wrapped in try/catch — some browsers block autoplay until first gesture.
+  try {
+    var Ctx = window.AudioContext || window.webkitAudioContext;
+    if(!Ctx) return;
+    var ctx = new Ctx();
+    var notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+    var durations = [0.15, 0.15, 0.15, 0.4];
+    var t = ctx.currentTime;
+    notes.forEach(function(freq, i){
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.15, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + durations[i]);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + durations[i]);
+      t += durations[i] * 0.8;
+    });
+  } catch(_e){ /* silent celebration */ }
 }
 
 function setG2MComment(product,idx,text){
@@ -22226,6 +23021,19 @@ function _prioToggleMatrixHidden(rowId){
   persistData();
   renderPrioMatrixTab();
 }
+// v14 Fix 1: bulk Select All toggle for the matrix items list.
+function _prioToggleMatrixSelectAll(checked){
+  var ui = _prioMatrixUI();
+  if(checked){
+    ui.hidden = [];
+  } else {
+    // Hide every row (and any per-bar overrides become irrelevant — row-hidden
+    // already disables children).
+    ui.hidden = (rows || []).map(function(r){ return r.id; });
+  }
+  persistData();
+  renderPrioMatrixTab();
+}
 function _prioSetMatrixOpt(key, val){
   var ui = _prioMatrixUI();
   ui[key] = val;
@@ -22308,6 +23116,17 @@ function renderPrioMatrixTab(){
   var BAR_STATUS = { g:'#22c55e', b:'#3b82f6', o:'#f59e0b', s:'#7c3aed', r:'#ef4444' };
   var BAR_LABELS = { g:'Released', b:'In Progress', o:'Delayed', s:'Strategy', r:'At Risk' };
   function _barKey(rowId, barIdx){ return rowId + '#' + barIdx; }
+  // v14 Fix 1: items with no scores still need to be plotted (otherwise the
+  // chart looks empty even when the items list shows checked). For unscored
+  // items we derive a sensible default x/y from priority + a midpoint so the
+  // user sees a dot they can drag to set their own position.
+  function _defaultMatrixXY(row){
+    // Priority maps to value (Y); leave cost (X) at midpoint until user drags.
+    var priorityValueMap = { 'P1': 8, 'P2': 5, 'P3': 3, 'High': 8, 'Medium': 5, 'Low': 3 };
+    var y = priorityValueMap[row.priority] != null ? priorityValueMap[row.priority] : 5;
+    var x = 5; // default cost = middle
+    return { x: x, y: y };
+  }
   var pts = [];
   rows.forEach(function(r){
     var s = (prioritizationData.scores || {})[r.id] || {};
@@ -22319,8 +23138,16 @@ function renderPrioMatrixTab(){
       var ov = ovs[key];
       var x = ov ? ov.x : rowX;
       var y = ov ? ov.y : rowY;
-      if((!x || x <= 0) && (!y || y <= 0) && !ov) return;
-      pts.push({ row: r, bar: b, barIdx: idx, key: key, x: x, y: y, override: !!ov, hidden: !!hiddenSet[key] || !!hiddenSet[r.id] });
+      var isDefault = false;
+      // v14 Fix 1: when both axes are unscored AND no manual override exists,
+      // fall back to a default position derived from priority so the dot is
+      // still visible and drag-pinnable.
+      if((!x || x <= 0) && (!y || y <= 0) && !ov){
+        var def = _defaultMatrixXY(r);
+        x = def.x; y = def.y;
+        isDefault = true;
+      }
+      pts.push({ row: r, bar: b, barIdx: idx, key: key, x: x, y: y, override: !!ov, isDefault: isDefault, hidden: !!hiddenSet[key] || !!hiddenSet[r.id] });
     });
   });
 
@@ -22485,15 +23312,19 @@ function renderPrioMatrixTab(){
       }).join('')
     : '<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">No initiatives yet.</div>';
 
+  // v14 Fix 1: Select All state — checked when no rows are hidden.
+  var anyHidden = (ui.hidden || []).length > 0;
+  var selectAllChecked = !anyHidden;
   content.innerHTML =
-    '<div style="display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start">' +
-      '<div class="prio-matrix" style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px;position:relative">' +
+    '<div style="display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:16px;align-items:start;max-width:100%;overflow:hidden">' +
+      '<div class="prio-matrix" style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px;position:relative;min-width:0">' +
         svgParts.join('') +
         '<div id="prioMatrixTooltip" style="display:none;position:absolute;background:var(--white);color:var(--text);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 28px rgba(0,0,0,.22);padding:10px 12px;font-size:12px;pointer-events:none;z-index:50;max-width:280px;line-height:1.45"></div>' +
         '<div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center">Drag points to pin a position. Hover for details. Expand a row in the items list to plot specific initiatives.</div>' +
       '</div>' +
-      '<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;max-height:600px">' +
+      '<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;max-height:600px;min-width:0">' +
         '<div style="padding:10px 12px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:flex;justify-content:space-between;align-items:center"><span>Items ('+rows.length+')</span><span style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted)">'+visiblePts.length+' on chart</span></div>' +
+        '<div style="padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text);display:flex;align-items:center;gap:8px"><label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1"><input type="checkbox" id="prioMatrixSelectAll" '+(selectAllChecked?'checked':'')+' onchange="_prioToggleMatrixSelectAll(this.checked)" title="Show or hide every row on the matrix">Select All</label></div>' +
         '<div style="overflow-y:auto;flex:1">'+itemsHtml+'</div>' +
       '</div>' +
     '</div>';
@@ -27090,18 +27921,29 @@ function _productFormatDate(iso){
   var d = new Date(iso); if(isNaN(d)) return '';
   return d.toLocaleDateString(undefined, {year:'numeric',month:'short',day:'numeric'});
 }
-function _productGetCompletion(row){
-  // Look up linked plan via row.linkedPlanId or planId, fall back to projectPlans matching
+function _productLinkedPlan(rowId){
   if(typeof projectPlans === 'undefined' || !projectPlans || !projectPlans.length) return null;
-  var plan = null;
-  if(row.linkedPlanId) plan = projectPlans.find(function(p){ return p.id === row.linkedPlanId; });
-  if(!plan){
-    // Heuristic: plan whose name matches the product name
-    plan = projectPlans.find(function(p){ return p && p.name && row.name && p.name.toLowerCase() === row.name.toLowerCase(); });
-  }
+  return projectPlans.find(function(p){ return (p.linkedRowIds||[]).indexOf(rowId) !== -1; }) || null;
+}
+function _productGetCompletion(row){
+  var plan = _productLinkedPlan(row.id);
   if(!plan || !plan.tasks || !plan.tasks.length) return null;
   var done = plan.tasks.filter(function(t){ var s=(t.status||'').toLowerCase(); return s==='done'||s==='complete'; }).length;
   return Math.round((done / plan.tasks.length) * 100);
+}
+function _productLinkedDocs(rowId){
+  if(!Array.isArray(documentRepository)) return [];
+  return documentRepository.filter(function(d){ return d && d.initiativeId === rowId; });
+}
+function _productEffectiveHistory(p){
+  var hist = (p.productHistory || []).slice();
+  // Auto-seed a "Product created" entry if we have createdAt and no history
+  if(p.createdAt && !hist.some(function(h){ return h.type==='lifecycle' && /created|added/i.test(h.title||''); })){
+    hist.push({ id:'auto-created', date:p.createdAt, type:'lifecycle',
+      title:'Product created', description:'Initial entry on the roadmap.',
+      actor:'System', autoGenerated:true });
+  }
+  return hist.sort(function(a,b){ return new Date(b.date) - new Date(a.date); });
 }
 
 function _productGetAll(){
@@ -27301,11 +28143,684 @@ function sortProducts(key){
   renderProductsPage();
 }
 
-// Phase-2 stub — opens detail view. For Phase 1, route the user to the
-// existing edit modal so the click is never a dead-end.
+// ─── Phase 2: Product detail view (8 tabs) ─────────────────────────────
+var _currentProductDetailTab = 'overview';
+var _productHistoryFilter = 'all';
 function openProductDetail(productId){
-  if(typeof openEditModal === 'function'){ openEditModal(productId); return; }
-  showToast && showToast('Product detail view coming in v1.44 Phase 2', 'info');
+  var row = (rows||[]).find(function(r){ return r.id === productId; });
+  if(!row){ showToast && showToast('Product not found','error'); return; }
+  ensureProductFields(row);
+  _currentProductDetailId = productId;
+  _currentProductDetailTab = 'overview';
+  _productHistoryFilter = 'all';
+  var ov = document.getElementById('productsOverlay');
+  if(ov && !ov.classList.contains('open')) ov.classList.add('open');
+  var summary = document.getElementById('productsSummary');
+  if(summary) summary.innerHTML = '';
+  var body = document.getElementById('productsContainer');
+  if(!body) return;
+  body.innerHTML = renderProductDetail(row);
+}
+function closeProductDetail(){
+  _currentProductDetailId = null;
+  renderProductsPage();
+}
+function renderProductDetail(p){
+  var status = _productInferStatus(p);
+  var meEmail = ((typeof userProfile!=='undefined' && userProfile && userProfile.email) || (_currentUser && _currentUser.email) || '').toLowerCase();
+  var watching = (p.watchers||[]).indexOf(meEmail) !== -1;
+  var tabs = [
+    {key:'overview',  label:'Overview'},
+    {key:'commercial',label:'Commercial'},
+    {key:'releases',  label:'Releases & Bugs'},
+    {key:'plan',      label:'Plan & Tasks'},
+    {key:'specs',     label:'Specs'},
+    {key:'history',   label:'History'},
+    {key:'docs',      label:'Documents'},
+    {key:'discussion',label:'Discussion'}
+  ];
+  return '<div class="product-detail">'+
+    '<button class="btn-back" onclick="closeProductDetail()">'+
+      '<svg viewBox="0 0 16 16"><polyline points="10 2 4 8 10 14"/></svg> Back to Products'+
+    '</button>'+
+    '<div class="product-detail-header">'+
+      '<div class="product-header-left">'+
+        (p.productImage
+          ? '<img class="product-detail-img" src="'+escHtml(p.productImage)+'" alt="">'
+          : '<div class="product-detail-icon-lg">'+_productGetTypeIcon(p.productType)+'</div>')+
+        '<div style="flex:1;min-width:0">'+
+          '<h1 class="product-detail-name">'+escHtml(p.name||'Untitled')+'</h1>'+
+          ((p.tagline||p.sub) ? '<p class="product-detail-tagline">'+escHtml(p.tagline||p.sub)+'</p>' : '')+
+          '<div class="product-header-meta">'+
+            (p.productCode ? '<span class="code-label">'+escHtml(p.productCode)+'</span>' : '')+
+            '<span class="type-badge type-'+(p.productType||'digital')+'">'+_productFormatType(p.productType)+'</span>'+
+            '<span class="stage-badge">'+_productFormatStage(p.lifecycleStage)+'</span>'+
+            '<span class="status-badge status-'+status.toLowerCase().replace(/\s/g,'-')+'">'+status+'</span>'+
+            (p.version ? '<span class="version-badge">v'+escHtml(p.version)+'</span>' : '')+
+            (p.productFamily ? '<span class="product-family-badge">'+escHtml(p.productFamily)+'</span>' : '')+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="product-header-right">'+
+        '<button class="product-detail-btn primary" onclick="openEditModal(\''+escHtml(p.id)+'\')">'+
+          '<svg viewBox="0 0 16 16"><path d="M11.5 1.5l3 3L5 14H2v-3L11.5 1.5z"/></svg> Edit'+
+        '</button>'+
+        '<button class="product-detail-btn'+(watching?' active':'')+'" onclick="toggleRowWatch(\''+escHtml(p.id)+'\');openProductDetail(\''+escHtml(p.id)+'\')" title="'+(watching?'You are watching this product':'Watch this product')+'">'+
+          '<svg viewBox="0 0 16 16"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg> '+(watching?'Watching':'Watch')+
+        '</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="product-tabs" id="productDetailTabs">'+
+      tabs.map(function(t){
+        return '<button class="product-tab'+(t.key===_currentProductDetailTab?' active':'')+'" data-tab="'+t.key+'" onclick="switchProductTab(\''+t.key+'\')">'+escHtml(t.label)+'</button>';
+      }).join('')+
+    '</div>'+
+    '<div id="productTabContent">'+_renderProductTab(p, _currentProductDetailTab)+'</div>'+
+  '</div>';
+}
+function switchProductTab(name){
+  _currentProductDetailTab = name;
+  document.querySelectorAll('#productDetailTabs .product-tab').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-tab') === name);
+  });
+  var content = document.getElementById('productTabContent'); if(!content) return;
+  var p = (rows||[]).find(function(r){ return r.id === _currentProductDetailId; });
+  if(!p) return;
+  content.innerHTML = _renderProductTab(p, name);
+}
+function _renderProductTab(p, name){
+  switch(name){
+    case 'overview':   return renderProductOverviewTab(p);
+    case 'commercial': return renderProductCommercialTab(p);
+    case 'releases':   return renderProductReleasesTab(p);
+    case 'plan':       return renderProductPlanTab(p);
+    case 'specs':      return renderProductSpecsTab(p);
+    case 'history':    return renderProductHistoryTab(p);
+    case 'docs':       return renderProductDocsTab(p);
+    case 'discussion': return renderProductDiscussionTab(p);
+  }
+  return '';
+}
+function _productField(label, value){
+  var v = (value === null || value === undefined || value === '') ? '<span class="value muted">—</span>' : '<span class="value">'+escHtml(String(value))+'</span>';
+  return '<div class="detail-field"><span class="label">'+escHtml(label)+'</span>'+v+'</div>';
+}
+function renderProductOverviewTab(p){
+  var status = _productInferStatus(p);
+  var openBugs = (p.bugs||[]).filter(function(b){return b.status==='open'||b.status==='investigating';}).length;
+  var releases = (p.releaseNotes||[]).length;
+  var completion = _productGetCompletion(p);
+  var docs = _productLinkedDocs(p.id);
+  var commentsCount = (p.comments||[]).length;
+  var watchersCount = (p.watchers||[]).length;
+  var stages = ['concept','discovery','development','beta','ga','mature','eol'];
+  var currentStage = p.lifecycleStage || 'concept';
+  var currentIdx = stages.indexOf(currentStage); if(currentIdx < 0) currentIdx = 0;
+  var lifecycleBar = '<div class="lifecycle-bar">'+
+    stages.map(function(s, i){
+      var cls = i===currentIdx ? 'active' : (i<currentIdx ? 'past' : '');
+      return '<div class="stage '+cls+'">'+_productFormatStage(s)+'</div>';
+    }).join('')+
+  '</div>';
+  var stats = '<div class="detail-stat-grid">'+
+    '<div class="detail-stat-card"><span class="label">Status</span><span class="value">'+status+'</span></div>'+
+    '<div class="detail-stat-card"><span class="label">Open Bugs</span><span class="value" style="'+(openBugs>0?'color:#dc2626':'')+'">'+openBugs+'</span></div>'+
+    '<div class="detail-stat-card"><span class="label">Releases</span><span class="value">'+releases+'</span></div>'+
+    (completion!==null ? '<div class="detail-stat-card"><span class="label">Plan Progress</span><span class="value">'+completion+'%</span></div>' : '')+
+    '<div class="detail-stat-card"><span class="label">Documents</span><span class="value">'+docs.length+'</span></div>'+
+    '<div class="detail-stat-card"><span class="label">Comments</span><span class="value">'+commentsCount+'</span></div>'+
+    '<div class="detail-stat-card"><span class="label">Watchers</span><span class="value">'+watchersCount+'</span></div>'+
+    '<div class="detail-stat-card"><span class="label">Revenue</span><span class="value">'+_productFormatCurrency(p.revenueProjected || p.revenue)+'</span></div>'+
+  '</div>';
+  var fields = '<div class="detail-field-grid">'+
+    _productField('Owner',         p.owner)+
+    _productField('Owner Email',   p.ownerEmail)+
+    _productField('Priority',      p.priority)+
+    _productField('Product Family', p.productFamily)+
+    _productField('Target Market', p.targetMarket)+
+    _productField('Target Customer', p.targetCustomer)+
+    _productField('Launch Planned',_productFormatDate(p.launchDatePlanned))+
+    _productField('Launch Actual', _productFormatDate(p.launchDateActual))+
+    _productField('Created',       _productFormatDate(p.createdAt))+
+    _productField('Last Updated',  _productFormatDate(p.updatedAt))+
+  '</div>';
+  var hist = _productEffectiveHistory(p).slice(0, 5);
+  var recent = hist.length
+    ? '<ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px">'+
+        hist.map(function(h){
+          return '<li style="font-size:12px;color:var(--text);display:flex;justify-content:space-between;gap:10px;padding:6px 10px;background:var(--surface-low);border:1px solid var(--border);border-radius:8px">'+
+            '<span>'+escHtml(h.title)+'</span><span style="color:var(--muted)">'+_productFormatDate(h.date)+'</span>'+
+          '</li>';
+        }).join('')+
+      '</ul>'
+    : '<div class="empty-state">No activity yet. Edit this product or change its status to start the timeline.</div>';
+  return ''+
+    '<div class="detail-section"><div class="detail-section-header"><h3>Lifecycle</h3></div>'+lifecycleBar+'</div>'+
+    '<div class="detail-section"><div class="detail-section-header"><h3>Snapshot</h3></div>'+stats+'</div>'+
+    '<div class="detail-section"><div class="detail-section-header"><h3>Profile</h3></div>'+fields+'</div>'+
+    '<div class="detail-section"><div class="detail-section-header"><h3>Recent Activity</h3></div>'+recent+'</div>';
+}
+function renderProductCommercialTab(p){
+  var pricingLabels = {one_time:'One-time', subscription:'Subscription', per_unit:'Per-unit', tiered:'Tiered', free:'Free', freemium:'Freemium'};
+  var stats = '<div class="detail-stat-grid">'+
+    '<div class="detail-stat-card"><span class="label">Revenue Projected</span><span class="value">'+_productFormatCurrency(p.revenueProjected || p.revenue)+'</span></div>'+
+    '<div class="detail-stat-card"><span class="label">Revenue Actual</span><span class="value">'+_productFormatCurrency(p.revenueActual)+'</span></div>'+
+    '<div class="detail-stat-card"><span class="label">Cost to Build</span><span class="value">'+_productFormatCurrency(p.costToBuild)+'</span></div>'+
+    '<div class="detail-stat-card"><span class="label">Gross Margin</span><span class="value">'+(p.grossMargin!==null && p.grossMargin!==undefined && p.grossMargin!=='' ? p.grossMargin+'%' : '—')+'</span></div>'+
+  '</div>';
+  var fields = '<div class="detail-field-grid">'+
+    _productField('Pricing Model', pricingLabels[p.pricingModel] || p.pricingModel)+
+    _productField('Sales Channel', p.salesChannel)+
+    _productField('Target Market', p.targetMarket)+
+    _productField('Target Customer', p.targetCustomer)+
+    _productField('Licensing Terms', p.licensingTerms)+
+  '</div>';
+  var pricePoints = p.pricePoints || [];
+  var pricingTable = pricePoints.length
+    ? '<table class="pricing-table"><thead><tr><th>Tier</th><th>Price</th><th>Currency</th><th>Interval</th></tr></thead><tbody>'+
+      pricePoints.map(function(pp){
+        return '<tr><td>'+escHtml(pp.tier||'—')+'</td><td>'+escHtml(String(pp.price||'—'))+'</td><td>'+escHtml(pp.currency||'USD')+'</td><td>'+escHtml(pp.interval||'one-time')+'</td></tr>';
+      }).join('')+
+      '</tbody></table>'
+    : '<div class="empty-state">No price points configured. Edit the product to add pricing tiers.</div>';
+  return ''+
+    '<div class="detail-section"><div class="detail-section-header"><h3>Revenue</h3></div>'+stats+'</div>'+
+    '<div class="detail-section"><div class="detail-section-header"><h3>Commercial Profile</h3></div>'+fields+'</div>'+
+    '<div class="detail-section"><div class="detail-section-header"><h3>Price Points</h3></div>'+pricingTable+'</div>';
+}
+function _releaseGroup(label, items, extra){
+  if(!items || !items.length) return '';
+  return '<div class="release-group'+(extra?' '+extra:'')+'"><h5>'+escHtml(label)+'</h5><ul>'+items.map(function(x){return '<li>'+escHtml(x)+'</li>';}).join('')+'</ul></div>';
+}
+function renderProductReleasesTab(p){
+  var releases = (p.releaseNotes||[]).slice().sort(function(a,b){ return new Date(b.date||0) - new Date(a.date||0); });
+  var bugs = (p.bugs||[]).slice().sort(function(a,b){ return new Date(b.reportedDate||0) - new Date(a.reportedDate||0); });
+  var openBugs = bugs.filter(function(b){ return ['open','investigating','fix_in_progress'].indexOf(b.status) !== -1; });
+  var resolvedBugs = bugs.filter(function(b){ return ['resolved','wont_fix','duplicate'].indexOf(b.status) !== -1; });
+  var releasesHtml = '<div class="releases-section">'+
+    '<div class="detail-section-header">'+
+      '<h3>Release Notes</h3>'+
+      '<button class="btn-sm btn-primary" onclick="addProductRelease(\''+escHtml(p.id)+'\')">+ New Release</button>'+
+    '</div>';
+  if(!releases.length){
+    releasesHtml += '<div class="empty-state">No releases yet. Click "+ New Release" to create one.</div>';
+  } else {
+    releasesHtml += releases.map(function(r){
+      var typeLabel = ({major:'Major',minor:'Minor',patch:'Patch',hotfix:'Hotfix'})[r.type] || 'Release';
+      return '<div class="release-card">'+
+        '<div class="release-header">'+
+          '<div class="release-version">'+
+            '<span class="version-tag '+(r.type||'major')+'">'+typeLabel+'</span>'+
+            '<h4>v'+escHtml(r.version||'')+'</h4>'+
+            (r.title ? '<span class="release-title">— '+escHtml(r.title)+'</span>' : '')+
+          '</div>'+
+          '<div class="release-meta">'+
+            '<span>'+_productFormatDate(r.date)+'</span>'+
+            '<button class="btn-icon-sm" onclick="editProductRelease(\''+escHtml(p.id)+'\',\''+escHtml(r.id)+'\')" title="Edit"><svg viewBox="0 0 16 16" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 1.5l3 3L5 14H2v-3L11.5 1.5z"/></svg></button>'+
+          '</div>'+
+        '</div>'+
+        _releaseGroup('Features', r.features) +
+        _releaseGroup('Bug Fixes', r.bugFixes) +
+        _releaseGroup('Improvements', r.improvements) +
+        _releaseGroup('Breaking Changes', r.breakingChanges, 'breaking') +
+        _releaseGroup('Known Issues', r.knownIssues, 'known-issues') +
+        (r.notes ? '<div class="release-notes-text"><p>'+escHtml(r.notes)+'</p></div>' : '')+
+      '</div>';
+    }).join('');
+  }
+  releasesHtml += '</div>';
+  var bugsHtml = '<div class="bugs-section" style="margin-top:24px">'+
+    '<div class="detail-section-header">'+
+      '<h3>Bug Tracker</h3>'+
+      '<div style="display:flex;align-items:center;gap:8px">'+
+        '<div class="bug-summary-badges">'+
+          '<span class="bug-badge open">'+openBugs.length+' Open</span>'+
+          '<span class="bug-badge resolved">'+resolvedBugs.length+' Resolved</span>'+
+        '</div>'+
+        '<button class="btn-sm btn-primary" onclick="addProductBug(\''+escHtml(p.id)+'\')">+ Report Bug</button>'+
+      '</div>'+
+    '</div>';
+  if(!bugs.length){
+    bugsHtml += '<div class="empty-state">No bugs reported. Nice.</div>';
+  } else {
+    var sevColors = { critical:'#dc2626', high:'#ea580c', medium:'#ca8a04', low:'#65a30d' };
+    bugsHtml += '<div class="bugs-list">'+bugs.map(function(b){
+      return '<div class="bug-row" data-status="'+(b.status||'open')+'">'+
+        '<span class="bug-severity" style="background:'+(sevColors[b.severity]||'#999')+'" title="'+escHtml(b.severity||'')+'"></span>'+
+        '<div class="bug-info">'+
+          '<span class="bug-title">'+escHtml(b.title||'Untitled bug')+'</span>'+
+          '<span class="bug-meta">'+(b.affectedVersion?'v'+escHtml(b.affectedVersion)+' · ':'')+'Reported '+_productFormatDate(b.reportedDate)+(b.reportedBy?' by '+escHtml(b.reportedBy):'')+'</span>'+
+        '</div>'+
+        '<select class="bug-status-select" onchange="updateProductBugStatus(\''+escHtml(p.id)+'\',\''+escHtml(b.id)+'\',this.value)">'+
+          ['open','investigating','fix_in_progress','resolved','wont_fix','duplicate'].map(function(s){
+            var lbl = ({open:'Open',investigating:'Investigating',fix_in_progress:'Fix in progress',resolved:'Resolved',wont_fix:"Won't fix",duplicate:'Duplicate'})[s];
+            return '<option value="'+s+'"'+(b.status===s?' selected':'')+'>'+lbl+'</option>';
+          }).join('')+
+        '</select>'+
+      '</div>';
+    }).join('')+'</div>';
+  }
+  bugsHtml += '</div>';
+  return '<div class="releases-bugs-tab">'+releasesHtml+bugsHtml+'</div>';
+}
+function renderProductPlanTab(p){
+  var plan = _productLinkedPlan(p.id);
+  if(!plan){
+    return '<div class="empty-state">No plan linked yet. Open the Plans page and link a plan to this initiative.</div>';
+  }
+  var tasks = plan.tasks || [];
+  var done = tasks.filter(function(t){ var s=(t.status||'').toLowerCase(); return s==='done'||s==='complete'; }).length;
+  var pct = tasks.length ? Math.round(done/tasks.length*100) : 0;
+  var byStatus = {};
+  tasks.forEach(function(t){ var s = (t.status||'Unscheduled'); byStatus[s] = (byStatus[s]||0)+1; });
+  var statusBlocks = Object.keys(byStatus).map(function(s){
+    return '<div class="detail-stat-card"><span class="label">'+escHtml(s)+'</span><span class="value">'+byStatus[s]+'</span></div>';
+  }).join('');
+  var stats = '<div class="detail-stat-grid">'+
+    '<div class="detail-stat-card"><span class="label">Plan</span><span class="value" style="font-size:14px">'+escHtml(plan.name||'Untitled')+'</span></div>'+
+    '<div class="detail-stat-card"><span class="label">Tasks</span><span class="value">'+tasks.length+'</span></div>'+
+    '<div class="detail-stat-card"><span class="label">Completed</span><span class="value">'+done+'</span></div>'+
+    '<div class="detail-stat-card"><span class="label">Progress</span><span class="value">'+pct+'%</span></div>'+
+  '</div>';
+  var bar = '<div style="height:8px;background:var(--surface-low);border-radius:9999px;overflow:hidden;margin-bottom:18px;border:1px solid var(--border)"><div style="height:100%;width:'+pct+'%;background:var(--accent);transition:width .3s"></div></div>';
+  var rowsHtml = tasks.slice(0, 12).map(function(t){
+    var statusKey = (t.status||'').toLowerCase().replace(/\s/g,'-');
+    return '<tr><td>'+escHtml(t.name||t.title||'Untitled')+'</td><td>'+escHtml(t.owner||'—')+'</td><td><span class="status-badge status-'+statusKey+'">'+escHtml(t.status||'—')+'</span></td><td>'+_productFormatDate(t.endDate||t.dueDate)+'</td></tr>';
+  }).join('');
+  var taskTable = tasks.length
+    ? '<table class="pricing-table"><thead><tr><th>Task</th><th>Owner</th><th>Status</th><th>Due</th></tr></thead><tbody>'+rowsHtml+'</tbody></table>'+
+      (tasks.length>12 ? '<div style="text-align:center;font-size:11px;color:var(--muted);margin-top:8px">Showing 12 of '+tasks.length+' tasks. Open the Plans page for the full Gantt.</div>' : '')
+    : '<div class="empty-state">This plan has no tasks yet.</div>';
+  return ''+
+    '<div class="detail-section"><div class="detail-section-header"><h3>Plan Snapshot</h3><button class="btn-sm" onclick="closeProducts();openPlans()">Open in Plans →</button></div>'+stats+'</div>'+
+    '<div class="detail-section"><div class="detail-section-header"><h3>By Status</h3></div><div class="detail-stat-grid">'+statusBlocks+'</div></div>'+
+    '<div class="detail-section"><div class="detail-section-header"><h3>Progress</h3></div>'+bar+'</div>'+
+    '<div class="detail-section"><div class="detail-section-header"><h3>Tasks</h3></div>'+taskTable+'</div>';
+}
+function renderProductSpecsTab(p){
+  var t = p.productType || 'digital';
+  var blocks = [];
+  if(t === 'hardware' || t === 'firmware' || t === 'hybrid'){
+    var hw = p.hardwareInfo || {};
+    blocks.push('<div class="detail-section">'+
+      '<div class="detail-section-header"><h3>Hardware</h3></div>'+
+      '<div class="detail-field-grid">'+
+        _productField('BOM Reference', hw.bomReference)+
+        _productField('Hardware Revision', hw.hardwareRevision)+
+        _productField('Firmware Version', hw.firmwareVersion)+
+        _productField('Manufacturing Location', hw.manufacturingLocation)+
+        _productField('Warranty Period', hw.warrantyPeriod)+
+        _productField('Serial Number Range', hw.serialNumberRange)+
+        _productField('Certifications', (hw.certifications||[]).join(', '))+
+        _productField('Units Shipped', hw.unitsShipped)+
+        _productField('Units in Field', hw.unitsInField)+
+        _productField('Field Failure Rate', hw.fieldFailureRate!==null && hw.fieldFailureRate!==undefined ? hw.fieldFailureRate+'%' : '')+
+        _productField('RMA Rate', hw.rmaRate!==null && hw.rmaRate!==undefined ? hw.rmaRate+'%' : '')+
+      '</div>'+
+    '</div>');
+  }
+  if(t === 'digital' || t === 'hybrid'){
+    var d = p.digitalInfo || {};
+    blocks.push('<div class="detail-section">'+
+      '<div class="detail-section-header"><h3>Digital</h3></div>'+
+      '<div class="detail-field-grid">'+
+        _productField('Tech Stack', (d.techStack||[]).join(', '))+
+        _productField('Hosting', d.hosting)+
+        _productField('Uptime SLA', d.uptimeSLA)+
+        _productField('API Version', d.apiVersion)+
+        _productField('Supported Platforms', (d.supportedPlatforms||[]).join(', '))+
+        _productField('Compliance', (d.complianceStatus||[]).join(', '))+
+        _productField('Active Users (DAU)', d.activeUsersDAU)+
+        _productField('Active Users (MAU)', d.activeUsersMAU)+
+        _productField('Third-Party Deps', (d.thirdPartyDeps||[]).join(', '))+
+      '</div>'+
+    '</div>');
+  }
+  var q = p.qualityMetrics || {};
+  blocks.push('<div class="detail-section">'+
+    '<div class="detail-section-header"><h3>Quality &amp; Support</h3></div>'+
+    '<div class="detail-field-grid">'+
+      _productField('CSAT Score', q.csatScore)+
+      _productField('NPS Score', q.npsScore)+
+      _productField('Support Tickets Open', q.supportTicketsOpen)+
+      _productField('Avg Resolution Time', q.avgResolutionTime)+
+      _productField('SLA Compliance', q.slaCompliance!==null && q.slaCompliance!==undefined ? q.slaCompliance+'%' : '')+
+    '</div>'+
+  '</div>');
+  if(!blocks.length) blocks.push('<div class="empty-state">No specs available for this product type.</div>');
+  return blocks.join('');
+}
+function renderProductHistoryTab(p){
+  var typeIcons = {
+    lifecycle:  '<svg viewBox="0 0 16 16"><polyline points="1 8 5 12 15 2"/></svg>',
+    release:    '<svg viewBox="0 0 16 16"><path d="M4 2l8 6-8 6z"/></svg>',
+    bug:        '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><line x1="8" y1="10.5" x2="8.01" y2="10.5"/></svg>',
+    pricing:    '<svg viewBox="0 0 16 16"><line x1="8" y1="1" x2="8" y2="15"/><path d="M12 4H6.5a2.5 2.5 0 000 5h3a2.5 2.5 0 010 5H4"/></svg>',
+    team:       '<svg viewBox="0 0 16 16"><circle cx="6" cy="5" r="2.5"/><path d="M1 14v-1a4 4 0 014-4h2"/><circle cx="12" cy="5" r="2.5"/><path d="M15 14v-1a4 4 0 00-4-4"/></svg>',
+    compliance: '<svg viewBox="0 0 16 16"><path d="M8 1l5 3v4c0 3.5-2.5 6.5-5 7.5-2.5-1-5-4-5-7.5V4l5-3z"/></svg>',
+    incident:   '<svg viewBox="0 0 16 16"><path d="M2 14L8 2l6 12H2z"/><line x1="8" y1="6" x2="8" y2="9"/><line x1="8" y1="11" x2="8.01" y2="11"/></svg>',
+    milestone:  '<svg viewBox="0 0 16 16"><path d="M3 8l4 4 6-8"/></svg>',
+    custom:     '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/></svg>'
+  };
+  var all = _productEffectiveHistory(p);
+  var filtered = (_productHistoryFilter === 'all') ? all : all.filter(function(h){ return h.type === _productHistoryFilter; });
+  var chips = ['all','lifecycle','release','bug','pricing','team','compliance','incident','milestone','custom']
+    .map(function(t){
+      var label = (t==='all') ? 'All' : t.charAt(0).toUpperCase()+t.slice(1);
+      return '<button class="filter-chip'+(_productHistoryFilter===t?' active':'')+'" onclick="setProductHistoryFilter(\''+t+'\')">'+label+'</button>';
+    }).join('');
+  var body = filtered.length
+    ? '<div class="history-timeline">'+filtered.map(function(h){
+        return '<div class="timeline-entry" data-type="'+escHtml(h.type)+'">'+
+          '<div class="timeline-marker">'+
+            '<div class="timeline-icon">'+(typeIcons[h.type] || typeIcons.custom)+'</div>'+
+            '<div class="timeline-line"></div>'+
+          '</div>'+
+          '<div class="timeline-content">'+
+            '<div class="timeline-header">'+
+              '<span class="timeline-title">'+escHtml(h.title||'Event')+'</span>'+
+              '<span class="timeline-date">'+_productFormatDate(h.date)+'</span>'+
+            '</div>'+
+            (h.description ? '<p class="timeline-description">'+escHtml(h.description)+'</p>' : '')+
+            '<span class="timeline-actor">'+escHtml(h.actor||'')+(h.autoGenerated?' · Auto-logged':'')+'</span>'+
+          '</div>'+
+        '</div>';
+      }).join('')+'</div>'
+    : '<div class="empty-state">No history entries match this filter.</div>';
+  return ''+
+    '<div class="detail-section-header">'+
+      '<h3>Product History</h3>'+
+      '<button class="btn-sm btn-primary" onclick="addProductHistoryEntry(\''+escHtml(p.id)+'\')">+ Add Entry</button>'+
+    '</div>'+
+    '<div class="history-filters">'+chips+'</div>'+
+    body;
+}
+function setProductHistoryFilter(t){
+  _productHistoryFilter = t;
+  if(_currentProductDetailTab !== 'history') return;
+  var p = (rows||[]).find(function(r){return r.id === _currentProductDetailId;});
+  if(!p) return;
+  document.getElementById('productTabContent').innerHTML = renderProductHistoryTab(p);
+}
+function renderProductDocsTab(p){
+  var docs = _productLinkedDocs(p.id);
+  if(!docs.length){
+    return '<div class="detail-section-header"><h3>Linked Documents</h3>'+
+      '<button class="btn-sm" onclick="closeProducts();openArtifacts()">Open Document Repository →</button></div>'+
+      '<div class="empty-state">No documents linked to this product. Upload documents in Artifacts → Document Repository and tag them with this initiative.</div>';
+  }
+  var fileIcon = '<svg viewBox="0 0 20 20" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2h7l4 4v12H5z"/><path d="M12 2v4h4"/></svg>';
+  return ''+
+    '<div class="detail-section-header"><h3>Linked Documents ('+docs.length+')</h3>'+
+      '<button class="btn-sm" onclick="closeProducts();openArtifacts()">Open Document Repository →</button></div>'+
+    '<div class="docs-list">'+docs.map(function(d){
+      var size = d.fileSize ? Math.round(d.fileSize/1024)+' KB' : '';
+      return '<div class="doc-row">'+
+        '<div class="doc-icon">'+fileIcon+'</div>'+
+        '<div class="doc-info">'+
+          '<span class="doc-name">'+escHtml(d.name || d.fileName || 'Untitled')+'</span>'+
+          '<span class="doc-meta">'+escHtml(d.folder || 'Uncategorized')+(size?' · '+size:'')+(d.fileType?' · '+escHtml(d.fileType.toUpperCase()):'')+'</span>'+
+        '</div>'+
+      '</div>';
+    }).join('')+'</div>';
+}
+function renderProductDiscussionTab(p){
+  var comments = (p.comments || []).slice().sort(function(a,b){ return new Date(a.createdAt||0) - new Date(b.createdAt||0); });
+  var html = '<div class="detail-section-header"><h3>Discussion</h3>'+
+    '<button class="btn-sm" onclick="openEditModal(\''+escHtml(p.id)+'\')">Add Comment in Edit Modal →</button></div>';
+  if(!comments.length){
+    html += '<div class="empty-state">No comments yet. Open the edit modal to start the conversation.</div>';
+    return html;
+  }
+  html += '<div style="display:flex;flex-direction:column;gap:8px">'+comments.map(function(c){
+    return '<div class="comment-item">'+
+      '<div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:4px">'+
+        '<span class="comment-author">'+escHtml(c.authorName || c.author || 'Anonymous')+'</span>'+
+        '<span class="comment-time">'+_productFormatDate(c.createdAt)+'</span>'+
+      '</div>'+
+      '<div class="comment-body">'+escHtml(c.text||'')+'</div>'+
+    '</div>';
+  }).join('')+'</div>';
+  return html;
+}
+// ─── Phase 3: Release / Bug / History forms ───────────────────────────
+function _productPersistAndRefresh(rowId){
+  if(typeof pushCloudData === 'function') pushCloudData();
+  if(_currentProductDetailId === rowId){
+    var p = (rows||[]).find(function(r){ return r.id === rowId; });
+    if(p) document.getElementById('productTabContent').innerHTML = _renderProductTab(p, _currentProductDetailTab);
+  }
+}
+function _productCloseModal(){
+  var ov = document.getElementById('productFormOverlay');
+  if(ov) ov.remove();
+}
+function _productLinesToArr(s){ return String(s||'').split(/\r?\n/).map(function(x){return x.trim();}).filter(Boolean); }
+function _productArrToLines(a){ return Array.isArray(a) ? a.join('\n') : ''; }
+
+function addProductRelease(rowId){ _productOpenReleaseForm(rowId, null); }
+function editProductRelease(rowId, releaseId){ _productOpenReleaseForm(rowId, releaseId); }
+function _productOpenReleaseForm(rowId, releaseId){
+  var row = (rows||[]).find(function(r){ return r.id === rowId; });
+  if(!row) return;
+  ensureProductFields(row);
+  var existing = releaseId ? (row.releaseNotes||[]).find(function(r){return r.id===releaseId;}) : null;
+  var data = existing || { type:'minor', version:'', title:'', date:new Date().toISOString().slice(0,10), notes:'' };
+  _productCloseModal();
+  var ov = document.createElement('div');
+  ov.id = 'productFormOverlay';
+  ov.className = 'modal-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9100;display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
+  var modal = document.createElement('div');
+  modal.style.cssText = 'background:var(--white);color:var(--text);border:1px solid var(--border);border-radius:12px;max-width:560px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 24px 64px rgba(0,0,0,.35)';
+  modal.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)">'+
+      '<h3 style="margin:0;font-size:15px;font-weight:800">'+(existing?'Edit Release':'New Release')+'</h3>'+
+      '<button onclick="_productCloseModal()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">&times;</button>'+
+    '</div>'+
+    '<div style="padding:16px 20px;display:flex;flex-direction:column;gap:12px">'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">'+
+        '<label class="detail-field"><span class="label">Version</span><input id="rfVersion" class="cap-input" placeholder="1.0.0" value="'+escHtml(data.version)+'"></label>'+
+        '<label class="detail-field"><span class="label">Type</span><select id="rfType" class="cap-input">'+
+          ['major','minor','patch','hotfix'].map(function(t){return '<option value="'+t+'"'+(data.type===t?' selected':'')+'>'+t.charAt(0).toUpperCase()+t.slice(1)+'</option>';}).join('')+
+        '</select></label>'+
+        '<label class="detail-field"><span class="label">Date</span><input id="rfDate" type="date" class="cap-input" value="'+(data.date?String(data.date).slice(0,10):'')+'"></label>'+
+      '</div>'+
+      '<label class="detail-field"><span class="label">Title</span><input id="rfTitle" class="cap-input" placeholder="Short summary (optional)" value="'+escHtml(data.title||'')+'"></label>'+
+      '<label class="detail-field"><span class="label">Features (one per line)</span><textarea id="rfFeatures" class="cap-input" rows="3">'+escHtml(_productArrToLines(data.features))+'</textarea></label>'+
+      '<label class="detail-field"><span class="label">Bug Fixes (one per line)</span><textarea id="rfBugFixes" class="cap-input" rows="3">'+escHtml(_productArrToLines(data.bugFixes))+'</textarea></label>'+
+      '<label class="detail-field"><span class="label">Improvements (one per line)</span><textarea id="rfImprovements" class="cap-input" rows="2">'+escHtml(_productArrToLines(data.improvements))+'</textarea></label>'+
+      '<label class="detail-field"><span class="label">Breaking Changes (one per line)</span><textarea id="rfBreaking" class="cap-input" rows="2">'+escHtml(_productArrToLines(data.breakingChanges))+'</textarea></label>'+
+      '<label class="detail-field"><span class="label">Known Issues (one per line)</span><textarea id="rfKnown" class="cap-input" rows="2">'+escHtml(_productArrToLines(data.knownIssues))+'</textarea></label>'+
+      '<label class="detail-field"><span class="label">Notes</span><textarea id="rfNotes" class="cap-input" rows="2">'+escHtml(data.notes||'')+'</textarea></label>'+
+    '</div>'+
+    '<div style="display:flex;justify-content:flex-end;gap:8px;padding:14px 20px;border-top:1px solid var(--border)">'+
+      (existing ? '<button class="btn-sm" style="color:#dc2626;border-color:#fecaca" onclick="_productDeleteRelease(\''+rowId+'\',\''+releaseId+'\')">Delete</button>' : '')+
+      '<button class="btn-sm" onclick="_productCloseModal()">Cancel</button>'+
+      '<button class="btn-sm btn-primary" onclick="_productSaveRelease(\''+rowId+'\','+(releaseId?'\''+releaseId+'\'':'null')+')">'+(existing?'Save':'Create Release')+'</button>'+
+    '</div>';
+  ov.appendChild(modal);
+  document.body.appendChild(ov);
+}
+function _productSaveRelease(rowId, releaseId){
+  var row = (rows||[]).find(function(r){ return r.id === rowId; });
+  if(!row) return;
+  ensureProductFields(row);
+  var version = (document.getElementById('rfVersion')||{}).value || '';
+  if(!version.trim()){ showToast && showToast('Version is required','error'); return; }
+  var entry = {
+    id: releaseId || ('rel-' + Date.now() + '-' + Math.random().toString(36).slice(2,7)),
+    version: version.trim(),
+    type: (document.getElementById('rfType')||{}).value || 'minor',
+    date: (document.getElementById('rfDate')||{}).value || new Date().toISOString().slice(0,10),
+    title: (document.getElementById('rfTitle')||{}).value || '',
+    features:        _productLinesToArr((document.getElementById('rfFeatures')    ||{}).value),
+    bugFixes:        _productLinesToArr((document.getElementById('rfBugFixes')    ||{}).value),
+    improvements:    _productLinesToArr((document.getElementById('rfImprovements')||{}).value),
+    breakingChanges: _productLinesToArr((document.getElementById('rfBreaking')    ||{}).value),
+    knownIssues:     _productLinesToArr((document.getElementById('rfKnown')       ||{}).value),
+    notes: (document.getElementById('rfNotes')||{}).value || ''
+  };
+  if(releaseId){
+    var idx = (row.releaseNotes||[]).findIndex(function(r){ return r.id === releaseId; });
+    if(idx >= 0) row.releaseNotes[idx] = entry;
+    logProductHistory(rowId, { type:'release', title:'Release v'+entry.version+' updated' });
+  } else {
+    row.releaseNotes.push(entry);
+    logProductHistory(rowId, { type:'release', title:'Release v'+entry.version+' created' });
+  }
+  _productCloseModal();
+  showToast && showToast('Release saved','success');
+  _productPersistAndRefresh(rowId);
+}
+function _productDeleteRelease(rowId, releaseId){
+  if(!confirm('Delete this release?')) return;
+  var row = (rows||[]).find(function(r){ return r.id === rowId; });
+  if(!row || !row.releaseNotes) return;
+  var rel = row.releaseNotes.find(function(r){return r.id === releaseId;});
+  row.releaseNotes = row.releaseNotes.filter(function(r){ return r.id !== releaseId; });
+  if(rel) logProductHistory(rowId, { type:'release', title:'Release v'+rel.version+' deleted' });
+  _productCloseModal();
+  showToast && showToast('Release deleted','success');
+  _productPersistAndRefresh(rowId);
+}
+
+function addProductBug(rowId){
+  var row = (rows||[]).find(function(r){ return r.id === rowId; });
+  if(!row) return;
+  ensureProductFields(row);
+  _productCloseModal();
+  var ov = document.createElement('div');
+  ov.id = 'productFormOverlay';
+  ov.className = 'modal-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9100;display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
+  var modal = document.createElement('div');
+  modal.style.cssText = 'background:var(--white);color:var(--text);border:1px solid var(--border);border-radius:12px;max-width:520px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 24px 64px rgba(0,0,0,.35)';
+  modal.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)">'+
+      '<h3 style="margin:0;font-size:15px;font-weight:800">Report a Bug</h3>'+
+      '<button onclick="_productCloseModal()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">&times;</button>'+
+    '</div>'+
+    '<div style="padding:16px 20px;display:flex;flex-direction:column;gap:12px">'+
+      '<label class="detail-field"><span class="label">Title</span><input id="bfTitle" class="cap-input" placeholder="What goes wrong?"></label>'+
+      '<label class="detail-field"><span class="label">Description</span><textarea id="bfDesc" class="cap-input" rows="3" placeholder="What happens vs. what should happen?"></textarea></label>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+
+        '<label class="detail-field"><span class="label">Severity</span><select id="bfSeverity" class="cap-input">'+
+          [['critical','Critical'],['high','High'],['medium','Medium'],['low','Low']].map(function(t){return '<option value="'+t[0]+'"'+(t[0]==='medium'?' selected':'')+'>'+t[1]+'</option>';}).join('')+
+        '</select></label>'+
+        '<label class="detail-field"><span class="label">Status</span><select id="bfStatus" class="cap-input">'+
+          ['open','investigating','fix_in_progress'].map(function(s){return '<option value="'+s+'">'+s.replace(/_/g,' ')+'</option>';}).join('')+
+        '</select></label>'+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+
+        '<label class="detail-field"><span class="label">Affected Version</span><input id="bfVersion" class="cap-input" placeholder="e.g. 1.2.0"></label>'+
+        '<label class="detail-field"><span class="label">Reported By</span><input id="bfReporter" class="cap-input" placeholder="Customer / team name"></label>'+
+      '</div>'+
+      '<label class="detail-field"><span class="label">Reproduction Steps</span><textarea id="bfRepro" class="cap-input" rows="3" placeholder="1. ...\n2. ..."></textarea></label>'+
+    '</div>'+
+    '<div style="display:flex;justify-content:flex-end;gap:8px;padding:14px 20px;border-top:1px solid var(--border)">'+
+      '<button class="btn-sm" onclick="_productCloseModal()">Cancel</button>'+
+      '<button class="btn-sm btn-primary" onclick="_productSaveBug(\''+rowId+'\')">Report Bug</button>'+
+    '</div>';
+  ov.appendChild(modal);
+  document.body.appendChild(ov);
+}
+function _productSaveBug(rowId){
+  var row = (rows||[]).find(function(r){ return r.id === rowId; });
+  if(!row) return;
+  ensureProductFields(row);
+  var title = (document.getElementById('bfTitle')||{}).value || '';
+  if(!title.trim()){ showToast && showToast('Title is required','error'); return; }
+  var bug = {
+    id: 'bug-' + Date.now() + '-' + Math.random().toString(36).slice(2,7),
+    title: title.trim(),
+    description: (document.getElementById('bfDesc')||{}).value || '',
+    severity: (document.getElementById('bfSeverity')||{}).value || 'medium',
+    status:   (document.getElementById('bfStatus')  ||{}).value || 'open',
+    reportedBy: (document.getElementById('bfReporter')||{}).value || '',
+    reportedDate: new Date().toISOString(),
+    resolvedDate: null,
+    affectedVersion: (document.getElementById('bfVersion')||{}).value || '',
+    fixedInVersion: null,
+    reproductionSteps: (document.getElementById('bfRepro')||{}).value || ''
+  };
+  row.bugs.push(bug);
+  logProductHistory(rowId, { type:'bug', title:'Bug reported: '+bug.title, description:bug.description });
+  _productCloseModal();
+  showToast && showToast('Bug reported','success');
+  _productPersistAndRefresh(rowId);
+}
+function updateProductBugStatus(rowId, bugId, newStatus){
+  var row = (rows||[]).find(function(r){return r.id === rowId;});
+  if(!row) return;
+  var bug = (row.bugs||[]).find(function(b){return b.id === bugId;});
+  if(!bug) return;
+  bug.status = newStatus;
+  if(newStatus === 'resolved') bug.resolvedDate = new Date().toISOString();
+  logProductHistory(rowId, { type:'bug', title:'Bug "'+(bug.title||'Untitled')+'" '+(newStatus==='resolved'?'resolved':'status changed to '+newStatus) });
+  if(typeof pushCloudData === 'function') pushCloudData();
+  showToast && showToast('Bug status updated','success');
+  if(_currentProductDetailId === rowId && _currentProductDetailTab === 'releases'){
+    document.getElementById('productTabContent').innerHTML = renderProductReleasesTab(row);
+  }
+}
+function addProductHistoryEntry(rowId){
+  var row = (rows||[]).find(function(r){ return r.id === rowId; });
+  if(!row) return;
+  ensureProductFields(row);
+  _productCloseModal();
+  var ov = document.createElement('div');
+  ov.id = 'productFormOverlay';
+  ov.className = 'modal-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9100;display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
+  var modal = document.createElement('div');
+  modal.style.cssText = 'background:var(--white);color:var(--text);border:1px solid var(--border);border-radius:12px;max-width:480px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 24px 64px rgba(0,0,0,.35)';
+  var typeOpts = ['lifecycle','milestone','release','bug','pricing','team','compliance','incident','custom'];
+  modal.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)">'+
+      '<h3 style="margin:0;font-size:15px;font-weight:800">Add History Entry</h3>'+
+      '<button onclick="_productCloseModal()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">&times;</button>'+
+    '</div>'+
+    '<div style="padding:16px 20px;display:flex;flex-direction:column;gap:12px">'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+
+        '<label class="detail-field"><span class="label">Type</span><select id="hfType" class="cap-input">'+
+          typeOpts.map(function(t){return '<option value="'+t+'">'+t.charAt(0).toUpperCase()+t.slice(1)+'</option>';}).join('')+
+        '</select></label>'+
+        '<label class="detail-field"><span class="label">Date</span><input id="hfDate" type="date" class="cap-input" value="'+new Date().toISOString().slice(0,10)+'"></label>'+
+      '</div>'+
+      '<label class="detail-field"><span class="label">Title</span><input id="hfTitle" class="cap-input" placeholder="What happened?"></label>'+
+      '<label class="detail-field"><span class="label">Description (optional)</span><textarea id="hfDesc" class="cap-input" rows="3" placeholder="More context..."></textarea></label>'+
+    '</div>'+
+    '<div style="display:flex;justify-content:flex-end;gap:8px;padding:14px 20px;border-top:1px solid var(--border)">'+
+      '<button class="btn-sm" onclick="_productCloseModal()">Cancel</button>'+
+      '<button class="btn-sm btn-primary" onclick="_productSaveHistoryEntry(\''+rowId+'\')">Add Entry</button>'+
+    '</div>';
+  ov.appendChild(modal);
+  document.body.appendChild(ov);
+}
+function _productSaveHistoryEntry(rowId){
+  var row = (rows||[]).find(function(r){ return r.id === rowId; });
+  if(!row) return;
+  var title = (document.getElementById('hfTitle')||{}).value || '';
+  if(!title.trim()){ showToast && showToast('Title is required','error'); return; }
+  var date = (document.getElementById('hfDate')||{}).value;
+  ensureProductFields(row);
+  row.productHistory.push({
+    id:'ph-' + Date.now() + '-' + Math.random().toString(36).slice(2,7),
+    date: date ? new Date(date).toISOString() : new Date().toISOString(),
+    type: (document.getElementById('hfType')||{}).value || 'custom',
+    title: title.trim(),
+    description: (document.getElementById('hfDesc')||{}).value || '',
+    actor: ((typeof userProfile!=='undefined' && userProfile && userProfile.name) || ((typeof _currentUser!=='undefined' && _currentUser && _currentUser.email)) || 'You'),
+    autoGenerated: false
+  });
+  if(row.productHistory.length > 200) row.productHistory = row.productHistory.slice(-200);
+  _productCloseModal();
+  showToast && showToast('History entry added','success');
+  _productPersistAndRefresh(rowId);
 }
 
 function renderInsights(){
@@ -35032,7 +36547,15 @@ function _tplCardHtml(t) {
     'Engineering': '#3b82f6', 'Strategy': '#a855f7'
   };
   var catColor = catColors[t.category] || '#6366f1';
-  var iconSvg = '<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:' + catColor + ';fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>';
+  // v14 Fix 6: prefer the template's own icon when present, fall back to a
+  // category-tinted clipboard glyph so every card carries an SVG above the
+  // title — never a blank space.
+  var iconSvg;
+  if(t.icon && typeof svgIcon === 'function'){
+    iconSvg = '<span style="display:inline-flex;align-items:center;justify-content:center;color:' + catColor + ';width:16px;height:16px">' + svgIcon(t.icon, { size: 16, sw: 1.8 }) + '</span>';
+  } else {
+    iconSvg = '<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:' + catColor + ';fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>';
+  }
 
   var escapedId = (t.id || '').toString().replace(/'/g, "\\'");
   var isPlatform = (t.scope === 'platform');
