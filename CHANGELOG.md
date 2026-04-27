@@ -1,5 +1,34 @@
 # Roadmap OS — Changelog
 
+## v1.47.0 — Dashboard rebuild: Strategy Execution Scoreboard
+
+The Dashboard is rebuilt around a single thesis — **strategy → execution → measurement, closing the loop on outcomes**. The old "Initiative Health" panel (a flat list of "In Progress / Strategy / Delayed Release") and the 4-tile vanity-stats grid are gone. In their place, eight purpose-built sections each answer a specific question a product leader has.
+
+**The eight sections (in priority order):**
+
+1. **Pulse Strip (hero)** — five outcome KPIs with sparklines + week-over-week deltas: **Shipped (7d)**, **Shipping next 7d**, **At-risk products**, **Avg G2M readiness**, **Success criteria met %**. Each tile clicks through to its source module (Reports / G2M / launch-outcomes).
+2. **Action Inbox** — top six alerts ranked by severity (danger → warning → info → success). Driven by `_dashBuildAlerts()` — extracted from the existing `renderInsights()` so the engine is shared. Each row has a "View →" CTA.
+3. **Closing the Loop** — Roadmap OS's differentiator made visible: stacked **Met / Partial / Pending / Missed** bar across all expected-outcomes tied to released initiatives, plus the 3 most recent launches with per-launch criteria-met %.
+4. **Throughput rail** — 3 stacked sub-lists (Shipped 7d / Shipping next 7d / Blocked), capped at 4 each with "+ N more" overflow.
+5. **G2M Readiness rail** — portfolio average + top-3 ready (≥80%) + bottom-3 stuck (<50%) as compact progress bars.
+6. **My Day** — 3-column strip: my capacity (planned/avail), my open todos (filtered by `_currentUser.email`), recent activity (merged from `_roadmapChangeLog` + `_localNotifications`).
+7. **Recent Feedback** — last 4 entries from `_feedbackItems` with sentiment dot + source pill.
+8. **Launchpad** — 4 module shortcuts (To-Do / KPI / CapacityIQ / Plans) with live count badges.
+
+**Sparkline persistence:**
+- New Supabase table `public.dashboard_metrics` stores per-user weekly KPI snapshots (RLS-scoped per user).
+- New edge function `dashboard-snapshot` computes the 5 pulse metrics from each user's `roadmap_data` JSONB blob and upserts the current week. Idempotent — safe to call on every dashboard load.
+- One-time **backfill** of the past 12 weeks: walks `projectPlans.tasks[].doneAt` to derive `shipped_7d` per historical week. The other 4 metrics aren't historically derivable, so backfill rows store NULL — the sparkline renderer treats NULL as a gap and fills in naturally over the next 12 weeks.
+- Backfill is gated by `appSettings.dashboardBackfilled` (set in the user's JSONB blob after first run).
+
+**Renderer changes:**
+- Markup at L2396-2447 fully replaced — 8 section containers + an empty-state banner that auto-hides once the user has at least one row.
+- `populateDashboard()` rewritten as a 9-call orchestrator (greeting + 8 section renderers + fire-and-forget snapshot).
+- ~700 new lines of helpers added: `_dashIsoWeekKey`, `_dashSnapshotCurrentWeek`, `_dashFetchPulseHistory`, `_dashSparkline` (gap-aware), `_dashPulseCurrent`, `_dashWeeklyTriad`, `_dashG2MTop`, `_dashLoopStats`, plus the 9 section renderers.
+- `renderInsights()` refactored to call `_dashBuildAlerts()` instead of inlining the alert-building loop. Insights overlay behaviour unchanged.
+
+**Untouched:** `rptWeeklyStatus`, `rptLaunchOutcomes`, `rptG2MRollup`, `rptWeeklyCapacity`, all module `open*()` functions. The dashboard reuses calculation patterns rather than duplicating them.
+
 ## v1.46.0 — V15 Batch A+B+C: Reports cleanup, session refresh, team-card polish
 
 A focused subset of the V15 fix queue. Audit (vs v1.45.3) showed 9 of 20 fixes already in code from V13/V14 work; 5 truly missing items shipped here. The "editability layer" (Fix 14c/d/e + 16) and integration data-pull (Fix 20) are deferred to a follow-up — see `FIX_LOG_V15.md`.
