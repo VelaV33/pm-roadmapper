@@ -20,7 +20,7 @@
 <style>
 :root{
   --navy:#0F1B3D;--blue:#005bb1;--accent:#005bb1;
-  --bg:#f9f9fa;--white:#FFFFFF;--border:#e2e2e3;
+  --bg:#e9eef5;--white:#FFFFFF;--border:#9ea7b8;
   --text:#1a1c1d;--muted:#717785;
   --g1:#10b981;--g2:#34d399;
   --b1:#005bb1;--b2:#0073dd;
@@ -29,9 +29,9 @@
   --r1:#ef4444;--r2:#f87171;
   --purple:#7c3aed;--light-blue-bg:#d6e3ff;
   --surface-low:#f3f3f4;--surface-high:#e8e8e9;--outline-var:#c1c6d6;
-  --toolbar-bg:rgba(249,249,250,.85);
-  --page-header-bg:rgba(249,249,250,.9);
-  --shadow-card:0 1px 3px rgba(0,0,0,.04);
+  --toolbar-bg:#ffffff;
+  --page-header-bg:#ffffff;
+  --shadow-card:0 1px 2px rgba(15,27,61,.05),0 4px 12px rgba(15,27,61,.06);
 }
 /* Dark mode (v1.21.0) — global theme override applied to <body>. Most of the
  * app uses var(--*) tokens, so flipping these makes the bulk of pages dark.
@@ -40,16 +40,16 @@ body.dark-mode{
   --navy:#e2e8f0;
   --bg:#0f172a;
   --white:#1e293b;
-  --border:#334155;
+  --border:#5b6678;
   --text:#e2e8f0;
   --muted:#94a3b8;
   --surface-low:#1e293b;
   --surface-high:#334155;
   --outline-var:#475569;
   --light-blue-bg:#1e3a8a;
-  --toolbar-bg:rgba(15,23,42,.92);
-  --page-header-bg:rgba(15,23,42,.92);
-  --shadow-card:0 1px 3px rgba(0,0,0,.4);
+  --toolbar-bg:#1e293b;
+  --page-header-bg:#1e293b;
+  --shadow-card:0 1px 2px rgba(0,0,0,.5),0 4px 12px rgba(0,0,0,.4);
   color-scheme:dark;
 }
 body.dark-mode .toolbar{background:var(--toolbar-bg)}
@@ -224,10 +224,10 @@ body.dark-mode .card,body.dark-mode [class*="-card"]:not(.kanban-card){backgroun
 body.dark-mode select option{background:var(--white);color:var(--text)}
 
 /* ── Overlay headers (glassmorphic bars) ── */
-body.dark-mode .g2m-header,body.dark-mode .todo-header,body.dark-mode .art-header,body.dark-mode .cap-topbar,body.dark-mode .plans-topbar,body.dark-mode .prio-topbar{background:rgba(15,23,42,.92)!important;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom-color:var(--border)!important}
+body.dark-mode .g2m-header,body.dark-mode .todo-header,body.dark-mode .art-header,body.dark-mode .cap-topbar,body.dark-mode .plans-topbar,body.dark-mode .prio-topbar{background:rgba(15,23,42,.92)!important;border-bottom-color:var(--border)!important}
 body.dark-mode .g2m-header h2,body.dark-mode .todo-header h2,body.dark-mode .art-header h2,body.dark-mode .cap-topbar h2{color:var(--text)}
 body.dark-mode .g2m-toolbar,body.dark-mode .todo-toolbar,body.dark-mode .art-toolbar{background:var(--white);border-bottom-color:var(--border)}
-body.dark-mode #platformAdminOverlay>div:first-child,body.dark-mode #adminOverlay>div:first-child,body.dark-mode #insightsOverlay>div:first-child{background:rgba(15,23,42,.92)!important;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom-color:var(--border)!important}
+body.dark-mode #platformAdminOverlay>div:first-child,body.dark-mode #adminOverlay>div:first-child,body.dark-mode #insightsOverlay>div:first-child{background:rgba(15,23,42,.92)!important;border-bottom-color:var(--border)!important}
 
 /* ── Edit Row Modal specifics ── */
 body.dark-mode #rowModal .modal{background:var(--white)}
@@ -333,7 +333,7 @@ button,input,select,textarea{font-family:'Inter',system-ui,-apple-system,sans-se
 h1,h2,h3,h4{font-weight:700;letter-spacing:-0.02em;line-height:1.2;color:var(--text)}
 
 /* ── TOOLBAR (glassmorphic top bar) ── */
-.toolbar{background:rgba(249,249,250,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);position:fixed;top:0;left:0;right:0;z-index:5000;border-bottom:1px solid var(--border)}
+.toolbar{background:rgba(249,249,250,.85);position:fixed;top:0;left:0;right:0;z-index:5000;border-bottom:1px solid var(--border)}
 .toolbar-spacer{height:56px}
 /* v1.35.0 Fix 2 — definitive global toolbar/header centering.
    Reusable .page-toolbar class kept for new pages; legacy overlay headers
@@ -484,7 +484,7 @@ tr.data-row:hover td.td-mo{background:#f0f4ff !important}
 
 /* ── MODAL ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(15,27,61,.35);backdrop-filter:blur(6px);z-index:6000;display:flex;align-items:center;justify-content:center;padding:24px}
-.modal{background:var(--white);border-radius:16px;width:520px;max-width:100%;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(15,27,61,.15)}
+.modal{background:var(--white);border-radius:16px;width:520px;max-width:100%;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 16px 48px rgba(15,27,61,.18),0 4px 12px rgba(15,27,61,.10)}
 .modal > .modal-body{flex:1;overflow-y:auto;min-height:0}
 .modal > .modal-hdr{flex-shrink:0}
 .modal > .modal-footer{flex-shrink:0}
@@ -600,7 +600,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 /* ── G2M CHECKLIST ── */
 #g2mOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:4000;display:none;flex-direction:column;overflow:hidden}
 #g2mOverlay.open{display:flex}
-.g2m-header{background:var(--page-header-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;border-bottom:1px solid var(--border)}
+.g2m-header{background:var(--page-header-bg);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;border-bottom:1px solid var(--border)}
 .g2m-header h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
 .g2m-header .g2m-score{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:8px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
 .g2m-header .g2m-score .score-pct{font-size:22px;font-weight:800;color:var(--accent);letter-spacing:-0.02em}
@@ -642,7 +642,7 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 /* ── TODO OVERLAY ── */
 #todoOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
 #todoOverlay.open{display:flex}
-.todo-header{background:var(--page-header-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;border-bottom:1px solid var(--border)}
+.todo-header{background:var(--page-header-bg);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;border-bottom:1px solid var(--border)}
 .todo-header h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
 .todo-toolbar{background:var(--white);padding:12px 32px;display:flex;align-items:center;gap:12px;flex-shrink:0;flex-wrap:wrap;border-bottom:1px solid var(--border)}
 .todo-body{flex:1;overflow-y:auto;padding:28px 32px 60px;background:var(--bg)}
@@ -708,7 +708,7 @@ body.dark-mode .todo-item.done .todo-text{color:#94a3b8}
 /* ── KPI OVERLAY ── */
 #kpiOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
 #kpiOverlay.open{display:flex}
-.kpi-header{background:var(--page-header-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;gap:16px;flex-shrink:0;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.kpi-header{background:var(--page-header-bg);padding:16px 32px;display:flex;align-items:center;gap:16px;flex-shrink:0;flex-wrap:wrap;border-bottom:1px solid var(--border)}
 .kpi-header h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
 .kpi-body{flex:1;overflow-y:auto;padding:28px 32px 60px;background:var(--bg)}
 .kpi-group{background:var(--white);border:1px solid var(--border);border-radius:12px;margin-bottom:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
@@ -722,7 +722,7 @@ body.dark-mode .todo-item.done .todo-text{color:#94a3b8}
 /* ── UCR OVERLAY ── */
 #ucrOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
 #ucrOverlay.open{display:flex}
-.ucr-header{background:var(--page-header-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;border-bottom:1px solid var(--border)}
+.ucr-header{background:var(--page-header-bg);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;border-bottom:1px solid var(--border)}
 .ucr-header h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
 .ucr-body{flex:1;overflow-y:auto;padding:28px 32px 60px;background:var(--bg)}
 .ucr-list{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
@@ -865,7 +865,7 @@ body.dark-mode .intg-icon{background:var(--surface-low);color:var(--text)}
 body.dark-mode .intg-feature{background:var(--surface-low);color:var(--muted)}
 #reportsOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
 #reportsOverlay.open{display:flex}
-.rpt-header{background:var(--page-header-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);color:var(--text);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:1px solid var(--border)}
+.rpt-header{background:var(--page-header-bg);color:var(--text);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:1px solid var(--border)}
 .rpt-header h2{font-weight:800;font-size:20px;letter-spacing:-0.03em;color:var(--text)}
 .rpt-body{display:flex;flex:1;overflow:hidden}
 .rpt-sidebar{width:220px;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;padding:12px 0}
@@ -890,7 +890,7 @@ body.dark-mode .intg-feature{background:var(--surface-low);color:var(--muted)}
 /* ── Top 10 Priorities overlay ──────────────────────────────────────── */
 #top10Overlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
 #top10Overlay.open{display:flex}
-.top10-header{background:var(--page-header-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.top10-header{background:var(--page-header-bg);padding:14px 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .top10-body{flex:1;overflow-y:auto;padding:28px 32px}
 .top10-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:12px;display:flex;align-items:flex-start;gap:16px;transition:box-shadow .15s}
 .top10-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08)}
@@ -907,7 +907,7 @@ body.dark-mode .top10-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.3)}
 /* ── Template Library overlay ───────────────────────────────────────── */
 #templateLibraryOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:4600;display:none;flex-direction:column;overflow:hidden}
 #templateLibraryOverlay.open{display:flex}
-.tpl-header{background:var(--page-header-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.tpl-header{background:var(--page-header-bg);padding:14px 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .tpl-header h2{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.03em;display:flex;align-items:center;gap:10px;margin:0}
 .tpl-toolbar{padding:12px 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
 .tpl-search{padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--text);font-size:13px;font-weight:500;font-family:inherit;min-width:260px}
@@ -973,7 +973,7 @@ body.dark-mode .tpl-task-table th{background:var(--bg)}
 .prio-sidebar-item.active{background:rgba(45,107,244,.15);color:var(--accent);border-left-color:var(--accent)}
 .prio-sidebar-item:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;color:rgba(255,255,255,.95)}
 .prio-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.prio-topbar{background:var(--page-header-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;min-height:52px;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.prio-topbar{background:var(--page-header-bg);padding:14px 28px;display:flex;align-items:center;min-height:52px;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .prio-topbar h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
 .prio-content{flex:1;overflow-y:auto;padding:24px 28px;background:var(--bg)}
 .prio-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);font-size:12px}
@@ -1009,7 +1009,7 @@ body.dark-mode .tpl-task-table th{background:var(--bg)}
 .prio-fwk-criteria-tags span.value{background:rgba(22,163,74,.08);color:#16a34a}
 .prio-btn{padding:8px 16px;border-radius:9999px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--text);transition:all .12s}
 .prio-btn:hover{background:var(--surface-low)}
-.prio-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.prio-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 1px 2px rgba(15,27,61,.12)}
 .prio-btn.primary:hover{filter:brightness(.92)}
 .prio-btn.danger{color:#dc2626;border-color:#fecaca}
 .prio-btn.danger:hover{background:#fef2f2}
@@ -1035,7 +1035,7 @@ body.dark-mode .tpl-task-table th{background:var(--bg)}
 .plans-sidebar-item .plan-actions button{background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:11px;padding:2px 4px}
 .plans-sidebar-item .plan-actions button:hover{color:#fff}
 .plans-main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
-.plans-topbar{background:var(--page-header-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;min-height:64px;gap:14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.plans-topbar{background:var(--page-header-bg);padding:14px 28px;display:flex;align-items:center;min-height:64px;gap:14px;border-bottom:1px solid var(--border);flex-shrink:0}
 /* v1.34.0 Fix 6 (revised) — bulletproof vertical centering in ALL page
    header / toolbar bars. Three root causes were making buttons ride high:
      a) h2 browser-default margins (~0.83em each) inflating the flex line
@@ -1399,7 +1399,7 @@ body.dark-mode .bill-card,body.dark-mode .bill-plan{background:var(--white);bord
 .kanban-card-section{display:inline-flex;align-items:center;gap:4px;font-weight:600}
 .kanban-col.drag-over{background:rgba(45,107,244,.04);border-color:var(--accent)}
 .cap-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.cap-topbar{background:var(--page-header-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;min-height:52px;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.cap-topbar{background:var(--page-header-bg);padding:14px 28px;display:flex;align-items:center;min-height:52px;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .cap-topbar h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
 .cap-content{flex:1;overflow-y:auto;padding:24px 28px;background:var(--bg)}
 .cap-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
@@ -1458,7 +1458,7 @@ body.dark-mode .bill-card,body.dark-mode .bill-plan{background:var(--white);bord
 /* ── ARTIFACTS OVERLAY ── */
 #artOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:3000;display:none;flex-direction:column;overflow:hidden}
 #artOverlay.open{display:flex}
-.art-header{background:var(--page-header-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;border-bottom:1px solid var(--border)}
+.art-header{background:var(--page-header-bg);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;border-bottom:1px solid var(--border)}
 .art-header h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
 .art-body{flex:1;overflow-y:auto;padding:28px 32px 60px;background:var(--bg)}
 .art-toolbar{background:var(--white);padding:12px 32px;display:flex;align-items:center;gap:12px;flex-shrink:0;flex-wrap:wrap;border-bottom:1px solid var(--border)}
@@ -1822,7 +1822,7 @@ body.dark-mode #celebration-overlay .celebration-message{background:var(--white)
  * ═══════════════════════════════════════════════════════════════════════════ */
 #productsOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:3500;display:none;flex-direction:column;overflow:hidden}
 #productsOverlay.open{display:flex}
-.products-header{background:var(--toolbar-bg);backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0}
+.products-header{background:var(--toolbar-bg);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0}
 .products-header h2{font-size:20px;font-weight:800;letter-spacing:-0.03em;color:var(--text);margin:0;display:flex;align-items:center;gap:8px}
 .products-header h2 svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .products-header .pclose{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer}
@@ -2989,7 +2989,7 @@ body.dark-mode .lifecycle-bar .stage.past{background:rgba(45,107,244,.2);color:#
 <!-- ══ CAPACITYIQ OVERLAY ══ -->
 <!-- ADMIN OVERLAY -->
 <div id="adminOverlay">
-  <div style="background:var(--page-header-bg);backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0">
+  <div style="background:var(--page-header-bg);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0">
     <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.03em;color:var(--text);margin:0">User Management</h2>
     <button onclick="closeAdmin()" title="Close" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;align-self:center">&times;</button>
   </div>
@@ -2998,7 +2998,7 @@ body.dark-mode .lifecycle-bar .stage.past{background:rgba(45,107,244,.2);color:#
 
 <!-- PLATFORM ADMIN OVERLAY -->
 <div id="platformAdminOverlay">
-  <div style="background:var(--page-header-bg);backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0">
+  <div style="background:var(--page-header-bg);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0">
     <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.03em;color:var(--text);margin:0">Platform Admin</h2>
     <button onclick="closePlatformAdmin()" title="Close" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;align-self:center">&times;</button>
   </div>
@@ -3007,7 +3007,7 @@ body.dark-mode .lifecycle-bar .stage.past{background:rgba(45,107,244,.2);color:#
 
 <!-- INSIGHTS OVERLAY -->
 <div id="insightsOverlay">
-  <div style="background:var(--page-header-bg);backdrop-filter:blur(20px);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0">
+  <div style="background:var(--page-header-bg);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0">
     <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.03em;color:var(--text);margin:0">Insights</h2>
     <button onclick="closeInsights()" title="Close" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;align-self:center">&times;</button>
   </div>
@@ -3088,7 +3088,7 @@ body.dark-mode .lifecycle-bar .stage.past{background:rgba(45,107,244,.2);color:#
 <!-- ── BILLING OVERLAY ───────────────────────────────────────────────────── -->
 <div id="billingOverlay">
   <div style="display:flex;flex-direction:column;flex:1;overflow:hidden">
-    <div class="prio-topbar" style="background:var(--page-header-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0">
+    <div class="prio-topbar" style="background:var(--page-header-bg);padding:14px 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0">
       <h2 style="color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em;display:flex;align-items:center;gap:10px">
         <svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><path d="M7 15h4"/></svg>
         Billing &amp; Subscription
@@ -3104,7 +3104,7 @@ body.dark-mode .lifecycle-bar .stage.past{background:rgba(45,107,244,.2);color:#
 <!-- ── FEEDBACK OVERLAY ──────────────────────────────────────────────────── -->
 <div id="feedbackOverlay">
   <div style="display:flex;flex-direction:column;flex:1;overflow:hidden">
-    <div class="prio-topbar" style="background:var(--page-header-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:14px 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0">
+    <div class="prio-topbar" style="background:var(--page-header-bg);padding:14px 28px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0">
       <h2 style="color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em;display:flex;align-items:center;gap:10px">
         <svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
         Feedback Inbox
