@@ -70,11 +70,20 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
-function redirectWithError(error: string): Response {
-  return new Response(null, {
-    status: 302,
-    headers: { Location: `${APP_URL}/#integrations?error=${encodeURIComponent(error)}` },
-  });
+// Both the success and error callbacks redirect to a STATIC page hosted on the
+// web app domain. We cannot serve HTML directly from Supabase edge functions
+// because the gateway rewrites Content-Type to text/plain. The static page is
+// a tiny HTML file at /oauth-callback.html that doesn't load the SPA, doesn't
+// auto-sign-in, and just shows a "close this tab" confirmation — so users who
+// started from the desktop app aren't yanked into the web app silently.
+function callbackUrl(params: Record<string, string>): string {
+  const qs = new URLSearchParams(params).toString();
+  return `${APP_URL}/oauth-callback.html${qs ? "?" + qs : ""}`;
+}
+
+function redirectWithError(error: string, provider = ""): Response {
+  const url = callbackUrl({ error, ...(provider ? { provider } : {}) });
+  return new Response(null, { status: 302, headers: { Location: url } });
 }
 
 async function getUserFromAuth(req: Request, supabase: SupabaseClient) {
@@ -321,7 +330,7 @@ async function handleCallback(url: URL, provider: string, supabase: SupabaseClie
 
   return new Response(null, {
     status: 302,
-    headers: { Location: `${APP_URL}/#integrations?connected=${provider}` },
+    headers: { Location: callbackUrl({ connected: provider }) },
   });
 }
 
