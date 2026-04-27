@@ -61,6 +61,15 @@ const PROVIDERS: Record<string, ProviderConfig> = {
     clientIdEnv: "LINEAR_CLIENT_ID",
     clientSecretEnv: "LINEAR_CLIENT_SECRET",
   },
+  teams: {
+    // Multi-tenant Microsoft Graph OAuth — /common lets users from any
+    // Azure AD tenant authorize.
+    authUrl: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+    tokenUrl: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+    scopes: "User.Read offline_access Channel.ReadBasic.All ChannelMessage.Send Group.Read.All Tasks.ReadWrite Team.ReadBasic.All",
+    clientIdEnv: "TEAMS_CLIENT_ID",
+    clientSecretEnv: "TEAMS_CLIENT_SECRET",
+  },
 };
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -202,6 +211,12 @@ async function handleCallback(url: URL, provider: string, supabase: SupabaseClie
     redirect_uri: redirectUri,
   };
 
+  // Microsoft requires the same `scope` value in the token exchange request
+  // that was used in /authorize. Other providers don't require it but accept it.
+  if (provider === "teams") {
+    tokenBody.scope = config.scopes;
+  }
+
   const tokenHeaders: Record<string, string> = {
     "Content-Type": "application/x-www-form-urlencoded",
     Accept: "application/json",
@@ -299,6 +314,17 @@ async function handleCallback(url: URL, provider: string, supabase: SupabaseClie
         userId: meData.data?.viewer?.id,
         userName: meData.data?.viewer?.name,
         teams: meData.data?.teams?.nodes,
+      };
+    } else if (provider === "teams") {
+      // Seed Teams config with Microsoft Graph user profile.
+      const meRes = await fetch("https://graph.microsoft.com/v1.0/me", {
+        headers: { Authorization: `Bearer ${accessToken}`, Accept: "application/json" },
+      });
+      const meData = await meRes.json();
+      providerConfig = {
+        userId: meData.id,
+        displayName: meData.displayName,
+        email: meData.mail || meData.userPrincipalName,
       };
     }
   } catch (e) {

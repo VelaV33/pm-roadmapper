@@ -159,6 +159,20 @@ serve(async (req) => {
   if (!m) return jsonResponse({ error: "Not found" }, 404);
   const provider = m[1];
 
+  // Microsoft Graph subscription validation handshake.
+  // When you create a /subscriptions resource, Graph sends a GET (or POST)
+  // with `?validationToken=...` and expects the token echoed verbatim within
+  // 5 seconds (text/plain, status 200) before it will trust the endpoint.
+  if (provider === "teams") {
+    const validationToken = url.searchParams.get("validationToken");
+    if (validationToken) {
+      return new Response(validationToken, {
+        status: 200,
+        headers: { "Content-Type": "text/plain" },
+      });
+    }
+  }
+
   const body = await req.text();
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -169,6 +183,14 @@ serve(async (req) => {
     else if (provider === "asana") verified = await verifyAsanaSig(req, body);
     else if (provider === "linear") verified = await verifyLinearSig(req, body);
     else if (provider === "jira") verified = await verifyJiraSig(req, body);
+    else if (provider === "teams") {
+      // Phase 1: log the change-notification payload and return 200 so Graph
+      // doesn't retry. Per-resource processing (subscription clientState
+      // verification, decryption of `encryptedContent`, fan-out into the
+      // user's roadmap) lands in Phase 2 alongside the subscription manager.
+      console.log("[webhook][teams] payload received:", body.slice(0, 1000));
+      return jsonResponse({ ok: true });
+    }
     else return jsonResponse({ error: "Unknown provider" }, 400);
 
     // Slack URL verification challenge — return early before signature check

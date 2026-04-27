@@ -104,6 +104,76 @@ async function listLinearTeams(conn: Connection) {
   }));
 }
 
+// ── Microsoft Graph helpers ─────────────────────────────────────────────
+// Honour 429 throttling (Retry-After), follow @odata.nextLink up to 20 pages.
+async function graphFetch(url: string, token: string, attempt = 0): Promise<Response> {
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+  });
+  if (res.status === 429 && attempt < 3) {
+    const retryAfter = parseInt(res.headers.get("Retry-After") || "2", 10);
+    await new Promise((r) => setTimeout(r, Math.max(1, retryAfter) * 1000));
+    return graphFetch(url, token, attempt + 1);
+  }
+  return res;
+}
+
+async function graphCollect<T>(
+  startUrl: string,
+  token: string,
+  mapItem: (raw: Record<string, unknown>) => T,
+): Promise<T[]> {
+  const out: T[] = [];
+  let url: string | null = startUrl;
+  let pages = 0;
+  while (url && pages < 20) {
+    const res = await graphFetch(url, token);
+    if (!res.ok) break;
+    const data = await res.json() as { value?: Array<Record<string, unknown>>; "@odata.nextLink"?: string };
+    for (const v of (data.value || [])) out.push(mapItem(v));
+    url = data["@odata.nextLink"] || null;
+    pages++;
+  }
+  return out;
+}
+
+async function listTeamsPlannerPlans(conn: Connection) {
+  // GET /me/planner/plans returns Planner plans across all groups the user
+  // belongs to. Each plan's `owner` field is the group (team) ID it lives in.
+  return graphCollect<{ id: string; name: string; extra: Record<string, unknown> }>(
+    "https://graph.microsoft.com/v1.0/me/planner/plans",
+    conn.access_token,
+    (plan) => ({
+      id: plan.id as string,
+      name: (plan.title as string) || "(untitled plan)",
+      extra: { groupId: plan.owner as string | undefined },
+    }),
+  );
+}
+
+async function listTeamsJoinedTeams(conn: Connection) {
+  // GET /me/joinedTeams returns groups the user is a member of (each is a "team").
+  return graphCollect<{ id: string; name: string }>(
+    "https://graph.microsoft.com/v1.0/me/joinedTeams",
+    conn.access_token,
+    (t) => ({
+      id: t.id as string,
+      name: (t.displayName as string) || "(untitled team)",
+    }),
+  );
+}
+
+async function listTeamsChannels(conn: Connection, teamId: string) {
+  return graphCollect<{ id: string; name: string }>(
+    `https://graph.microsoft.com/v1.0/teams/${encodeURIComponent(teamId)}/channels`,
+    conn.access_token,
+    (c) => ({
+      id: c.id as string,
+      name: (c.displayName as string) || "(untitled channel)",
+    }),
+  );
+}
+
 async function listProviderProjects(conn: Connection) {
   switch (conn.provider) {
     case "jira": return listJiraProjects(conn);
@@ -111,6 +181,7 @@ async function listProviderProjects(conn: Connection) {
     case "slack": return listSlackChannels(conn);
     case "asana": return listAsanaProjects(conn);
     case "linear": return listLinearTeams(conn);
+    case "teams": return listTeamsPlannerPlans(conn);
     default: return [];
   }
 }
@@ -145,6 +216,31 @@ serve(async (req) => {
       if (!conn) return jsonResponse({ projects: [] });
       const projects = await listProviderProjects(conn as Connection);
       return jsonResponse({ projects });
+    }
+
+    // GET /teams-list/teams — list the user's joined Microsoft Teams (groups).
+    // Used by the Configure modal to populate the notification team selector.
+    if (path.match(/^\/teams-list\/teams\/?$/) && req.method === "GET") {
+      const { data: conn } = await supabase
+        .from("integration_connections")
+        .select("id, user_id, provider, access_token, config")
+        .eq("user_id", user.id).eq("provider", "teams").maybeSingle();
+      if (!conn) return jsonResponse({ teams: [] });
+      const teams = await listTeamsJoinedTeams(conn as Connection);
+      return jsonResponse({ teams });
+    }
+
+    // GET /teams-channels/:teamId/teams — list channels of a Microsoft Team.
+    m = path.match(/^\/teams-channels\/([^/]+)\/teams\/?$/);
+    if (m && req.method === "GET") {
+      const teamId = decodeURIComponent(m[1]);
+      const { data: conn } = await supabase
+        .from("integration_connections")
+        .select("id, user_id, provider, access_token, config")
+        .eq("user_id", user.id).eq("provider", "teams").maybeSingle();
+      if (!conn) return jsonResponse({ channels: [] });
+      const channels = await listTeamsChannels(conn as Connection, teamId);
+      return jsonResponse({ channels });
     }
 
     // PUT /configure/:provider
