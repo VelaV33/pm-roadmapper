@@ -83,7 +83,18 @@ serve(handle(async (req) => {
   const RESEND_KEY = Deno.env.get("RESEND_API_KEY");
   const FROM_EMAIL = Deno.env.get("FROM_EMAIL") || "Roadmap OS <onboarding@resend.dev>";
   if (!RESEND_KEY) {
-    return jsonResponse({ ok: true, email_sent: false, invite_token: token });
+    // v1.46.1: surface the actual config gap so the renderer can show
+    // something more useful than "unknown" in its toast. The frontend
+    // (renderer/index.html ~L32567) reads email_error + hint and
+    // displays both.
+    console.error("[team-invite] RESEND_API_KEY is not set in this function's environment");
+    return jsonResponse({
+      ok: true,
+      email_sent: false,
+      invite_token: token,
+      email_error: "RESEND_API_KEY is not set on the team-invite function",
+      hint: "Add RESEND_API_KEY in Supabase Dashboard → Edge Functions → team-invite → Secrets, then re-deploy.",
+    });
   }
 
   const acceptUrl = `${APP_URL}/?invite_token=${encodeURIComponent(token)}&email=${encodeURIComponent(normalizedEmail)}`;
@@ -136,7 +147,34 @@ serve(handle(async (req) => {
   if (!resendRes.ok) {
     const txt = await resendRes.text();
     console.error("[team-invite] resend error:", resendRes.status, txt.substring(0, 200));
-    return jsonResponse({ ok: true, email_sent: false, invite_token: token });
+    // v1.46.1: parse Resend's JSON error and surface the actual reason
+    // (e.g. "domain not verified", "rate limit exceeded"). Fall back to
+    // raw text if Resend returned non-JSON.
+    let parsedMessage = "";
+    let parsedName = "";
+    try {
+      const j = JSON.parse(txt);
+      parsedMessage = (j && (j.message || j.error || j.name)) || "";
+      parsedName = (j && j.name) || "";
+    } catch (_) { /* not JSON */ }
+    let hint = "";
+    const lcMsg = (parsedMessage || txt).toLowerCase();
+    if (resendRes.status === 401 || resendRes.status === 403) {
+      hint = "Resend rejected the API key. Verify RESEND_API_KEY value in Supabase secrets.";
+    } else if (resendRes.status === 422 && (lcMsg.indexOf("verify") >= 0 || lcMsg.indexOf("domain") >= 0)) {
+      hint = "The from-domain on " + FROM_EMAIL + " is not verified in Resend. Either verify the domain at resend.com/domains or set FROM_EMAIL to onboarding@resend.dev (Resend's testing sender).";
+    } else if (resendRes.status === 429) {
+      hint = "Resend rate limit hit. Try again shortly, or upgrade Resend plan.";
+    } else if (parsedName === "validation_error") {
+      hint = "Resend rejected the request payload. Check the from-address format and recipient validity.";
+    }
+    return jsonResponse({
+      ok: true,
+      email_sent: false,
+      invite_token: token,
+      email_error: "Resend HTTP " + resendRes.status + (parsedMessage ? ": " + parsedMessage : ""),
+      hint: hint || "Check Supabase Dashboard → Edge Functions → team-invite logs for the full Resend response.",
+    });
   }
   const resendData = await resendRes.json();
   return jsonResponse({ ok: true, email_sent: true, invite_token: token, email_id: resendData.id });
