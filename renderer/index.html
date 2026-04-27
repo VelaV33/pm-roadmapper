@@ -52,7 +52,7 @@ body.dark-mode{
   --shadow-card:0 1px 2px rgba(0,0,0,.5), 0 4px 12px rgba(0,0,0,.4);
   color-scheme:dark;
 }
-body.dark-mode .toolbar{background:var(--toolbar-bg)}
+body.dark-mode .toolbar{background:rgba(15,23,42,0.72);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%)}
 body.dark-mode input,body.dark-mode select,body.dark-mode textarea{background:var(--white);color:var(--text);border-color:var(--border)}
 body.dark-mode input::placeholder,body.dark-mode textarea::placeholder{color:var(--muted)}
 body.dark-mode .modal,body.dark-mode .plan-modal{background:var(--white);color:var(--text);box-shadow:0 24px 64px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.4)}
@@ -209,7 +209,8 @@ body.dark-mode .ts-week-nav .ts-week-label{color:var(--text)}
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ── Global surface & text overrides ── */
-body.dark-mode .modal-body,body.dark-mode .modal-hdr{background:var(--white);color:var(--text)}
+body.dark-mode .modal-body{background:var(--white);color:var(--text)}
+body.dark-mode .modal-hdr{background:rgba(15,23,42,0.72);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%);color:var(--text)}
 body.dark-mode .modal-footer{background:var(--white);border-top-color:var(--border)}
 body.dark-mode .modal-footer .btn-cancel{background:var(--surface-high);color:var(--text);border-color:var(--border)}
 body.dark-mode .form-row label{color:var(--muted)}
@@ -320,7 +321,7 @@ body.dark-mode .table-wrap{background:var(--white);border-color:var(--border)}
  * v1.29.0 FIX 2 — Global Dropdown Dark Mode
  * ═══════════════════════════════════════════════════════════════════════════ */
 body.dark-mode select,body.dark-mode select option{background:var(--white);color:var(--text)}
-body.dark-mode .row-kebab-menu{background:var(--white);border-color:var(--border);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+body.dark-mode .row-kebab-menu{background:rgba(15,23,42,0.72);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%);border-color:var(--border);box-shadow:0 8px 24px rgba(0,0,0,.4)}
 body.dark-mode .row-kebab-menu button{color:var(--text)}
 body.dark-mode .row-kebab-menu button:hover{background:var(--surface-low)}
 body.dark-mode .row-kebab-menu button.danger{color:#f87171}
@@ -333,7 +334,7 @@ button,input,select,textarea{font-family:'Inter',system-ui,-apple-system,sans-se
 h1,h2,h3,h4{font-weight:700;letter-spacing:-0.02em;line-height:1.2;color:var(--text)}
 
 /* ── TOOLBAR (glassmorphic top bar) ── */
-.toolbar{background:rgba(249,249,250,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);position:fixed;top:0;left:0;right:0;z-index:5000;border-bottom:1px solid var(--border)}
+.toolbar{background:rgba(255,255,255,0.72);backdrop-filter:blur(8px) saturate(140%);-webkit-backdrop-filter:blur(8px) saturate(140%);position:fixed;top:0;left:0;right:0;z-index:5000;border-bottom:1px solid var(--border)}
 .toolbar-spacer{height:56px}
 /* v1.35.0 Fix 2 — definitive global toolbar/header centering.
    Reusable .page-toolbar class kept for new pages; legacy overlay headers
@@ -438,7 +439,7 @@ tr.data-row td.td-lbl .row-btns{display:flex;gap:3px;flex-shrink:0;opacity:0;tra
 tr.data-row:hover td.td-lbl .row-btns{opacity:1}
 tr.data-row td.td-lbl .row-btns .row-kebab{padding:3px 6px;border-radius:9999px;border:1px solid var(--border);background:var(--white);font-size:13px;line-height:1;cursor:pointer;color:var(--muted);transition:all .15s;letter-spacing:1px}
 tr.data-row td.td-lbl .row-btns .row-kebab:hover{background:var(--surface-low);color:var(--text);border-color:var(--accent)}
-.row-kebab-menu{position:absolute;top:24px;right:0;background:var(--white);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(15,27,61,.15);min-width:160px;padding:6px 0;z-index:5500}
+.row-kebab-menu{position:absolute;top:24px;right:0;background:rgba(255,255,255,0.72);backdrop-filter:blur(8px) saturate(140%);-webkit-backdrop-filter:blur(8px) saturate(140%);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(15,27,61,.15);min-width:160px;padding:6px 0;z-index:5500}
 .row-kebab-menu button{display:flex;align-items:center;gap:9px;width:100%;border:none;background:transparent;padding:8px 14px;font-size:12px;font-weight:500;color:var(--text);cursor:pointer;text-align:left;font-family:inherit}
 .row-kebab-menu button:hover{background:var(--surface-low)}
 .row-kebab-menu button.danger{color:#dc2626}
@@ -488,7 +489,7 @@ tr.data-row:hover td.td-mo{background:#f0f4ff !important}
 .modal > .modal-body{flex:1;overflow-y:auto;min-height:0}
 .modal > .modal-hdr{flex-shrink:0}
 .modal > .modal-footer{flex-shrink:0}
-.modal-hdr{background:var(--white);color:var(--text);padding:20px 28px;border-radius:16px 16px 0 0;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.modal-hdr{background:rgba(255,255,255,0.72);backdrop-filter:blur(8px) saturate(140%);-webkit-backdrop-filter:blur(8px) saturate(140%);color:var(--text);padding:20px 28px;border-radius:16px 16px 0 0;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
 .modal-hdr h2{font-weight:800;font-size:18px;letter-spacing:-0.02em;color:var(--text)}
 .modal-hdr .close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;transition:color .15s}
 .modal-hdr .close:hover{color:var(--text)}
@@ -1232,7 +1233,7 @@ body.dark-mode .plan-sprint-bar .sprint-bar-expand{background:var(--white);color
 .help-fab{position:fixed;bottom:20px;right:20px;z-index:10500}
 .help-fab-button{width:52px;height:52px;border-radius:50%;background:var(--accent);color:#fff;border:none;box-shadow:0 6px 20px rgba(45,107,244,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s}
 .help-fab-button:hover{transform:scale(1.06);box-shadow:0 8px 24px rgba(45,107,244,.45)}
-.help-panel{position:absolute;bottom:64px;right:0;width:320px;background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:0 16px 48px rgba(15,27,61,.2);overflow:hidden;font-family:inherit}
+.help-panel{position:absolute;bottom:64px;right:0;width:320px;background:rgba(255,255,255,0.72);backdrop-filter:blur(8px) saturate(140%);-webkit-backdrop-filter:blur(8px) saturate(140%);border:1px solid var(--border);border-radius:14px;box-shadow:0 16px 48px rgba(15,27,61,.2);overflow:hidden;font-family:inherit}
 .help-panel-hdr{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
 .help-panel-hdr h3{margin:0;font-size:14px;font-weight:800;color:var(--text)}
 .help-panel-close{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;padding:0 4px}
@@ -1248,7 +1249,7 @@ body.dark-mode .plan-sprint-bar .sprint-bar-expand{background:var(--white);color
 .help-form-actions{display:flex;gap:6px;margin-top:4px}
 .help-form-actions button{flex:1;padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--text);font-family:inherit}
 .help-form-actions button.help-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-body.dark-mode .help-panel{background:var(--white);border-color:var(--border)}
+body.dark-mode .help-panel{background:rgba(15,23,42,0.72);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%);border-color:var(--border)}
 body.dark-mode .help-form input,body.dark-mode .help-form textarea,body.dark-mode .help-form select{background:var(--surface-low);color:var(--text);border-color:var(--border)}
 body.dark-mode .kanban-card{background:#1e293b;border-color:#334155}
 body.dark-mode .kanban-pct-bar{background:#0f172a}
@@ -2039,6 +2040,15 @@ body.dark-mode .filter-chip,body.dark-mode .product-detail-btn,body.dark-mode .b
 body.dark-mode .product-detail-btn.primary,body.dark-mode .btn-sm.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
 body.dark-mode .lifecycle-bar{background:#0f172a;border-color:var(--border)}
 body.dark-mode .lifecycle-bar .stage.past{background:rgba(45,107,244,.2);color:#93c5fd}
+/* v1.46.x visual polish: respect user preference to reduce backdrop-filter
+   transparency. When set, the four glassed surfaces fall back to solid white
+   (token --white flips correctly in dark mode). */
+@media (prefers-reduced-transparency: reduce) {
+  .toolbar, .modal-hdr, .help-panel, .row-kebab-menu {
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+    background: var(--white);
+  }
+}
 </style>
 </head>
 <body>
