@@ -31,6 +31,17 @@
   --surface-low:#f3f3f4;--surface-high:#e8e8e9;--outline-var:#c1c6d6;
   --toolbar-bg:rgba(249,249,250,.85);
   --shadow-card:0 1px 3px rgba(0,0,0,.04);
+  /* v1.46.0 — Glassmorphism tokens (Apple-style vibrancy). Surfaces that
+     need to feel "above" content (nav, toolbars, modals, toasts, FAB) opt
+     into these. Base UI keeps using the opaque tokens above. */
+  --glass-bg:rgba(255,255,255,0.62);
+  --glass-bg-strong:rgba(255,255,255,0.78);
+  --glass-border:1px solid rgba(255,255,255,0.45);
+  --glass-border-soft:1px solid rgba(15,27,61,0.06);
+  --glass-blur:14px;
+  --glass-blur-strong:22px;
+  --glass-saturate:180%;
+  --glass-shadow:0 1px 0 rgba(255,255,255,0.5) inset, 0 8px 24px rgba(15,27,61,0.08), 0 1px 2px rgba(15,27,61,0.06);
 }
 /* Dark mode (v1.21.0) — global theme override applied to <body>. Most of the
  * app uses var(--*) tokens, so flipping these makes the bulk of pages dark.
@@ -48,6 +59,13 @@ body.dark-mode{
   --light-blue-bg:#1e3a8a;
   --toolbar-bg:rgba(15,23,42,.92);
   --shadow-card:0 1px 3px rgba(0,0,0,.4);
+  /* v1.46.0 — Glass tokens for dark mode. --glass-blur and --glass-saturate
+     stay the same as light mode. */
+  --glass-bg:rgba(15,23,42,0.6);
+  --glass-bg-strong:rgba(15,23,42,0.78);
+  --glass-border:1px solid rgba(255,255,255,0.07);
+  --glass-border-soft:1px solid rgba(255,255,255,0.04);
+  --glass-shadow:0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 24px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
   color-scheme:dark;
 }
 body.dark-mode .toolbar{background:var(--toolbar-bg)}
@@ -326,7 +344,20 @@ body.dark-mode .row-kebab-menu button.danger:hover{background:#7f1d1d}
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);min-height:100vh;color:var(--text);font-size:14px;line-height:1.6;letter-spacing:0}
+/* v1.46.0 — Page background gets two faint colour washes so the
+   backdrop-filter blur on glass surfaces has something to blur (otherwise
+   glass is invisible against a perfectly flat colour). Barely visible. */
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:radial-gradient(ellipse 1200px 600px at 15% -5%, rgba(0,91,177,0.05), transparent 60%),radial-gradient(ellipse 900px 500px at 95% 100%, rgba(124,58,237,0.04), transparent 65%),var(--bg);background-attachment:fixed;min-height:100vh;color:var(--text);font-size:14px;line-height:1.6;letter-spacing:0}
+body.dark-mode{background:radial-gradient(ellipse 1200px 600px at 15% -5%, rgba(59,130,246,0.10), transparent 60%),radial-gradient(ellipse 900px 500px at 95% 100%, rgba(124,58,237,0.08), transparent 65%),var(--bg);background-attachment:fixed}
+/* v1.46.0 — Glass utility class. Apply to surfaces that float above content
+   (nav, toolbars, modals, toasts, FAB). Inputs/cards on flat backgrounds
+   should NOT use this — opaque tokens are preferred there for legibility. */
+.glass{background:var(--glass-bg);backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate));-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate));border:var(--glass-border-soft);box-shadow:var(--glass-shadow)}
+.glass--strong{background:var(--glass-bg-strong);backdrop-filter:blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));-webkit-backdrop-filter:blur(var(--glass-blur-strong)) saturate(var(--glass-saturate))}
+/* Accessibility: users who prefer reduced transparency get an opaque fallback. */
+@media (prefers-reduced-transparency:reduce){
+  .glass,.glass--strong{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--white)}
+}
 button,input,select,textarea{font-family:'Inter',system-ui,-apple-system,sans-serif;font-size:14px}
 h1,h2,h3,h4{font-weight:700;letter-spacing:-0.02em;line-height:1.2;color:var(--text)}
 
