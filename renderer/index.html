@@ -20,7 +20,7 @@
 <style>
 :root{
   --navy:#0F1B3D;--blue:#005bb1;--accent:#005bb1;
-  --bg:#f9f9fa;--white:#FFFFFF;--border:#e2e2e3;
+  --bg:#f1f3f7;--white:#FFFFFF;--border:#e2e2e3;
   --text:#1a1c1d;--muted:#717785;
   --g1:#10b981;--g2:#34d399;
   --b1:#005bb1;--b2:#0073dd;
@@ -31,7 +31,7 @@
   --surface-low:#f3f3f4;--surface-high:#e8e8e9;--outline-var:#c1c6d6;
   --toolbar-bg:rgba(249,249,250,.85);
   --page-header-bg:rgba(249,249,250,.9);
-  --shadow-card:0 1px 3px rgba(0,0,0,.04);
+  --shadow-card:0 1px 2px rgba(15,27,61,0.05), 0 4px 12px rgba(15,27,61,0.06);
 }
 /* Dark mode (v1.21.0) — global theme override applied to <body>. Most of the
  * app uses var(--*) tokens, so flipping these makes the bulk of pages dark.
@@ -49,20 +49,20 @@ body.dark-mode{
   --light-blue-bg:#1e3a8a;
   --toolbar-bg:rgba(15,23,42,.92);
   --page-header-bg:rgba(15,23,42,.92);
-  --shadow-card:0 1px 3px rgba(0,0,0,.4);
+  --shadow-card:0 1px 2px rgba(0,0,0,.5), 0 4px 12px rgba(0,0,0,.4);
   color-scheme:dark;
 }
 body.dark-mode .toolbar{background:var(--toolbar-bg)}
 body.dark-mode input,body.dark-mode select,body.dark-mode textarea{background:var(--white);color:var(--text);border-color:var(--border)}
 body.dark-mode input::placeholder,body.dark-mode textarea::placeholder{color:var(--muted)}
-body.dark-mode .modal,body.dark-mode .plan-modal{background:var(--white);color:var(--text)}
+body.dark-mode .modal,body.dark-mode .plan-modal{background:var(--white);color:var(--text);box-shadow:0 24px 64px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.4)}
 body.dark-mode .modal-overlay,body.dark-mode .plan-modal-backdrop{background:rgba(0,0,0,.65)}
 body.dark-mode .plan-task-table th{background:#0f172a;color:var(--muted)}
 body.dark-mode .plan-task-table td{border-bottom-color:#1e293b}
 body.dark-mode .plan-task-table tr:hover td{background:#0f172a}
 body.dark-mode .plan-task-wrap{background:var(--white)}
 body.dark-mode .prio-btn{background:var(--white);color:var(--text);border-color:var(--border)}
-body.dark-mode .prio-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+body.dark-mode .prio-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:inset 0 1px 0 rgba(255,255,255,0.10), 0 1px 3px rgba(0,0,0,0.4)}
 /* v1.28.0: The prio/cap sidebars use var(--navy) as a dark surface. In dark
    mode --navy flips to #e2e8f0 (for text inversion), which makes the sidebar
    background LIGHT while its items use semi-transparent white text — invisible.
@@ -484,7 +484,7 @@ tr.data-row:hover td.td-mo{background:#f0f4ff !important}
 
 /* ── MODAL ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(15,27,61,.35);backdrop-filter:blur(6px);z-index:6000;display:flex;align-items:center;justify-content:center;padding:24px}
-.modal{background:var(--white);border-radius:16px;width:520px;max-width:100%;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(15,27,61,.15)}
+.modal{background:var(--white);border-radius:16px;width:520px;max-width:100%;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 16px 48px rgba(15,27,61,0.18), 0 4px 12px rgba(15,27,61,0.10)}
 .modal > .modal-body{flex:1;overflow-y:auto;min-height:0}
 .modal > .modal-hdr{flex-shrink:0}
 .modal > .modal-footer{flex-shrink:0}
@@ -1009,7 +1009,7 @@ body.dark-mode .tpl-task-table th{background:var(--bg)}
 .prio-fwk-criteria-tags span.value{background:rgba(22,163,74,.08);color:#16a34a}
 .prio-btn{padding:8px 16px;border-radius:9999px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--text);transition:all .12s}
 .prio-btn:hover{background:var(--surface-low)}
-.prio-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.prio-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:inset 0 1px 0 rgba(255,255,255,0.15), 0 1px 2px rgba(15,27,61,0.12)}
 .prio-btn.primary:hover{filter:brightness(.92)}
 .prio-btn.danger{color:#dc2626;border-color:#fecaca}
 .prio-btn.danger:hover{background:#fef2f2}
@@ -1296,7 +1296,7 @@ body.dark-mode .owner-pick-row:hover{background:#0f172a}
 
 /* Add task modal */
 .plan-modal-backdrop{position:fixed;inset:0;background:rgba(15,27,61,.55);z-index:9000;display:flex;align-items:center;justify-content:center}
-.plan-modal{background:var(--white);border-radius:16px;width:680px;max-width:92vw;max-height:86vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(15,27,61,.4)}
+.plan-modal{background:var(--white);border-radius:16px;width:680px;max-width:92vw;max-height:86vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 48px rgba(15,27,61,0.18), 0 4px 12px rgba(15,27,61,0.10)}
 .plan-modal-header{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .plan-modal-header h3{font-size:18px;font-weight:800;color:var(--text)}
 .plan-modal-close{background:none;border:none;font-size:24px;color:var(--muted);cursor:pointer;line-height:1}
