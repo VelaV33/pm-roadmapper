@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { handle, verifyRequest, jsonResponse, errorResponse, isSuperAdmin, isPlatformAdmin, SUPER_ADMINS } from "../_shared/auth.ts";
+import { handle, verifyRequest, jsonResponse, errorResponse, isSuperAdmin, isPlatformAdmin, PLATFORM_ADMINS, getCallerOrgId } from "../_shared/auth.ts";
 
 serve(handle(async (req) => {
   // verifyRequest enforces a valid JWT — caller identity comes from there.
@@ -25,21 +25,60 @@ serve(handle(async (req) => {
 
   // ACTION: list-users
   if (action === "list-users") {
+    // v1.45.2 (security): non-platform admins are scoped to their own org.
+    // Without this, an org-A super_admin could list users from every org —
+    // a cross-tenant data leak when multiple paying customers share the
+    // same Supabase project.
+    const callerIsPlatform = isPlatformAdmin(user);
+    const callerOrgId = callerIsPlatform ? null : await getCallerOrgId(supabase, user.id);
+    if (!callerIsPlatform && !callerOrgId) {
+      return errorResponse(
+        "Your account is not assigned to an organisation. Ask a platform admin to assign you before managing users.",
+        403,
+      );
+    }
+
     const { data: allUsers, error: listErr } = await supabase.auth.admin.listUsers();
     if (listErr) {
       console.error("[admin-api] list error:", listErr.message);
       return errorResponse("Failed to list users", 500);
     }
-    const users = (allUsers?.users || []).map((u) => {
+
+    // Pull profiles + orgs once so we can both filter AND enrich.
+    const { data: profiles } = await supabase
+      .from("user_profiles")
+      .select("user_id, organization_id, tier, subscription_status");
+    const { data: orgs } = await supabase
+      .from("organizations")
+      .select("id, name");
+    const orgMap: Record<string, string> = {};
+    (orgs || []).forEach((o: { id: string; name: string }) => { orgMap[o.id] = o.name; });
+    const profileMap: Record<string, { organization_id?: string; tier?: string; subscription_status?: string }> = {};
+    (profiles || []).forEach((p: { user_id: string; organization_id?: string; tier?: string; subscription_status?: string }) => { profileMap[p.user_id] = p; });
+
+    // Org-scope filter: non-platform admins only see users in their own org.
+    const visibleAuthUsers = (allUsers?.users || []).filter((u) => {
+      if (callerIsPlatform) return true;
+      const prof = profileMap[u.id];
+      return prof?.organization_id && prof.organization_id === callerOrgId;
+    });
+
+    const users = visibleAuthUsers.map((u) => {
       const appRole = (u.app_metadata as { role?: string } | undefined)?.role;
+      const appPlat = (u.app_metadata as { platform_admin?: boolean } | undefined)?.platform_admin === true;
       const uMeta = (u.user_metadata || {}) as Record<string, unknown>;
       return {
         id: u.id,
         email: u.email,
         created_at: u.created_at,
         last_sign_in: u.last_sign_in_at,
-        is_super_admin:
-          SUPER_ADMINS.includes((u.email || "").toLowerCase()) || appRole === "super_admin",
+        // is_super_admin retained for backward-compat with the admin UI; now
+        // reflects only the org-scoped role, NOT the platform allowlist.
+        is_super_admin: appRole === "super_admin",
+        // New (v1.45.2): explicit platform-admin flag drawn from the renamed
+        // PLATFORM_ADMINS allowlist OR app_metadata.platform_admin.
+        is_platform_admin:
+          PLATFORM_ADMINS.includes((u.email || "").toLowerCase()) || appPlat,
         role: appRole || "product_manager",
         rows_count: 0,
         sections_count: 0,
@@ -66,17 +105,6 @@ serve(handle(async (req) => {
       }
     }
 
-    // Enrich with organization info
-    const { data: profiles } = await supabase
-      .from("user_profiles")
-      .select("user_id, organization_id, tier, subscription_status");
-    const { data: orgs } = await supabase
-      .from("organizations")
-      .select("id, name");
-    const orgMap: Record<string, string> = {};
-    (orgs || []).forEach((o: { id: string; name: string }) => { orgMap[o.id] = o.name; });
-    const profileMap: Record<string, { organization_id?: string; tier?: string; subscription_status?: string }> = {};
-    (profiles || []).forEach((p: { user_id: string; organization_id?: string; tier?: string; subscription_status?: string }) => { profileMap[p.user_id] = p; });
     users.forEach((u) => {
       const prof = profileMap[u.id];
       (u as Record<string, unknown>).organization_id = prof?.organization_id || null;
@@ -121,6 +149,20 @@ serve(handle(async (req) => {
       return errorResponse("Invalid role", 400);
     }
 
+    // v1.45.2 (security): non-platform admins can only change roles inside
+    // their own organisation. Without this gate an org-A super_admin could
+    // demote / promote anyone in org-B.
+    if (!isPlatformAdmin(user)) {
+      const callerOrgId = await getCallerOrgId(supabase, user.id);
+      if (!callerOrgId) {
+        return errorResponse("Your account is not assigned to an organisation.", 403);
+      }
+      const targetOrgId = await getCallerOrgId(supabase, target_user_id);
+      if (targetOrgId !== callerOrgId) {
+        return errorResponse("You can only change roles for users in your own organisation.", 403);
+      }
+    }
+
     const { error } = await supabase.auth.admin.updateUserById(target_user_id, {
       app_metadata: { role },
     });
@@ -150,6 +192,28 @@ serve(handle(async (req) => {
       .select("*");
     // Resolve user_id → email/name for each member
     const { data: allUsers } = await supabase.auth.admin.listUsers();
+
+    // v1.45.2 (security): non-platform admins shouldn't be able to read the
+    // emails of users in other organisations through the team-member roster.
+    // Build a per-org-allowed user_id set and redact users outside that set.
+    // Teams themselves aren't org-scoped in the schema yet, so we redact at
+    // the member-resolution layer rather than dropping whole teams.
+    const callerIsPlatform = isPlatformAdmin(user);
+    let allowedUserIds: Set<string> | null = null; // null = unrestricted
+    if (!callerIsPlatform) {
+      const callerOrgId = await getCallerOrgId(supabase, user.id);
+      if (!callerOrgId) {
+        return errorResponse("Your account is not assigned to an organisation.", 403);
+      }
+      const { data: sameOrgProfiles } = await supabase
+        .from("user_profiles")
+        .select("user_id")
+        .eq("organization_id", callerOrgId);
+      allowedUserIds = new Set((sameOrgProfiles || []).map(
+        (p: { user_id: string }) => p.user_id,
+      ));
+    }
+
     const userMap: Record<string, { email: string; name?: string }> = {};
     (allUsers?.users || []).forEach((u) => {
       const md = u.user_metadata as { display_name?: string; full_name?: string } | undefined;
@@ -161,12 +225,15 @@ serve(handle(async (req) => {
     const enriched = (teams || []).map((t) => {
       const teamMembers = (members || [])
         .filter((m) => m.team_id === t.id)
-        .map((m) => ({
-          user_id: m.user_id,
-          role_in_team: m.role_in_team,
-          email: userMap[m.user_id]?.email || "(unknown)",
-          name: userMap[m.user_id]?.name,
-        }));
+        .map((m) => {
+          const visible = allowedUserIds === null || allowedUserIds.has(m.user_id);
+          return {
+            user_id: visible ? m.user_id : null,
+            role_in_team: m.role_in_team,
+            email: visible ? (userMap[m.user_id]?.email || "(unknown)") : "(other organisation)",
+            name: visible ? userMap[m.user_id]?.name : undefined,
+          };
+        });
       return { ...t, members: teamMembers };
     });
     return jsonResponse({ ok: true, teams: enriched });
@@ -362,6 +429,24 @@ serve(handle(async (req) => {
   if (action === "assign-user-org") {
     const { user_id, organization_id } = body;
     if (!user_id) return errorResponse("Missing user_id", 400);
+
+    // v1.45.2 (security): non-platform admins can only invite users INTO their
+    // own org. They cannot move users into other orgs, nor null out the
+    // assignment (which would orphan the user from their own management view).
+    if (!isPlatformAdmin(user)) {
+      const callerOrgId = await getCallerOrgId(supabase, user.id);
+      if (!callerOrgId) {
+        return errorResponse("Your account is not assigned to an organisation.", 403);
+      }
+      if (!organization_id || organization_id !== callerOrgId) {
+        return errorResponse("You can only assign users to your own organisation.", 403);
+      }
+      // Also: don't let a super_admin pull a user out of a different org.
+      const targetCurrentOrg = await getCallerOrgId(supabase, user_id);
+      if (targetCurrentOrg && targetCurrentOrg !== callerOrgId) {
+        return errorResponse("That user already belongs to a different organisation.", 403);
+      }
+    }
 
     const { error } = await supabase
       .from("user_profiles")

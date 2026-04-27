@@ -22,23 +22,52 @@ export function errorResponse(message: string, status = 400): Response {
   return jsonResponse({ error: message }, status);
 }
 
-// Hardcoded super admins. Additional super admins live in app_metadata.role.
+// Hardcoded PLATFORM admins (god-mode — see every organisation).
+// Additional platform admins live in app_metadata.platform_admin === true.
 // IMPORTANT: do NOT use user_metadata for roles — it is user-writable.
-export const SUPER_ADMINS = ["velasabelo.com@gmail.com"];
+//
+// v1.45.2 (security): renamed from SUPER_ADMINS to PLATFORM_ADMINS to match
+// what this allowlist actually does. The previous name was misleading because
+// `super_admin` is now a per-organisation role (assigned via app_metadata.role),
+// while platform-wide god-mode is the platform_admin role. The legacy
+// `SUPER_ADMINS` export is kept as an alias for backward compatibility but
+// new code should import `PLATFORM_ADMINS`.
+export const PLATFORM_ADMINS = ["velasabelo.com@gmail.com"];
+/** @deprecated Use PLATFORM_ADMINS instead. */
+export const SUPER_ADMINS = PLATFORM_ADMINS;
 
 export function isSuperAdmin(user: User | null): boolean {
   if (!user) return false;
-  const email = (user.email || "").toLowerCase();
-  if (SUPER_ADMINS.includes(email)) return true;
-  // app_metadata is server-only writable
+  // v1.45.2: super_admin is now ORG-SCOPED. The platform allowlist is checked
+  // by isPlatformAdmin() instead. A super_admin can manage users only inside
+  // their own organisation.
   const role = (user.app_metadata as { role?: string } | undefined)?.role;
   return role === "super_admin";
 }
 
 export function isPlatformAdmin(user: User | null): boolean {
   if (!user) return false;
+  const email = (user.email || "").toLowerCase();
+  if (PLATFORM_ADMINS.includes(email)) return true;
   const meta = user.app_metadata as { platform_admin?: boolean } | undefined;
   return meta?.platform_admin === true;
+}
+
+// v1.45.2 (security): Look up the organization_id of the calling user.
+// Returns null if the user has no profile row or hasn't been assigned to an
+// org. Used to scope list-users / list-teams / set-role / assign-user-org for
+// non-platform admins so org-A's super_admin can't see / mutate org-B's data.
+export async function getCallerOrgId(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("user_profiles")
+    .select("organization_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error || !data) return null;
+  return (data as { organization_id?: string | null }).organization_id || null;
 }
 
 export interface VerifiedRequest {

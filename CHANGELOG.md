@@ -1,5 +1,21 @@
 # Roadmap OS — Changelog
 
+## v1.45.2 — Cross-tenant isolation in User Management (security)
+
+A user reported that the owner picker on the Plans page was listing people from other organisations. Root-cause + fix:
+
+- **Root cause:** the `admin-api` edge function (`list-users`, `list-teams`, `set-role`, `assign-user-org`) treated **`super_admin`** as a platform-wide god-mode role identical to `platform_admin`. An org A super_admin could enumerate every user in every other org, change their roles, and re-home them.
+- **Fix:** `super_admin` is now strictly an **org-scoped role**. Platform-wide god-mode is now exclusive to **`platform_admin`**.
+  - `list-users` filters the response to users whose `user_profiles.organization_id` matches the caller's. Platform admins still see everything.
+  - `list-teams` redacts emails/names of team members from other organisations to `(other organisation)`.
+  - `set-role` rejects role changes for users outside the caller's org.
+  - `assign-user-org` only allows assignment INTO the caller's own org, and refuses to move a user already assigned elsewhere.
+- **Renamed `SUPER_ADMINS` → `PLATFORM_ADMINS`** in `_shared/auth.ts` to reflect what the allowlist actually grants. Old export kept as a deprecated alias for backward compat. `isSuperAdmin()` no longer consults the allowlist; `isPlatformAdmin()` does.
+- **Renderer** (`/admin-api check-role` consumer): the User Management sidebar button is shown to platform admins too, so the platform owner doesn't lose UI access after the role split.
+- **Audited `auth.admin.listUsers()` callers in `contacts-api` and `notifications-api`**: both already safe (`contacts-api` returns generic 409 to avoid existence oracle; `notifications-api` is an internal email→user_id lookup).
+
+This needs the `admin-api` edge function redeployed to Supabase — `supabase functions deploy admin-api` (or via the Supabase Dashboard).
+
 ## v1.45.1 — Post-V14 polish
 
 - **Official Slack icon** in the Integrations grid (replaces the placeholder hash-grid SVG).

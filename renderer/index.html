@@ -4039,7 +4039,7 @@ function buildDayOptions(mname,selectedDay){
 // v1.43.0 — single source of truth for the app version. Bump this with every
 // release alongside package.json. Used by the login footer, the JSON backup
 // metadata, and the in-app What's New modal (lastSeenAppVersion comparison).
-var APP_VERSION = 'v1.45.1';
+var APP_VERSION = 'v1.45.2';
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 var sections=[
@@ -25341,7 +25341,11 @@ async function checkSuperAdmin(){
       token:_accessToken||null
     });
     console.log('[checkSuperAdmin]', r);
-    if(r.ok&&r.data&&r.data.is_super_admin){
+    // v1.45.2 (security): platform admins inherit super_admin UI access (the
+    // User Management button) — the back-end list-users now scopes per-org for
+    // org super_admins but returns everything to platform admins, so showing
+    // the button to platform admins is safe and matches the prior UX.
+    if(r.ok&&r.data&&(r.data.is_super_admin || r.data.is_platform_admin)){
       _isSuperAdmin=true;
       var btn=document.getElementById('adminSidebarBtn');
       var div=document.getElementById('adminSidebarDivider');
