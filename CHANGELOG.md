@@ -1,5 +1,31 @@
 # Roadmap OS — Changelog
 
+## v1.48.0 — Product page editability + Configure modal (V15 Fixes 14c/14d/14e/16)
+
+The Product page becomes a fully editable surface — every field on Overview / Commercial / Specs is inline-editable via a click-to-edit pencil pattern, and the dropdown vocabularies (industry, segment, channel, etc.) are now user-configurable from a single Configure modal instead of being hard-coded.
+
+**Inline pencil-edit pattern:**
+- New `renderEditableField(label, fieldKey, productId)` helper renders a label + value + pencil affordance. Clicking the pencil swaps the value into the appropriate input (text, textarea, select, multi-select, number, currency, percent, date, URL) using `_PRODUCT_FIELD_CONFIG()` — a single field-type registry that defines the input shape and persistence path for each Product field. ~40 call sites across the three tabs.
+- New `_productEditField(productId, fieldKey)` / `_productSaveField(productId, fieldKey, val)` orchestrate the swap-and-save round-trip.
+- New `_renderProductTagArrayField(productId, fieldKey)` renders array fields (segments, channels, integrations, compliance certs, supported regions) as removable tag chips with an inline "+ Add" input.
+- New `_renderPricePointsEditor(productId)` replaces the old read-only Commercial pricing block with a full add/remove price-points table (tier name, monthly $, annual $, included seats, notes).
+
+**Configure modal (Fix 14e):**
+- New `openProductConfig()` modal (button in the Products page header) lets the user manage 5 dropdown vocabularies in one place: **industries**, **segments**, **channels**, **lifecycle stages**, **compliance certifications**. Each vocabulary is a tag editor (chips + add input) backed by `currentData.appSettings.productConfig.{key}[]`.
+- `getProductConfig(key)` resolves to the user's customised list, falling back to `_PRODUCT_CONFIG_DEFAULTS[key]` when empty. All Product dropdowns now read from this resolver instead of hard-coded arrays.
+
+**Tab rewrites:**
+- `renderProductOverviewTab` Profile section: every field (name, tagline, description, owner, status, lifecycle, launch date, industry, target segment, primary channel, website, repo URL) now renders via `renderEditableField` instead of static text + a separate "Edit" button.
+- `renderProductCommercialTab` fully rewritten — pricing model, currency, base price, contract length, billing cadence, ARR target, key accounts, customer count, churn, NPS — all editable; Price Points uses the new editor.
+- `renderProductSpecsTab` fully rewritten — tech stack (text), hosting region (multi), supported regions (tag array), data residency (text), integrations (tag array), compliance certs (tag array), uptime SLA, response time SLA — all editable.
+
+**Implementation notes:**
+- Persistence: every field write merges into `currentData.products[i]` and triggers the existing sync function. No new tables, no edge functions.
+- The substitution was atomic — a single Node script (`tmp_apply_prod.js`) injected the helpers above `_productField()`, replaced the three tab bodies, added the Configure button, and added the pencil-hover CSS at the first `</style>` (the top-of-file stylesheet — not the `</style>` inside the HTML export string template at L32337, which an earlier `lastIndexOf` attempt incorrectly matched).
+- 0 emoji, dark-mode CSS variables throughout, no new CDN imports.
+
+**Deferred to v1.49.0:** Fix 20 (integration sync → product bugs/releases mapping) — touches edge functions + sync flow, kept separate for risk isolation.
+
 ## v1.47.0 — Dashboard rebuild: Strategy Execution Scoreboard
 
 The Dashboard is rebuilt around a single thesis — **strategy → execution → measurement, closing the loop on outcomes**. The old "Initiative Health" panel (a flat list of "In Progress / Strategy / Delayed Release") and the 4-tile vanity-stats grid are gone. In their place, eight purpose-built sections each answer a specific question a product leader has.

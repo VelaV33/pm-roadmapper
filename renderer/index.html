@@ -2039,6 +2039,13 @@ body.dark-mode .filter-chip,body.dark-mode .product-detail-btn,body.dark-mode .b
 body.dark-mode .product-detail-btn.primary,body.dark-mode .btn-sm.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
 body.dark-mode .lifecycle-bar{background:#0f172a;border-color:var(--border)}
 body.dark-mode .lifecycle-bar .stage.past{background:rgba(45,107,244,.2);color:#93c5fd}
+/* v1.48.0: inline pencil-edit on product detail fields. */
+.detail-field-editable .edit-pencil:hover{background:rgba(0,91,177,.12);color:var(--accent)}
+.detail-field-editable .edit-pencil:focus{outline:none;background:rgba(0,91,177,.18);color:var(--accent)}
+.detail-field-editable input,.detail-field-editable select{font-family:inherit}
+body.dark-mode .detail-field-editable .edit-pencil:hover{background:rgba(45,107,244,.18);color:#93c5fd}
+.pricing-table input{transition:border-color .12s}
+.pricing-table input:focus{outline:none;border-color:var(--accent)!important}
 </style>
 </head>
 <body>
@@ -3239,7 +3246,7 @@ body.dark-mode .lifecycle-bar .stage.past{background:rgba(45,107,244,.2);color:#
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
       Products
     </h2>
-    <button class="pclose" onclick="closeProducts()" aria-label="Close">&times;</button>
+    <button onclick="openProductConfig()" title="Configure product categories, markets, channels, and pricing models" style="background:none;border:1px solid var(--border);color:var(--text);padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;margin-right:8px;display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 16 16" width="12" height="12" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="2"/><path d="M8 1v3M8 12v3M1 8h3M12 8h3M3.05 3.05l2.12 2.12M10.83 10.83l2.12 2.12M3.05 12.95l2.12-2.12M10.83 5.17l2.12-2.12"/></svg>Configure</button><button class="pclose" onclick="closeProducts()" aria-label="Close">&times;</button>
   </div>
   <div class="products-toolbar">
     <input type="text" id="productsSearchInput" placeholder="Search products by name, code, family, owner..." oninput="filterProducts()">
@@ -4027,7 +4034,7 @@ function buildDayOptions(mname,selectedDay){
 // v1.43.0 — single source of truth for the app version. Bump this with every
 // release alongside package.json. Used by the login footer, the JSON backup
 // metadata, and the in-app What's New modal (lastSeenAppVersion comparison).
-var APP_VERSION = 'v1.47.0';
+var APP_VERSION = 'v1.48.0';
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 var sections=[
@@ -28603,6 +28610,421 @@ function _renderProductTab(p, name){
   }
   return '';
 }
+// ═══════════════════════════════════════════════════════════════════════════
+// v1.48.0 — Product page editability + Configure modal
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── Product Configuration (Fix 14e) ──────────────────────────────────────
+var _PRODUCT_CONFIG_DEFAULTS = {
+  productCategories: ['IoT','SaaS','Hardware','Firmware','Platform','Mobile App'],
+  targetMarkets:     ['South Africa','SADC','East Africa','Global','Enterprise','SMB'],
+  targetSegments:    ['Mining','Construction','Fleet Management','Utilities','Logistics'],
+  salesChannels:     ['Direct','Reseller','OEM','Marketplace','Online','Retail'],
+  pricingModels:     ['One-time','Subscription','Rental','Per-unit','Tiered','Freemium','Free']
+};
+var _PRODUCT_CONFIG_LABELS = {
+  productCategories: 'Product Categories',
+  targetMarkets:     'Target Markets',
+  targetSegments:    'Target Segments',
+  salesChannels:     'Sales Channels',
+  pricingModels:     'Pricing Models'
+};
+function getProductConfig(key){
+  try {
+    var cfg = (typeof appSettings === 'object' && appSettings && appSettings.productConfig) || {};
+    if(cfg[key] && Array.isArray(cfg[key])) return cfg[key].slice();
+  } catch(_){}
+  return (_PRODUCT_CONFIG_DEFAULTS[key] || []).slice();
+}
+function _setProductConfig(key, items){
+  if(typeof appSettings !== 'object' || !appSettings) return;
+  if(!appSettings.productConfig) appSettings.productConfig = {};
+  appSettings.productConfig[key] = items.slice();
+  if(typeof pushCloudData === 'function') pushCloudData();
+}
+function openProductConfig(){
+  var ex = document.getElementById('productConfigOverlay'); if(ex) ex.remove();
+  var ov = document.createElement('div');
+  ov.id = 'productConfigOverlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9100;display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
+  var keys = ['productCategories','targetMarkets','targetSegments','salesChannels','pricingModels'];
+  var modal = document.createElement('div');
+  modal.style.cssText = 'background:var(--white);color:var(--text);border:1px solid var(--border);border-radius:12px;max-width:560px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 24px 64px rgba(0,0,0,.35)';
+  modal.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)">'+
+      '<h3 style="margin:0;font-size:16px;font-weight:800">Product Configuration</h3>'+
+      '<button onclick="document.getElementById(\'productConfigOverlay\').remove()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">&times;</button>'+
+    '</div>'+
+    '<div style="padding:8px 20px 0;font-size:12px;color:var(--muted);line-height:1.5">These options appear as dropdowns in product edit forms across the app. Click \xD7 on a tag to remove it; type and press Enter to add a new one.</div>'+
+    '<div id="productConfigBody" style="padding:16px 20px;display:flex;flex-direction:column;gap:18px">'+
+      keys.map(function(k){ return _renderConfigSection(k); }).join('')+
+    '</div>'+
+    '<div style="display:flex;justify-content:flex-end;gap:8px;padding:14px 20px;border-top:1px solid var(--border)">'+
+      '<button class="btn-sm btn-primary" onclick="document.getElementById(\'productConfigOverlay\').remove()">Done</button>'+
+    '</div>';
+  ov.appendChild(modal);
+  document.body.appendChild(ov);
+}
+function _renderConfigSection(key){
+  var items = getProductConfig(key);
+  return '<div data-config-section="'+key+'">'+
+    '<label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px">'+escHtml(_PRODUCT_CONFIG_LABELS[key]||key)+'</label>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--surface-low);min-height:42px" id="cfg-tags-'+key+'">'+
+      items.map(function(t){ return _configTagPill(key, t); }).join('')+
+      '<input type="text" placeholder="Add..." style="background:none;border:none;outline:none;flex:1;min-width:80px;font-size:12px;color:var(--text);font-family:inherit" onkeydown="if(event.key===\'Enter\'){event.preventDefault();_addConfigTag(\''+key+'\',this.value);this.value=\'\';}">'+
+    '</div>'+
+  '</div>';
+}
+function _configTagPill(key, value){
+  var safe = escHtml(value);
+  return '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:9999px;background:var(--white);border:1px solid var(--border);font-size:11px;color:var(--text);font-weight:600">'+
+    safe+
+    '<button onclick="_removeConfigTag(\''+key+'\','+JSON.stringify(value).replace(/"/g,'&quot;')+')" style="background:none;border:none;color:var(--muted);font-size:14px;line-height:1;cursor:pointer;padding:0 0 0 2px">&times;</button>'+
+  '</span>';
+}
+function _addConfigTag(key, value){
+  value = String(value || '').trim();
+  if(!value) return;
+  var items = getProductConfig(key);
+  if(items.indexOf(value) !== -1) return;
+  items.push(value);
+  _setProductConfig(key, items);
+  _refreshConfigSection(key);
+}
+function _removeConfigTag(key, value){
+  var items = getProductConfig(key).filter(function(x){ return x !== value; });
+  _setProductConfig(key, items);
+  _refreshConfigSection(key);
+}
+function _refreshConfigSection(key){
+  var section = document.querySelector('[data-config-section="'+key+'"]');
+  if(!section) return;
+  var newHtml = _renderConfigSection(key);
+  var tmp = document.createElement('div');
+  tmp.innerHTML = newHtml;
+  section.parentNode.replaceChild(tmp.firstChild, section);
+}
+
+// ── Inline editable field (Fix 14c, 14d, 16) ─────────────────────────────
+function _PRODUCT_FIELD_CONFIG(){
+  var orgPool = function(){
+    if(typeof _orgUserPool === 'function'){
+      try { return _orgUserPool().map(function(u){ return u.email; }); } catch(_){}
+    }
+    return [];
+  };
+  return {
+    'owner':                       { type:'text' },
+    'ownerEmail':                  { type:'select', options: function(){ return [''].concat(orgPool()); } },
+    'priority':                    { type:'select', options: ['','High','Medium','Low'] },
+    'productFamily':               { type:'select', options: function(){ return [''].concat(getProductConfig('productCategories')); } },
+    'targetMarket':                { type:'select', options: function(){ return [''].concat(getProductConfig('targetMarkets')); } },
+    'targetCustomer':              { type:'text' },
+    'launchDatePlanned':           { type:'date',   displayFmt: _productFormatDate },
+    'launchDateActual':            { type:'date',   displayFmt: _productFormatDate },
+    'pricingModel':                { type:'select', options: function(){ return [''].concat(getProductConfig('pricingModels')); } },
+    'salesChannel':                { type:'select', options: function(){ return [''].concat(getProductConfig('salesChannels')); } },
+    'licensingTerms':              { type:'text' },
+    'revenueProjected':            { type:'number', displayFmt: _productFormatCurrency },
+    'revenueActual':               { type:'number', displayFmt: _productFormatCurrency },
+    'costToBuild':                 { type:'number', displayFmt: _productFormatCurrency },
+    'grossMargin':                 { type:'number', displayFmt: function(v){ return (v===null||v===undefined||v==='')?'':v+'%'; } },
+    'hardwareInfo.bomReference':         { type:'text' },
+    'hardwareInfo.hardwareRevision':     { type:'text' },
+    'hardwareInfo.firmwareVersion':      { type:'text' },
+    'hardwareInfo.manufacturingLocation':{ type:'text' },
+    'hardwareInfo.warrantyPeriod':       { type:'text' },
+    'hardwareInfo.serialNumberRange':    { type:'text' },
+    'hardwareInfo.unitsShipped':         { type:'number' },
+    'hardwareInfo.unitsInField':         { type:'number' },
+    'hardwareInfo.fieldFailureRate':     { type:'number', displayFmt: function(v){ return (v===null||v===undefined||v==='')?'':v+'%'; } },
+    'hardwareInfo.rmaRate':              { type:'number', displayFmt: function(v){ return (v===null||v===undefined||v==='')?'':v+'%'; } },
+    'digitalInfo.hosting':       { type:'text' },
+    'digitalInfo.uptimeSLA':     { type:'text' },
+    'digitalInfo.apiVersion':    { type:'text' },
+    'digitalInfo.activeUsersDAU':{ type:'number' },
+    'digitalInfo.activeUsersMAU':{ type:'number' },
+    'qualityMetrics.csatScore':         { type:'number' },
+    'qualityMetrics.npsScore':          { type:'number' },
+    'qualityMetrics.supportTicketsOpen':{ type:'number' },
+    'qualityMetrics.avgResolutionTime': { type:'text' },
+    'qualityMetrics.slaCompliance':     { type:'number', displayFmt: function(v){ return (v===null||v===undefined||v==='')?'':v+'%'; } }
+  };
+}
+function _productGetNested(obj, p){
+  if(!obj || !p) return undefined;
+  var parts = p.split('.');
+  var cur = obj;
+  for(var i = 0; i < parts.length; i++){
+    if(cur === null || cur === undefined) return undefined;
+    cur = cur[parts[i]];
+  }
+  return cur;
+}
+function _productSetNested(obj, p, value){
+  if(!obj || !p) return;
+  var parts = p.split('.');
+  var cur = obj;
+  for(var i = 0; i < parts.length - 1; i++){
+    if(cur[parts[i]] === undefined || cur[parts[i]] === null) cur[parts[i]] = {};
+    cur = cur[parts[i]];
+  }
+  cur[parts[parts.length - 1]] = value;
+}
+function _productFieldId(productId, fieldKey){
+  return 'pf-' + productId + '-' + fieldKey.replace(/[.\W]/g, '_');
+}
+function renderEditableField(label, fieldKey, productId){
+  var p = (typeof rows !== 'undefined' ? rows : []).find(function(r){ return r.id === productId; });
+  if(!p) return _productField(label, '');
+  var cfg = (_PRODUCT_FIELD_CONFIG()[fieldKey]) || { type:'text' };
+  var raw = _productGetNested(p, fieldKey);
+  var displayValue = cfg.displayFmt ? cfg.displayFmt(raw) : raw;
+  var v = (displayValue === null || displayValue === undefined || displayValue === '')
+    ? '<span class="value muted">—</span>'
+    : '<span class="value">' + escHtml(String(displayValue)) + '</span>';
+  return '<div class="detail-field detail-field-editable" id="' + _productFieldId(productId, fieldKey) + '" data-product-id="' + escHtml(productId) + '" data-field-key="' + escHtml(fieldKey) + '">'+
+    '<span class="label" style="display:flex;align-items:center;gap:4px">'+
+      escHtml(label)+
+      '<button class="edit-pencil" onclick="_productEditField(\'' + escHtml(productId) + '\',\'' + escHtml(fieldKey) + '\')" title="Edit ' + escHtml(label) + '" aria-label="Edit ' + escHtml(label) + '" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:0 2px;display:inline-flex;align-items:center;border-radius:3px;opacity:.5;transition:opacity .12s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.5">'+
+        '<svg viewBox="0 0 14 14" width="11" height="11" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M10 1.5l2.5 2.5L4 12.5H1.5V10L10 1.5z"/></svg>'+
+      '</button>'+
+    '</span>'+
+    v+
+  '</div>';
+}
+function _productEditField(productId, fieldKey){
+  var p = (typeof rows !== 'undefined' ? rows : []).find(function(r){ return r.id === productId; });
+  if(!p) return;
+  var cfg = (_PRODUCT_FIELD_CONFIG()[fieldKey]) || { type:'text' };
+  var container = document.getElementById(_productFieldId(productId, fieldKey));
+  if(!container) return;
+  var raw = _productGetNested(p, fieldKey);
+  var valueSpan = container.querySelector('.value');
+  if(!valueSpan) return;
+  var input;
+  if(cfg.type === 'select'){
+    input = document.createElement('select');
+    var opts = (typeof cfg.options === 'function') ? cfg.options() : (cfg.options || ['']);
+    opts.forEach(function(o){
+      var opt = document.createElement('option');
+      opt.value = o; opt.textContent = o || '—';
+      if(String(raw||'') === o) opt.selected = true;
+      input.appendChild(opt);
+    });
+  } else if(cfg.type === 'date'){
+    input = document.createElement('input');
+    input.type = 'date';
+    if(raw){
+      try {
+        var d = new Date(raw);
+        if(!isNaN(d)) input.value = d.toISOString().slice(0, 10);
+      } catch(_){}
+    }
+  } else if(cfg.type === 'number'){
+    input = document.createElement('input');
+    input.type = 'number';
+    input.value = (raw === null || raw === undefined) ? '' : raw;
+  } else {
+    input = document.createElement('input');
+    input.type = 'text';
+    input.value = (raw === null || raw === undefined) ? '' : raw;
+  }
+  input.style.cssText = 'padding:3px 8px;border:1px solid var(--accent);border-radius:5px;font-size:13px;background:var(--white);color:var(--text);font-family:inherit;width:100%;max-width:240px;outline:none';
+  valueSpan.replaceWith(input);
+  input.focus();
+  if(typeof input.select === 'function') input.select();
+  var saved = false, cancelled = false;
+  function commit(){
+    if(saved || cancelled) return;
+    saved = true;
+    var newRaw;
+    if(cfg.type === 'date')        newRaw = input.value ? new Date(input.value).toISOString() : null;
+    else if(cfg.type === 'number') newRaw = input.value === '' ? null : Number(input.value);
+    else                           newRaw = input.value;
+    _productSaveField(productId, fieldKey, newRaw);
+  }
+  function cancel(){
+    if(saved || cancelled) return;
+    cancelled = true;
+    var rerendered = renderEditableField(_productFieldLabel(fieldKey), fieldKey, productId);
+    var tmp = document.createElement('div'); tmp.innerHTML = rerendered;
+    container.parentNode.replaceChild(tmp.firstChild, container);
+  }
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); commit(); }
+    if(e.key === 'Escape'){ e.preventDefault(); cancel(); }
+  });
+}
+function _productSaveField(productId, fieldKey, newValue){
+  var p = (typeof rows !== 'undefined' ? rows : []).find(function(r){ return r.id === productId; });
+  if(!p) return;
+  ensureProductFields(p);
+  _productSetNested(p, fieldKey, newValue);
+  p.updatedAt = new Date().toISOString();
+  if((fieldKey === 'revenueProjected' || fieldKey === 'costToBuild') &&
+     typeof p.revenueProjected === 'number' && typeof p.costToBuild === 'number' && p.revenueProjected > 0){
+    p.grossMargin = Math.round(((p.revenueProjected - p.costToBuild) / p.revenueProjected) * 100);
+  }
+  if(typeof pushCloudData === 'function') pushCloudData();
+  if(typeof showToast === 'function') showToast('Saved', 'success');
+  var container = document.getElementById(_productFieldId(productId, fieldKey));
+  if(container){
+    var rerendered = renderEditableField(_productFieldLabel(fieldKey), fieldKey, productId);
+    var tmp = document.createElement('div'); tmp.innerHTML = rerendered;
+    container.parentNode.replaceChild(tmp.firstChild, container);
+  }
+  if(typeof logProductHistory === 'function'){
+    var label = _productFieldLabel(fieldKey);
+    logProductHistory(productId, { type:'lifecycle', title: label + ' updated', autoGenerated:true });
+  }
+}
+var _PRODUCT_FIELD_LABELS = {
+  'owner':'Owner', 'ownerEmail':'Owner Email', 'priority':'Priority',
+  'productFamily':'Product Family', 'targetMarket':'Target Market',
+  'targetCustomer':'Target Customer', 'launchDatePlanned':'Launch Planned',
+  'launchDateActual':'Launch Actual', 'pricingModel':'Pricing Model',
+  'salesChannel':'Sales Channel', 'licensingTerms':'Licensing Terms',
+  'revenueProjected':'Revenue Projected', 'revenueActual':'Revenue Actual',
+  'costToBuild':'Cost to Build', 'grossMargin':'Gross Margin',
+  'hardwareInfo.bomReference':'BOM Reference',
+  'hardwareInfo.hardwareRevision':'Hardware Revision',
+  'hardwareInfo.firmwareVersion':'Firmware Version',
+  'hardwareInfo.manufacturingLocation':'Manufacturing Location',
+  'hardwareInfo.warrantyPeriod':'Warranty Period',
+  'hardwareInfo.serialNumberRange':'Serial Number Range',
+  'hardwareInfo.unitsShipped':'Units Shipped',
+  'hardwareInfo.unitsInField':'Units in Field',
+  'hardwareInfo.fieldFailureRate':'Field Failure Rate',
+  'hardwareInfo.rmaRate':'RMA Rate',
+  'digitalInfo.hosting':'Hosting', 'digitalInfo.uptimeSLA':'Uptime SLA',
+  'digitalInfo.apiVersion':'API Version',
+  'digitalInfo.activeUsersDAU':'Active Users (DAU)',
+  'digitalInfo.activeUsersMAU':'Active Users (MAU)',
+  'qualityMetrics.csatScore':'CSAT Score', 'qualityMetrics.npsScore':'NPS Score',
+  'qualityMetrics.supportTicketsOpen':'Support Tickets Open',
+  'qualityMetrics.avgResolutionTime':'Avg Resolution Time',
+  'qualityMetrics.slaCompliance':'SLA Compliance'
+};
+function _productFieldLabel(fieldKey){
+  if(_PRODUCT_FIELD_LABELS[fieldKey]) return _PRODUCT_FIELD_LABELS[fieldKey];
+  var last = fieldKey.split('.').pop();
+  return last.charAt(0).toUpperCase() + last.slice(1).replace(/([A-Z])/g, ' $1');
+}
+
+// ── Tag-array editor ─────────────────────────────────────────────────────
+function _renderProductTagArrayField(label, fieldKey, productId){
+  var p = (typeof rows !== 'undefined' ? rows : []).find(function(r){ return r.id === productId; });
+  if(!p) return _productField(label, '');
+  var arr = _productGetNested(p, fieldKey) || [];
+  if(!Array.isArray(arr)) arr = [];
+  var fieldId = _productFieldId(productId, fieldKey);
+  return '<div class="detail-field" id="' + fieldId + '" data-product-id="' + escHtml(productId) + '" data-field-key="' + escHtml(fieldKey) + '">'+
+    '<span class="label">' + escHtml(label) + '</span>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:4px 6px;border:1px solid var(--border);border-radius:6px;background:var(--surface-low);min-height:30px">'+
+      arr.map(function(t){ return _productTagPill(productId, fieldKey, t); }).join('')+
+      '<input type="text" placeholder="+ Add" style="background:none;border:none;outline:none;flex:1;min-width:60px;font-size:11px;color:var(--text);font-family:inherit" onkeydown="if(event.key===\'Enter\'){event.preventDefault();_productAddTag(\'' + escHtml(productId) + '\',\'' + escHtml(fieldKey) + '\',this.value);this.value=\'\';}">'+
+    '</div>'+
+  '</div>';
+}
+function _productTagPill(productId, fieldKey, value){
+  var safe = escHtml(value);
+  return '<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:4px;background:var(--white);border:1px solid var(--border);font-size:10px;color:var(--text);font-weight:600">'+
+    safe+
+    '<button onclick="_productRemoveTag(\'' + escHtml(productId) + '\',\'' + escHtml(fieldKey) + '\',' + JSON.stringify(value).replace(/"/g,'&quot;') + ')" style="background:none;border:none;color:var(--muted);font-size:12px;line-height:1;cursor:pointer;padding:0 0 0 1px">&times;</button>'+
+  '</span>';
+}
+function _productAddTag(productId, fieldKey, value){
+  value = String(value || '').trim();
+  if(!value) return;
+  var p = (typeof rows !== 'undefined' ? rows : []).find(function(r){ return r.id === productId; });
+  if(!p) return;
+  ensureProductFields(p);
+  var arr = _productGetNested(p, fieldKey) || [];
+  if(!Array.isArray(arr)) arr = [];
+  if(arr.indexOf(value) !== -1) return;
+  arr.push(value);
+  _productSetNested(p, fieldKey, arr);
+  p.updatedAt = new Date().toISOString();
+  if(typeof pushCloudData === 'function') pushCloudData();
+  _productRefreshTagField(productId, fieldKey);
+}
+function _productRemoveTag(productId, fieldKey, value){
+  var p = (typeof rows !== 'undefined' ? rows : []).find(function(r){ return r.id === productId; });
+  if(!p) return;
+  var arr = (_productGetNested(p, fieldKey) || []).filter(function(x){ return x !== value; });
+  _productSetNested(p, fieldKey, arr);
+  p.updatedAt = new Date().toISOString();
+  if(typeof pushCloudData === 'function') pushCloudData();
+  _productRefreshTagField(productId, fieldKey);
+}
+function _productRefreshTagField(productId, fieldKey){
+  var container = document.getElementById(_productFieldId(productId, fieldKey));
+  if(!container) return;
+  var label = _productFieldLabel(fieldKey);
+  var rerendered = _renderProductTagArrayField(label, fieldKey, productId);
+  var tmp = document.createElement('div'); tmp.innerHTML = rerendered;
+  container.parentNode.replaceChild(tmp.firstChild, container);
+}
+
+// ── Price-points editor (Fix 14d) ────────────────────────────────────────
+function _renderPricePointsEditor(productId){
+  var p = (typeof rows !== 'undefined' ? rows : []).find(function(r){ return r.id === productId; });
+  if(!p) return '';
+  var pts = (p.pricePoints || []);
+  var rowsHtml = pts.map(function(pp, idx){
+    return '<tr data-idx="'+idx+'">'+
+      '<td><input value="'+escHtml(pp.tier||'')+'" placeholder="Tier (e.g. Basic)" onblur="_productUpdatePricePoint(\''+escHtml(productId)+'\','+idx+',\'tier\',this.value)" style="width:100%;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--white);color:var(--text);font-family:inherit"></td>'+
+      '<td><input type="number" value="'+escHtml(String(pp.price||''))+'" placeholder="0" onblur="_productUpdatePricePoint(\''+escHtml(productId)+'\','+idx+',\'price\',this.value)" style="width:100%;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--white);color:var(--text);font-family:inherit"></td>'+
+      '<td><input value="'+escHtml(pp.currency||'USD')+'" placeholder="USD" onblur="_productUpdatePricePoint(\''+escHtml(productId)+'\','+idx+',\'currency\',this.value)" style="width:100%;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--white);color:var(--text);font-family:inherit"></td>'+
+      '<td><input value="'+escHtml(pp.interval||'one-time')+'" placeholder="one-time" onblur="_productUpdatePricePoint(\''+escHtml(productId)+'\','+idx+',\'interval\',this.value)" style="width:100%;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--white);color:var(--text);font-family:inherit"></td>'+
+      '<td style="text-align:right;width:36px"><button onclick="_productRemovePricePoint(\''+escHtml(productId)+'\','+idx+')" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:14px;padding:2px 6px;border-radius:4px" title="Remove">&times;</button></td>'+
+    '</tr>';
+  }).join('');
+  return '<div id="pricePointsEditor-'+escHtml(productId)+'" data-product-id="'+escHtml(productId)+'">'+
+    '<table class="pricing-table" style="width:100%"><thead><tr><th>Tier</th><th>Price</th><th>Currency</th><th>Interval</th><th></th></tr></thead><tbody>'+
+      (rowsHtml || '<tr><td colspan="5" style="text-align:center;color:var(--muted);font-style:italic;padding:10px">No price points yet</td></tr>')+
+    '</tbody></table>'+
+    '<button class="btn-sm btn-primary" onclick="_productAddPricePoint(\''+escHtml(productId)+'\')" style="margin-top:8px">+ Add Tier</button>'+
+  '</div>';
+}
+function _productAddPricePoint(productId){
+  var p = (typeof rows !== 'undefined' ? rows : []).find(function(r){ return r.id === productId; });
+  if(!p) return;
+  if(!Array.isArray(p.pricePoints)) p.pricePoints = [];
+  p.pricePoints.push({ tier:'', price:0, currency:'USD', interval:'one-time' });
+  p.updatedAt = new Date().toISOString();
+  if(typeof pushCloudData === 'function') pushCloudData();
+  _productRefreshPricePoints(productId);
+}
+function _productRemovePricePoint(productId, idx){
+  var p = (typeof rows !== 'undefined' ? rows : []).find(function(r){ return r.id === productId; });
+  if(!p || !Array.isArray(p.pricePoints)) return;
+  p.pricePoints.splice(idx, 1);
+  p.updatedAt = new Date().toISOString();
+  if(typeof pushCloudData === 'function') pushCloudData();
+  _productRefreshPricePoints(productId);
+}
+function _productUpdatePricePoint(productId, idx, key, value){
+  var p = (typeof rows !== 'undefined' ? rows : []).find(function(r){ return r.id === productId; });
+  if(!p || !Array.isArray(p.pricePoints) || !p.pricePoints[idx]) return;
+  if(key === 'price'){
+    var n = Number(value); p.pricePoints[idx][key] = isNaN(n) ? value : n;
+  } else {
+    p.pricePoints[idx][key] = value;
+  }
+  p.updatedAt = new Date().toISOString();
+  if(typeof pushCloudData === 'function') pushCloudData();
+}
+function _productRefreshPricePoints(productId){
+  var ed = document.getElementById('pricePointsEditor-' + productId);
+  if(!ed) return;
+  var tmp = document.createElement('div'); tmp.innerHTML = _renderPricePointsEditor(productId);
+  ed.parentNode.replaceChild(tmp.firstChild, ed);
+}
+
 function _productField(label, value){
   var v = (value === null || value === undefined || value === '') ? '<span class="value muted">—</span>' : '<span class="value">'+escHtml(String(value))+'</span>';
   return '<div class="detail-field"><span class="label">'+escHtml(label)+'</span>'+v+'</div>';
@@ -28634,15 +29056,16 @@ function renderProductOverviewTab(p){
     '<div class="detail-stat-card"><span class="label">Watchers</span><span class="value">'+watchersCount+'</span></div>'+
     '<div class="detail-stat-card"><span class="label">Revenue</span><span class="value">'+_productFormatCurrency(p.revenueProjected || p.revenue)+'</span></div>'+
   '</div>';
+  // v1.48.0: Profile fields are now inline-editable.
   var fields = '<div class="detail-field-grid">'+
-    _productField('Owner',         p.owner)+
-    _productField('Owner Email',   p.ownerEmail)+
-    _productField('Priority',      p.priority)+
-    _productField('Product Family', p.productFamily)+
-    _productField('Target Market', p.targetMarket)+
-    _productField('Target Customer', p.targetCustomer)+
-    _productField('Launch Planned',_productFormatDate(p.launchDatePlanned))+
-    _productField('Launch Actual', _productFormatDate(p.launchDateActual))+
+    renderEditableField('Owner',           'owner',             p.id)+
+    renderEditableField('Owner Email',     'ownerEmail',        p.id)+
+    renderEditableField('Priority',        'priority',          p.id)+
+    renderEditableField('Product Family',  'productFamily',     p.id)+
+    renderEditableField('Target Market',   'targetMarket',      p.id)+
+    renderEditableField('Target Customer', 'targetCustomer',    p.id)+
+    renderEditableField('Launch Planned',  'launchDatePlanned', p.id)+
+    renderEditableField('Launch Actual',   'launchDateActual',  p.id)+
     _productField('Created',       _productFormatDate(p.createdAt))+
     _productField('Last Updated',  _productFormatDate(p.updatedAt))+
   '</div>';
@@ -28663,32 +29086,24 @@ function renderProductOverviewTab(p){
     '<div class="detail-section"><div class="detail-section-header"><h3>Recent Activity</h3></div>'+recent+'</div>';
 }
 function renderProductCommercialTab(p){
-  var pricingLabels = {one_time:'One-time', subscription:'Subscription', per_unit:'Per-unit', tiered:'Tiered', free:'Free', freemium:'Freemium'};
-  var stats = '<div class="detail-stat-grid">'+
-    '<div class="detail-stat-card"><span class="label">Revenue Projected</span><span class="value">'+_productFormatCurrency(p.revenueProjected || p.revenue)+'</span></div>'+
-    '<div class="detail-stat-card"><span class="label">Revenue Actual</span><span class="value">'+_productFormatCurrency(p.revenueActual)+'</span></div>'+
-    '<div class="detail-stat-card"><span class="label">Cost to Build</span><span class="value">'+_productFormatCurrency(p.costToBuild)+'</span></div>'+
-    '<div class="detail-stat-card"><span class="label">Gross Margin</span><span class="value">'+(p.grossMargin!==null && p.grossMargin!==undefined && p.grossMargin!=='' ? p.grossMargin+'%' : '—')+'</span></div>'+
+  // v1.48.0: every field editable inline; price points have full add/remove editor.
+  var stats = '<div class="detail-field-grid">'+
+    renderEditableField('Revenue Projected', 'revenueProjected', p.id)+
+    renderEditableField('Revenue Actual',    'revenueActual',    p.id)+
+    renderEditableField('Cost to Build',     'costToBuild',      p.id)+
+    renderEditableField('Gross Margin',      'grossMargin',      p.id)+
   '</div>';
   var fields = '<div class="detail-field-grid">'+
-    _productField('Pricing Model', pricingLabels[p.pricingModel] || p.pricingModel)+
-    _productField('Sales Channel', p.salesChannel)+
-    _productField('Target Market', p.targetMarket)+
-    _productField('Target Customer', p.targetCustomer)+
-    _productField('Licensing Terms', p.licensingTerms)+
+    renderEditableField('Pricing Model',    'pricingModel',    p.id)+
+    renderEditableField('Sales Channel',    'salesChannel',    p.id)+
+    renderEditableField('Target Market',    'targetMarket',    p.id)+
+    renderEditableField('Target Customer',  'targetCustomer',  p.id)+
+    renderEditableField('Licensing Terms',  'licensingTerms',  p.id)+
   '</div>';
-  var pricePoints = p.pricePoints || [];
-  var pricingTable = pricePoints.length
-    ? '<table class="pricing-table"><thead><tr><th>Tier</th><th>Price</th><th>Currency</th><th>Interval</th></tr></thead><tbody>'+
-      pricePoints.map(function(pp){
-        return '<tr><td>'+escHtml(pp.tier||'—')+'</td><td>'+escHtml(String(pp.price||'—'))+'</td><td>'+escHtml(pp.currency||'USD')+'</td><td>'+escHtml(pp.interval||'one-time')+'</td></tr>';
-      }).join('')+
-      '</tbody></table>'
-    : '<div class="empty-state">No price points configured. Edit the product to add pricing tiers.</div>';
   return ''+
     '<div class="detail-section"><div class="detail-section-header"><h3>Revenue</h3></div>'+stats+'</div>'+
     '<div class="detail-section"><div class="detail-section-header"><h3>Commercial Profile</h3></div>'+fields+'</div>'+
-    '<div class="detail-section"><div class="detail-section-header"><h3>Price Points</h3></div>'+pricingTable+'</div>';
+    '<div class="detail-section"><div class="detail-section-header"><h3>Price Points</h3></div>'+_renderPricePointsEditor(p.id)+'</div>';
 }
 function _releaseGroup(label, items, extra){
   if(!items || !items.length) return '';
@@ -28800,53 +29215,51 @@ function renderProductPlanTab(p){
     '<div class="detail-section"><div class="detail-section-header"><h3>Tasks</h3></div>'+taskTable+'</div>';
 }
 function renderProductSpecsTab(p){
+  // v1.48.0: every spec field editable inline; arrays use the tag editor.
   var t = p.productType || 'digital';
   var blocks = [];
   if(t === 'hardware' || t === 'firmware' || t === 'hybrid'){
-    var hw = p.hardwareInfo || {};
     blocks.push('<div class="detail-section">'+
       '<div class="detail-section-header"><h3>Hardware</h3></div>'+
       '<div class="detail-field-grid">'+
-        _productField('BOM Reference', hw.bomReference)+
-        _productField('Hardware Revision', hw.hardwareRevision)+
-        _productField('Firmware Version', hw.firmwareVersion)+
-        _productField('Manufacturing Location', hw.manufacturingLocation)+
-        _productField('Warranty Period', hw.warrantyPeriod)+
-        _productField('Serial Number Range', hw.serialNumberRange)+
-        _productField('Certifications', (hw.certifications||[]).join(', '))+
-        _productField('Units Shipped', hw.unitsShipped)+
-        _productField('Units in Field', hw.unitsInField)+
-        _productField('Field Failure Rate', hw.fieldFailureRate!==null && hw.fieldFailureRate!==undefined ? hw.fieldFailureRate+'%' : '')+
-        _productField('RMA Rate', hw.rmaRate!==null && hw.rmaRate!==undefined ? hw.rmaRate+'%' : '')+
+        renderEditableField('BOM Reference',          'hardwareInfo.bomReference',          p.id)+
+        renderEditableField('Hardware Revision',      'hardwareInfo.hardwareRevision',      p.id)+
+        renderEditableField('Firmware Version',       'hardwareInfo.firmwareVersion',       p.id)+
+        renderEditableField('Manufacturing Location', 'hardwareInfo.manufacturingLocation', p.id)+
+        renderEditableField('Warranty Period',        'hardwareInfo.warrantyPeriod',        p.id)+
+        renderEditableField('Serial Number Range',    'hardwareInfo.serialNumberRange',     p.id)+
+        _renderProductTagArrayField('Certifications', 'hardwareInfo.certifications',        p.id)+
+        renderEditableField('Units Shipped',          'hardwareInfo.unitsShipped',          p.id)+
+        renderEditableField('Units in Field',         'hardwareInfo.unitsInField',          p.id)+
+        renderEditableField('Field Failure Rate',     'hardwareInfo.fieldFailureRate',      p.id)+
+        renderEditableField('RMA Rate',               'hardwareInfo.rmaRate',               p.id)+
       '</div>'+
     '</div>');
   }
   if(t === 'digital' || t === 'hybrid'){
-    var d = p.digitalInfo || {};
     blocks.push('<div class="detail-section">'+
       '<div class="detail-section-header"><h3>Digital</h3></div>'+
       '<div class="detail-field-grid">'+
-        _productField('Tech Stack', (d.techStack||[]).join(', '))+
-        _productField('Hosting', d.hosting)+
-        _productField('Uptime SLA', d.uptimeSLA)+
-        _productField('API Version', d.apiVersion)+
-        _productField('Supported Platforms', (d.supportedPlatforms||[]).join(', '))+
-        _productField('Compliance', (d.complianceStatus||[]).join(', '))+
-        _productField('Active Users (DAU)', d.activeUsersDAU)+
-        _productField('Active Users (MAU)', d.activeUsersMAU)+
-        _productField('Third-Party Deps', (d.thirdPartyDeps||[]).join(', '))+
+        _renderProductTagArrayField('Tech Stack',         'digitalInfo.techStack',          p.id)+
+        renderEditableField('Hosting',                    'digitalInfo.hosting',            p.id)+
+        renderEditableField('Uptime SLA',                 'digitalInfo.uptimeSLA',          p.id)+
+        renderEditableField('API Version',                'digitalInfo.apiVersion',         p.id)+
+        _renderProductTagArrayField('Supported Platforms','digitalInfo.supportedPlatforms', p.id)+
+        _renderProductTagArrayField('Compliance',         'digitalInfo.complianceStatus',   p.id)+
+        renderEditableField('Active Users (DAU)',         'digitalInfo.activeUsersDAU',     p.id)+
+        renderEditableField('Active Users (MAU)',         'digitalInfo.activeUsersMAU',     p.id)+
+        _renderProductTagArrayField('Third-Party Deps',   'digitalInfo.thirdPartyDeps',     p.id)+
       '</div>'+
     '</div>');
   }
-  var q = p.qualityMetrics || {};
   blocks.push('<div class="detail-section">'+
     '<div class="detail-section-header"><h3>Quality &amp; Support</h3></div>'+
     '<div class="detail-field-grid">'+
-      _productField('CSAT Score', q.csatScore)+
-      _productField('NPS Score', q.npsScore)+
-      _productField('Support Tickets Open', q.supportTicketsOpen)+
-      _productField('Avg Resolution Time', q.avgResolutionTime)+
-      _productField('SLA Compliance', q.slaCompliance!==null && q.slaCompliance!==undefined ? q.slaCompliance+'%' : '')+
+      renderEditableField('CSAT Score',           'qualityMetrics.csatScore',         p.id)+
+      renderEditableField('NPS Score',            'qualityMetrics.npsScore',          p.id)+
+      renderEditableField('Support Tickets Open', 'qualityMetrics.supportTicketsOpen',p.id)+
+      renderEditableField('Avg Resolution Time',  'qualityMetrics.avgResolutionTime', p.id)+
+      renderEditableField('SLA Compliance',       'qualityMetrics.slaCompliance',     p.id)+
     '</div>'+
   '</div>');
   if(!blocks.length) blocks.push('<div class="empty-state">No specs available for this product type.</div>');
