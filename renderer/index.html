@@ -1800,6 +1800,10 @@ body.dark-mode .pmr-tip::after{background:var(--surface-low);color:var(--text);b
 @keyframes loadSpin{to{transform:rotate(360deg)}}
 .loading-overlay .loading-msg{font-size:13px;font-weight:600;color:#e2e8f0;letter-spacing:.01em}
 .loading-overlay .loading-brand{font-size:11px;font-weight:700;color:rgba(226,232,240,.6);text-transform:uppercase;letter-spacing:.18em}
+/* v15 Fix 9: contenteditable placeholders. Empty inline-edit divs were
+   rendering as 0/16-px-tall blanks, making team descriptions look like
+   "no field at all" rather than "empty editable field". */
+[contenteditable="true"][data-placeholder]:empty:before{content:attr(data-placeholder);color:var(--muted);font-style:italic;pointer-events:none}
 
 /* v14 Fix 4: checklist completion celebration */
 #celebration-overlay{position:fixed;inset:0;background:rgba(8,12,24,.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:99999;transition:opacity .3s}
@@ -2250,7 +2254,6 @@ body.dark-mode .lifecycle-bar .stage.past{background:rgba(45,107,244,.2);color:#
       <a onclick="closeAllOverlays();openTodo();updateNavActive('To-Do');return false;">To-Do</a>
       <a onclick="closeAllOverlays();openCapacity();updateNavActive('CapacityIQ');return false;">CapacityIQ</a>
       <a onclick="closeAllOverlays();_rptCurrentReport='initiative-health';openReports();updateNavActive('Reports');return false;">Reports</a>
-      <a onclick="closeAllOverlays();openInsights();updateNavActive('Insights');return false;">Insights</a>
     </nav>
     <div style="margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
       <!-- Cloud sync status (click to force sync) -->
@@ -2861,7 +2864,7 @@ body.dark-mode .lifecycle-bar .stage.past{background:rgba(45,107,244,.2);color:#
       <button class="btn" onclick="openTemplateBuilder('todo',{initiativeName:(document.getElementById('todoFilterSelect')&&document.getElementById('todoFilterSelect').value)||'Template Imports'})" title="Multi-select tasks from templates and the task library" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:-2px;margin-right:4px"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>From Library</button>
       <button class="btn" onclick="openTemplateLibrary('todo')" title="Browse saved templates" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:-2px;margin-right:4px"><path d="M4 4h16v16H4V4zM4 10h16M10 4v16"/></svg>Templates</button>
       <button class="btn" onclick="toggleTodoView()" id="todoViewToggle" title="Switch ToDo list to Kanban or list view" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:-2px;margin-right:4px"><path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Kanban</button>
-      <button class="btn" id="todoBackBtn" onclick="closeTodo()" title="Return to the main roadmap view" style="background:var(--white);border:1px solid var(--outline-var);color:var(--text)">← Back to Roadmap</button>
+      <!-- v15 Fix 10B: removed dedicated "Back to Roadmap" button — top nav already exposes it. -->
     </div>
   </div>
   <div class="todo-toolbar">
@@ -4039,7 +4042,7 @@ function buildDayOptions(mname,selectedDay){
 // v1.43.0 — single source of truth for the app version. Bump this with every
 // release alongside package.json. Used by the login footer, the JSON backup
 // metadata, and the in-app What's New modal (lastSeenAppVersion comparison).
-var APP_VERSION = 'v1.45.3';
+var APP_VERSION = 'v1.46.0';
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 var sections=[
@@ -8203,6 +8206,44 @@ function _saveSession(d){
       user:          d.user
     }));
   }catch(e){}
+}
+
+// v15 Fix 13: proactive session refresh. The custom Supabase-compatible client
+// already refreshes on demand inside getSession(), but we still saw "session
+// expired" toasts because long-idle tabs would only discover the expiry on the
+// NEXT user action — by which point the refresh window had also closed.
+// This timer keeps the access token rolled over every 10 min while the tab is
+// open, so users essentially never hit the manual re-login path.
+var _pmrSessionRefreshTimer = null;
+async function _pmrRefreshSessionIfNeeded(){
+  try {
+    var raw = localStorage.getItem('pmr_session');
+    if(!raw) return; // signed out — nothing to do
+    var s = JSON.parse(raw);
+    if(!s || !s.refresh_token) return;
+    var nowSec = Math.floor(Date.now()/1000);
+    var secsLeft = (s.expires_at || 0) - nowSec;
+    // Refresh once we're within 10 minutes of expiry.
+    if(secsLeft > 600) return;
+    var r = await _sbFetch('/auth/v1/token?grant_type=refresh_token','POST',{refresh_token:s.refresh_token});
+    if(r && r.ok && r.data && r.data.access_token){
+      _accessToken=r.data.access_token; _refreshToken=r.data.refresh_token;
+      if(r.data.user) _currentUser=r.data.user;
+      _saveSession(r.data);
+    } else if(r && r.status === 400){
+      // Refresh token itself rejected — only path is re-login. Don't auto-clear
+      // the session; let the next user action surface the message naturally.
+      console.warn('[session] proactive refresh rejected (status 400) — user will be prompted on next action');
+    }
+  } catch(e){
+    console.warn('[session] proactive refresh failed:', (e && e.message) || e);
+  }
+}
+function _pmrStartSessionRefreshTimer(){
+  if(_pmrSessionRefreshTimer) return;
+  // Run once on start, then every 10 minutes.
+  _pmrRefreshSessionIfNeeded();
+  _pmrSessionRefreshTimer = setInterval(_pmrRefreshSessionIfNeeded, 10 * 60 * 1000);
 }
 
 // Minimal Supabase-compatible client (used by cloud sync)
@@ -15065,9 +15106,12 @@ function renderKanban(allTodos){
   var wrap=document.createElement('div');
   wrap.className='kanban-wrap';
 
+  // v15 Fix 10A: align To-Do kanban with the standard roadmap palette —
+  // grey (open) / blue (in-progress) / green (done). The previous amber
+  // for In Progress wasn't used anywhere else in the app.
   var colDefs=[
     {key:'open',label:'Open',color:'#64748b',icon:'download'},
-    {key:'progress',label:'In Progress',color:'#d97706',icon:'refresh'},
+    {key:'progress',label:'In Progress',color:'#005bb1',icon:'refresh'},
     {key:'done',label:'Done',color:'#16a34a',icon:'check'}
   ];
 
@@ -28907,18 +28951,21 @@ function renderInsights(){
 var _rptCurrentReport='initiative-health';
 // v1.39.0 — expanded from 5 → 11 reports covering strategy, delivery,
 // capacity, and input-backlog audiences.
+// v15 Fix 4 + 5: Insights moved out of top nav and into Reports as a tab.
+//   OKR Progress + Change Requests removed from the visible report list (the
+//   underlying renderer functions stay so older share-links don't 500). To
+//   re-enable later just add the entries back.
 var RPT_REPORTS=[
   {id:'initiative-health',name:'Initiative Health',icon:'target',desc:'Status of every roadmap initiative'},
   {id:'weekly-status',     name:'Weekly Status',     icon:'calendar',desc:'Shipped, shipping next, blocked'},
   {id:'launch-outcomes',   name:'Launch Outcomes',   icon:'rocket',  desc:'Released initiatives & outcomes'},
-  {id:'okr-progress',      name:'OKR Progress',      icon:'check',   desc:'Objectives & key-result health'},
   {id:'sprint-metrics',    name:'Sprint Metrics',    icon:'chart-bar',desc:'Per-plan velocity, hours, mix'},
   {id:'g2m-rollup',        name:'G2M Readiness',     icon:'rocket',  desc:'Go-to-market completeness per product'},
   {id:'prioritization',    name:'Prioritisation',    icon:'chart-bar',desc:'Framework scores (RICE/ICE/MoSCoW)'},
-  {id:'weekly-capacity',name:'Weekly Capacity',icon:'calendar',desc:'Time allocation this week'},
-  {id:'ucr-summary',       name:'Change Requests',   icon:'edit',    desc:'User change requests summary'},
+  {id:'weekly-capacity',   name:'Weekly Capacity',   icon:'calendar',desc:'Time allocation this week'},
+  {id:'insights',          name:'Insights',          icon:'lightbulb',desc:'Cross-cutting alerts and metrics'},
   {id:'change-log',        name:'Roadmap Change Log',icon:'edit',    desc:'Recent initiative edits, additions, deletions'},
-  {id:'qbr-pack',name:'QBR Pack',icon:'doc',desc:'Quarterly Business Review summary'},
+  {id:'qbr-pack',          name:'QBR Pack',          icon:'doc',     desc:'Quarterly Business Review summary'},
   {id:'deliverables-tracker',name:'Deliverables Tracker',icon:'check',desc:'What was promised vs delivered'}
 ];
 
@@ -28958,6 +29005,12 @@ function renderReport(id){
   else if(id==='change-log') rptChangeLog(c);
   else if(id==='qbr-pack') rptQBRPack(c);
   else if(id==='deliverables-tracker') rptDeliverablesTracker(c);
+  // v15 Fix 4: Insights as a Reports tab. Reuses renderInsights() unchanged
+  // by giving it the #insightsBody node it expects, scoped inside #rptContent.
+  else if(id==='insights'){
+    c.innerHTML = '<div id="insightsBody" style="padding:24px 28px;overflow-y:auto"></div>';
+    if(typeof renderInsights === 'function') renderInsights();
+  }
 }
 
 // v1.40.0: Roadmap Change Log report — lists initiative edits/additions/
@@ -38687,6 +38740,9 @@ var STATIC_MODAL_IDS_SET = { rowModal: 1, barModal: 1, quartersModal: 1 };
 // Wire history once the initial DOM is ready AND the renderer has defined
 // its open* functions (they're defined in the top-level script above us).
 setTimeout(_pmrWireHistory, 0);
+
+// v15 Fix 13: kick off the proactive session-refresh timer.
+try { _pmrStartSessionRefreshTimer(); } catch(_){}
 
 init();
 </script>

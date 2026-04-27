@@ -1,5 +1,23 @@
 # Roadmap OS — Changelog
 
+## v1.46.0 — V15 Batch A+B+C: Reports cleanup, session refresh, team-card polish
+
+A focused subset of the V15 fix queue. Audit (vs v1.45.3) showed 9 of 20 fixes already in code from V13/V14 work; 5 truly missing items shipped here. The "editability layer" (Fix 14c/d/e + 16) and integration data-pull (Fix 20) are deferred to a follow-up — see `FIX_LOG_V15.md`.
+
+**Reports & nav (Fix 4 + Fix 5):**
+- **Insights moved into Reports as a tab.** Top-nav `Insights` link removed; the Reports sidebar gets a new `Insights` entry that renders the existing insights view in `#rptContent`. Standalone `openInsights()` overlay kept for deep-link compat.
+- **OKR Progress + Change Requests removed from the Reports sidebar.** Underlying renderers kept so any pre-existing share URLs still resolve.
+
+**To-Do (Fix 10):**
+- **Kanban "In Progress" column** is now app-standard blue (`#005bb1`) instead of the discordant amber.
+- **"Back to Roadmap" button removed** — top nav already provides navigation.
+
+**Session reliability (Fix 13):**
+- **Proactive token refresh.** New `_pmrStartSessionRefreshTimer()` re-runs `/auth/v1/token?grant_type=refresh_token` whenever the access token has <10 min left, on a 10-minute interval. Long-idle tabs no longer hit "session expired" because the refresh now happens *before* the token actually expires, not on the next user action when the refresh window may already have closed.
+
+**Team card polish (Fix 9):**
+- **Empty contenteditable fields now show their placeholder.** A global `[contenteditable="true"][data-placeholder]:empty:before` rule was missing — empty team descriptions rendered as a 0px-tall blank, looking like "the field doesn't exist." Now they show the prompt text in italic muted colour. (The team-card display itself — logo, member avatars, member count — was already correct from v1.43.1.)
+
 ## v1.45.2 — Cross-tenant isolation in User Management (security)
 
 A user reported that the owner picker on the Plans page was listing people from other organisations. Root-cause + fix:
