@@ -5,28 +5,176 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Roadmap OS — Integration callback</title>
 <style>
-:root { color-scheme: dark; }
 *, *::before, *::after { box-sizing: border-box; }
-body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#0f172a; color:#e2e8f0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
-.card { max-width:440px; width:100%; background:#1e293b; border:1px solid #334155; border-radius:14px; padding:36px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.4); }
-.icon { width:64px; height:64px; margin:0 auto 20px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
-.icon.ok { background:rgba(34,197,94,.12); }
-.icon.err { background:rgba(239,68,68,.12); }
-.icon svg { width:32px; height:32px; stroke-width:2.5; fill:none; stroke-linecap:round; stroke-linejoin:round; }
-.icon.ok svg { stroke:#22c55e; }
-.icon.err svg { stroke:#ef4444; }
-h1 { margin:0 0 12px; font-size:22px; font-weight:700; color:#f1f5f9; }
-p { margin:0 0 24px; font-size:14px; line-height:1.6; color:#94a3b8; }
-.actions { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
-button, a.btn { padding:10px 18px; background:#3b82f6; color:#fff; border:0; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; text-decoration:none; display:inline-block; font-family:inherit; }
-button.secondary, a.btn.secondary { background:transparent; color:#94a3b8; border:1px solid #334155; }
-button:hover { background:#2563eb; }
-button.secondary:hover { color:#cbd5e1; border-color:#475569; }
-.small { font-size:11px; color:#64748b; margin-top:18px; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: linear-gradient(135deg, #f9f9fa 0%, #e8eef9 100%);
+  color: #1a1c1d;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.shell { width: 100%; max-width: 460px; }
+.brand {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+.brand svg { height: 44px; width: auto; }
+.card {
+  background: #ffffff;
+  border: 1px solid #e2e2e3;
+  border-radius: 14px;
+  padding: 36px 32px;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(15, 27, 61, 0.08), 0 2px 6px rgba(15, 27, 61, 0.04);
+}
+.icon-wrap {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-wrap.ok { background: rgba(16, 185, 129, 0.12); }
+.icon-wrap.err { background: rgba(239, 68, 68, 0.12); }
+.icon-wrap svg {
+  width: 32px;
+  height: 32px;
+  stroke-width: 2.5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.icon-wrap.ok svg { stroke: #10b981; }
+.icon-wrap.err svg { stroke: #ef4444; }
+h1 {
+  margin: 0 0 10px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1464;
+  letter-spacing: -0.3px;
+}
+p { margin: 0 0 24px; font-size: 14px; line-height: 1.6; color: #717785; }
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+button, a.btn {
+  padding: 11px 20px;
+  background: #0F1B3D;
+  color: #ffffff;
+  border: 0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  font-family: inherit;
+  transition: background 0.15s ease, transform 0.05s ease;
+}
+button:hover, a.btn:hover { background: #1a1464; }
+button:active, a.btn:active { transform: translateY(1px); }
+button.secondary, a.btn.secondary {
+  background: transparent;
+  color: #0F1B3D;
+  border: 1px solid #c1c6d6;
+}
+button.secondary:hover, a.btn.secondary:hover {
+  background: #f3f3f4;
+  color: #1a1464;
+}
+.foot {
+  font-size: 11px;
+  color: #9ba3b8;
+  margin-top: 18px;
+  line-height: 1.5;
+}
+.tagline {
+  text-align: center;
+  font-size: 11px;
+  color: #7b8db0;
+  letter-spacing: 2px;
+  margin-top: 20px;
+  text-transform: uppercase;
+}
+@media (prefers-color-scheme: dark) {
+  body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #e2e8f0; }
+  .card { background: #1e293b; border-color: #334155; box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+  h1 { color: #f1f5f9; }
+  p { color: #94a3b8; }
+  button, a.btn { background: #2563eb; }
+  button:hover, a.btn:hover { background: #3b82f6; }
+  button.secondary, a.btn.secondary { color: #cbd5e1; border-color: #475569; background: transparent; }
+  button.secondary:hover, a.btn.secondary:hover { background: rgba(255,255,255,.04); color: #f1f5f9; }
+  .foot { color: #64748b; }
+  .tagline { color: #475569; }
+  .brand-light { display: none; }
+  .brand-dark { display: block; }
+}
+.brand-dark { display: none; }
 </style>
 </head>
 <body>
-<div class="card" id="card"></div>
+<div class="shell">
+  <div class="brand">
+    <!-- Light-mode logo (full Roadmap OS wordmark with navy fill) -->
+    <svg class="brand-light" viewBox="0 0 480 80" xmlns="http://www.w3.org/2000/svg" aria-label="Roadmap OS">
+      <defs>
+        <linearGradient id="iconbg-l" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#2563a8"/>
+          <stop offset="100%" stop-color="#1a1464"/>
+        </linearGradient>
+        <linearGradient id="prog-l" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#16a34a"/>
+          <stop offset="100%" stop-color="#2563a8"/>
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="72" height="72" rx="18" fill="url(#iconbg-l)"/>
+      <rect x="10" y="20" width="52" height="32" rx="6" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"/>
+      <line x1="10" y1="36" x2="62" y2="36" stroke="rgba(255,255,255,.2)" stroke-width="1" stroke-dasharray="6 4"/>
+      <rect x="10" y="20" width="34" height="32" rx="6" fill="url(#prog-l)" opacity=".85"/>
+      <polygon points="44,28 54,36 44,44" fill="#fff" opacity=".9"/>
+      <circle cx="18" cy="36" r="3.5" fill="#fff"/>
+      <circle cx="30" cy="36" r="3.5" fill="#fff" opacity=".7"/>
+      <text x="88" y="40" font-family="Georgia,'Times New Roman',serif" font-size="32" font-weight="700" fill="#1a1464" letter-spacing="-0.5">Roadmap OS</text>
+      <rect x="89" y="48" width="56" height="3" rx="1.5" fill="url(#prog-l)"/>
+    </svg>
+    <!-- Dark-mode variant: same layout but lighter wordmark -->
+    <svg class="brand-dark" viewBox="0 0 480 80" xmlns="http://www.w3.org/2000/svg" aria-label="Roadmap OS">
+      <defs>
+        <linearGradient id="iconbg-d" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#3b82f6"/>
+          <stop offset="100%" stop-color="#1e40af"/>
+        </linearGradient>
+        <linearGradient id="prog-d" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#22c55e"/>
+          <stop offset="100%" stop-color="#3b82f6"/>
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="72" height="72" rx="18" fill="url(#iconbg-d)"/>
+      <rect x="10" y="20" width="52" height="32" rx="6" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1.5"/>
+      <line x1="10" y1="36" x2="62" y2="36" stroke="rgba(255,255,255,.25)" stroke-width="1" stroke-dasharray="6 4"/>
+      <rect x="10" y="20" width="34" height="32" rx="6" fill="url(#prog-d)" opacity=".85"/>
+      <polygon points="44,28 54,36 44,44" fill="#fff" opacity=".95"/>
+      <circle cx="18" cy="36" r="3.5" fill="#fff"/>
+      <circle cx="30" cy="36" r="3.5" fill="#fff" opacity=".7"/>
+      <text x="88" y="40" font-family="Georgia,'Times New Roman',serif" font-size="32" font-weight="700" fill="#f1f5f9" letter-spacing="-0.5">Roadmap OS</text>
+      <rect x="89" y="48" width="56" height="3" rx="1.5" fill="url(#prog-d)"/>
+    </svg>
+  </div>
+  <div class="card" id="card"></div>
+  <div class="tagline">Strategy meets execution</div>
+</div>
 <script>
 (function(){
   var params = new URLSearchParams(window.location.search);
@@ -34,45 +182,56 @@ button.secondary:hover { color:#cbd5e1; border-color:#475569; }
   var error = params.get('error');
 
   var ok = !!connected && !error;
-  var providerRaw = connected || 'Integration';
+  var providerRaw = (connected || 'integration').toLowerCase();
   var provider = providerRaw.charAt(0).toUpperCase() + providerRaw.slice(1);
+
+  // Persist the OAuth result so the SPA can pick it up after auth/init settles,
+  // even if the URL hash gets dropped during a sign-in redirect. The SPA reads
+  // and clears this on init / after-login.
+  try {
+    localStorage.setItem('pmr.pendingOAuthCallback', JSON.stringify({
+      provider: providerRaw,
+      ok: ok,
+      error: error || null,
+      ts: Date.now()
+    }));
+  } catch(_){}
 
   var title = ok ? provider + ' connected' : provider + " couldn't be connected";
   var subtitle = ok
-    ? 'Your connection is live. Return to Roadmap OS — the integrations page will refresh within a few seconds.'
+    ? 'Your connection is live and ready to sync. Return to Roadmap OS — the integrations page will refresh within a few seconds.'
     : (error || 'Something went wrong during authorization. Please try again from the integrations page.');
 
   var iconSvg = ok
     ? '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>'
     : '<svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>';
 
-  // Build the URL that opens the SPA on the integrations page.
   var spaUrl = '/#integrations' + (ok ? '?connected=' + encodeURIComponent(providerRaw) : '?error=' + encodeURIComponent(error || 'unknown'));
 
   function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
   document.getElementById('card').innerHTML =
-    '<div class="icon ' + (ok ? 'ok' : 'err') + '">' + iconSvg + '</div>' +
+    '<div class="icon-wrap ' + (ok ? 'ok' : 'err') + '">' + iconSvg + '</div>' +
     '<h1>' + escHtml(title) + '</h1>' +
     '<p>' + escHtml(subtitle) + '</p>' +
     '<div class="actions">' +
       '<button onclick="closeTab()">Close this tab</button>' +
-      '<a class="btn secondary" href="' + escHtml(spaUrl) + '">Open Roadmap OS</a>' +
+      '<a class="btn secondary" href="' + escHtml(spaUrl) + '">Open Integrations</a>' +
     '</div>' +
-    '<div class="small">If you started this from the desktop app, switch back to it — no further action needed.</div>';
+    '<div class="foot">If you started this from the desktop app, switch back to it — the integrations page will update automatically. No further action needed.</div>';
 
   document.title = (ok ? title : 'Connection failed') + ' — Roadmap OS';
 
   window.closeTab = function(){
     try { window.close(); } catch(e){}
     setTimeout(function(){
-      document.body.innerHTML = '<div style="padding:40px;text-align:center;color:#94a3b8;font-family:sans-serif">You can close this tab manually now.</div>';
+      document.body.innerHTML = '<div style="padding:48px;text-align:center;color:#717785;font-family:-apple-system,sans-serif;font-size:13px">You can close this tab manually now.</div>';
     }, 100);
   };
 
-  // If this was opened as a popup (web flow), auto-close after 1.5s on success.
+  // If this was opened as a popup (web flow), auto-close after 1.8s on success.
   if (ok && window.opener && window.opener !== window) {
-    setTimeout(window.closeTab, 1500);
+    setTimeout(window.closeTab, 1800);
   }
 })();
 </script>

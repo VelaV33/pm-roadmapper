@@ -4039,7 +4039,7 @@ function buildDayOptions(mname,selectedDay){
 // v1.43.0 — single source of truth for the app version. Bump this with every
 // release alongside package.json. Used by the login footer, the JSON backup
 // metadata, and the in-app What's New modal (lastSeenAppVersion comparison).
-var APP_VERSION = 'v1.45.2';
+var APP_VERSION = 'v1.45.3';
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 var sections=[
@@ -38624,6 +38624,35 @@ function _pmrWireHistory(){
   if(initialHashBase && initialHashBase !== 'roadmap' && _PMR_OVERLAY_MAP[initialHashBase] && typeof window[_PMR_OVERLAY_MAP[initialHashBase].open] === 'function'){
     setTimeout(function(){ window[_PMR_OVERLAY_MAP[initialHashBase].open](); }, 500);
   }
+  // v1.45.3: backup channel — if oauth-callback.html dropped a localStorage
+  // marker and the URL hash was lost across the login redirect, force-open the
+  // integrations overlay so the user lands where they were before OAuth.
+  _pmrConsumeOAuthCallback();
+}
+
+function _pmrConsumeOAuthCallback(){
+  try {
+    var raw = localStorage.getItem('pmr.pendingOAuthCallback');
+    if(!raw) return;
+    var parsed = JSON.parse(raw);
+    // Ignore stale markers (older than 5 minutes)
+    if(!parsed || !parsed.ts || (Date.now() - parsed.ts) > 5*60*1000){
+      localStorage.removeItem('pmr.pendingOAuthCallback');
+      return;
+    }
+    // Update the URL hash so _handleIntegrationCallback picks it up
+    var qs = parsed.ok ? '?connected=' + encodeURIComponent(parsed.provider || '')
+                       : '?error=' + encodeURIComponent(parsed.error || 'unknown');
+    try { history.replaceState({ pmrView: 'integrations' }, '', '#integrations' + qs); } catch(_){}
+    setTimeout(function(){
+      try {
+        if(typeof window.openIntegrations === 'function') window.openIntegrations();
+      } catch(_){}
+    }, 600);
+    localStorage.removeItem('pmr.pendingOAuthCallback');
+  } catch(_){
+    try { localStorage.removeItem('pmr.pendingOAuthCallback'); } catch(__){}
+  }
 }
 
 // v1.42.0: call this after a successful sign-in to reset the navigation
@@ -38645,6 +38674,9 @@ function _pmrSeedAfterLogin(){
     if(landing !== 'roadmap' && _PMR_OVERLAY_MAP[landing] && typeof window[_PMR_OVERLAY_MAP[landing].open] === 'function'){
       setTimeout(function(){ window[_PMR_OVERLAY_MAP[landing].open](); }, 500);
     }
+    // v1.45.3: also drain the localStorage backup so OAuth callbacks survive
+    // across login flows that strip the URL hash.
+    if(typeof _pmrConsumeOAuthCallback === 'function') _pmrConsumeOAuthCallback();
   } catch(_){}
 }
 
