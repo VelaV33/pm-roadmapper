@@ -4,11 +4,11 @@
 Roadmap OS (formerly PM Roadmapper) is a product roadmap tool that ships as both an Electron desktop app and a Vercel-hosted web app from a single codebase.
 
 ## Critical Architecture Facts
-- **renderer/index.html** is a 23,445-line single-file SPA. ALL UI, logic, and styles live here. Do NOT split it into separate files.
+- **renderer/index.html** is a ~38,800-line single-file SPA. ALL UI, logic, and styles live here. Do NOT split it into separate files.
 - The renderer calls `window.electronAPI.*` for platform ops. Two implementations exist: `main.js`/`preload.js` (Electron) and `web/shim/electronAPI.js` (browser).
 - Data is stored as one JSONB blob per user in the `roadmap_data` Supabase table.
 - Dark mode uses CSS variables and a class toggle. Every new UI element MUST support dark mode.
-- Navigation uses a `showPage('pageId')` pattern. Pages are `<div>` sections toggled by display.
+- Navigation is overlay-based: top-level views are full-screen `.modal-overlay` panels (`#kpiOverlay`, `#capOverlay`, etc.) opened by `openX()` and dismissed by `closeX()`. The roadmap itself is always rendered underneath; "going to roadmap" just calls `closeAllOverlays()`. The catalog of views lives in `_PMR_OVERLAY_MAP` (renderer/index.html, around line 38527) and `_pmrWireHistory()` (around line 38654) wraps each `openX/closeX` so back/forward + URL hash + nav-active state stay in sync.
 - 15 Supabase Edge Functions (Deno) in `supabase/functions/`.
 - Supabase project ID: `nigusoyssktoebzscbwe` (eu-west-1).
 
@@ -27,7 +27,12 @@ Roadmap OS (formerly PM Roadmapper) is a product roadmap tool that ships as both
 4. **Dropdowns must be dark-mode-aware:** `<select>`, `<option>`, and custom dropdowns need explicit dark background + light text in dark mode.
 
 ## Common Patterns
-- **Adding a new page:** Create `<div id="my-page" class="page" style="display:none">`, add nav button with `onclick="showPage('my-page')"`, add case in `showPage()` function.
+- **Adding a new page (overlay):**
+  1. Add the markup as a `<div class="modal-overlay hidden" id="myOverlay">…</div>` inside the body.
+  2. Define `function openMyView(){ ... document.getElementById('myOverlay').classList.add('open'); }` and a matching `function closeMyView(){ document.getElementById('myOverlay').classList.remove('open'); }`. Don't push history yourself — the wrapper does it.
+  3. Register the view in `_PMR_OVERLAY_MAP` (renderer/index.html ~38527) with `{ open:'openMyView', close:'closeMyView', id:'myOverlay', nav:'My View' }`. The `nav` value must match the label of the matching top-nav `<a>` so `updateNavActive()` highlights it.
+  4. Wire the top-nav entry: `<a onclick="closeAllOverlays();openMyView();updateNavActive('My View');return false;">My View</a>` (match the existing nav style — see the Integrations entry for a recent example).
+  5. `_pmrWireHistory()` runs once on script load and wraps both functions so opening pushes `#myView` to the URL and back/forward navigates correctly. Heavy views can be added to `_PMR_HEAVY_VIEWS` to show the branded loading overlay during the open call.
 - **Saving data:** Merge into the user's JSONB blob and call the sync function.
 - **Dark mode:** Check how existing `.dark-mode` selectors work. New elements need explicit dark mode overrides.
 - **Edge functions:** Follow the pattern in `supabase/functions/_shared/auth.ts` for auth + rate limiting.
@@ -42,7 +47,8 @@ Roadmap OS (formerly PM Roadmapper) is a product roadmap tool that ships as both
 
 ## Testing
 - Syntax check: `node -e "require('fs').readFileSync('renderer/index.html','utf8')"` (ensures file isn't corrupted)
-- Emoji check: `grep -Pc '[\x{1F300}-\x{1FAFF}]' renderer/index.html` (must be 0)
+- Emoji check (POSIX): `grep -Pc '[\x{1F300}-\x{1FAFF}]' renderer/index.html` (must be 0)
+- Emoji check (Windows-safe): `node -e "process.stdout.write(String((require('fs').readFileSync('renderer/index.html','utf8').match(/[\u{1F300}-\u{1FAFF}]/gu) || []).length))"`
 - White background check: `grep -c "background.*white\|background.*#fff" renderer/index.html` (each must have a dark mode override)
 - Web build: `cd web && npm run build` — must succeed without errors
 

@@ -2267,8 +2267,12 @@ body.dark-mode .lifecycle-bar .stage.past{background:rgba(45,107,244,.2);color:#
   <!-- Row 2: Burger menu + AI bar -->
   <div class="toolbar-btns">
 
-    <!-- Hidden elements kept for JS compatibility -->
-    <div id="aiCmdBar" style="display:none"><input id="aiCmdInput" style="display:none"><button id="aiVoiceBtn" style="display:none"></button></div>
+    <!-- Hidden elements kept for JS compatibility. 2026-04-27: dropped the
+         #aiVoiceBtn placeholder (it was never wired to anything once the
+         voice command dialog was removed). #aiCmdInput is still here so the
+         existing aiCmdInput keydown listener and the runAiCommand() helper
+         keep working if a future entry point is added. -->
+    <div id="aiCmdBar" style="display:none"><input id="aiCmdInput" style="display:none"></div>
     <span id="saveStatus" class="saved" style="display:none">● Saved</span>
     <span id="roleBadge" style="display:none"></span>
     <span id="cloudSyncStatus" style="display:none;font-size:11px;font-weight:600;padding:4px 10px;border-radius:9999px;border:1px solid transparent;cursor:pointer" title="Click to sync now">☁</span>
@@ -2297,7 +2301,16 @@ body.dark-mode .lifecycle-bar .stage.past{background:rgba(45,107,244,.2);color:#
     KPI Scorecard
   </button>
   <!-- v1.38.0: Change Requests (UCR) removed from sidebar. Data preserved
-       in ucrAllData in the JSONB blob — only the UI entry point is gone. -->
+       in ucrAllData in the JSONB blob — only the UI entry point was gone.
+       2026-04-27 cleanup: UCR is documented as feature F-063 in TEST_PLAN.md
+       and the onboarding tour (TOUR_STEPS) still highlights it via
+       [onclick*="openUCR"], so the hidden state was an inconsistency. Putting
+       it back as a sidebar entry matches the other module nav pattern and
+       gives users (and the tour) a real target. -->
+  <button class="sidebar-item" onclick="closeDds();closeAllOverlays();openUCR()" title="Open Change Requests — formal change management with full form fields, systems impact, and Word export">
+    <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+    Change Requests
+  </button>
   <button class="sidebar-item" onclick="closeDds();var sb=document.getElementById('appSidebar');if(sb)sb.classList.add('collapsed');closeAllOverlays();openArtifacts()" title="Open Artifacts — design files, ICDs, BOMs, and assets">
     <svg viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
     Artifacts
@@ -9708,144 +9721,15 @@ function updateRoadmapOwnerBadge(){
 }
 
 // ── SETTINGS MODAL ────────────────────────────────────────────────────────────
-function openSettings(){
-  var ex = document.getElementById('settingsModal'); if(ex) ex.remove();
-  var ov = document.createElement('div');
-  ov.id = 'settingsModal'; ov.className = 'modal-overlay';
-
-  var modal = document.createElement('div');
-  modal.className = 'modal'; modal.style.width = '500px';
-
-  // Header
-  var hdr = document.createElement('div'); hdr.className = 'modal-hdr';
-  hdr.innerHTML = '<h2>'+svgIcon('settings',{size:22,sw:1.8})+' Settings</h2>';
-  var cx = document.createElement('button'); cx.className = 'close'; cx.innerHTML = '✕';
-  cx.onclick = function(){ ov.remove(); }; hdr.appendChild(cx);
-  modal.appendChild(hdr);
-
-  var body = document.createElement('div'); body.className = 'modal-body';
-
-  function sectionHdr(label){
-    var d = document.createElement('div');
-    d.style.cssText = 'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--border)';
-    d.textContent = label; return d;
-  }
-  function row(labelText, inputEl){
-    var d = document.createElement('div');
-    d.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px';
-    var lbl = document.createElement('label');
-    lbl.style.cssText = 'font-size:13px;color:var(--text);font-weight:500';
-    lbl.textContent = labelText;
-    d.appendChild(lbl); d.appendChild(inputEl); return d;
-  }
-  function makeSelect(opts, current, onchange){
-    var sel = document.createElement('select');
-    sel.style.cssText = 'padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:#fff;color:var(--navy);min-width:140px';
-    opts.forEach(function(o){
-      var opt = document.createElement('option'); opt.value=o.v; opt.textContent=o.l;
-      if(o.v===current) opt.selected=true; sel.appendChild(opt);
-    });
-    sel.onchange = function(){ onchange(sel.value); };
-    return sel;
-  }
-
-  // ── Timeline ──
-  body.appendChild(sectionHdr('Timeline'));
-  var MONTH_OPTS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'].map(function(m){ return {v:m,l:m}; });
-  body.appendChild(row('Financial year starts', makeSelect(MONTH_OPTS, appSettings.fyStartMonth, function(v){
-    appSettings.fyStartMonth = v;
-    // Update Q_MONTH_MAP and default quarters start
-    var idx = ALL_MONTHS.indexOf(v);
-    if(idx>=0){
-      Q_MONTH_MAP[1] = [ALL_MONTHS[idx%12], ALL_MONTHS[(idx+1)%12], ALL_MONTHS[(idx+2)%12]];
-      Q_MONTH_MAP[2] = [ALL_MONTHS[(idx+3)%12], ALL_MONTHS[(idx+4)%12], ALL_MONTHS[(idx+5)%12]];
-      Q_MONTH_MAP[3] = [ALL_MONTHS[(idx+6)%12], ALL_MONTHS[(idx+7)%12], ALL_MONTHS[(idx+8)%12]];
-      Q_MONTH_MAP[4] = [ALL_MONTHS[(idx+9)%12], ALL_MONTHS[(idx+10)%12], ALL_MONTHS[(idx+11)%12]];
-    }
-  })));
-
-  body.appendChild(row('Date format', makeSelect(
-    [{v:'DD/MM',l:'DD/MM/YYYY (e.g. 15/03/2025)'},{v:'MM/DD',l:'MM/DD/YYYY (e.g. 03/15/2025)'}],
-    appSettings.dateFormat,
-    function(v){ appSettings.dateFormat = v; }
-  )));
-
-  // ── Exports ──
-  body.appendChild(sectionHdr('Export defaults'));
-  body.appendChild(row('Default export format', makeSelect(
-    [{v:'excel',l:'Excel (.xls)'},{v:'pdf',l:'PDF'}],
-    appSettings.exportFormat,
-    function(v){ appSettings.exportFormat = v; }
-  )));
-
-  // ── Appearance ──
-  body.appendChild(sectionHdr('Appearance'));
-  body.appendChild(row('Theme', makeSelect(
-    [{v:'light',l:'Light'},{v:'dark',l:'Dark'}],
-    appSettings.theme,
-    function(v){ appSettings.theme = v; }
-  )));
-
-  // ── Data ──
-  body.appendChild(sectionHdr('Data management'));
-  var clearBtn = document.createElement('button');
-  clearBtn.innerHTML = svgIcon('trash',{size:14}) + ' Clear all roadmap data';
-  clearBtn.style.cssText = 'padding:8px 16px;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;width:100%';
-  clearBtn.onclick = function(){
-    if(!confirm('Clear ALL roadmap data and start with a blank canvas? This cannot be undone.')) return;
-    sections = [{id:'s1',name:'New Section',color:'#0F1B3D'}];
-    rows = []; tabs_data=[{id:'tab1',name:'Main Roadmap',stacked:false}]; activeTabId='tab1';
-    recomputeTimeline(); renderTableHeader(); renderTabs(); renderStackedTabs(); render(); persistData();
-    ov.remove();
-    showToast('Roadmap cleared','success');
-  };
-  body.appendChild(clearBtn);
-
-  // v1.33.1: Integrations section
-  body.appendChild(sectionHdr('Integrations'));
-  var slackBtn = document.createElement('button');
-  var _slk = (appSettings.integrations && appSettings.integrations.slack) || {connected:false, configured:false, workspaces:[]};
-  var _slkCount = (_slk.workspaces || []).length;
-  var _slkLabel = _slk.connected ? (_slkCount + ' workspace' + (_slkCount === 1 ? '' : 's') + ' connected') : 'Not connected';
-  slackBtn.innerHTML = svgIcon('link',{size:14}) + ' Slack <span style="font-size:10px;color:var(--muted);margin-left:auto;font-weight:600">' + _slkLabel + '</span>';
-  slackBtn.style.cssText = 'padding:10px 16px;background:var(--white);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;gap:8px;margin-bottom:8px';
-  slackBtn.onclick = function(){ ov.remove(); openSlackIntegrations(); };
-  body.appendChild(slackBtn);
-
-  var calBtn = document.createElement('button');
-  var gC = !!(appSettings.integrations && appSettings.integrations.google && appSettings.integrations.google.connected);
-  var mC = !!(appSettings.integrations && appSettings.integrations.microsoft && appSettings.integrations.microsoft.connected);
-  var calLabel = (gC || mC) ? 'Connected' : 'Not connected';
-  calBtn.innerHTML = svgIcon('calendar',{size:14}) + ' Calendar <span style="font-size:10px;color:var(--muted);margin-left:auto;font-weight:600">' + calLabel + '</span>';
-  calBtn.style.cssText = 'padding:10px 16px;background:var(--white);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;gap:8px;margin-bottom:8px';
-  calBtn.onclick = function(){ ov.remove(); openCalendarIntegrationModal(); };
-  body.appendChild(calBtn);
-
-  // v1.29.0 FIX 13: Help & Tour section
-  body.appendChild(sectionHdr('Help & Support'));
-  var helpBtn = document.createElement('button');
-  helpBtn.innerHTML = svgIcon('question-mark',{size:14}) + ' Open Help Guide';
-  helpBtn.style.cssText = 'padding:8px 16px;background:var(--surface-low);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;width:100%;margin-bottom:8px;display:flex;align-items:center;gap:8px';
-  helpBtn.onclick = function(){ ov.remove(); openHelp(); };
-  body.appendChild(helpBtn);
-  var tourBtn = document.createElement('button');
-  tourBtn.innerHTML = svgIcon('sparkle',{size:14}) + ' Replay Onboarding Tour';
-  tourBtn.style.cssText = 'padding:8px 16px;background:var(--surface-low);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;gap:8px';
-  tourBtn.onclick = function(){ ov.remove(); startTour(); };
-  body.appendChild(tourBtn);
-
-  modal.appendChild(body);
-
-  var footer = document.createElement('div'); footer.className = 'modal-footer';
-  var cancel = document.createElement('button'); cancel.className = 'btn-cancel';
-  cancel.textContent = 'Cancel'; cancel.onclick = function(){ ov.remove(); };
-  var save = document.createElement('button'); save.className = 'btn-save';
-  save.textContent = 'Save Settings';
-  save.onclick = function(){ saveProfileSettings(); ov.remove(); showToast('Settings saved','success'); };
-  footer.appendChild(cancel); footer.appendChild(save);
-  modal.appendChild(footer);
-  ov.appendChild(modal); document.body.appendChild(ov);
-}
+// The legacy structured Settings modal that used to live here was deleted on
+// 2026-04-27 — JavaScript last-defined-wins meant it was already dead code
+// (the live openSettings() is defined later in the file, around line 35044).
+// Its unique features were either migrated into the live one (Open Help Guide
+// button), already reachable elsewhere (Clear all data → openProfile danger
+// zone, FY start → configureFYStart() in the legend menu, Dark mode → openProfile
+// quick action, Slack/Calendar → live settings + Capacity toolbar), or wired to
+// fields that were never read (appSettings.dateFormat / .exportFormat / .theme).
+// See CLEANUP_LOG.md for the audit.
 
 // ── PROFILE MODAL ─────────────────────────────────────────────────────────────
 function openProfile(){
@@ -11470,231 +11354,21 @@ document.addEventListener('DOMContentLoaded',function(){
   if(ci)ci.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();runAiCommand();}});
 });
 
-function toggleAiVoiceCmd(){
-  openVoiceRecordingDialog();
-}
-
-function openVoiceRecordingDialog(){
-  // Create dialog
-  var ex=document.getElementById('voiceCmdModal');if(ex)ex.remove();
-  var ov=document.createElement('div');ov.id='voiceCmdModal';ov.className='modal-overlay';
-  var modal=document.createElement('div');modal.className='modal';modal.style.maxWidth='500px';
-  var hdr=document.createElement('div');hdr.className='modal-hdr';
-  hdr.innerHTML='<h2>'+svgIcon('mic',{size:20,sw:1.8})+' Voice Command</h2>';
-  var cx=document.createElement('button');cx.className='close';cx.innerHTML='✕';
-  cx.onclick=function(){stopVoiceRecording();ov.remove();};
-  hdr.appendChild(cx);modal.appendChild(hdr);
-
-  var body=document.createElement('div');body.className='modal-body';body.style.textAlign='center';
-
-  var indicator=document.createElement('div');indicator.id='voiceIndicator';
-  indicator.style.cssText='font-size:48px;margin:16px 0';
-  indicator.innerHTML=svgIcon('circle-dot',{size:16,sw:2});
-  body.appendChild(indicator);
-
-  var statusTxt=document.createElement('p');statusTxt.id='voiceStatus';
-  statusTxt.style.cssText='font-size:14px;font-weight:600;color:var(--navy);margin-bottom:4px';
-  statusTxt.textContent='Starting microphone...';
-  body.appendChild(statusTxt);
-
-  var timerTxt=document.createElement('p');timerTxt.id='voiceTimer';
-  timerTxt.style.cssText='font-size:24px;font-weight:700;color:var(--accent);margin-bottom:12px;font-family:monospace';
-  timerTxt.textContent='0:00';
-  body.appendChild(timerTxt);
-
-  var hint=document.createElement('p');hint.style.cssText='font-size:11px;color:var(--muted);margin-bottom:16px';
-  hint.textContent='Describe what you want on the roadmap. Click Stop when done — AI will transcribe your speech.';
-  body.appendChild(hint);
-
-  // Transcript area (shown after transcription)
-  var transcriptBox=document.createElement('textarea');transcriptBox.id='voiceTranscript';
-  transcriptBox.style.cssText='display:none;width:100%;min-height:100px;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);line-height:1.6;margin-bottom:16px;resize:vertical;box-sizing:border-box';
-  transcriptBox.placeholder='Transcript will appear here...';
-  body.appendChild(transcriptBox);
-
-  // Buttons
-  var btns=document.createElement('div');btns.style.cssText='display:flex;gap:10px;justify-content:center;flex-wrap:wrap';
-  var stopBtn=document.createElement('button');stopBtn.id='voiceStopBtn';
-  stopBtn.style.cssText='padding:10px 24px;font-size:13px;border-radius:8px;font-weight:700;background:#dc2626;color:#fff;border:none;cursor:pointer';
-  stopBtn.textContent='⏹ Stop Recording';
-  stopBtn.onclick=function(){stopAndTranscribe(ov);};
-
-  var submitBtn=document.createElement('button');submitBtn.id='voiceSubmitBtn';
-  submitBtn.style.cssText='display:none;padding:10px 24px;font-size:13px;border-radius:8px;font-weight:700;background:linear-gradient(135deg,#7c3aed,#2563a8);color:#fff;border:none;cursor:pointer';
-  submitBtn.innerHTML=svgIcon('rocket',{size:14})+' Send to AI';
-  submitBtn.onclick=function(){
-    var text=document.getElementById('voiceTranscript').value.trim();
-    if(!text){showToast('No text to send');return;}
-    ov.remove();
-    var inp=document.getElementById('aiCmdInput');
-    if(inp)inp.value=text;
-    runAiCommand();
-  };
-
-  var cancelBtn=document.createElement('button');
-  cancelBtn.style.cssText='padding:10px 20px;font-size:13px;border-radius:8px;font-weight:700;background:#fff;color:var(--muted);border:1px solid var(--border);cursor:pointer';
-  cancelBtn.textContent='Cancel';
-  cancelBtn.onclick=function(){stopVoiceRecording();ov.remove();};
-
-  btns.appendChild(stopBtn);btns.appendChild(submitBtn);btns.appendChild(cancelBtn);
-  body.appendChild(btns);
-  modal.appendChild(body);ov.appendChild(modal);document.body.appendChild(ov);
-
-  // Start recording with MediaRecorder
-  startVoiceRecording();
-}
-
-var _mediaRecorder=null;
-var _audioChunks=[];
-var _voiceTimerInterval=null;
-
-async function startVoiceRecording(){
-  var st=document.getElementById('voiceStatus');
-  try{
-    var stream=await navigator.mediaDevices.getUserMedia({audio:true});
-    _audioChunks=[];
-    // Try different audio formats - pick the first supported one
-    var mimeType='audio/webm;codecs=opus';
-    if(!MediaRecorder.isTypeSupported(mimeType)) mimeType='audio/webm';
-    if(!MediaRecorder.isTypeSupported(mimeType)) mimeType='audio/ogg;codecs=opus';
-    if(!MediaRecorder.isTypeSupported(mimeType)) mimeType='';
-    console.log('[Voice] Recording with mimeType:',mimeType||'default');
-    _mediaRecorder=mimeType?new MediaRecorder(stream,{mimeType:mimeType}):new MediaRecorder(stream);
-    _mediaRecorder.ondataavailable=function(e){if(e.data.size>0)_audioChunks.push(e.data);};
-    _mediaRecorder.start(1000); // collect chunks every 1s
-
-    if(st)st.innerHTML=svgIcon('circle-dot',{size:14,sw:2})+' Recording — speak now...';
-    // Start timer
-    var startTime=Date.now();
-    _voiceTimerInterval=setInterval(function(){
-      var elapsed=Math.floor((Date.now()-startTime)/1000);
-      var mins=Math.floor(elapsed/60);
-      var secs=elapsed%60;
-      var t=document.getElementById('voiceTimer');
-      if(t)t.textContent=mins+':'+(secs<10?'0':'')+secs;
-    },1000);
-  }catch(e){
-    console.error('[Voice] Mic error:',e);
-    if(st)st.innerHTML=svgIcon('x',{size:14,sw:2})+' Microphone access denied. Go to Windows Settings &rarr; Privacy &rarr; Microphone and allow access.';
-    var ind=document.getElementById('voiceIndicator');
-    if(ind)ind.innerHTML=svgIcon('x',{size:14,sw:2});
-  }
-}
-
-function stopVoiceRecording(){
-  if(_voiceTimerInterval){clearInterval(_voiceTimerInterval);_voiceTimerInterval=null;}
-  if(_mediaRecorder&&_mediaRecorder.state!=='inactive'){
-    _mediaRecorder.stop();
-    _mediaRecorder.stream.getTracks().forEach(function(t){t.stop();});
-  }
-  _mediaRecorder=null;
-}
-
-async function stopAndTranscribe(overlay){
-  var st=document.getElementById('voiceStatus');
-  var ind=document.getElementById('voiceIndicator');
-  if(st)st.textContent='Stopping recording...';
-
-  if(_voiceTimerInterval){clearInterval(_voiceTimerInterval);_voiceTimerInterval=null;}
-
-  if(!_mediaRecorder||_mediaRecorder.state==='inactive'){
-    if(st)st.textContent='No recording to process';
-    return;
-  }
-
-  // Save mime type before stopping
-  var actualMime=_mediaRecorder.mimeType||'audio/webm';
-
-  // Request any pending data, then stop
-  try{_mediaRecorder.requestData();}catch(e){}
-
-  // Wait for stop event (data flush completes)
-  await new Promise(function(resolve){
-    _mediaRecorder.onstop=function(){
-      console.log('[Voice] MediaRecorder stopped, chunks:',_audioChunks.length);
-      resolve();
-    };
-    _mediaRecorder.stop();
-  });
-
-  // NOW stop the mic stream (after data is flushed)
-  try{_mediaRecorder.stream.getTracks().forEach(function(t){t.stop();});}catch(e){}
-
-  console.log('[Voice] Chunks:',_audioChunks.length,'mimeType:',actualMime);
-
-  if(_audioChunks.length===0){
-    if(st)st.textContent='No audio chunks captured — microphone may not be working';
-    return;
-  }
-
-  var blob=new Blob(_audioChunks,{type:actualMime});
-  console.log('[Voice] Blob size:',blob.size,'bytes');
-  _audioChunks=[];
-  _mediaRecorder=null;
-
-  if(blob.size<1000){
-    if(st)st.textContent='Recording too short or empty ('+blob.size+' bytes) — try speaking louder';
-    return;
-  }
-
-  if(ind)ind.textContent='⏳';
-  if(st)st.textContent='Transcribing ('+Math.round(blob.size/1024)+'KB audio)... please wait';
-
-  // Convert to base64
-  var reader=new FileReader();
-  reader.onload=async function(){
-    var base64=reader.result.split(',')[1];
-
-    // Transcribe via main process IPC (bypasses CORS)
-    var geminiKey=localStorage.getItem(_lsKey('pmr_comp_apikey_gemini'));
-    if(!geminiKey&&_currentUser&&_currentUser.email==='velasabelo.com@gmail.com'){
-      geminiKey='AIzaSyAdtsyQEsXTioqseNO9RfwfAg6KXiCxsyk';
-      localStorage.setItem(_lsKey('pmr_comp_apikey_gemini'),geminiKey);
-    }
-    console.log('[Voice] Sending to main process for transcription, key:',!!geminiKey,'audioSize:',base64.length);
-
-    if(!geminiKey){
-      if(ind)ind.innerHTML=svgIcon('warn',{size:14,sw:2});
-      if(st)st.textContent='No Gemini API key — save one in CI → New Analysis tab';
-      var tb2=document.getElementById('voiceTranscript');
-      if(tb2){tb2.style.display='block';tb2.placeholder='Type your command here...';tb2.focus();}
-      document.getElementById('voiceStopBtn').style.display='none';
-      document.getElementById('voiceSubmitBtn').style.display='';
-      return;
-    }
-
-    if(st)st.textContent='⏳ Transcribing with Gemini AI...';
-    try{
-      console.log('[Voice] Sending to IPC — mimeType:',actualMime,'base64 length:',base64.length,'blob size:',blob.size);
-      var result=await window.electronAPI.transcribeAudio({base64:base64,apiKey:geminiKey,mimeType:actualMime||'audio/webm'});
-      console.log('[Voice] Transcription result:',result);
-      if(result.ok&&result.text){
-        var tb=document.getElementById('voiceTranscript');
-        if(tb){tb.value=result.text;tb.style.display='block';}
-        if(ind)ind.innerHTML=svgIcon('check',{size:14,sw:2});
-        if(st)st.textContent='Transcription complete ('+result.model+') — review and edit below, then click Send';
-        document.getElementById('voiceStopBtn').style.display='none';
-        document.getElementById('voiceSubmitBtn').style.display='';
-      } else {
-        if(ind)ind.innerHTML=svgIcon('warn',{size:14,sw:2});
-        if(st)st.textContent='Transcription failed: '+(result.error||'unknown')+' — type below';
-        var tbFail=document.getElementById('voiceTranscript');
-        if(tbFail){tbFail.style.display='block';tbFail.placeholder='Type your command here...';tbFail.focus();}
-        document.getElementById('voiceStopBtn').style.display='none';
-        document.getElementById('voiceSubmitBtn').style.display='';
-      }
-    }catch(e){
-      console.error('[Voice] IPC transcription error:',e);
-      if(ind)ind.innerHTML=svgIcon('warn',{size:14,sw:2});
-      if(st)st.textContent='Error: '+e.message+' — type below';
-      var tbErr=document.getElementById('voiceTranscript');
-      if(tbErr){tbErr.style.display='block';tbErr.focus();}
-      document.getElementById('voiceStopBtn').style.display='none';
-      document.getElementById('voiceSubmitBtn').style.display='';
-    }
-  };
-  reader.readAsDataURL(blob);
-}
+// 2026-04-27 cleanup: the MediaRecorder-based voice command dialog
+// (toggleAiVoiceCmd / openVoiceRecordingDialog / startVoiceRecording /
+// stopVoiceRecording / stopAndTranscribe) lived here. v1.45.0 removed the
+// row-modal voice button (v14 Fix 3 Part D), and the only other entry point
+// (toggleAiVoiceCmd) was never wired to any UI. The hidden #aiVoiceBtn in
+// the toolbar had no event listener attached. With zero callers across the
+// renderer, web shim, and main process, the dialog was dead code.
+//
+// What stays: addVoiceButton/toggleVoice (line ~11580 onward) — those use
+// the browser's native webkitSpeechRecognition and are still wired to the
+// company-profile + competitive-intel input fields. Different feature.
+//
+// The transcribeAudio IPC plumbing (preload.js + web shim) is left intact
+// in case voice command is reintroduced; it's tiny and doesn't run unless
+// called.
 
 async function runAiCommand(){
   var inp=document.getElementById('aiCmdInput');
@@ -13836,11 +13510,10 @@ document.addEventListener('keydown', function(e){
     if(['rowModal','barModal','quartersModal'].indexOf(top.id) !== -1){
       top.classList.add('hidden');
     } else {
-      // Voice command modal needs to stop the mic stream and timer when
-      // closed via Escape, otherwise the recording silently continues.
-      if(top.id === 'voiceCmdModal' && typeof stopVoiceRecording === 'function'){
-        try { stopVoiceRecording(); } catch(_){}
-      }
+      // 2026-04-27 cleanup: previously had a special case here to stop the
+      // MediaRecorder when Escape closed #voiceCmdModal. Voice command dialog
+      // was deleted (no UI entry points), so the generic .remove() below is
+      // sufficient now.
       top.remove();
     }
     return;
@@ -35314,7 +34987,12 @@ function openSettings(){
   h+='</div>';
 
   // v1.32.0 FIX 15: Re-run onboarding button
+  // 2026-04-27 cleanup: also surface the in-app Help Guide here — this used to
+  // live in the legacy openSettings() that has now been removed; openHelp() is
+  // still a real feature so it needs a UI entry point.
   h+='<div style="margin-bottom:16px;padding-top:16px;border-top:1px solid #e8edf7">';
+  h+='<div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:8px">Help &amp; Support</div>';
+  h+='<button onclick="document.getElementById(\'settingsOverlay\').remove();openHelp()" style="width:100%;padding:8px;background:var(--surface-low);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:8px">Open Help Guide</button>';
   h+='<button onclick="document.getElementById(\'settingsOverlay\').remove();showOnboarding()" style="width:100%;padding:8px;background:var(--surface-low);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:8px">Re-run Onboarding Tour</button>';
   h+='</div>';
   h+='<button onclick="document.getElementById(\'settingsOverlay\').remove()" style="width:100%;padding:10px;background:var(--navy);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">Done</button>';
