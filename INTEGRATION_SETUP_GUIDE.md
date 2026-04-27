@@ -4,7 +4,8 @@ After Claude Code builds the integration framework you need to **register OAuth 
 with each provider, set the resulting Client ID + Client Secret as Supabase secrets,
 deploy the edge functions, and run the migration.
 
-The five providers wired in this drop are **Jira (Cloud), GitHub, Slack, Asana, Linear**.
+The six providers wired in are **Jira (Cloud), GitHub, Slack, Asana, Linear,
+Microsoft Teams + Planner**.
 
 ---
 
@@ -14,7 +15,7 @@ The five providers wired in this drop are **Jira (Cloud), GitHub, Slack, Asana, 
 https://nigusoyssktoebzscbwe.supabase.co/functions/v1/integrations-oauth/callback/{provider}
 ```
 
-Replace `{provider}` with: `jira`, `github`, `slack`, `asana`, `linear`.
+Replace `{provider}` with: `jira`, `github`, `slack`, `asana`, `linear`, `teams`.
 
 ---
 
@@ -108,6 +109,56 @@ Replace `{provider}` with: `jira`, `github`, `slack`, `asana`, `linear`.
 6. Register a webhook in Linear -> Settings -> API:
    - URL: `https://nigusoyssktoebzscbwe.supabase.co/functions/v1/integrations-webhook/webhook/linear`
    - Secret: same as `LINEAR_WEBHOOK_SECRET`
+
+## 6. Microsoft Teams + Planner
+
+Microsoft Teams integration covers two sub-features in a single connection:
+
+- **Planner sync** (Jira-equivalent): bidirectional sync between a Microsoft
+  Planner plan and a Roadmap OS plan / section / feedback queue.
+- **Channel notifications** (Slack-equivalent): post status updates to a
+  Microsoft Teams channel.
+
+Both require the same Azure AD app registration.
+
+1. Go to https://portal.azure.com -> **Azure Active Directory** -> **App
+   registrations** -> **New registration**.
+2. Name: `Roadmap OS`.
+3. Supported account types: pick **Accounts in any organizational directory
+   (Any Azure AD directory - Multitenant)** to allow users from any tenant
+   to authorize. The OAuth endpoints use `/common/` to match this.
+4. Redirect URI:
+   - Platform: **Web**
+   - URL: `https://nigusoyssktoebzscbwe.supabase.co/functions/v1/integrations-oauth/callback/teams`
+5. Register the app, then grab the **Application (client) ID** from the
+   Overview page.
+6. **Certificates & secrets** -> **New client secret** -> set a long expiry
+   and copy the **Value** (this is your client secret — only shown once).
+7. **API permissions** -> **Add a permission** -> **Microsoft Graph** ->
+   **Delegated permissions**, then add all of:
+   - `User.Read`
+   - `offline_access`
+   - `Channel.ReadBasic.All`
+   - `ChannelMessage.Send`
+   - `Group.Read.All`
+   - `Tasks.ReadWrite`
+   - `Team.ReadBasic.All`
+8. Some of these (e.g. `Group.Read.All`) require admin consent. Click
+   **Grant admin consent for [your tenant]** if you're a tenant admin, or
+   ask a tenant admin to do so. End users in other tenants will be prompted
+   to consent on first authorization (or their admin will, depending on the
+   tenant's consent settings).
+9. Set in Supabase:
+   ```bash
+   supabase secrets set TEAMS_CLIENT_ID=your_application_client_id
+   supabase secrets set TEAMS_CLIENT_SECRET=your_client_secret_value
+   ```
+10. (Optional, Phase 2) Register a Microsoft Graph **change notification**
+    subscription pointing at:
+    `https://nigusoyssktoebzscbwe.supabase.co/functions/v1/integrations-webhook/webhook/teams`
+    The endpoint already handles the `validationToken` echo handshake.
+    Active processing of notifications (auto-import on Planner task changes)
+    is documented in [TEAMS_INTEGRATION.md](./TEAMS_INTEGRATION.md) as Phase 2.
 
 ---
 
