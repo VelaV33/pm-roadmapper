@@ -159,8 +159,15 @@ serve(handle(async (req) => {
     } catch (_) { /* not JSON */ }
     let hint = "";
     const lcMsg = (parsedMessage || txt).toLowerCase();
-    if (resendRes.status === 401 || resendRes.status === 403) {
-      hint = "Resend rejected the API key. Verify RESEND_API_KEY value in Supabase secrets.";
+    // v1.46.2: order matters — match the most specific message strings first.
+    // The "testing emails to your own email" message is a 403 but the cause is
+    // an unverified from-domain, not a bad API key.
+    if (lcMsg.indexOf("testing email") >= 0 || lcMsg.indexOf("verify a domain") >= 0 || lcMsg.indexOf("not verified") >= 0) {
+      hint = "Verify your sending domain at https://resend.com/domains, then set FROM_EMAIL on this function to an address using that domain (e.g. Roadmap OS <hello@pmroadmapper.com>). Until then Resend's testing sender (onboarding@resend.dev) can ONLY email the Resend account owner.";
+    } else if (resendRes.status === 401) {
+      hint = "Resend rejected the API key (401). Verify RESEND_API_KEY value in Supabase secrets.";
+    } else if (resendRes.status === 403) {
+      hint = "Resend returned 403. Most often this means the from-domain isn't verified, or the API key lacks send permission. Check resend.com/domains and resend.com/api-keys.";
     } else if (resendRes.status === 422 && (lcMsg.indexOf("verify") >= 0 || lcMsg.indexOf("domain") >= 0)) {
       hint = "The from-domain on " + FROM_EMAIL + " is not verified in Resend. Either verify the domain at resend.com/domains or set FROM_EMAIL to onboarding@resend.dev (Resend's testing sender).";
     } else if (resendRes.status === 429) {
