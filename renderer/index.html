@@ -27244,7 +27244,12 @@ var INTEGRATION_DEFS = [
     description:'Sync Linear issues with your roadmap initiatives and plan tasks.',
     iconSvg:'<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14l7 7M3 10l11 11M5 6l13 13M9 3l12 12M15 3l6 6"/></svg>',
     features:['Import issues','Push updates','Two-way sync','Team picker'],
-    docsUrl:'https://developers.linear.app/' }
+    docsUrl:'https://developers.linear.app/' },
+  { id:'teams', name:'Microsoft Teams + Planner', color:'#6264A7', category:'communication',
+    description:'Sync Planner tasks with your roadmap and post status updates to Teams channels.',
+    iconSvg:'<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="13" height="13" rx="1.5"/><text x="9.5" y="13" text-anchor="middle" font-size="9" font-weight="bold" fill="currentColor" stroke="none">T</text><circle cx="19" cy="9" r="3"/><path d="M16 14v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5"/></svg>',
+    features:['Sync Planner tasks','Post to channels','Status notifications','Two-way sync'],
+    docsUrl:'https://learn.microsoft.com/en-us/graph/teams-concept-overview' }
 ];
 
 function openIntegrations(){
@@ -27318,6 +27323,12 @@ async function renderIntegrationsPage(){
       else if(def.id === 'slack'    && configBits.teamName) subtitle = configBits.teamName + (configBits.channelName ? ' #' + configBits.channelName : '');
       else if(def.id === 'asana'    && configBits.userName) subtitle = configBits.userName + (configBits.projectName ? ' / ' + configBits.projectName : '');
       else if(def.id === 'linear'   && configBits.userName) subtitle = configBits.userName + (configBits.teamName ? ' / ' + configBits.teamName : '');
+      else if(def.id === 'teams'){
+        var bits = [];
+        if(configBits.planName) bits.push("Plan '"+configBits.planName+"'");
+        if(configBits.notificationChannelName) bits.push('#'+configBits.notificationChannelName);
+        subtitle = bits.join(' · ');
+      }
     }
     return ''+
       '<div class="intg-card '+(connected?'connected':'')+'" data-provider="'+def.id+'">'+
@@ -27423,7 +27434,7 @@ async function configureIntegration(provider){
   ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9100;display:flex;align-items:center;justify-content:center;padding:24px';
   ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
 
-  var labelMap = { jira:'Jira Project', github:'GitHub Repository', slack:'Slack Channel', asana:'Asana Project', linear:'Linear Team' };
+  var labelMap = { jira:'Jira Project', github:'GitHub Repository', slack:'Slack Channel', asana:'Asana Project', linear:'Linear Team', teams:'Planner Plan' };
   var sectionsOpts = (typeof sections !== 'undefined' && sections)
     ? sections.map(function(s){ return '<option value="'+escHtml(s.id)+'">'+escHtml(s.name)+'</option>'; }).join('')
     : '';
@@ -27444,6 +27455,23 @@ async function configureIntegration(provider){
         projects.map(function(p){ return '<option value="'+escHtml(p.id)+'" data-extra=\''+escHtml(JSON.stringify(p.extra||{}))+'\'>'+escHtml(p.name)+'</option>'; }).join('')+
       '</select>'+
     '</label>'+
+    (provider==='teams' ?
+      '<div style="border-top:1px solid var(--border);padding-top:12px;margin-bottom:12px">'+
+        '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:8px">Notifications Channel</div>'+
+        '<label style="display:block;margin-bottom:10px">'+
+          '<div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:4px">Team</div>'+
+          '<select id="intgTeamSelect" class="cap-input" style="width:100%" onchange="_intgLoadTeamsChannels()">'+
+            '<option value="">— Loading teams... —</option>'+
+          '</select>'+
+        '</label>'+
+        '<label style="display:block">'+
+          '<div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:4px">Channel</div>'+
+          '<select id="intgChannelSelect" class="cap-input" style="width:100%" disabled>'+
+            '<option value="">— Select team first —</option>'+
+          '</select>'+
+        '</label>'+
+      '</div>'
+      : '')+
     '<label style="display:block;margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Sync Direction</div>'+
       '<select id="intgDir" class="cap-input" style="width:100%">'+
         '<option value="bidirectional"'+(conn.sync_direction==='bidirectional'?' selected':'')+'>Two-way sync</option>'+
@@ -27478,7 +27506,69 @@ async function configureIntegration(provider){
     '</div>';
   ov.appendChild(panel);
   document.body.appendChild(ov);
+  // Stash the live connection config on the overlay so async loaders can
+  // read previously-saved teams/channel selections to pre-select.
+  try { ov.__conn = conn; } catch(_e){}
   _intgToggleTargetFields();
+  // Teams: lazily populate Joined Teams + Channels selectors and pre-select
+  // any previously saved choices from conn.config.
+  if(provider === 'teams'){
+    // Pre-select the saved Planner plan (if any).
+    if(conn && conn.config && conn.config.planId){
+      var ps = document.getElementById('intgProjSelect');
+      if(ps){ ps.value = conn.config.planId; }
+    }
+    _intgLoadTeamsTeams(conn);
+  }
+}
+
+async function _intgLoadTeamsTeams(conn){
+  var teamSel = document.getElementById('intgTeamSelect');
+  if(!teamSel) return;
+  try {
+    var r = await _sbFetch('/functions/v1/integrations-api/teams-list/teams', 'GET', null);
+    var list = (r && r.ok && r.data && Array.isArray(r.data.teams)) ? r.data.teams : [];
+    var preselect = (conn && conn.config && conn.config.notificationTeamId) || '';
+    teamSel.innerHTML = '<option value="">— Select team —</option>' + list.map(function(t){
+      return '<option value="'+escHtml(t.id)+'"'+(t.id===preselect?' selected':'')+'>'+escHtml(t.name)+'</option>';
+    }).join('');
+    if(preselect){
+      _intgLoadTeamsChannels();
+    }
+  } catch(e){
+    teamSel.innerHTML = '<option value="">— Failed to load teams —</option>';
+  }
+}
+
+async function _intgLoadTeamsChannels(){
+  var teamSel = document.getElementById('intgTeamSelect');
+  var chSel = document.getElementById('intgChannelSelect');
+  if(!teamSel || !chSel) return;
+  var teamId = teamSel.value;
+  if(!teamId){
+    chSel.innerHTML = '<option value="">— Select team first —</option>';
+    chSel.disabled = true;
+    return;
+  }
+  chSel.disabled = true;
+  chSel.innerHTML = '<option value="">— Loading channels... —</option>';
+  try {
+    var r = await _sbFetch('/functions/v1/integrations-api/teams-channels/'+encodeURIComponent(teamId)+'/teams', 'GET', null);
+    var list = (r && r.ok && r.data && Array.isArray(r.data.channels)) ? r.data.channels : [];
+    // Pull the saved channel id from the overlay's stashed connection config.
+    var preselect = '';
+    try {
+      var ov = document.getElementById('intgConfigOverlay');
+      var savedCfg = ov && ov.__conn && ov.__conn.config;
+      if(savedCfg && savedCfg.notificationChannelId) preselect = savedCfg.notificationChannelId;
+    } catch(_e){}
+    chSel.innerHTML = '<option value="">— Select channel —</option>' + list.map(function(c){
+      return '<option value="'+escHtml(c.id)+'"'+(c.id===preselect?' selected':'')+'>'+escHtml(c.name)+'</option>';
+    }).join('');
+    chSel.disabled = false;
+  } catch(e){
+    chSel.innerHTML = '<option value="">— Failed to load channels —</option>';
+  }
 }
 
 function _intgToggleTargetFields(){
@@ -27509,6 +27599,24 @@ async function saveIntegrationConfig(provider){
     else if(provider === 'slack'){ providerCfg.channelId = projSel.value; providerCfg.channelName = (opt.textContent || '').replace(/^#/,''); }
     else if(provider === 'asana'){ providerCfg.projectGid = projSel.value; providerCfg.workspaceGid = extra.workspaceGid; providerCfg.projectName = opt.textContent; }
     else if(provider === 'linear'){ providerCfg.teamId = projSel.value; providerCfg.teamName = opt.textContent; }
+    else if(provider === 'teams'){
+      providerCfg.planId = projSel.value;
+      providerCfg.planName = opt.textContent;
+      providerCfg.groupId = extra.groupId;
+    }
+  }
+  // Teams: also capture the notification team + channel choices.
+  if(provider === 'teams'){
+    var teamSel = document.getElementById('intgTeamSelect');
+    var chSel = document.getElementById('intgChannelSelect');
+    if(teamSel && teamSel.value){
+      providerCfg.notificationTeamId = teamSel.value;
+      providerCfg.notificationTeamName = (teamSel.options[teamSel.selectedIndex] || {}).textContent || '';
+    }
+    if(chSel && chSel.value){
+      providerCfg.notificationChannelId = chSel.value;
+      providerCfg.notificationChannelName = (chSel.options[chSel.selectedIndex] || {}).textContent || '';
+    }
   }
 
   try {
