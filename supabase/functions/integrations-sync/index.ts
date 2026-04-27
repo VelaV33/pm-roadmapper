@@ -67,7 +67,28 @@ const STATUS_MAP: Record<string, Record<string, string>> = {
     Done: "done",
     Canceled: "done",
   },
+  // Planner has no native string statuses — we map percentComplete numerically
+  // in plannerStatusFromPercent(). Kept here for symmetry / lookup safety.
+  teams: {
+    "0": "todo",
+    "50": "in_progress",
+    "100": "done",
+  },
 };
+
+// Microsoft Planner uses percentComplete (0/50/100). Planner has no "blocked".
+function plannerStatusFromPercent(pc: number | null | undefined): string {
+  if (typeof pc !== "number") return "todo";
+  if (pc >= 100) return "done";
+  if (pc >= 50) return "in_progress";
+  return "todo";
+}
+
+function plannerPercentFromStatus(status: string): number {
+  if (status === "done") return 100;
+  if (status === "in_progress") return 50;
+  return 0;
+}
 
 function normalizeStatus(provider: string, raw: string): string {
   const map = STATUS_MAP[provider] || {};
@@ -108,6 +129,7 @@ async function refreshTokenIfNeeded(supabase: SupabaseClient, conn: Connection):
     jira: "https://auth.atlassian.com/oauth/token",
     asana: "https://app.asana.com/-/oauth_token",
     linear: "https://api.linear.app/oauth/token",
+    teams: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
   };
   const tokenUrl = refreshUrls[conn.provider];
   if (!tokenUrl) return conn;
@@ -118,16 +140,23 @@ async function refreshTokenIfNeeded(supabase: SupabaseClient, conn: Connection):
   const clientSecret = Deno.env.get(clientSecretEnv);
   if (!clientId || !clientSecret) return conn;
 
+  // Microsoft requires `scope` on refresh as well — re-use the same scope
+  // string used during /authorize.
+  const teamsScope = "User.Read offline_access Channel.ReadBasic.All ChannelMessage.Send Group.Read.All Tasks.ReadWrite Team.ReadBasic.All";
+
   try {
+    const refreshBody: Record<string, string> = {
+      grant_type: "refresh_token",
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: conn.refresh_token,
+    };
+    if (conn.provider === "teams") refreshBody.scope = teamsScope;
+
     const res = await fetch(tokenUrl, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
-      body: new URLSearchParams({
-        grant_type: "refresh_token",
-        client_id: clientId,
-        client_secret: clientSecret,
-        refresh_token: conn.refresh_token,
-      }).toString(),
+      body: new URLSearchParams(refreshBody).toString(),
     });
     const data = await res.json();
     if (!data.access_token) return conn;
@@ -313,21 +342,182 @@ async function fetchLinearItems(conn: Connection): Promise<SyncItem[]> {
   return out;
 }
 
+// ── Microsoft Graph helpers (used by Planner sync + Teams notifications) ──
+async function graphFetch(
+  url: string,
+  token: string,
+  init: RequestInit = {},
+  attempt = 0,
+): Promise<Response> {
+  const headers = new Headers(init.headers || {});
+  if (!headers.has("Authorization")) headers.set("Authorization", `Bearer ${token}`);
+  if (!headers.has("Accept")) headers.set("Accept", "application/json");
+  const res = await fetch(url, { ...init, headers });
+  if (res.status === 429 && attempt < 3) {
+    const retryAfter = parseInt(res.headers.get("Retry-After") || "2", 10);
+    await new Promise((r) => setTimeout(r, Math.max(1, retryAfter) * 1000));
+    return graphFetch(url, token, init, attempt + 1);
+  }
+  return res;
+}
+
+async function fetchTeamsItems(conn: Connection): Promise<SyncItem[]> {
+  const cfg = conn.config as { planId?: string };
+  if (!cfg.planId) return [];
+  const out: SyncItem[] = [];
+  let url: string | null = `https://graph.microsoft.com/v1.0/planner/plans/${encodeURIComponent(cfg.planId)}/tasks`;
+  let pages = 0;
+  while (url && pages < 20) {
+    const res = await graphFetch(url, conn.access_token);
+    if (!res.ok) throw new Error(`Teams ${res.status}: ${await res.text()}`);
+    const data = await res.json() as {
+      value?: Array<Record<string, unknown>>;
+      "@odata.nextLink"?: string;
+    };
+    for (const task of (data.value || [])) {
+      const t = task as {
+        id?: string;
+        title?: string;
+        percentComplete?: number;
+        assignments?: Record<string, unknown>;
+        dueDateTime?: string;
+        appliedCategories?: Record<string, unknown>;
+        orderHint?: string;
+        planId?: string;
+        bucketId?: string;
+      };
+      const assigneeKeys = t.assignments ? Object.keys(t.assignments) : [];
+      const labelKeys = t.appliedCategories ? Object.keys(t.appliedCategories) : [];
+      out.push({
+        externalId: t.id || "",
+        externalKey: t.orderHint ? `#${String(t.orderHint).split(" ")[0].slice(0, 8)}` : undefined,
+        // Planner has no public canonical URL per task — link the plan board.
+        externalUrl: t.planId ? `https://tasks.office.com/_#/plantaskboard/${encodeURIComponent(t.planId)}` : undefined,
+        title: t.title || "(no title)",
+        // Skip the per-task /details fetch — it doubles request count and Graph
+        // throttling makes it slow. Fall back to title for description.
+        description: t.title || "",
+        status: plannerStatusFromPercent(t.percentComplete),
+        priority: "medium",
+        assignee: assigneeKeys[0] || undefined,
+        dueDate: t.dueDateTime ? String(t.dueDateTime).slice(0, 10) : undefined,
+        labels: labelKeys,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+    url = data["@odata.nextLink"] || null;
+    pages++;
+  }
+  return out;
+}
+
+// Push a single Roadmap OS task back to Microsoft Planner. Planner PATCH
+// requires the current @odata.etag in an If-Match header.
+async function applyExportToPlanner(
+  conn: Connection,
+  item: SyncItem,
+  externalId?: string,
+): Promise<{ id: string; key?: string; url?: string } | null> {
+  const cfg = conn.config as { planId?: string };
+  if (!cfg.planId) return null;
+
+  if (externalId) {
+    // Update path — fetch first to obtain the etag.
+    const getRes = await graphFetch(
+      `https://graph.microsoft.com/v1.0/planner/tasks/${encodeURIComponent(externalId)}`,
+      conn.access_token,
+    );
+    if (!getRes.ok) return null;
+    const existing = await getRes.json() as { "@odata.etag"?: string };
+    const etag = existing["@odata.etag"];
+    if (!etag) return null;
+    const patchRes = await graphFetch(
+      `https://graph.microsoft.com/v1.0/planner/tasks/${encodeURIComponent(externalId)}`,
+      conn.access_token,
+      {
+        method: "PATCH",
+        headers: { "If-Match": etag, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: item.title,
+          percentComplete: plannerPercentFromStatus(item.status),
+          dueDateTime: item.dueDate ? new Date(item.dueDate).toISOString() : null,
+        }),
+      },
+    );
+    if (!patchRes.ok) return null;
+    return { id: externalId, url: `https://tasks.office.com/_#/plantaskboard/${encodeURIComponent(cfg.planId)}` };
+  }
+
+  // Create path — POST /planner/tasks with planId.
+  const createRes = await graphFetch(
+    "https://graph.microsoft.com/v1.0/planner/tasks",
+    conn.access_token,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        planId: cfg.planId,
+        title: item.title,
+        percentComplete: plannerPercentFromStatus(item.status),
+        dueDateTime: item.dueDate ? new Date(item.dueDate).toISOString() : undefined,
+      }),
+    },
+  );
+  if (!createRes.ok) return null;
+  const created = await createRes.json() as { id?: string };
+  if (!created.id) return null;
+  return {
+    id: created.id,
+    url: `https://tasks.office.com/_#/plantaskboard/${encodeURIComponent(cfg.planId)}`,
+  };
+}
+
+// Post an HTML message to a Microsoft Teams channel. Phase 1 helper —
+// the renderer-side hook that auto-fires this on initiative status change
+// is documented in TEAMS_INTEGRATION.md as Phase 2.
+export async function postTeamsNotification(
+  conn: Connection,
+  message: string,
+): Promise<{ ok: boolean; status: number; body?: string }> {
+  const cfg = conn.config as {
+    notificationTeamId?: string;
+    notificationChannelId?: string;
+  };
+  if (!cfg.notificationTeamId || !cfg.notificationChannelId) {
+    return { ok: false, status: 0, body: "Teams notification target not configured" };
+  }
+  const url = `https://graph.microsoft.com/v1.0/teams/${encodeURIComponent(cfg.notificationTeamId)}/channels/${encodeURIComponent(cfg.notificationChannelId)}/messages`;
+  const res = await graphFetch(url, conn.access_token, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      body: { contentType: "html", content: message },
+    }),
+  });
+  const body = res.ok ? undefined : await res.text();
+  return { ok: res.ok, status: res.status, body };
+}
+
 async function fetchExternalItems(conn: Connection): Promise<SyncItem[]> {
   switch (conn.provider) {
     case "jira": return fetchJiraItems(conn);
     case "github": return fetchGitHubItems(conn);
     case "asana": return fetchAsanaItems(conn);
     case "linear": return fetchLinearItems(conn);
+    case "teams": return fetchTeamsItems(conn);
     default: return []; // slack is webhook-driven
   }
 }
 
 // ── Push back to external (export path) ──────────────────────────────────
-async function pushItemToProvider(_conn: Connection, _item: SyncItem): Promise<{ id?: string; key?: string; url?: string } | null> {
-  // Out of scope for the v10 first-cut: we record exports in the sync log
-  // but actual API push is left as a follow-up per provider. We still mark
-  // imported mappings as "exported" so future syncs reconcile correctly.
+async function pushItemToProvider(conn: Connection, item: SyncItem, externalId?: string): Promise<{ id?: string; key?: string; url?: string } | null> {
+  // Per-provider export. Most providers are stubbed pending dedicated
+  // implementations; Teams (Planner) is the first wired path because the
+  // sync-back is needed for status-change propagation.
+  if (conn.provider === "teams") {
+    return await applyExportToPlanner(conn, item, externalId);
+  }
+  // Other providers: record exports in the sync log only.
   return null;
 }
 
@@ -559,7 +749,7 @@ serve(async (req) => {
       for (const _m of (maps || []).slice(0, 50)) {
         const pushed = await pushItemToProvider(connection, {
           externalId: _m.external_id, title: "", status: "todo", updatedAt: new Date().toISOString(),
-        });
+        }, _m.external_id);
         if (pushed) exported++;
       }
     }
