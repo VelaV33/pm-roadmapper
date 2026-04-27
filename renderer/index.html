@@ -20,7 +20,7 @@
 <style>
 :root{
   --navy:#0F1B3D;--blue:#005bb1;--accent:#005bb1;
-  --bg:#e9eef5;--white:#FFFFFF;--border:#9ea7b8;
+  --bg:#e2e8f0;--white:#FFFFFF;--border:#475569;
   --text:#1a1c1d;--muted:#717785;
   --g1:#10b981;--g2:#34d399;
   --b1:#005bb1;--b2:#0073dd;
@@ -2393,58 +2393,39 @@ body.dark-mode .lifecycle-bar .stage.past{background:rgba(45,107,244,.2);color:#
   </div>
 
   <!-- Bento Stats Grid -->
-  <div id="dashStats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px"></div>
+  <div id="dashStats" style="display:none"></div>
 
-  <!-- Main Content Grid -->
-  <div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;margin-bottom:32px">
-    <!-- Initiative Health Summary -->
-    <div style="background:var(--white);border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.04)">
-      <h3 style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:16px">Initiative Health</h3>
-      <div id="dashHealthList"></div>
-    </div>
-    <!-- Quick Actions -->
-    <div style="display:flex;flex-direction:column;gap:16px">
-      <div style="background:linear-gradient(135deg,#001b3d,#0073dd);border-radius:16px;padding:24px;color:#fff;position:relative;overflow:hidden">
-        <div style="position:absolute;right:-20px;bottom:-20px;width:120px;height:120px;background:rgba(255,255,255,.06);border-radius:50%;"></div>
-        <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.5)">Quick Actions</span>
-        <h3 style="font-size:18px;font-weight:700;margin:8px 0 16px;letter-spacing:-0.02em;color:#fff">What would you like to do?</h3>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <button onclick="closeAllOverlays();openAddRowModal(null)" title="Add a new product (roadmap row)" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;text-align:left;transition:all .12s;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">+ Add Initiative</button>
-          <button onclick="closeAllOverlays();openG2M()" title="Open the Go-to-Market readiness checklist" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;text-align:left;transition:all .12s;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">Checklist</button>
-          <button onclick="closeAllOverlays();openReports()" title="View quarterly reports and snapshots" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;text-align:left;transition:all .12s;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">View Reports</button>
-        </div>
-      </div>
-      <!-- Capacity Mini -->
-      <div style="background:var(--white);border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.04);flex:1">
-        <h3 style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:12px">This Week's Capacity</h3>
-        <div id="dashCapacity"></div>
-      </div>
-    </div>
+  <!-- v1.47.0: Dashboard rebuilt as a strategy-execution scoreboard.
+       Sections render in priority order: pulse hero -> action inbox + outcomes
+       -> throughput + readiness -> my day -> feedback -> launchpad. -->
+
+  <!-- S1 Pulse Strip (hero, 5 KPI tiles) -->
+  <div id="dashPulseStrip" style="margin-bottom:24px"></div>
+  <div id="dashEmptyBanner" style="display:none;margin:-8px 0 24px;padding:12px 16px;background:rgba(0,91,177,.08);border:1px dashed var(--accent);border-radius:10px;font-size:12px;color:var(--text)">
+    Add your first initiative on the Roadmap to start tracking.
+    <button onclick="closeAllOverlays();openAddRowModal(null)" style="margin-left:8px;background:var(--accent);color:#fff;border:none;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">+ Add Initiative</button>
   </div>
 
-  <!-- Bottom Grid (v1.26.10: real <button> elements for keyboard a11y) -->
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
-    <button class="dash-card" onclick="closeAllOverlays();openTodo()" title="Open the ToDo list" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);text-align:left;font-family:inherit" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
-      <div style="margin-bottom:8px;color:var(--accent)"><span class="ico" aria-hidden="true" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></span></div>
-      <h5 style="font-weight:700;font-size:13px;margin-bottom:4px">ToDo List</h5>
-      <p style="font-size:11px;color:var(--muted)" id="dashTodoSummary">—</p>
-    </button>
-    <button class="dash-card" onclick="closeAllOverlays();openKPI()" title="Open KPI Scorecard" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);text-align:left;font-family:inherit" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
-      <div style="margin-bottom:8px;color:var(--accent)"><span class="ico" aria-hidden="true" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path d="M16 8v8m-4-5v5m-4-2v2m-2 4h16a2 2 0 002-2V5a2 2 0 00-2-2H4a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></span></div>
-      <h5 style="font-weight:700;font-size:13px;margin-bottom:4px">KPI Scorecard</h5>
-      <p style="font-size:11px;color:var(--muted)">Track performance metrics</p>
-    </button>
-    <button class="dash-card" onclick="closeAllOverlays();openCapacity()" title="Open CapacityIQ — team capacity planning" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);text-align:left;font-family:inherit" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
-      <div style="margin-bottom:8px;color:var(--accent)"><span class="ico" aria-hidden="true" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></span></div>
-      <h5 style="font-weight:700;font-size:13px;margin-bottom:4px">CapacityIQ</h5>
-      <p style="font-size:11px;color:var(--muted)">Team capacity planning</p>
-    </button>
-    <button class="dash-card" onclick="closeAllOverlays();openPlans()" title="Open Project Plans" style="padding:20px;background:var(--white);border-radius:16px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04);text-align:left;font-family:inherit" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)'">
-      <div style="margin-bottom:8px;color:var(--accent)"><span class="ico" aria-hidden="true" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg></span></div>
-      <h5 style="font-weight:700;font-size:13px;margin-bottom:4px">Plans Overview</h5>
-      <p style="font-size:11px;color:var(--muted)" id="dashPlansSummary">—</p>
-    </button>
+  <!-- S2 + S3 Action Inbox + Closing the Loop -->
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:24px" id="dashActionRow">
+    <div id="dashActionInbox"></div>
+    <div id="dashLoopCard"></div>
   </div>
+
+  <!-- S4 + S5 Throughput + G2M Readiness -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px" id="dashRailRow">
+    <div id="dashThroughput"></div>
+    <div id="dashReadiness"></div>
+  </div>
+
+  <!-- S6 My Day (full width, 3 sub-columns inside) -->
+  <div id="dashMyDay" style="margin-bottom:24px"></div>
+
+  <!-- S7 Recent Feedback -->
+  <div id="dashFeedback" style="margin-bottom:24px"></div>
+
+  <!-- S8 Launchpad (kept) -->
+  <div id="dashLaunchpad"></div>
 </div>
 
 <div id="roadmapPage" class="page">
@@ -4044,7 +4025,7 @@ function buildDayOptions(mname,selectedDay){
 // v1.43.0 — single source of truth for the app version. Bump this with every
 // release alongside package.json. Used by the login footer, the JSON backup
 // metadata, and the in-app What's New modal (lastSeenAppVersion comparison).
-var APP_VERSION = 'v1.46.0';
+var APP_VERSION = 'v1.47.0';
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 var sections=[
@@ -25246,106 +25227,570 @@ function closeDashboard(){
   updateNavActive('Roadmap');
 }
 
-function populateDashboard(){
-  // Greeting
-  var hr=new Date().getHours();
-  var greeting=hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
-  var el=document.getElementById('dashGreeting');
-  var displayName=userProfile.name||(_currentUser?_currentUser.email.split('@')[0]:'');
-  if(el) el.textContent=greeting+(displayName?', '+displayName:'');
+// ═══════════════════════════════════════════════════════════════════════════
+// v1.47.0 DASHBOARD — Strategy Execution Scoreboard
+//   Eight sections, each answering a specific question a product leader has.
+//   Reuses the same calculations as the existing Reports/Insights modules and
+//   adds a tiny per-week KPI snapshot (dashboard_metrics table) for the
+//   pulse-strip sparklines.
+// ═══════════════════════════════════════════════════════════════════════════
 
-  // Stats
-  var statsEl=document.getElementById('dashStats');
-  if(statsEl){
-    var totalInit=rows.length;
-    var totalTodos=0,doneTodos=0;
-    Object.keys(todoAllData).forEach(function(k){var ts=todoAllData[k]||[];totalTodos+=ts.length;ts.forEach(function(t){if(t.status==='done')doneTodos++;});});
-    var taskPct=totalTodos>0?Math.round(doneTodos/totalTodos*100):0;
-    var g2mProducts=Object.keys(g2mAllData).length;
-    var sharedCount=(_sharedToMe||[]).length;
+// ── State ──
+var _dashHistoryCache = null;
+var _dashSnapshotInflight = false;
 
-    var stats=[
-      {icon:svgIcon('target',24),value:totalInit,label:'Initiatives',color:'var(--accent)'},
-      {icon:svgIcon('check',24),value:taskPct+'%',label:'Tasks Complete',color:'var(--g1)'},
-      {icon:svgIcon('clipboard',24),value:g2mProducts,label:'G2M Strategies',color:'var(--purple)'},
-      {icon:svgIcon('share',24),value:sharedCount,label:'Shared With Me',color:'var(--accent)'}
-    ];
-    statsEl.innerHTML='';
-    stats.forEach(function(s){
-      var card=document.createElement('div');
-      card.style.cssText='background:var(--white);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.04);cursor:pointer;transition:all .15s';
-      card.onmouseover=function(){card.style.boxShadow='0 4px 16px rgba(0,0,0,.08)';};
-      card.onmouseout=function(){card.style.boxShadow='0 1px 3px rgba(0,0,0,.04)';};
-      card.innerHTML='<div style="margin-bottom:8px;color:'+s.color+'">'+s.icon+'</div><div style="font-size:28px;font-weight:800;letter-spacing:-0.03em;color:'+s.color+'">'+s.value+'</div><div style="font-size:11px;font-weight:600;color:var(--muted);margin-top:4px">'+s.label+'</div>';
-      statsEl.appendChild(card);
-    });
-  }
+// ── ISO week helper (matches dashboard-snapshot edge function) ──
+function _dashIsoWeekKey(d){
+  d = d || new Date();
+  var t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+  var ys = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  var w = Math.ceil((((t.getTime() - ys.getTime()) / 86400000) + 1) / 7);
+  return t.getUTCFullYear() + '-W' + String(w).padStart(2, '0');
+}
 
-  // Health list (top 6 initiatives)
-  var healthEl=document.getElementById('dashHealthList');
-  if(healthEl){
-    healthEl.innerHTML='';
-    var statusColors={g:'#10b981',b:'#005bb1',o:'#f59e0b',s:'#7c3aed',r:'#ef4444'};
-    var statusLabels={g:'Released',b:'In Progress',o:'Delayed',s:'Strategy',r:'At Risk'};
-    rows.slice(0,6).forEach(function(row){
-      var sec=sections.find(function(s){return s.id===row.sec;})||{name:'—'};
-      var lastBar=row.bars&&row.bars.length?row.bars[row.bars.length-1]:null;
-      var status=lastBar?lastBar.c:'s';
-      var div=document.createElement('div');
-      div.style.cssText='display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)';
-      div.innerHTML='<div style="width:8px;height:8px;border-radius:50%;background:'+(statusColors[status]||'#94a3b8')+';flex-shrink:0"></div>'+
-        '<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(row.name)+'</div><div style="font-size:11px;color:var(--muted)">'+escHtml(sec.name)+'</div></div>'+
-        '<span style="font-size:10px;font-weight:600;padding:3px 10px;border-radius:9999px;background:'+(statusColors[status]||'#94a3b8')+'15;color:'+(statusColors[status]||'#94a3b8')+'">'+statusLabels[status]+'</span>';
-      healthEl.appendChild(div);
-    });
-    if(!rows.length) healthEl.innerHTML='<p style="color:var(--muted);font-size:13px;padding:16px 0;text-align:center;font-style:italic">No initiatives yet. Add one from the roadmap.</p>';
-  }
-
-  // Capacity mini
-  var capEl=document.getElementById('dashCapacity');
-  if(capEl){
-    if(!_tsCurrentWeek) _tsCurrentWeek=_getISOWeek(new Date());
-    var weekDates=_weekDates(_tsCurrentWeek);
-    var todos=_getTodosForWeek(weekDates[0]);
-    var planned=0; todos.forEach(function(t){planned+=t.hours;});
-    var avail=_capacityHoursPerWeek;
-    var pct=Math.round(planned/avail*100);
-    var color=pct<=75?'var(--g1)':pct<=95?'var(--o1)':'var(--r1)';
-    capEl.innerHTML='<div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:13px;font-weight:600">'+planned.toFixed(1)+'h / '+avail+'h</span><span style="font-size:13px;font-weight:700;color:'+color+'">'+pct+'%</span></div>'+
-      '<div style="height:8px;background:var(--surface-high);border-radius:4px;overflow:hidden"><div style="height:100%;width:'+Math.min(pct,100)+'%;background:'+color+';border-radius:4px;transition:width .3s"></div></div>'+
-      '<div style="font-size:11px;color:var(--muted);margin-top:6px">'+Math.max(0,avail-planned).toFixed(1)+'h remaining this week</div>';
-  }
-
-  // Todo summary
-  var todoSum=document.getElementById('dashTodoSummary');
-  if(todoSum){
-    var total=0,open=0;
-    Object.keys(todoAllData).forEach(function(k){var ts=todoAllData[k]||[];total+=ts.length;ts.forEach(function(t){if(t.status==='open')open++;});});
-    todoSum.textContent=open+' open of '+total+' total tasks';
-  }
-
-  // v1.40.0: Plans Overview replaces Shared-with-me — surfaces the user's
-  // active plans count with a tiny status breakdown.
-  var plansSum=document.getElementById('dashPlansSummary');
-  if(plansSum){
-    var plans=(typeof projectPlans!=='undefined' && projectPlans)?projectPlans:[];
-    if(!plans.length){
-      plansSum.textContent='No plans yet — click to create one';
-    } else {
-      var totalTasks=0, doneTasks=0, openPlans=0;
-      plans.forEach(function(p){
-        var tsks=p.tasks||[];
-        totalTasks+=tsks.length;
-        var allDone=tsks.length>0;
-        tsks.forEach(function(t){
-          if(t.status==='done') doneTasks++; else allDone=false;
-        });
-        if(!allDone) openPlans++;
-      });
-      var pct = totalTasks ? Math.round(doneTasks/totalTasks*100) : 0;
-      plansSum.textContent = plans.length+' plan'+(plans.length===1?'':'s')+' · '+openPlans+' active · '+pct+'% complete';
+// ── Snapshot + history (Supabase) ──
+async function _dashSnapshotCurrentWeek(){
+  if(_dashSnapshotInflight) return;
+  if(typeof _accessToken === 'undefined' || !_accessToken) return;
+  _dashSnapshotInflight = true;
+  try {
+    await _sbFetch('/functions/v1/dashboard-snapshot', 'POST', { mode: 'current' });
+    var settings = (typeof currentData !== 'undefined' && currentData && currentData.appSettings) || {};
+    if(!settings.dashboardBackfilled){
+      await _sbFetch('/functions/v1/dashboard-snapshot', 'POST', { mode: 'backfill' });
+      if(typeof currentData !== 'undefined'){
+        currentData.appSettings = currentData.appSettings || {};
+        currentData.appSettings.dashboardBackfilled = true;
+        if(typeof pushCloudData === 'function') pushCloudData();
+      }
     }
+    // Invalidate cache so next render fetches fresh
+    _dashHistoryCache = null;
+  } catch(_e){ /* silent — dashboard renders even if snapshot fails */ }
+  finally { _dashSnapshotInflight = false; }
+}
+
+async function _dashFetchPulseHistory(){
+  if(_dashHistoryCache && (Date.now() - _dashHistoryCache.at) < 60000) return _dashHistoryCache.data;
+  try {
+    var r = await _sbFetch('/rest/v1/dashboard_metrics?select=week_iso,shipped_7d,shipping_next_7d,at_risk_count,avg_g2m,success_criteria_pct&order=week_iso.desc&limit=12', 'GET', null);
+    if(!r || !r.ok || !Array.isArray(r.data)) return null;
+    var rows = r.data.slice().reverse(); // oldest -> newest
+    var data = {
+      shipped:      rows.map(function(x){ return x.shipped_7d; }),
+      shippingNext: rows.map(function(x){ return x.shipping_next_7d; }),
+      atRisk:       rows.map(function(x){ return x.at_risk_count; }),
+      g2m:          rows.map(function(x){ return x.avg_g2m === null ? null : Number(x.avg_g2m); }),
+      scMet:        rows.map(function(x){ return x.success_criteria_pct === null ? null : Number(x.success_criteria_pct); })
+    };
+    _dashHistoryCache = { at: Date.now(), data: data };
+    return data;
+  } catch(_e){ return null; }
+}
+
+// ── SVG sparkline (gaps for null) ──
+function _dashSparkline(values, color){
+  if(!Array.isArray(values) || !values.length) return '<svg width="60" height="16"></svg>';
+  var nums = values.filter(function(v){ return v !== null && v !== undefined && !isNaN(v); });
+  if(!nums.length) return '<svg width="60" height="16"></svg>';
+  var min = Math.min.apply(null, nums), max = Math.max.apply(null, nums);
+  var span = max - min || 1;
+  var step = 60 / Math.max(1, values.length - 1);
+  var pts = values.map(function(v, i){
+    if(v === null || v === undefined || isNaN(v)) return null;
+    return { x: i * step, y: 16 - ((v - min) / span) * 14 - 1 };
+  });
+  var paths = []; var cur = [];
+  pts.forEach(function(p){ if(p === null){ if(cur.length){ paths.push(cur); cur = []; } } else cur.push(p); });
+  if(cur.length) paths.push(cur);
+  var svg = '<svg width="60" height="16" style="display:block">';
+  paths.forEach(function(seg){
+    if(seg.length < 2){
+      svg += '<circle cx="' + seg[0].x.toFixed(1) + '" cy="' + seg[0].y.toFixed(1) + '" r="1.5" fill="' + (color || 'currentColor') + '"/>';
+    } else {
+      var d = 'M ' + seg.map(function(p){ return p.x.toFixed(1) + ' ' + p.y.toFixed(1); }).join(' L ');
+      svg += '<path d="' + d + '" stroke="' + (color || 'currentColor') + '" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+    }
+  });
+  svg += '</svg>';
+  return svg;
+}
+
+// ── Data calculators (sync, in-memory) ──
+function _dashPulseCurrent(){
+  var now = Date.now();
+  var weekAgo = now - 7 * 86400000;
+  var weekAhead = now + 7 * 86400000;
+  var shipped = 0, shippingNext = 0;
+  (typeof projectPlans !== 'undefined' ? projectPlans : []).forEach(function(p){
+    (p.tasks || []).forEach(function(t){
+      if(t.doneAt){
+        var ts = Date.parse(t.doneAt);
+        if(isFinite(ts) && ts >= weekAgo && ts < now) shipped++;
+      }
+      if((t.status || '').toLowerCase() !== 'done'){
+        var d = t.endDate || t.dueDate;
+        if(d){
+          var ts2 = Date.parse(d);
+          if(isFinite(ts2) && ts2 >= now && ts2 < weekAhead) shippingNext++;
+        }
+      }
+    });
+  });
+  var atRisk = (typeof rows !== 'undefined' ? rows : []).filter(function(r){
+    var bars = r.bars || [];
+    if(!bars.length) return false;
+    var c = bars[bars.length - 1].c;
+    return c === 'r' || c === 'o';
+  }).length;
+  var avgG2M = null;
+  if(typeof g2mAllData !== 'undefined' && g2mAllData){
+    var sum = 0, n = 0;
+    Object.keys(g2mAllData).forEach(function(k){
+      var items = (g2mAllData[k] || {}).items || [];
+      var applicable = items.filter(function(i){ return (i.value || '') !== 'na'; });
+      if(!applicable.length) return;
+      var yes = applicable.filter(function(i){ return i.value === 'yes'; }).length;
+      sum += (yes / applicable.length) * 100;
+      n++;
+    });
+    if(n) avgG2M = Math.round(sum / n);
   }
+  var total = 0, met = 0;
+  (typeof rows !== 'undefined' ? rows : []).forEach(function(r){
+    var released = (r.bars || []).some(function(b){ return b && b.c === 'g'; }) || (r.launchOutcomes && r.launchOutcomes.releasedAt);
+    if(!released) return;
+    var outcomes = [];
+    if(Array.isArray(r.expectedOutcomes)) outcomes = outcomes.concat(r.expectedOutcomes);
+    if(r.launchOutcomes && Array.isArray(r.launchOutcomes.criteria)) outcomes = outcomes.concat(r.launchOutcomes.criteria);
+    if(r.launchOutcomes && Array.isArray(r.launchOutcomes.successCriteria)) outcomes = outcomes.concat(r.launchOutcomes.successCriteria);
+    outcomes.forEach(function(o){
+      var s = String((o && (o.status || o.result)) || '').toLowerCase();
+      if(!s) return;
+      total++;
+      if(s === 'met' || s === 'achieved' || s === 'success') met++;
+    });
+  });
+  var scMet = total > 0 ? Math.round(met / total * 100) : null;
+  return { shipped: shipped, shippingNext: shippingNext, atRisk: atRisk, avgG2M: avgG2M, scMet: scMet };
+}
+
+function _dashWeeklyTriad(){
+  var now = Date.now();
+  var weekAgo = now - 7 * 86400000;
+  var weekAhead = now + 7 * 86400000;
+  var shipped = [], shippingNext = [], blocked = [];
+  (typeof projectPlans !== 'undefined' ? projectPlans : []).forEach(function(p){
+    (p.tasks || []).forEach(function(t){
+      var st = (t.status || '').toLowerCase();
+      if(t.doneAt){
+        var ts = Date.parse(t.doneAt);
+        if(isFinite(ts) && ts >= weekAgo && ts < now) shipped.push({ task: t, plan: p });
+      }
+      if(st !== 'done'){
+        var d = t.endDate || t.dueDate;
+        if(d){
+          var ts2 = Date.parse(d);
+          if(isFinite(ts2) && ts2 >= now && ts2 < weekAhead) shippingNext.push({ task: t, plan: p });
+        }
+      }
+      if(st === 'blocked' || t.blockedReason) blocked.push({ task: t, plan: p });
+    });
+  });
+  return { shipped: shipped, shippingNext: shippingNext, blocked: blocked };
+}
+
+function _dashG2MTop(){
+  var products = [];
+  if(typeof g2mAllData !== 'undefined' && g2mAllData){
+    Object.keys(g2mAllData).forEach(function(name){
+      var items = (g2mAllData[name] || {}).items || [];
+      var applicable = items.filter(function(i){ return (i.value || '') !== 'na'; });
+      if(!applicable.length) return;
+      var yes = applicable.filter(function(i){ return i.value === 'yes'; }).length;
+      products.push({ name: name, pct: Math.round(yes / applicable.length * 100) });
+    });
+  }
+  products.sort(function(a, b){ return b.pct - a.pct; });
+  var avg = products.length ? Math.round(products.reduce(function(s, p){ return s + p.pct; }, 0) / products.length) : 0;
+  return {
+    avg: avg,
+    top3: products.filter(function(p){ return p.pct >= 80; }).slice(0, 3),
+    bottom3: products.filter(function(p){ return p.pct < 50; }).slice(-3).reverse(),
+    all: products
+  };
+}
+
+function _dashLoopStats(){
+  var met = 0, missed = 0, pending = 0, partial = 0;
+  var launches = [];
+  (typeof rows !== 'undefined' ? rows : []).forEach(function(r){
+    var releasedAt = (r.launchOutcomes && r.launchOutcomes.releasedAt) || null;
+    var releasedColor = (r.bars || []).some(function(b){ return b && b.c === 'g'; });
+    if(!releasedAt && !releasedColor) return;
+    var outcomes = [];
+    if(Array.isArray(r.expectedOutcomes)) outcomes = outcomes.concat(r.expectedOutcomes);
+    if(r.launchOutcomes && Array.isArray(r.launchOutcomes.criteria)) outcomes = outcomes.concat(r.launchOutcomes.criteria);
+    if(r.launchOutcomes && Array.isArray(r.launchOutcomes.successCriteria)) outcomes = outcomes.concat(r.launchOutcomes.successCriteria);
+    var rTotal = 0, rMet = 0;
+    outcomes.forEach(function(o){
+      var s = String((o && (o.status || o.result)) || '').toLowerCase();
+      if(!s) return;
+      rTotal++;
+      if(s === 'met' || s === 'achieved' || s === 'success'){ met++; rMet++; }
+      else if(s === 'missed' || s === 'failed') missed++;
+      else if(s === 'partial') partial++;
+      else pending++;
+    });
+    launches.push({
+      row: r,
+      releasedAt: releasedAt || (r.updatedAt || null),
+      total: rTotal,
+      met: rMet,
+      pct: rTotal > 0 ? Math.round(rMet / rTotal * 100) : null
+    });
+  });
+  launches.sort(function(a, b){
+    var ta = a.releasedAt ? Date.parse(a.releasedAt) : 0;
+    var tb = b.releasedAt ? Date.parse(b.releasedAt) : 0;
+    return tb - ta;
+  });
+  return {
+    met: met, missed: missed, pending: pending, partial: partial,
+    total: met + missed + pending + partial,
+    recent: launches.slice(0, 3)
+  };
+}
+
+// ── UI atoms ──
+function _dashIcon(name, size){
+  if(typeof svgIcon === 'function') return svgIcon(name, { size: size || 18 });
+  return '';
+}
+
+function _dashFmtVal(v){
+  return (v === null || v === undefined) ? '—' : v;
+}
+
+// ── Section renderers ──
+function _dashRenderGreeting(){
+  var el = document.getElementById('dashGreeting');
+  if(!el) return;
+  var hr = new Date().getHours();
+  var g = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+  var name = (typeof userProfile !== 'undefined' && userProfile && userProfile.name)
+    || (typeof _currentUser !== 'undefined' && _currentUser ? _currentUser.email.split('@')[0] : '');
+  el.textContent = g + (name ? ', ' + name : '');
+}
+
+function _dashRenderPulse(){
+  var el = document.getElementById('dashPulseStrip');
+  if(!el) return;
+  var p = _dashPulseCurrent();
+  function tile(label, value, color, icon, sparkValues, currentForDelta, onClickAttr){
+    var sparkHtml = sparkValues ? _dashSparkline(sparkValues, color) : '';
+    var deltaHtml = '';
+    if(sparkValues && sparkValues.length >= 2){
+      var prev = sparkValues[sparkValues.length - 2];
+      if(prev !== null && prev !== undefined && currentForDelta !== null){
+        var d = currentForDelta - prev;
+        if(d !== 0){
+          var dColor = d > 0 ? '#10b981' : '#ef4444';
+          var sign = d > 0 ? '+' : '';
+          deltaHtml = '<span style="font-size:10px;font-weight:700;color:' + dColor + ';margin-left:6px">' + sign + (typeof d === 'number' ? Math.round(d * 10) / 10 : d) + '</span>';
+        }
+      }
+    }
+    return '<button onclick="' + onClickAttr + '" style="text-align:left;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-card);cursor:pointer;transition:all .15s;font-family:inherit;width:100%" onmouseover="this.style.boxShadow=\'0 4px 16px rgba(0,0,0,.08)\'" onmouseout="this.style.boxShadow=\'\'">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'+
+        '<span style="color:' + color + ';display:flex">' + _dashIcon(icon, 18) + '</span>'+
+        '<span style="color:' + color + ';opacity:.6">' + sparkHtml + '</span>'+
+      '</div>'+
+      '<div style="font-size:24px;font-weight:800;letter-spacing:-0.02em;color:' + color + ';line-height:1.1">' + _dashFmtVal(value) + deltaHtml + '</div>'+
+      '<div style="font-size:10px;font-weight:700;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.05em">' + escHtml(label) + '</div>'+
+    '</button>';
+  }
+  function render(history){
+    var get = function(k){ return history && history[k] ? history[k] : null; };
+    el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px">'+
+      tile('Shipped (7d)',         p.shipped,                                          '#10b981',      'rocket',    get('shipped'),      p.shipped,    "closeAllOverlays();_rptCurrentReport='weekly-status';openReports();updateNavActive('Reports')")+
+      tile('Shipping next 7d',     p.shippingNext,                                     'var(--accent)','calendar',  get('shippingNext'), p.shippingNext, "closeAllOverlays();_rptCurrentReport='weekly-status';openReports();updateNavActive('Reports')")+
+      tile('At-risk products',     p.atRisk,                                           p.atRisk > 0 ? '#ef4444' : 'var(--muted)', 'warn', get('atRisk'), p.atRisk,    "closeAllOverlays()")+
+      tile('Avg G2M readiness',    p.avgG2M === null ? null : (p.avgG2M + '%'),        'var(--purple)','clipboard', get('g2m'),          p.avgG2M,     "closeAllOverlays();openG2M()")+
+      tile('Success criteria met', p.scMet === null ? null : (p.scMet + '%'),          '#10b981',      'check',     get('scMet'),        p.scMet,      "closeAllOverlays();_rptCurrentReport='launch-outcomes';openReports();updateNavActive('Reports')")+
+    '</div>';
+    var bannerEl = document.getElementById('dashEmptyBanner');
+    if(bannerEl) bannerEl.style.display = (typeof rows !== 'undefined' && rows.length === 0) ? 'block' : 'none';
+  }
+  render(null);
+  _dashFetchPulseHistory().then(function(h){ if(h) render(h); });
+}
+
+function _dashRenderActionInbox(){
+  var el = document.getElementById('dashActionInbox');
+  if(!el) return;
+  var alerts = (typeof _dashBuildAlerts === 'function') ? _dashBuildAlerts() : [];
+  var sevRank = { danger: 0, warning: 1, info: 2, success: 3 };
+  alerts.sort(function(a, b){ return (sevRank[a.type] || 9) - (sevRank[b.type] || 9); });
+  var top = alerts.slice(0, 6);
+  if(!top.length){
+    el.innerHTML = '<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:32px 20px;box-shadow:var(--shadow-card);text-align:center">'+
+      '<div style="color:#10b981;display:inline-flex;margin-bottom:8px">' + _dashIcon('check', 32) + '</div>'+
+      '<div style="font-size:13px;color:var(--text);font-weight:600">Nothing needs you right now</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:4px">Everything\'s on track.</div>'+
+    '</div>';
+    return;
+  }
+  var typeColors = { danger: '#ef4444', warning: '#f59e0b', info: 'var(--accent)', success: '#10b981' };
+  var typeBg     = { danger: 'rgba(239,68,68,.06)', warning: 'rgba(245,158,11,.06)', info: 'rgba(0,91,177,.05)', success: 'rgba(16,185,129,.06)' };
+  var rowsHtml = top.map(function(a){
+    var color = typeColors[a.type] || 'var(--accent)';
+    var bg = typeBg[a.type] || 'transparent';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:' + bg + ';border-left:3px solid ' + color + ';border-radius:0 8px 8px 0;margin-bottom:6px">'+
+      '<span style="color:' + color + ';flex-shrink:0;display:flex">' + _dashIcon(a.icon || 'file', 16) + '</span>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-size:12px;font-weight:700;color:var(--text)">' + escHtml(a.title || '') + '</div>'+
+        (a.detail ? '<div style="font-size:11px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(a.detail) + '</div>' : '')+
+      '</div>'+
+      '<button onclick="closeAllOverlays();openInsights()" style="background:none;border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0">View →</button>'+
+    '</div>';
+  }).join('');
+  var more = alerts.length > 6
+    ? '<button onclick="closeAllOverlays();openInsights()" style="background:none;border:none;color:var(--accent);font-size:11px;font-weight:600;cursor:pointer;padding:8px 0;font-family:inherit">View all ' + alerts.length + ' alerts →</button>'
+    : '';
+  el.innerHTML = '<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-card)">'+
+    '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">Needs you today</div>'+
+    rowsHtml + more +
+  '</div>';
+}
+
+function _dashRenderLoop(){
+  var el = document.getElementById('dashLoopCard');
+  if(!el) return;
+  var s = _dashLoopStats();
+  if(s.total === 0){
+    el.innerHTML = '<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow-card)">'+
+      '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">Closing the Loop</div>'+
+      '<div style="font-size:12px;color:var(--muted);font-style:italic;line-height:1.5">No launches tracked yet. Mark a timeline bar Released or set a release date to start measuring outcomes.</div>'+
+    '</div>';
+    return;
+  }
+  var pct = function(n){ return s.total ? Math.round(n / s.total * 100) : 0; };
+  var bar = '<div style="display:flex;height:10px;border-radius:6px;overflow:hidden;margin:10px 0;background:var(--surface-low)">'+
+    (s.met     ? '<div style="width:' + pct(s.met)     + '%;background:#10b981" title="Met"></div>' : '')+
+    (s.partial ? '<div style="width:' + pct(s.partial) + '%;background:#f59e0b" title="Partial"></div>' : '')+
+    (s.pending ? '<div style="width:' + pct(s.pending) + '%;background:var(--muted)" title="Pending"></div>' : '')+
+    (s.missed  ? '<div style="width:' + pct(s.missed)  + '%;background:#ef4444" title="Missed"></div>' : '')+
+  '</div>';
+  var legend = '<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--muted)">'+
+    '<span><span style="display:inline-block;width:8px;height:8px;background:#10b981;border-radius:2px;margin-right:4px"></span>Met ' + s.met + '</span>'+
+    (s.partial ? '<span><span style="display:inline-block;width:8px;height:8px;background:#f59e0b;border-radius:2px;margin-right:4px"></span>Partial ' + s.partial + '</span>' : '')+
+    '<span><span style="display:inline-block;width:8px;height:8px;background:var(--muted);border-radius:2px;margin-right:4px"></span>Pending ' + s.pending + '</span>'+
+    (s.missed  ? '<span><span style="display:inline-block;width:8px;height:8px;background:#ef4444;border-radius:2px;margin-right:4px"></span>Missed ' + s.missed + '</span>' : '')+
+  '</div>';
+  var recent = s.recent.length
+    ? '<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">'+
+      '<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Recent launches</div>'+
+      s.recent.map(function(r){
+        var pctText = r.pct === null ? 'No criteria' : r.pct + '% met';
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:12px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-weight:500">' + escHtml(r.row.name) + '</span><span style="color:var(--muted);font-size:11px;flex-shrink:0;margin-left:8px">' + pctText + '</span></div>';
+      }).join('')+
+    '</div>'
+    : '';
+  el.innerHTML = '<div onclick="closeAllOverlays();_rptCurrentReport=\'launch-outcomes\';openReports();updateNavActive(\'Reports\')" style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow-card);cursor:pointer;transition:all .15s" onmouseover="this.style.boxShadow=\'0 4px 16px rgba(0,0,0,.08)\'" onmouseout="this.style.boxShadow=\'\'">'+
+    '<div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:13px;font-weight:700;color:var(--text)">Closing the Loop</div><div style="font-size:11px;color:var(--muted)">' + s.total + ' outcomes</div></div>'+
+    bar + legend + recent +
+  '</div>';
+}
+
+function _dashRenderThroughput(){
+  var el = document.getElementById('dashThroughput');
+  if(!el) return;
+  var t = _dashWeeklyTriad();
+  function listSection(heading, items, emptyMsg){
+    var inner = items.length
+      ? items.slice(0, 4).map(function(x){
+          return '<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
+            escHtml(x.task.name || x.task.title || 'Untitled') +
+            '<span style="color:var(--muted);font-size:11px;margin-left:6px">' + escHtml(x.plan.name || '') + '</span></div>';
+        }).join('')
+      : '<div style="padding:8px 0;color:var(--muted);font-size:12px;font-style:italic">' + escHtml(emptyMsg) + '</div>';
+    var more = items.length > 4
+      ? '<div style="margin-top:4px"><button onclick="closeAllOverlays();_rptCurrentReport=\'weekly-status\';openReports();updateNavActive(\'Reports\')" style="background:none;border:none;color:var(--accent);font-size:11px;font-weight:600;cursor:pointer;padding:4px 0;font-family:inherit">+ ' + (items.length - 4) + ' more →</button></div>'
+      : '';
+    return '<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">' + escHtml(heading) + '</div>' + inner + more + '</div>';
+  }
+  el.innerHTML = '<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow-card)">'+
+    '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">This week\'s throughput</div>'+
+    listSection('Shipped (7d)', t.shipped, 'Nothing shipped this week') +
+    listSection('Shipping next 7 days', t.shippingNext, 'No tasks ending in next 7 days') +
+    listSection('Blocked', t.blocked, 'No blocked tasks') +
+  '</div>';
+}
+
+function _dashRenderReadiness(){
+  var el = document.getElementById('dashReadiness');
+  if(!el) return;
+  var d = _dashG2MTop();
+  if(!d.all.length){
+    el.innerHTML = '<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow-card)">'+
+      '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">G2M Readiness</div>'+
+      '<div style="font-size:12px;color:var(--muted);font-style:italic;margin-bottom:10px">Open a product\'s G2M checklist to start tracking readiness.</div>'+
+      '<button onclick="closeAllOverlays();openG2M()" style="background:var(--accent);border:none;color:#fff;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Open Checklist →</button>'+
+    '</div>';
+    return;
+  }
+  var bar = function(p){
+    var color = p.pct >= 80 ? '#10b981' : p.pct < 50 ? '#ef4444' : '#f59e0b';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;font-size:12px">'+
+      '<div style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-weight:500">' + escHtml(p.name) + '</div>'+
+      '<div style="width:80px;height:6px;background:var(--surface-low);border-radius:3px;overflow:hidden;flex-shrink:0"><div style="width:' + p.pct + '%;height:100%;background:' + color + '"></div></div>'+
+      '<div style="font-size:11px;color:var(--muted);width:32px;text-align:right;flex-shrink:0">' + p.pct + '%</div>'+
+    '</div>';
+  };
+  var topHtml = d.top3.length    ? '<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:10px 0 4px">Ready (≥80%)</div>' + d.top3.map(bar).join('') : '';
+  var bottomHtml = d.bottom3.length ? '<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:12px 0 4px">Stuck (<50%)</div>' + d.bottom3.map(bar).join('') : '';
+  el.innerHTML = '<div onclick="closeAllOverlays();openG2M()" style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow-card);cursor:pointer;transition:all .15s" onmouseover="this.style.boxShadow=\'0 4px 16px rgba(0,0,0,.08)\'" onmouseout="this.style.boxShadow=\'\'">'+
+    '<div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:13px;font-weight:700;color:var(--text)">G2M Readiness</div><div style="font-size:12px;color:var(--accent);font-weight:700">Avg ' + d.avg + '%</div></div>'+
+    topHtml + bottomHtml +
+  '</div>';
+}
+
+function _dashRenderMyDay(){
+  var el = document.getElementById('dashMyDay');
+  if(!el) return;
+  var meEmail = ((typeof userProfile !== 'undefined' && userProfile && userProfile.email) || (typeof _currentUser !== 'undefined' && _currentUser && _currentUser.email) || '').toLowerCase();
+  // Capacity
+  var capHtml = '<div style="font-size:12px;color:var(--muted);font-style:italic">Set your capacity in CapacityIQ</div>';
+  try {
+    if(typeof _tsCurrentWeek !== 'undefined'){
+      if(!_tsCurrentWeek && typeof _getISOWeek === 'function') _tsCurrentWeek = _getISOWeek(new Date());
+      var weekDates = (typeof _weekDates === 'function') ? _weekDates(_tsCurrentWeek) : null;
+      if(weekDates && weekDates[0]){
+        var todos = (typeof _getTodosForWeek === 'function') ? _getTodosForWeek(weekDates[0]) : [];
+        var planned = 0; todos.forEach(function(t){ planned += (t.hours || 0); });
+        var avail = (typeof _capacityHoursPerWeek !== 'undefined') ? _capacityHoursPerWeek : 40;
+        var pct = avail > 0 ? Math.round(planned / avail * 100) : 0;
+        var color = pct <= 75 ? '#10b981' : pct <= 95 ? '#f59e0b' : '#ef4444';
+        capHtml = '<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:13px;font-weight:600">' + planned.toFixed(1) + 'h / ' + avail + 'h</span><span style="font-size:13px;font-weight:700;color:' + color + '">' + pct + '%</span></div>'+
+          '<div style="height:6px;background:var(--surface-low);border-radius:3px;overflow:hidden"><div style="height:100%;width:' + Math.min(pct, 100) + '%;background:' + color + '"></div></div>';
+      }
+    }
+  } catch(_e){ /* fall back to default capHtml */ }
+  // My todos
+  var myTodos = [];
+  if(meEmail && typeof todoAllData !== 'undefined' && todoAllData){
+    Object.keys(todoAllData).forEach(function(k){
+      (todoAllData[k] || []).forEach(function(t){
+        if(t.status === 'done') return;
+        var owner = (t.owner || '').toLowerCase();
+        if(owner === meEmail) myTodos.push({ todo: t, init: k });
+      });
+    });
+  }
+  var todosHtml = myTodos.length
+    ? '<div style="font-size:13px;color:var(--text);font-weight:700;margin-bottom:6px">' + myTodos.length + ' open</div>' +
+      myTodos.slice(0, 3).map(function(x){ return '<div style="font-size:12px;color:var(--text);padding:3px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(x.todo.text || x.todo.title || 'Untitled') + '</div>'; }).join('')
+    : '<div style="font-size:12px;color:var(--muted);font-style:italic">No tasks assigned to you</div>';
+  // Activity (merge change log + notifications)
+  var activity = [];
+  if(typeof _roadmapChangeLog !== 'undefined' && Array.isArray(_roadmapChangeLog)){
+    _roadmapChangeLog.slice(-10).forEach(function(c){
+      activity.push({ ts: c.ts || 0, title: c.summary || c.action || 'Edit' });
+    });
+  }
+  if(typeof _localNotifications !== 'undefined' && Array.isArray(_localNotifications)){
+    _localNotifications.slice(-10).forEach(function(n){
+      activity.push({ ts: n.ts || Date.now(), title: n.title || 'Notification' });
+    });
+  }
+  activity.sort(function(a, b){ return b.ts - a.ts; });
+  var actHtml = activity.length
+    ? activity.slice(0, 5).map(function(x){
+        var ago = '';
+        if(x.ts){
+          var diff = Date.now() - x.ts;
+          if(diff < 3600000)      ago = Math.floor(diff / 60000) + 'm';
+          else if(diff < 86400000) ago = Math.floor(diff / 3600000) + 'h';
+          else                    ago = Math.floor(diff / 86400000) + 'd';
+        }
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)">' + escHtml(x.title) + '</span><span style="color:var(--muted);font-size:11px;flex-shrink:0;margin-left:8px">' + ago + '</span></div>';
+      }).join('')
+    : '<div style="font-size:12px;color:var(--muted);font-style:italic">No recent edits</div>';
+  el.innerHTML = '<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow-card)">'+
+    '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px">My day</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px">'+
+      '<div><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Capacity</div>' + capHtml + '</div>'+
+      '<div><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">My open todos</div>' + todosHtml + '</div>'+
+      '<div><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Recent activity</div>' + actHtml + '</div>'+
+    '</div>'+
+  '</div>';
+}
+
+function _dashRenderFeedback(){
+  var el = document.getElementById('dashFeedback');
+  if(!el) return;
+  var items = (typeof _feedbackItems !== 'undefined' && Array.isArray(_feedbackItems)) ? _feedbackItems.slice(-4).reverse() : [];
+  if(!items.length){
+    el.innerHTML = '<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow-card)">'+
+      '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">Recent feedback</div>'+
+      '<div style="font-size:12px;color:var(--muted);font-style:italic">No feedback captured yet. Add feedback from a launch outcome card.</div>'+
+    '</div>';
+    return;
+  }
+  var sentColor = { positive: '#10b981', negative: '#ef4444', neutral: 'var(--muted)' };
+  var rowsHtml = items.map(function(f){
+    var color = sentColor[(f.sentiment || '').toLowerCase()] || 'var(--muted)';
+    var excerpt = String(f.text || '').substring(0, 90);
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">'+
+      '<span style="width:8px;height:8px;border-radius:50%;background:' + color + ';flex-shrink:0"></span>'+
+      '<span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;flex-shrink:0">' + escHtml(f.source || 'Unknown') + '</span>'+
+      '<span style="color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(excerpt) + (f.text && f.text.length > 90 ? '…' : '') + '</span>'+
+    '</div>';
+  }).join('');
+  el.innerHTML = '<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow-card)">'+
+    '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px">Recent feedback</div>'+
+    rowsHtml +
+  '</div>';
+}
+
+function _dashRenderLaunchpad(){
+  var el = document.getElementById('dashLaunchpad');
+  if(!el) return;
+  var todoOpen = 0;
+  if(typeof todoAllData !== 'undefined' && todoAllData){
+    Object.keys(todoAllData).forEach(function(k){ (todoAllData[k] || []).forEach(function(t){ if(t.status !== 'done') todoOpen++; }); });
+  }
+  var planCount = (typeof projectPlans !== 'undefined' && projectPlans) ? projectPlans.length : 0;
+  function tile(label, desc, icon, onClick, badge){
+    var badgeHtml = badge ? '<span style="background:var(--accent);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:9999px;margin-left:6px">' + badge + '</span>' : '';
+    return '<button onclick="' + onClick + '" style="padding:16px;background:var(--white);border-radius:12px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:var(--shadow-card);text-align:left;font-family:inherit" onmouseover="this.style.boxShadow=\'0 4px 16px rgba(0,0,0,.08)\'" onmouseout="this.style.boxShadow=\'\'">'+
+      '<div style="margin-bottom:6px;color:var(--accent);display:flex"><span style="display:flex">' + _dashIcon(icon, 18) + '</span></div>'+
+      '<div style="font-size:13px;font-weight:700;color:var(--text)">' + escHtml(label) + badgeHtml + '</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + escHtml(desc) + '</div>'+
+    '</button>';
+  }
+  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">'+
+    tile('To-Do',         todoOpen + ' open tasks',     'list',      "closeAllOverlays();openTodo()",     todoOpen > 0 ? todoOpen : null)+
+    tile('KPI Scorecard', 'Track performance',          'chart-bar', "closeAllOverlays();openKPI()",      null)+
+    tile('CapacityIQ',    'Team capacity',              'users',     "closeAllOverlays();openCapacity()", null)+
+    tile('Plans',         planCount + ' active plans',  'clipboard', "closeAllOverlays();openPlans()",    planCount > 0 ? planCount : null)+
+  '</div>';
+}
+
+// ── Orchestrator (replaces old populateDashboard) ──
+function populateDashboard(){
+  _dashRenderGreeting();
+  _dashRenderPulse();
+  _dashRenderActionInbox();
+  _dashRenderLoop();
+  _dashRenderThroughput();
+  _dashRenderReadiness();
+  _dashRenderMyDay();
+  _dashRenderFeedback();
+  _dashRenderLaunchpad();
+  _dashSnapshotCurrentWeek(); // fire-and-forget
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -28738,121 +29183,134 @@ function _productSaveHistoryEntry(rowId){
   _productPersistAndRefresh(rowId);
 }
 
+// v1.47.0: Extracted from renderInsights() so the new Dashboard's Action
+// Inbox can reuse the exact same alert-generation logic. Pure function —
+// returns [{type,icon,title,detail}] sorted by insertion order.
+function _dashBuildAlerts(){
+    var alerts=[]; // {icon,type:'danger'|'warning'|'info'|'success',title,detail}
+    var metrics=[]; // {label,value,trend,color}
+
+    // ── ROADMAP INSIGHTS ──
+    var atRisk=rows.filter(function(r){return r.bars&&r.bars.length&&r.bars[r.bars.length-1].c==='r';});
+    var delayed=rows.filter(function(r){return r.bars&&r.bars.length&&r.bars[r.bars.length-1].c==='o';});
+    var released=rows.filter(function(r){return r.bars&&r.bars.length&&r.bars[r.bars.length-1].c==='g';});
+    var inProgress=rows.filter(function(r){return r.bars&&r.bars.length&&r.bars[r.bars.length-1].c==='b';});
+
+    if(atRisk.length) alerts.push({icon:'warn',type:'danger',title:atRisk.length+' initiative(s) at risk',detail:atRisk.map(function(r){return r.name;}).join(', ')});
+    if(delayed.length) alerts.push({icon:'warn',type:'warning',title:delayed.length+' initiative(s) delayed',detail:delayed.map(function(r){return r.name;}).join(', ')});
+    if(released.length) alerts.push({icon:'check',type:'success',title:released.length+' initiative(s) released',detail:'Successfully shipped to market'});
+
+    // Section balance
+    var secCounts={};
+    rows.forEach(function(r){secCounts[r.sec]=(secCounts[r.sec]||0)+1;});
+    var secNames={}; sections.forEach(function(s){secNames[s.id]=s.name;});
+    var maxSec='',maxCount=0,minSec='',minCount=999;
+    Object.keys(secCounts).forEach(function(k){
+      if(secCounts[k]>maxCount){maxCount=secCounts[k];maxSec=secNames[k]||k;}
+      if(secCounts[k]<minCount){minCount=secCounts[k];minSec=secNames[k]||k;}
+    });
+    if(maxCount>3*minCount&&Object.keys(secCounts).length>1) alerts.push({icon:'Balance',type:'info',title:'Portfolio imbalance detected',detail:maxSec+' has '+maxCount+' initiatives while '+minSec+' has only '+minCount});
+
+    // ── TODO INSIGHTS ──
+    var totalTodos=0,doneTodos=0,openTodos=0,overdueTodos=0,blockedTodos=0;
+    var now=new Date();
+    Object.keys(todoAllData).forEach(function(k){
+      (todoAllData[k]||[]).forEach(function(t){
+        totalTodos++;
+        if(t.status==='done') doneTodos++;
+        else if(t.status==='open') openTodos++;
+        if(t.status==='progress'){
+          var age=(now.getTime()-t.createdAt)/(1000*60*60*24);
+          if(age>14) blockedTodos++;
+        }
+        if(t.due&&t.status!=='done'){
+          var due=new Date(t.due);
+          if(due<now) overdueTodos++;
+        }
+      });
+    });
+
+    if(overdueTodos>0) alerts.push({icon:'⏰',type:'danger',title:overdueTodos+' task(s) overdue',detail:'These tasks are past their due date and need attention'});
+    if(blockedTodos>0) alerts.push({icon:'exclamation',type:'warning',title:blockedTodos+' task(s) likely blocked',detail:'In progress for 14+ days without completion'});
+
+    // Estimate accuracy
+    var estTotal=0,actTotal=0,estCount=0;
+    Object.keys(todoAllData).forEach(function(k){
+      (todoAllData[k]||[]).forEach(function(t){
+        if(t.status==='done'&&t.estimate&&t.actualHours){
+          estTotal+=parseFloat(t.estimate)||0;
+          actTotal+=parseFloat(t.actualHours)||0;
+          estCount++;
+        }
+      });
+    });
+    if(estCount>=3){
+      var accuracy=Math.round(actTotal/estTotal*100);
+      if(accuracy>120) alerts.push({icon:'chart-bar',type:'warning',title:'Tasks taking '+accuracy+'% of estimated time',detail:'You may be under-estimating — actual hours exceed estimates by '+(accuracy-100)+'%'});
+      else if(accuracy<80) alerts.push({icon:'chart-bar',type:'info',title:'Tasks completing in '+accuracy+'% of estimated time',detail:'Your estimates are conservative — you have more capacity than planned'});
+    }
+
+    // ── G2M INSIGHTS ──
+    var g2mProducts=Object.keys(g2mAllData);
+    var lowReadiness=[],highReadiness=[];
+    g2mProducts.forEach(function(name){
+      var items=g2mAllData[name].items||[];
+      var naCount=items.filter(function(i){return i.value==='na';}).length;
+      var applicable=items.length-naCount;
+      var yes=items.filter(function(i){return i.value==='yes';}).length;
+      var pct=applicable>0?Math.round(yes/applicable*100):0;
+      if(pct<30&&applicable>0) lowReadiness.push({name:name,pct:pct});
+      if(pct>=80) highReadiness.push({name:name,pct:pct});
+      // Unassigned items
+      var unassigned=items.filter(function(i){return !i.assignee&&i.value!=='yes'&&i.value!=='na';}).length;
+      if(unassigned>5) alerts.push({icon:'user',type:'info',title:name+': '+unassigned+' G2M items unassigned',detail:'Assign team members to pending checklist items'});
+    });
+    if(lowReadiness.length) alerts.push({icon:'Go',type:'warning',title:lowReadiness.length+' product(s) below 30% G2M readiness',detail:lowReadiness.map(function(r){return r.name+' ('+r.pct+'%)';}).join(', ')});
+    if(highReadiness.length) alerts.push({icon:'OK',type:'success',title:highReadiness.length+' product(s) near launch-ready',detail:highReadiness.map(function(r){return r.name+' ('+r.pct+'%)';}).join(', ')});
+
+    // G2M department bottlenecks
+    var catNoCount={};
+    g2mProducts.forEach(function(name){
+      (g2mAllData[name].items||[]).forEach(function(it){
+        if(it.value==='no'){ catNoCount[it.cat]=(catNoCount[it.cat]||0)+1; }
+      });
+    });
+    var worstCat='',worstCount=0;
+    Object.keys(catNoCount).forEach(function(k){if(catNoCount[k]>worstCount){worstCount=catNoCount[k];worstCat=k;}});
+    if(worstCount>=3) alerts.push({icon:'Org',type:'info',title:'Department bottleneck: '+worstCat,detail:worstCount+' "No" items across all products — this department may need support'});
+
+    // ── CAPACITY INSIGHTS ──
+    if(_tsCurrentWeek){
+      var weekDates=_weekDates(_tsCurrentWeek);
+      var weekTodos=_getTodosForWeek(weekDates[0]);
+      var planned=0; weekTodos.forEach(function(t){planned+=t.hours;});
+      var pctCap=Math.round(planned/_capacityHoursPerWeek*100);
+      if(pctCap>95) alerts.push({icon:'Alert',type:'danger',title:'Capacity overloaded this week: '+pctCap+'%',detail:planned.toFixed(1)+'h planned against '+_capacityHoursPerWeek+'h available'});
+      else if(pctCap<30&&totalTodos>0) alerts.push({icon:'Tip',type:'info',title:'Low utilization this week: '+pctCap+'%',detail:'Only '+planned.toFixed(1)+'h planned — capacity available for new work'});
+    }
+
+    // ── UCR INSIGHTS ──
+    var pendingUCR=ucrAllData.filter(function(u){return u.status==='Submitted';}).length;
+    var draftUCR=ucrAllData.filter(function(u){return u.status==='Draft';}).length;
+    if(pendingUCR>0) alerts.push({icon:'Note',type:'info',title:pendingUCR+' UCR(s) awaiting approval',detail:'Submitted change requests need review'});
+    if(draftUCR>2) alerts.push({icon:'Note',type:'warning',title:draftUCR+' draft UCRs',detail:'Consider submitting or discarding old drafts'});
+
+    // ── SHARED ROADMAP INSIGHTS ──
+    if(_sharedToMe&&_sharedToMe.length>0) alerts.push({icon:'Link',type:'info',title:_sharedToMe.length+' roadmap(s) shared with you',detail:'From: '+_sharedToMe.map(function(s){return s.owner_name;}).join(', ')});
+
+
+  return alerts;
+}
+
 function renderInsights(){
   var body=document.getElementById('insightsBody');
   body.innerHTML='';
 
-  // Gather all insights
-  var alerts=[]; // {icon,type:'danger'|'warning'|'info'|'success',title,detail}
+  // v1.47.0: alerts now built by _dashBuildAlerts() so the Dashboard can
+  // reuse the same engine. Insights still owns the metrics + recommendations
+  // + competitive-intel render below.
+  var alerts = _dashBuildAlerts();
   var metrics=[]; // {label,value,trend,color}
-
-  // ── ROADMAP INSIGHTS ──
-  var atRisk=rows.filter(function(r){return r.bars&&r.bars.length&&r.bars[r.bars.length-1].c==='r';});
-  var delayed=rows.filter(function(r){return r.bars&&r.bars.length&&r.bars[r.bars.length-1].c==='o';});
-  var released=rows.filter(function(r){return r.bars&&r.bars.length&&r.bars[r.bars.length-1].c==='g';});
-  var inProgress=rows.filter(function(r){return r.bars&&r.bars.length&&r.bars[r.bars.length-1].c==='b';});
-
-  if(atRisk.length) alerts.push({icon:'warn',type:'danger',title:atRisk.length+' initiative(s) at risk',detail:atRisk.map(function(r){return r.name;}).join(', ')});
-  if(delayed.length) alerts.push({icon:'warn',type:'warning',title:delayed.length+' initiative(s) delayed',detail:delayed.map(function(r){return r.name;}).join(', ')});
-  if(released.length) alerts.push({icon:'check',type:'success',title:released.length+' initiative(s) released',detail:'Successfully shipped to market'});
-
-  // Section balance
-  var secCounts={};
-  rows.forEach(function(r){secCounts[r.sec]=(secCounts[r.sec]||0)+1;});
-  var secNames={}; sections.forEach(function(s){secNames[s.id]=s.name;});
-  var maxSec='',maxCount=0,minSec='',minCount=999;
-  Object.keys(secCounts).forEach(function(k){
-    if(secCounts[k]>maxCount){maxCount=secCounts[k];maxSec=secNames[k]||k;}
-    if(secCounts[k]<minCount){minCount=secCounts[k];minSec=secNames[k]||k;}
-  });
-  if(maxCount>3*minCount&&Object.keys(secCounts).length>1) alerts.push({icon:'Balance',type:'info',title:'Portfolio imbalance detected',detail:maxSec+' has '+maxCount+' initiatives while '+minSec+' has only '+minCount});
-
-  // ── TODO INSIGHTS ──
-  var totalTodos=0,doneTodos=0,openTodos=0,overdueTodos=0,blockedTodos=0;
-  var now=new Date();
-  Object.keys(todoAllData).forEach(function(k){
-    (todoAllData[k]||[]).forEach(function(t){
-      totalTodos++;
-      if(t.status==='done') doneTodos++;
-      else if(t.status==='open') openTodos++;
-      if(t.status==='progress'){
-        var age=(now.getTime()-t.createdAt)/(1000*60*60*24);
-        if(age>14) blockedTodos++;
-      }
-      if(t.due&&t.status!=='done'){
-        var due=new Date(t.due);
-        if(due<now) overdueTodos++;
-      }
-    });
-  });
-
-  if(overdueTodos>0) alerts.push({icon:'⏰',type:'danger',title:overdueTodos+' task(s) overdue',detail:'These tasks are past their due date and need attention'});
-  if(blockedTodos>0) alerts.push({icon:'exclamation',type:'warning',title:blockedTodos+' task(s) likely blocked',detail:'In progress for 14+ days without completion'});
-
-  // Estimate accuracy
-  var estTotal=0,actTotal=0,estCount=0;
-  Object.keys(todoAllData).forEach(function(k){
-    (todoAllData[k]||[]).forEach(function(t){
-      if(t.status==='done'&&t.estimate&&t.actualHours){
-        estTotal+=parseFloat(t.estimate)||0;
-        actTotal+=parseFloat(t.actualHours)||0;
-        estCount++;
-      }
-    });
-  });
-  if(estCount>=3){
-    var accuracy=Math.round(actTotal/estTotal*100);
-    if(accuracy>120) alerts.push({icon:'chart-bar',type:'warning',title:'Tasks taking '+accuracy+'% of estimated time',detail:'You may be under-estimating — actual hours exceed estimates by '+(accuracy-100)+'%'});
-    else if(accuracy<80) alerts.push({icon:'chart-bar',type:'info',title:'Tasks completing in '+accuracy+'% of estimated time',detail:'Your estimates are conservative — you have more capacity than planned'});
-  }
-
-  // ── G2M INSIGHTS ──
-  var g2mProducts=Object.keys(g2mAllData);
-  var lowReadiness=[],highReadiness=[];
-  g2mProducts.forEach(function(name){
-    var items=g2mAllData[name].items||[];
-    var naCount=items.filter(function(i){return i.value==='na';}).length;
-    var applicable=items.length-naCount;
-    var yes=items.filter(function(i){return i.value==='yes';}).length;
-    var pct=applicable>0?Math.round(yes/applicable*100):0;
-    if(pct<30&&applicable>0) lowReadiness.push({name:name,pct:pct});
-    if(pct>=80) highReadiness.push({name:name,pct:pct});
-    // Unassigned items
-    var unassigned=items.filter(function(i){return !i.assignee&&i.value!=='yes'&&i.value!=='na';}).length;
-    if(unassigned>5) alerts.push({icon:'user',type:'info',title:name+': '+unassigned+' G2M items unassigned',detail:'Assign team members to pending checklist items'});
-  });
-  if(lowReadiness.length) alerts.push({icon:'Go',type:'warning',title:lowReadiness.length+' product(s) below 30% G2M readiness',detail:lowReadiness.map(function(r){return r.name+' ('+r.pct+'%)';}).join(', ')});
-  if(highReadiness.length) alerts.push({icon:'OK',type:'success',title:highReadiness.length+' product(s) near launch-ready',detail:highReadiness.map(function(r){return r.name+' ('+r.pct+'%)';}).join(', ')});
-
-  // G2M department bottlenecks
-  var catNoCount={};
-  g2mProducts.forEach(function(name){
-    (g2mAllData[name].items||[]).forEach(function(it){
-      if(it.value==='no'){ catNoCount[it.cat]=(catNoCount[it.cat]||0)+1; }
-    });
-  });
-  var worstCat='',worstCount=0;
-  Object.keys(catNoCount).forEach(function(k){if(catNoCount[k]>worstCount){worstCount=catNoCount[k];worstCat=k;}});
-  if(worstCount>=3) alerts.push({icon:'Org',type:'info',title:'Department bottleneck: '+worstCat,detail:worstCount+' "No" items across all products — this department may need support'});
-
-  // ── CAPACITY INSIGHTS ──
-  if(_tsCurrentWeek){
-    var weekDates=_weekDates(_tsCurrentWeek);
-    var weekTodos=_getTodosForWeek(weekDates[0]);
-    var planned=0; weekTodos.forEach(function(t){planned+=t.hours;});
-    var pctCap=Math.round(planned/_capacityHoursPerWeek*100);
-    if(pctCap>95) alerts.push({icon:'Alert',type:'danger',title:'Capacity overloaded this week: '+pctCap+'%',detail:planned.toFixed(1)+'h planned against '+_capacityHoursPerWeek+'h available'});
-    else if(pctCap<30&&totalTodos>0) alerts.push({icon:'Tip',type:'info',title:'Low utilization this week: '+pctCap+'%',detail:'Only '+planned.toFixed(1)+'h planned — capacity available for new work'});
-  }
-
-  // ── UCR INSIGHTS ──
-  var pendingUCR=ucrAllData.filter(function(u){return u.status==='Submitted';}).length;
-  var draftUCR=ucrAllData.filter(function(u){return u.status==='Draft';}).length;
-  if(pendingUCR>0) alerts.push({icon:'Note',type:'info',title:pendingUCR+' UCR(s) awaiting approval',detail:'Submitted change requests need review'});
-  if(draftUCR>2) alerts.push({icon:'Note',type:'warning',title:draftUCR+' draft UCRs',detail:'Consider submitting or discarding old drafts'});
-
-  // ── SHARED ROADMAP INSIGHTS ──
-  if(_sharedToMe&&_sharedToMe.length>0) alerts.push({icon:'Link',type:'info',title:_sharedToMe.length+' roadmap(s) shared with you',detail:'From: '+_sharedToMe.map(function(s){return s.owner_name;}).join(', ')});
 
   // ── METRICS ──
   metrics.push({label:'Total Initiatives',value:rows.length,color:'var(--accent)'});
