@@ -1,5 +1,26 @@
 # Roadmap OS — Changelog
 
+## v1.48.6 — Top 10 Priorities is now an editable status board
+
+The Top 10 page used to be five static rows of "name + priority + status + section" — useful at a glance, useless as a working surface. Rewritten to be the page a PM actually uses for stand-up.
+
+**Each card now shows and edits:**
+- **Drag handle** — drag any card up/down to set a custom rank. Saved per-user in `appSettings.top10Order`. The toolbar shows a "Reset to auto-rank" button when a custom order is in effect; otherwise the page auto-ranks by the existing `_top10Score()`.
+- **Owner** — pulled from `row.owner`, shown as an avatar pill with initials. Click `+ Owner` to set one.
+- **Latest update** — the most recent `row.comments` entry rendered in a callout box with author + relative timestamp ("2d ago"). Click `+ Post update` to append a new one.
+- **Blockers** — new `row.blockers[]` (`{id, text, createdAt}`). Each blocker is a red callout with an inline remove. `+ Add blocker` prompts for the text.
+- **Expected release** — new `row.expectedRelease` (date input). Saves on change without re-rendering so the date picker keeps focus.
+- **Quick links** — five chips that jump straight into the related surface for that initiative:
+  - **Roadmap** → closes overlays and scrolls/highlights the row
+  - **Project plan** → finds the plan via `linkedRows` and opens it; falls back to the Plans page if none linked
+  - **G2M Readiness** → `openG2MForProduct(rowName)`
+  - **Products** → `openProducts()`
+  - **To-Do** → `openTodoForInitiative(rowName)`
+
+**New helpers:** `_top10ResolveOrder`, `_top10SaveOrder`, `_top10ResetOrder`, `_top10RenderCard`, `_top10LatestUpdate`, `_top10FormatDate`, `_top10FormatRelative`, `_top10AddUpdate`, `_top10AddBlocker`, `_top10RemoveBlocker`, `_top10SetExpectedRelease`, `_top10SetOwnerPrompt`, `_top10WireDrag`, `_top10ApplyReorder`, `_top10NavToRoadmap/Plan/G2M/Todo/Products`.
+
+**Untouched:** the score function (`_top10Score`), the rest of the Prioritisation page, the `row.comments` schema (we just append to it). Backwards-compatible — existing rows render the same baseline; new fields are opt-in.
+
 ## v1.48.5 — Plans Excel upload: rebuild the picker so it actually opens
 
 The "Upload Excel" button on the Plans page was funneling through the web shim's `readFile()`, which:

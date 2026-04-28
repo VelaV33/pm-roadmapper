@@ -922,6 +922,49 @@ body.dark-mode .intg-feature{background:var(--surface-low);color:var(--muted)}
 body.dark-mode #top10Overlay .top10-header{background:var(--toolbar-bg)}
 body.dark-mode .top10-card{background:var(--white);border-color:var(--border)}
 body.dark-mode .top10-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.3)}
+/* v1.48.6: rich Top-10 card — drag handle, latest update, blockers, links */
+.t10-card{display:grid;grid-template-columns:36px 36px 1fr;align-items:start;gap:14px;padding:16px 18px;background:var(--white);border:1px solid var(--border);border-radius:12px;margin-bottom:12px;transition:box-shadow .15s, border-color .15s, transform .12s;cursor:default}
+.t10-card.dragging{opacity:.55;transform:scale(.99)}
+.t10-card.drag-over-top{border-top:3px solid var(--accent)}
+.t10-card.drag-over-bottom{border-bottom:3px solid var(--accent)}
+.t10-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.07)}
+.t10-handle{width:30px;height:30px;border-radius:8px;color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:grab;user-select:none;align-self:center;transition:background .15s, color .15s}
+.t10-handle:hover{background:var(--surface-low);color:var(--accent)}
+.t10-handle:active{cursor:grabbing}
+.t10-rank{width:36px;height:36px;border-radius:10px;color:#fff;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;align-self:center}
+.t10-body{min-width:0}
+.t10-title-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.t10-title{font-size:15px;font-weight:700;color:var(--text);min-width:0}
+.t10-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.t10-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.t10-badge{font-size:9px;font-weight:700;padding:3px 9px;border-radius:9999px;text-transform:uppercase;letter-spacing:.04em}
+.t10-section{margin-top:14px;padding-top:12px;border-top:1px dashed var(--border)}
+.t10-section-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.t10-update{font-size:13px;color:var(--text);line-height:1.5;background:var(--surface-low);border-left:3px solid var(--accent);border-radius:6px;padding:8px 12px;margin-bottom:6px;white-space:pre-wrap;word-break:break-word}
+.t10-update-meta{font-size:10px;color:var(--muted);margin-top:4px}
+.t10-blockers{display:flex;flex-direction:column;gap:6px}
+.t10-blocker{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;font-size:12px;color:#991b1b;line-height:1.4}
+body.dark-mode .t10-blocker{background:rgba(220,38,38,.12);border-color:rgba(248,113,113,.35);color:#fca5a5}
+.t10-blocker-text{flex:1;word-break:break-word}
+.t10-blocker-rm{background:none;border:none;color:#dc2626;cursor:pointer;padding:0 2px;font-size:14px;line-height:1;opacity:.6;transition:opacity .12s}
+.t10-blocker-rm:hover{opacity:1}
+.t10-meta-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:10px;margin-top:8px}
+.t10-meta-cell{display:flex;flex-direction:column;gap:4px}
+.t10-meta-cell label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.t10-meta-cell input,.t10-meta-cell select,.t10-meta-cell textarea{padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--white);color:var(--text);font-family:inherit;width:100%;box-sizing:border-box}
+.t10-meta-cell textarea{min-height:54px;resize:vertical}
+.t10-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.t10-link-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--surface-low);border:1px solid var(--border);border-radius:9999px;font-size:11px;font-weight:600;color:var(--accent);cursor:pointer;transition:all .12s;font-family:inherit}
+.t10-link-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.t10-link-btn svg{width:12px;height:12px}
+.t10-add-btn{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;background:transparent;border:1px dashed var(--border);border-radius:9999px;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .12s;font-family:inherit}
+.t10-add-btn:hover{border-color:var(--accent);color:var(--accent)}
+.t10-owner-pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;background:var(--light-blue-bg);color:var(--accent);border-radius:9999px;font-size:11px;font-weight:600}
+.t10-owner-pill .t10-avatar{width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.t10-empty{text-align:center;padding:32px;color:var(--muted);font-size:12px;font-style:italic}
+.t10-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:18px;font-size:12px;color:var(--muted)}
+.t10-reset-btn{padding:5px 12px;border:1px solid var(--border);background:var(--white);color:var(--muted);border-radius:9999px;font-size:11px;cursor:pointer;font-family:inherit;transition:all .12s}
+.t10-reset-btn:hover{color:var(--accent);border-color:var(--accent)}
 
 /* ── Template Library overlay ───────────────────────────────────────── */
 #templateLibraryOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:4600;display:none;flex-direction:column;overflow:hidden}
@@ -4057,7 +4100,7 @@ function buildDayOptions(mname,selectedDay){
 // v1.43.0 — single source of truth for the app version. Bump this with every
 // release alongside package.json. Used by the login footer, the JSON backup
 // metadata, and the in-app What's New modal (lastSeenAppVersion comparison).
-var APP_VERSION = 'v1.48.5';
+var APP_VERSION = 'v1.48.6';
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 var sections=[
@@ -34815,43 +34858,401 @@ function renderTop10(){
 }
 
 // v1.32.0 FIX 17: Top 10 rendered inside Prioritisation overlay
+// v1.48.6: Top 10 Priorities — rebuilt as an editable status board.
+// Each card is now drag-reorderable, shows owner / latest update /
+// blockers / expected release, and links straight into the related
+// project plan, G2M readiness, products page, and the roadmap row.
+// The custom drag order is persisted in appSettings.top10Order so it
+// survives reloads and follows the user across devices via the JSONB
+// blob.
 function renderPrioTop10Tab(){
   var content = document.getElementById('prioContent');
   if(!content) return;
-  var scored = rows.map(function(r){ return {row:r, score:_top10Score(r)}; });
-  scored.sort(function(a,b){ return b.score - a.score; });
-  var top = scored.slice(0, 10);
-  if(top.length === 0){
+  if(!Array.isArray(rows) || rows.length === 0){
     content.innerHTML = '<div class="prio-empty"><h3>No initiatives yet</h3><p>Add some rows to your roadmap, then come back to see your top priorities.</p></div>';
     return;
   }
+  var ordered = _top10ResolveOrder().slice(0, 10);
   var rankColors = ['#7c3aed','#2563eb','#0891b2','#059669','#d97706','#dc2626','#7c3aed','#2563eb','#0891b2','#059669'];
   var prioBg = {P1:'background:#fee2e2;color:#991b1b',P2:'background:#fef3c7;color:#92400e',P3:'background:#dbeafe;color:#1e40af'};
   var statusBg = {'At Risk':'background:#fee2e2;color:#dc2626','Delayed':'background:#fef3c7;color:#d97706','In Progress':'background:#dbeafe;color:#2563eb','Complete':'background:#dcfce7;color:#16a34a','Not Started':'background:#f1f5f9;color:#64748b'};
-  var html = '<div style="max-width:720px;margin:0 auto;padding:24px">';
-  html += '<p style="color:var(--muted);font-size:13px;margin-bottom:20px;line-height:1.5">Your top initiatives ranked by priority level and status urgency. Derived automatically from your roadmap data.</p>';
-  top.forEach(function(item, idx){
-    var r = item.row;
-    var sec = sections.find(function(s){ return s.id === r.sec; });
-    var secName = sec ? sec.name : '';
-    var prio = r.priority || 'None';
-    var stat = r.status || 'Not Started';
-    html += '<div style="display:flex;gap:14px;align-items:flex-start;padding:14px;background:var(--white);border:1px solid var(--border);border-radius:12px;margin-bottom:10px">';
-    html += '<div style="width:32px;height:32px;border-radius:8px;background:'+rankColors[idx]+';color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+(idx+1)+'</div>';
-    html += '<div style="flex:1"><div style="font-weight:700;font-size:14px;color:var(--text)">'+escHtml(r.name)+'</div>';
-    if(r.sub) html += '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+escHtml(r.sub)+'</div>';
-    html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">';
-    if(prio !== 'None'){
-      var ps = prioBg[prio] || '';
-      html += '<span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:9999px;'+ps+'">'+escHtml(prio)+'</span>';
-    }
-    var ss = statusBg[stat] || '';
-    html += '<span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:9999px;'+ss+'">'+escHtml(stat)+'</span>';
-    if(secName) html += '<span style="font-size:9px;font-weight:600;padding:2px 8px;border-radius:9999px;background:var(--surface-low);color:var(--muted)">'+escHtml(secName)+'</span>';
-    html += '</div></div></div>';
+  var hasCustom = !!(appSettings && Array.isArray(appSettings.top10Order) && appSettings.top10Order.length);
+  var html = '<div style="max-width:880px;margin:0 auto;padding:24px">';
+  html += '<p style="color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.5">Your top 10 initiatives. Drag to reorder, capture latest updates and blockers, set an expected release, and jump straight into the related plan / G2M / Products surface.</p>';
+  html += '<div class="t10-toolbar">';
+  html += hasCustom
+    ? '<span>Custom order saved.</span><button class="t10-reset-btn" onclick="_top10ResetOrder()">Reset to auto-rank</button>'
+    : '<span>Auto-ranked by priority &amp; status urgency. Drag any card to set your own order.</span>';
+  html += '</div>';
+  html += '<div id="t10List">';
+  ordered.forEach(function(r, idx){
+    html += _top10RenderCard(r, idx, rankColors, prioBg, statusBg);
   });
   html += '</div>';
+  html += '</div>';
   content.innerHTML = html;
+  _top10WireDrag();
+}
+
+function _top10ResolveOrder(){
+  var orderIds = (appSettings && Array.isArray(appSettings.top10Order)) ? appSettings.top10Order : null;
+  var byId = {};
+  rows.forEach(function(r){ if(r && r.id) byId[r.id] = r; });
+  var ordered = [];
+  if(orderIds && orderIds.length){
+    orderIds.forEach(function(id){
+      if(byId[id]){ ordered.push(byId[id]); delete byId[id]; }
+    });
+    // Append any rows that aren't in the saved order, ranked by score.
+    var rest = Object.keys(byId).map(function(id){return byId[id];})
+      .map(function(r){return {r:r, s:_top10Score(r)};})
+      .sort(function(a,b){return b.s - a.s;})
+      .map(function(o){return o.r;});
+    ordered = ordered.concat(rest);
+  } else {
+    ordered = rows.slice().map(function(r){return {r:r, s:_top10Score(r)};})
+      .sort(function(a,b){return b.s - a.s;})
+      .map(function(o){return o.r;});
+  }
+  return ordered;
+}
+
+function _top10ResetOrder(){
+  if(!appSettings) return;
+  delete appSettings.top10Order;
+  persistData();
+  renderPrioTop10Tab();
+}
+
+function _top10SaveOrder(orderIds){
+  if(!appSettings) return;
+  appSettings.top10Order = orderIds;
+  persistData();
+}
+
+function _top10RenderCard(r, idx, rankColors, prioBg, statusBg){
+  var sec = sections.find(function(s){ return s.id === r.sec; });
+  var secName = sec ? sec.name : '';
+  var secColor = sec ? sec.color : '#64748b';
+  var prio = r.priority || 'None';
+  var stat = r.status || 'Not Started';
+  var ownerName = r.owner || (r.ownerEmail ? r.ownerEmail.split('@')[0] : '');
+  var ownerInitials = ownerName ? ownerName.trim().split(/\s+/).slice(0,2).map(function(p){return p.charAt(0).toUpperCase();}).join('') : '?';
+  var latest = _top10LatestUpdate(r);
+  var blockers = Array.isArray(r.blockers) ? r.blockers : [];
+  var expectedRelease = r.expectedRelease || '';
+  var rowIdSafe = String(r.id).replace(/'/g,"\\'");
+  var rowNameSafe = String(r.name||'').replace(/'/g,"\\'");
+
+  var h = '<div class="t10-card" draggable="true" data-row-id="'+escHtml(r.id)+'" data-idx="'+idx+'">';
+  h += '<div class="t10-handle" title="Drag to reorder">'+
+        '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>'+
+       '</div>';
+  h += '<div class="t10-rank" style="background:'+rankColors[idx % rankColors.length]+'">'+(idx+1)+'</div>';
+  h += '<div class="t10-body">';
+
+  // Title row
+  h += '<div class="t10-title-row">';
+  h += '<div style="flex:1;min-width:0">';
+  h += '<div class="t10-title" style="border-left:3px solid '+secColor+';padding-left:8px">'+escHtml(r.name)+'</div>';
+  if(r.sub) h += '<div class="t10-sub">'+escHtml(r.sub)+'</div>';
+  h += '</div>';
+  if(ownerName){
+    h += '<div class="t10-owner-pill" title="Owner">'+
+          '<span class="t10-avatar">'+escHtml(ownerInitials)+'</span>'+
+          '<span>'+escHtml(ownerName)+'</span>'+
+         '</div>';
+  } else {
+    h += '<button class="t10-add-btn" onclick="_top10SetOwnerPrompt(\''+rowIdSafe+'\')">+ Owner</button>';
+  }
+  h += '</div>';
+
+  // Badges
+  h += '<div class="t10-badges">';
+  if(prio !== 'None'){
+    h += '<span class="t10-badge" style="'+(prioBg[prio]||'')+'">'+escHtml(prio)+'</span>';
+  }
+  h += '<span class="t10-badge" style="'+(statusBg[stat]||'')+'">'+escHtml(stat)+'</span>';
+  if(secName) h += '<span class="t10-badge" style="background:var(--surface-low);color:var(--muted)">'+escHtml(secName)+'</span>';
+  if(expectedRelease){
+    h += '<span class="t10-badge" style="background:#ecfdf5;color:#065f46" title="Expected release">'+
+          '<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:3px"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>'+
+          escHtml(_top10FormatDate(expectedRelease))+
+         '</span>';
+  }
+  h += '</div>';
+
+  // Latest update
+  h += '<div class="t10-section">';
+  h += '<div class="t10-section-label">'+
+        '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>'+
+        ' Latest update'+
+       '</div>';
+  if(latest){
+    h += '<div class="t10-update">'+escHtml(latest.text)+'</div>';
+    h += '<div class="t10-update-meta">'+escHtml(latest.by||'')+(latest.ts?' &middot; '+escHtml(_top10FormatRelative(latest.ts)):'')+'</div>';
+  } else {
+    h += '<div class="t10-empty">No updates yet.</div>';
+  }
+  h += '<div style="margin-top:8px"><button class="t10-add-btn" onclick="_top10AddUpdate(\''+rowIdSafe+'\')">+ Post update</button></div>';
+  h += '</div>';
+
+  // Blockers
+  h += '<div class="t10-section">';
+  h += '<div class="t10-section-label">'+
+        '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>'+
+        ' Blockers ('+blockers.length+')'+
+       '</div>';
+  if(blockers.length){
+    h += '<div class="t10-blockers">';
+    blockers.forEach(function(b, bi){
+      var safeId = String(b.id || bi).replace(/'/g,"\\'");
+      h += '<div class="t10-blocker">'+
+            '<div class="t10-blocker-text">'+escHtml(b.text||'')+
+              (b.createdAt?' <span style="opacity:.7;font-size:10px">('+escHtml(_top10FormatDate(b.createdAt))+')</span>':'')+
+            '</div>'+
+            '<button class="t10-blocker-rm" title="Remove blocker" onclick="_top10RemoveBlocker(\''+rowIdSafe+'\',\''+safeId+'\')">&times;</button>'+
+           '</div>';
+    });
+    h += '</div>';
+  }
+  h += '<div style="margin-top:8px"><button class="t10-add-btn" onclick="_top10AddBlocker(\''+rowIdSafe+'\')">+ Add blocker</button></div>';
+  h += '</div>';
+
+  // Expected release editor
+  h += '<div class="t10-section">';
+  h += '<div class="t10-meta-grid">';
+  h += '<div class="t10-meta-cell"><label>Expected release</label>'+
+        '<input type="date" value="'+escHtml(expectedRelease||'')+'" onchange="_top10SetExpectedRelease(\''+rowIdSafe+'\', this.value)"></div>';
+  h += '</div>';
+  h += '</div>';
+
+  // Quick links
+  h += '<div class="t10-section">';
+  h += '<div class="t10-section-label">Quick links</div>';
+  h += '<div class="t10-links">';
+  h += '<button class="t10-link-btn" onclick="_top10NavToRoadmap(\''+rowIdSafe+'\')">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6l4-2 6 2 8-2v14l-8 2-6-2-4 2V6z"/></svg>'+
+        'Roadmap</button>';
+  h += '<button class="t10-link-btn" onclick="_top10NavToPlan(\''+rowNameSafe+'\')">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v11a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><path d="M9 5a2 2 0 002 2h2a2 2 0 002-2 2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>'+
+        'Project plan</button>';
+  h += '<button class="t10-link-btn" onclick="_top10NavToG2M(\''+rowNameSafe+'\')">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>'+
+        'G2M Readiness</button>';
+  h += '<button class="t10-link-btn" onclick="_top10NavToProducts()">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>'+
+        'Products</button>';
+  h += '<button class="t10-link-btn" onclick="_top10NavToTodo(\''+rowNameSafe+'\')">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v11a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>'+
+        'To-Do</button>';
+  h += '</div>';
+  h += '</div>';
+
+  h += '</div>'; // .t10-body
+  h += '</div>'; // .t10-card
+  return h;
+}
+
+function _top10LatestUpdate(r){
+  if(!r || !Array.isArray(r.comments) || !r.comments.length) return null;
+  // Pick the comment with the latest timestamp.
+  var sorted = r.comments.slice().sort(function(a,b){
+    return new Date(b.ts||0).getTime() - new Date(a.ts||0).getTime();
+  });
+  return sorted[0];
+}
+
+function _top10FormatDate(d){
+  if(!d) return '';
+  try {
+    var dt = new Date(d);
+    if(isNaN(dt.getTime())) return d;
+    return dt.toLocaleDateString('en-ZA', {day:'numeric',month:'short',year:'numeric'});
+  } catch(_e){ return d; }
+}
+
+function _top10FormatRelative(ts){
+  try {
+    var dt = new Date(ts);
+    if(isNaN(dt.getTime())) return '';
+    var diff = Date.now() - dt.getTime();
+    var d = Math.floor(diff/86400000);
+    if(d === 0) return 'today';
+    if(d === 1) return 'yesterday';
+    if(d < 7) return d+' days ago';
+    if(d < 30) return Math.floor(d/7)+'w ago';
+    return _top10FormatDate(ts);
+  } catch(_e){ return ''; }
+}
+
+function _top10AddUpdate(rowId){
+  var r = rows.find(function(x){return x.id===rowId;});
+  if(!r) return;
+  var text = window.prompt('What\'s the latest update on "'+r.name+'"?', '');
+  if(!text || !text.trim()) return;
+  if(!Array.isArray(r.comments)) r.comments = [];
+  var meEmail = (typeof userProfile!=='undefined' && userProfile && userProfile.email) || (_currentUser && _currentUser.email) || '';
+  var meName  = (typeof userProfile!=='undefined' && userProfile && userProfile.name) || meEmail.split('@')[0] || 'You';
+  r.comments.push({
+    id: 'tc_'+Date.now(),
+    text: text.trim(),
+    by: meName,
+    email: meEmail,
+    ts: new Date().toISOString()
+  });
+  persistData();
+  renderPrioTop10Tab();
+}
+
+function _top10AddBlocker(rowId){
+  var r = rows.find(function(x){return x.id===rowId;});
+  if(!r) return;
+  var text = window.prompt('Describe the blocker for "'+r.name+'":', '');
+  if(!text || !text.trim()) return;
+  if(!Array.isArray(r.blockers)) r.blockers = [];
+  r.blockers.push({
+    id: 'bl_'+Date.now(),
+    text: text.trim(),
+    createdAt: new Date().toISOString()
+  });
+  persistData();
+  renderPrioTop10Tab();
+}
+
+function _top10RemoveBlocker(rowId, blockerId){
+  var r = rows.find(function(x){return x.id===rowId;});
+  if(!r || !Array.isArray(r.blockers)) return;
+  r.blockers = r.blockers.filter(function(b){return String(b.id) !== String(blockerId);});
+  persistData();
+  renderPrioTop10Tab();
+}
+
+function _top10SetExpectedRelease(rowId, val){
+  var r = rows.find(function(x){return x.id===rowId;});
+  if(!r) return;
+  r.expectedRelease = val || '';
+  persistData();
+  // Don't re-render — that would steal focus from the date input.
+}
+
+function _top10SetOwnerPrompt(rowId){
+  var r = rows.find(function(x){return x.id===rowId;});
+  if(!r) return;
+  var name = window.prompt('Who owns "'+r.name+'"? (display name or email)', r.owner || r.ownerEmail || '');
+  if(name === null) return;
+  r.owner = name.trim();
+  if(name.indexOf('@') >= 0) r.ownerEmail = name.trim();
+  persistData();
+  renderPrioTop10Tab();
+}
+
+// ── Drag & drop reorder ──────────────────────────────────────────────────
+var _t10Drag = { srcId: null };
+function _top10WireDrag(){
+  var list = document.getElementById('t10List');
+  if(!list) return;
+  var cards = list.querySelectorAll('.t10-card');
+  cards.forEach(function(card){
+    card.addEventListener('dragstart', function(e){
+      _t10Drag.srcId = card.dataset.rowId;
+      card.classList.add('dragging');
+      try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', card.dataset.rowId); } catch(_){}
+    });
+    card.addEventListener('dragend', function(){
+      card.classList.remove('dragging');
+      cards.forEach(function(c){ c.classList.remove('drag-over-top','drag-over-bottom'); });
+      _t10Drag.srcId = null;
+    });
+    card.addEventListener('dragover', function(e){
+      e.preventDefault();
+      try { e.dataTransfer.dropEffect = 'move'; } catch(_){}
+      var rect = card.getBoundingClientRect();
+      var midY = rect.top + rect.height/2;
+      cards.forEach(function(c){ if(c !== card) c.classList.remove('drag-over-top','drag-over-bottom'); });
+      if(e.clientY < midY){
+        card.classList.add('drag-over-top'); card.classList.remove('drag-over-bottom');
+      } else {
+        card.classList.add('drag-over-bottom'); card.classList.remove('drag-over-top');
+      }
+    });
+    card.addEventListener('dragleave', function(){
+      card.classList.remove('drag-over-top','drag-over-bottom');
+    });
+    card.addEventListener('drop', function(e){
+      e.preventDefault();
+      var srcId = _t10Drag.srcId;
+      var dstId = card.dataset.rowId;
+      if(!srcId || !dstId || srcId === dstId) return;
+      var rect = card.getBoundingClientRect();
+      var insertBefore = e.clientY < (rect.top + rect.height/2);
+      _top10ApplyReorder(srcId, dstId, insertBefore);
+    });
+  });
+}
+
+function _top10ApplyReorder(srcId, dstId, insertBefore){
+  var ordered = _top10ResolveOrder().map(function(r){return r.id;});
+  var srcIdx = ordered.indexOf(srcId);
+  if(srcIdx < 0) return;
+  ordered.splice(srcIdx, 1);
+  var dstIdx = ordered.indexOf(dstId);
+  if(dstIdx < 0) dstIdx = ordered.length;
+  ordered.splice(insertBefore ? dstIdx : dstIdx+1, 0, srcId);
+  _top10SaveOrder(ordered);
+  renderPrioTop10Tab();
+}
+
+// ── Navigation helpers ───────────────────────────────────────────────────
+function _top10NavToRoadmap(rowId){
+  if(typeof closeAllOverlays === 'function') closeAllOverlays();
+  // Scroll to the row if rendered.
+  setTimeout(function(){
+    var tr = document.querySelector('tr.data-row[data-id="'+rowId.replace(/"/g,'')+'"]');
+    if(tr && tr.scrollIntoView){
+      tr.scrollIntoView({behavior:'smooth', block:'center'});
+      tr.style.transition = 'box-shadow .25s';
+      var prev = tr.style.boxShadow;
+      tr.style.boxShadow = 'inset 0 0 0 3px rgba(45,107,244,.45)';
+      setTimeout(function(){ tr.style.boxShadow = prev || ''; }, 1800);
+    }
+  }, 100);
+}
+
+function _top10NavToPlan(rowName){
+  // Try to find a plan whose linkedRows includes this initiative name.
+  var plan = null;
+  if(Array.isArray(projectPlans)){
+    plan = projectPlans.find(function(p){
+      return Array.isArray(p.linkedRows) && p.linkedRows.indexOf(rowName) >= 0;
+    });
+  }
+  if(typeof openPlans !== 'function'){ if(typeof showToast==='function') showToast('Plans page unavailable','error'); return; }
+  if(typeof closeAllOverlays === 'function') closeAllOverlays();
+  openPlans();
+  if(plan && typeof setActivePlan === 'function'){
+    setTimeout(function(){ setActivePlan(plan.id); }, 80);
+  } else if(typeof showToast === 'function'){
+    showToast('No plan linked to this initiative yet — pick or create one','info');
+  }
+}
+
+function _top10NavToG2M(rowName){
+  if(typeof closeAllOverlays === 'function') closeAllOverlays();
+  if(typeof openG2MForProduct === 'function') openG2MForProduct(rowName);
+  else if(typeof showToast === 'function') showToast('G2M page unavailable','error');
+}
+
+function _top10NavToTodo(rowName){
+  if(typeof closeAllOverlays === 'function') closeAllOverlays();
+  if(typeof openTodoForInitiative === 'function') openTodoForInitiative(rowName);
+  else if(typeof openTodo === 'function') openTodo();
+}
+
+function _top10NavToProducts(){
+  if(typeof closeAllOverlays === 'function') closeAllOverlays();
+  if(typeof openProducts === 'function') openProducts();
+  else if(typeof showToast === 'function') showToast('Products page unavailable','error');
 }
 
 // v1.35.0 Fix 8 — standalone Top 10 overlay removed. openTop10 already
