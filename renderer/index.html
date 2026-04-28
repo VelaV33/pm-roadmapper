@@ -922,49 +922,58 @@ body.dark-mode .intg-feature{background:var(--surface-low);color:var(--muted)}
 body.dark-mode #top10Overlay .top10-header{background:var(--toolbar-bg)}
 body.dark-mode .top10-card{background:var(--white);border-color:var(--border)}
 body.dark-mode .top10-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.3)}
-/* v1.48.6: rich Top-10 card — drag handle, latest update, blockers, links */
-.t10-card{display:grid;grid-template-columns:36px 36px 1fr;align-items:start;gap:14px;padding:16px 18px;background:var(--white);border:1px solid var(--border);border-radius:12px;margin-bottom:12px;transition:box-shadow .15s, border-color .15s, transform .12s;cursor:default}
+/* v1.48.7: Top-10 card — compact 6-column horizontal grid (drag, rank,
+   title, status, meta, links). Each card stays one row tall on wide
+   viewports; columns collapse on narrower screens. */
+.t10-card{display:grid;grid-template-columns:24px 32px minmax(180px,1.2fr) minmax(220px,1.6fr) 190px auto;align-items:start;gap:14px;padding:12px 16px;background:var(--white);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;transition:box-shadow .15s, border-color .15s, transform .12s;cursor:default}
 .t10-card.dragging{opacity:.55;transform:scale(.99)}
 .t10-card.drag-over-top{border-top:3px solid var(--accent)}
 .t10-card.drag-over-bottom{border-bottom:3px solid var(--accent)}
-.t10-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.07)}
-.t10-handle{width:30px;height:30px;border-radius:8px;color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:grab;user-select:none;align-self:center;transition:background .15s, color .15s}
-.t10-handle:hover{background:var(--surface-low);color:var(--accent)}
+.t10-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.t10-handle{width:24px;height:32px;color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:grab;user-select:none;align-self:center;transition:color .15s}
+.t10-handle:hover{color:var(--accent)}
 .t10-handle:active{cursor:grabbing}
-.t10-rank{width:36px;height:36px;border-radius:10px;color:#fff;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;align-self:center}
-.t10-body{min-width:0}
-.t10-title-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.t10-title{font-size:15px;font-weight:700;color:var(--text);min-width:0}
-.t10-sub{font-size:11px;color:var(--muted);margin-top:2px}
-.t10-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.t10-badge{font-size:9px;font-weight:700;padding:3px 9px;border-radius:9999px;text-transform:uppercase;letter-spacing:.04em}
-.t10-section{margin-top:14px;padding-top:12px;border-top:1px dashed var(--border)}
-.t10-section-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
-.t10-update{font-size:13px;color:var(--text);line-height:1.5;background:var(--surface-low);border-left:3px solid var(--accent);border-radius:6px;padding:8px 12px;margin-bottom:6px;white-space:pre-wrap;word-break:break-word}
-.t10-update-meta{font-size:10px;color:var(--muted);margin-top:4px}
-.t10-blockers{display:flex;flex-direction:column;gap:6px}
-.t10-blocker{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;font-size:12px;color:#991b1b;line-height:1.4}
-body.dark-mode .t10-blocker{background:rgba(220,38,38,.12);border-color:rgba(248,113,113,.35);color:#fca5a5}
-.t10-blocker-text{flex:1;word-break:break-word}
-.t10-blocker-rm{background:none;border:none;color:#dc2626;cursor:pointer;padding:0 2px;font-size:14px;line-height:1;opacity:.6;transition:opacity .12s}
+.t10-rank{width:32px;height:32px;border-radius:10px;color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;align-self:center}
+.t10-col{display:flex;flex-direction:column;gap:4px;min-width:0}
+.t10-title{font-size:14px;font-weight:700;color:var(--text);min-width:0;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.t10-sub{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.t10-badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.t10-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:9999px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.t10-col-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:4px;margin-bottom:2px}
+.t10-update-compact{font-size:12px;color:var(--text);line-height:1.4;background:var(--surface-low);border-left:3px solid var(--accent);border-radius:5px;padding:6px 9px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;word-break:break-word}
+.t10-update-meta{font-size:9px;color:var(--muted);margin-top:3px}
+.t10-blocker-strip{margin-top:6px;display:flex;flex-direction:column;gap:4px}
+.t10-blocker-row{display:flex;align-items:flex-start;gap:6px;padding:5px 8px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;font-size:11px;color:#991b1b;line-height:1.35}
+body.dark-mode .t10-blocker-row{background:rgba(220,38,38,.12);border-color:rgba(248,113,113,.35);color:#fca5a5}
+.t10-blocker-text{flex:1;word-break:break-word;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.t10-blocker-rm{background:none;border:none;color:#dc2626;cursor:pointer;padding:0 2px;font-size:14px;line-height:1;opacity:.5}
 .t10-blocker-rm:hover{opacity:1}
-.t10-meta-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:10px;margin-top:8px}
-.t10-meta-cell{display:flex;flex-direction:column;gap:4px}
-.t10-meta-cell label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-.t10-meta-cell input,.t10-meta-cell select,.t10-meta-cell textarea{padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--white);color:var(--text);font-family:inherit;width:100%;box-sizing:border-box}
-.t10-meta-cell textarea{min-height:54px;resize:vertical}
-.t10-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.t10-link-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--surface-low);border:1px solid var(--border);border-radius:9999px;font-size:11px;font-weight:600;color:var(--accent);cursor:pointer;transition:all .12s;font-family:inherit}
-.t10-link-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
-.t10-link-btn svg{width:12px;height:12px}
-.t10-add-btn{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;background:transparent;border:1px dashed var(--border);border-radius:9999px;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .12s;font-family:inherit}
+.t10-actions-row{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap}
+.t10-add-btn{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;background:transparent;border:1px dashed var(--border);border-radius:9999px;font-size:10px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .12s;font-family:inherit}
 .t10-add-btn:hover{border-color:var(--accent);color:var(--accent)}
-.t10-owner-pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;background:var(--light-blue-bg);color:var(--accent);border-radius:9999px;font-size:11px;font-weight:600}
-.t10-owner-pill .t10-avatar{width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center}
-.t10-empty{text-align:center;padding:32px;color:var(--muted);font-size:12px;font-style:italic}
-.t10-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:18px;font-size:12px;color:var(--muted)}
-.t10-reset-btn{padding:5px 12px;border:1px solid var(--border);background:var(--white);color:var(--muted);border-radius:9999px;font-size:11px;cursor:pointer;font-family:inherit;transition:all .12s}
+.t10-meta-stack{display:flex;flex-direction:column;gap:8px}
+.t10-meta-cell{display:flex;flex-direction:column;gap:3px}
+.t10-meta-cell label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.t10-meta-cell input{padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:11px;background:var(--white);color:var(--text);font-family:inherit;box-sizing:border-box;width:100%}
+.t10-owner-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;background:var(--light-blue-bg);color:var(--accent);border-radius:9999px;font-size:11px;font-weight:600;align-self:flex-start;max-width:100%}
+.t10-owner-pill .t10-avatar{width:16px;height:16px;border-radius:50%;background:var(--accent);color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.t10-owner-pill span:not(.t10-avatar){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t10-links-col{display:flex;flex-direction:column;gap:4px;align-items:stretch;min-width:120px}
+.t10-link-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;background:var(--surface-low);border:1px solid var(--border);border-radius:6px;font-size:10px;font-weight:600;color:var(--accent);cursor:pointer;transition:all .12s;font-family:inherit;justify-content:flex-start}
+.t10-link-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.t10-link-btn svg{width:11px;height:11px;flex-shrink:0}
+.t10-empty{font-size:11px;color:var(--muted);font-style:italic;padding:6px 0}
+.t10-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.t10-toolbar .t10-toolbar-spacer{flex:1}
+.t10-reset-btn,.t10-export-btn{padding:6px 14px;border:1px solid var(--border);background:var(--white);color:var(--muted);border-radius:9999px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .12s;display:inline-flex;align-items:center;gap:5px}
 .t10-reset-btn:hover{color:var(--accent);border-color:var(--accent)}
+.t10-export-btn{color:var(--accent);border-color:var(--accent)}
+.t10-export-btn:hover{background:var(--accent);color:#fff}
+.t10-export-btn svg{width:12px;height:12px}
+@media (max-width:1100px){
+  .t10-card{grid-template-columns:24px 32px minmax(180px,1fr) minmax(180px,1.4fr);grid-template-rows:auto auto}
+  .t10-col-meta,.t10-col-links{grid-column:3 / -1}
+}
 
 /* ── Template Library overlay ───────────────────────────────────────── */
 #templateLibraryOverlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--bg);z-index:4600;display:none;flex-direction:column;overflow:hidden}
@@ -4100,7 +4109,7 @@ function buildDayOptions(mname,selectedDay){
 // v1.43.0 — single source of truth for the app version. Bump this with every
 // release alongside package.json. Used by the login footer, the JSON backup
 // metadata, and the in-app What's New modal (lastSeenAppVersion comparison).
-var APP_VERSION = 'v1.48.6';
+var APP_VERSION = 'v1.48.7';
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 var sections=[
@@ -34877,12 +34886,17 @@ function renderPrioTop10Tab(){
   var prioBg = {P1:'background:#fee2e2;color:#991b1b',P2:'background:#fef3c7;color:#92400e',P3:'background:#dbeafe;color:#1e40af'};
   var statusBg = {'At Risk':'background:#fee2e2;color:#dc2626','Delayed':'background:#fef3c7;color:#d97706','In Progress':'background:#dbeafe;color:#2563eb','Complete':'background:#dcfce7;color:#16a34a','Not Started':'background:#f1f5f9;color:#64748b'};
   var hasCustom = !!(appSettings && Array.isArray(appSettings.top10Order) && appSettings.top10Order.length);
-  var html = '<div style="max-width:880px;margin:0 auto;padding:24px">';
-  html += '<p style="color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.5">Your top 10 initiatives. Drag to reorder, capture latest updates and blockers, set an expected release, and jump straight into the related plan / G2M / Products surface.</p>';
+  var html = '<div style="padding:20px 24px">';
+  html += '<p style="color:var(--muted);font-size:13px;margin-bottom:12px;line-height:1.5">Your top 10 initiatives. Drag to reorder, capture latest updates and blockers, set an expected release, and jump straight into the related plan / G2M / Products surface.</p>';
   html += '<div class="t10-toolbar">';
   html += hasCustom
     ? '<span>Custom order saved.</span><button class="t10-reset-btn" onclick="_top10ResetOrder()">Reset to auto-rank</button>'
     : '<span>Auto-ranked by priority &amp; status urgency. Drag any card to set your own order.</span>';
+  html += '<span class="t10-toolbar-spacer"></span>';
+  html += '<button class="t10-export-btn" onclick="_top10ExportXlsx()" title="Download all 10 priorities as an Excel file">'+
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>'+
+            'Export'+
+          '</button>';
   html += '</div>';
   html += '<div id="t10List">';
   ordered.forEach(function(r, idx){
@@ -34892,6 +34906,50 @@ function renderPrioTop10Tab(){
   html += '</div>';
   content.innerHTML = html;
   _top10WireDrag();
+}
+
+// v1.48.7: Export the 10 ordered priorities as a single-sheet xlsx so
+// the user can paste them into a status review deck or share over email.
+function _top10ExportXlsx(){
+  if(typeof XLSX === 'undefined'){
+    alert('Spreadsheet library failed to load. Reload the page and try again.');
+    return;
+  }
+  var ordered = _top10ResolveOrder().slice(0, 10);
+  if(!ordered.length){
+    if(typeof showToast === 'function') showToast('Nothing to export — add some initiatives first','info');
+    return;
+  }
+  var headers = ['Rank','Initiative','Sub','Section','Priority','Status','Owner','Owner email','Expected release','Blockers','Latest update','Updated by','Updated at'];
+  var rows = ordered.map(function(r, i){
+    var sec = sections.find(function(s){return s.id === r.sec;});
+    var latest = _top10LatestUpdate(r);
+    var blockerText = (Array.isArray(r.blockers) ? r.blockers : [])
+      .map(function(b){ return '• ' + (b.text || ''); }).join('\n');
+    return [
+      i + 1,
+      r.name || '',
+      r.sub || '',
+      sec ? sec.name : '',
+      r.priority || '',
+      r.status || '',
+      r.owner || '',
+      r.ownerEmail || '',
+      r.expectedRelease || '',
+      blockerText,
+      latest ? latest.text : '',
+      latest ? (latest.by || '') : '',
+      latest ? (latest.ts || '') : ''
+    ];
+  });
+  var wb = XLSX.utils.book_new();
+  var ws = XLSX.utils.aoa_to_sheet([headers].concat(rows));
+  // Reasonable column widths so the export opens nicely.
+  ws['!cols'] = [{wch:5},{wch:32},{wch:36},{wch:18},{wch:10},{wch:14},{wch:18},{wch:24},{wch:14},{wch:40},{wch:48},{wch:18},{wch:22}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Top 10 Priorities');
+  var name = 'top-10-priorities-' + new Date().toISOString().slice(0,10) + '.xlsx';
+  XLSX.writeFile(wb, name);
+  if(typeof showToast === 'function') showToast('Exported ' + ordered.length + ' priorities to ' + name, 'success');
 }
 
 function _top10ResolveOrder(){
@@ -34944,112 +35002,96 @@ function _top10RenderCard(r, idx, rankColors, prioBg, statusBg){
   var rowIdSafe = String(r.id).replace(/'/g,"\\'");
   var rowNameSafe = String(r.name||'').replace(/'/g,"\\'");
 
+  // v1.48.7: 6-column horizontal grid — drag, rank, title col, status
+  // col, meta col, links col. Each card stays a single row tall on
+  // wide viewports.
   var h = '<div class="t10-card" draggable="true" data-row-id="'+escHtml(r.id)+'" data-idx="'+idx+'">';
   h += '<div class="t10-handle" title="Drag to reorder">'+
-        '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>'+
+        '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>'+
        '</div>';
   h += '<div class="t10-rank" style="background:'+rankColors[idx % rankColors.length]+'">'+(idx+1)+'</div>';
-  h += '<div class="t10-body">';
 
-  // Title row
-  h += '<div class="t10-title-row">';
-  h += '<div style="flex:1;min-width:0">';
-  h += '<div class="t10-title" style="border-left:3px solid '+secColor+';padding-left:8px">'+escHtml(r.name)+'</div>';
+  // ── Col 3: Title + sub + badges ──
+  h += '<div class="t10-col t10-col-title">';
+  h +=   '<div class="t10-title" style="border-left:3px solid '+secColor+';padding-left:7px">'+escHtml(r.name)+'</div>';
   if(r.sub) h += '<div class="t10-sub">'+escHtml(r.sub)+'</div>';
-  h += '</div>';
-  if(ownerName){
-    h += '<div class="t10-owner-pill" title="Owner">'+
-          '<span class="t10-avatar">'+escHtml(ownerInitials)+'</span>'+
-          '<span>'+escHtml(ownerName)+'</span>'+
-         '</div>';
-  } else {
-    h += '<button class="t10-add-btn" onclick="_top10SetOwnerPrompt(\''+rowIdSafe+'\')">+ Owner</button>';
-  }
-  h += '</div>';
-
-  // Badges
-  h += '<div class="t10-badges">';
+  h +=   '<div class="t10-badges">';
   if(prio !== 'None'){
     h += '<span class="t10-badge" style="'+(prioBg[prio]||'')+'">'+escHtml(prio)+'</span>';
   }
-  h += '<span class="t10-badge" style="'+(statusBg[stat]||'')+'">'+escHtml(stat)+'</span>';
+  h +=   '<span class="t10-badge" style="'+(statusBg[stat]||'')+'">'+escHtml(stat)+'</span>';
   if(secName) h += '<span class="t10-badge" style="background:var(--surface-low);color:var(--muted)">'+escHtml(secName)+'</span>';
-  if(expectedRelease){
-    h += '<span class="t10-badge" style="background:#ecfdf5;color:#065f46" title="Expected release">'+
-          '<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:3px"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>'+
-          escHtml(_top10FormatDate(expectedRelease))+
-         '</span>';
-  }
+  h +=   '</div>';
   h += '</div>';
 
-  // Latest update
-  h += '<div class="t10-section">';
-  h += '<div class="t10-section-label">'+
-        '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>'+
-        ' Latest update'+
-       '</div>';
+  // ── Col 4: Latest update + blockers ──
+  h += '<div class="t10-col t10-col-status">';
+  h +=   '<div class="t10-col-label">Latest update</div>';
   if(latest){
-    h += '<div class="t10-update">'+escHtml(latest.text)+'</div>';
+    h += '<div class="t10-update-compact">'+escHtml(latest.text)+'</div>';
     h += '<div class="t10-update-meta">'+escHtml(latest.by||'')+(latest.ts?' &middot; '+escHtml(_top10FormatRelative(latest.ts)):'')+'</div>';
   } else {
     h += '<div class="t10-empty">No updates yet.</div>';
   }
-  h += '<div style="margin-top:8px"><button class="t10-add-btn" onclick="_top10AddUpdate(\''+rowIdSafe+'\')">+ Post update</button></div>';
-  h += '</div>';
-
-  // Blockers
-  h += '<div class="t10-section">';
-  h += '<div class="t10-section-label">'+
-        '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>'+
-        ' Blockers ('+blockers.length+')'+
-       '</div>';
   if(blockers.length){
-    h += '<div class="t10-blockers">';
+    h += '<div class="t10-blocker-strip">';
     blockers.forEach(function(b, bi){
       var safeId = String(b.id || bi).replace(/'/g,"\\'");
-      h += '<div class="t10-blocker">'+
-            '<div class="t10-blocker-text">'+escHtml(b.text||'')+
-              (b.createdAt?' <span style="opacity:.7;font-size:10px">('+escHtml(_top10FormatDate(b.createdAt))+')</span>':'')+
-            '</div>'+
+      h += '<div class="t10-blocker-row">'+
+            '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z"/></svg>'+
+            '<div class="t10-blocker-text">'+escHtml(b.text||'')+'</div>'+
             '<button class="t10-blocker-rm" title="Remove blocker" onclick="_top10RemoveBlocker(\''+rowIdSafe+'\',\''+safeId+'\')">&times;</button>'+
            '</div>';
     });
     h += '</div>';
   }
-  h += '<div style="margin-top:8px"><button class="t10-add-btn" onclick="_top10AddBlocker(\''+rowIdSafe+'\')">+ Add blocker</button></div>';
-  h += '</div>';
-
-  // Expected release editor
-  h += '<div class="t10-section">';
-  h += '<div class="t10-meta-grid">';
-  h += '<div class="t10-meta-cell"><label>Expected release</label>'+
-        '<input type="date" value="'+escHtml(expectedRelease||'')+'" onchange="_top10SetExpectedRelease(\''+rowIdSafe+'\', this.value)"></div>';
+  h += '<div class="t10-actions-row">';
+  h +=   '<button class="t10-add-btn" onclick="_top10AddUpdate(\''+rowIdSafe+'\')">+ Update</button>';
+  h +=   '<button class="t10-add-btn" onclick="_top10AddBlocker(\''+rowIdSafe+'\')">+ Blocker</button>';
   h += '</div>';
   h += '</div>';
 
-  // Quick links
-  h += '<div class="t10-section">';
-  h += '<div class="t10-section-label">Quick links</div>';
-  h += '<div class="t10-links">';
-  h += '<button class="t10-link-btn" onclick="_top10NavToRoadmap(\''+rowIdSafe+'\')">'+
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6l4-2 6 2 8-2v14l-8 2-6-2-4 2V6z"/></svg>'+
-        'Roadmap</button>';
-  h += '<button class="t10-link-btn" onclick="_top10NavToPlan(\''+rowNameSafe+'\')">'+
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v11a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><path d="M9 5a2 2 0 002 2h2a2 2 0 002-2 2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>'+
-        'Project plan</button>';
-  h += '<button class="t10-link-btn" onclick="_top10NavToG2M(\''+rowNameSafe+'\')">'+
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>'+
-        'G2M Readiness</button>';
-  h += '<button class="t10-link-btn" onclick="_top10NavToProducts()">'+
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>'+
-        'Products</button>';
-  h += '<button class="t10-link-btn" onclick="_top10NavToTodo(\''+rowNameSafe+'\')">'+
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v11a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>'+
-        'To-Do</button>';
-  h += '</div>';
+  // ── Col 5: Owner + Expected release ──
+  h += '<div class="t10-col t10-col-meta">';
+  h +=   '<div class="t10-meta-stack">';
+  h +=     '<div>';
+  h +=       '<div class="t10-col-label">Owner</div>';
+  if(ownerName){
+    h +=     '<div class="t10-owner-pill" onclick="_top10SetOwnerPrompt(\''+rowIdSafe+'\')" style="cursor:pointer" title="Click to change owner">'+
+              '<span class="t10-avatar">'+escHtml(ownerInitials)+'</span>'+
+              '<span>'+escHtml(ownerName)+'</span>'+
+             '</div>';
+  } else {
+    h +=     '<button class="t10-add-btn" onclick="_top10SetOwnerPrompt(\''+rowIdSafe+'\')">+ Add owner</button>';
+  }
+  h +=     '</div>';
+  h +=     '<div class="t10-meta-cell"><label>Expected release</label>'+
+            '<input type="date" value="'+escHtml(expectedRelease||'')+'" onchange="_top10SetExpectedRelease(\''+rowIdSafe+'\', this.value)"></div>';
+  h +=   '</div>';
   h += '</div>';
 
-  h += '</div>'; // .t10-body
+  // ── Col 6: Quick links (vertical stack of icon chips) ──
+  h += '<div class="t10-col t10-col-links">';
+  h +=   '<div class="t10-col-label">Quick links</div>';
+  h +=   '<div class="t10-links-col">';
+  h +=     '<button class="t10-link-btn" onclick="_top10NavToRoadmap(\''+rowIdSafe+'\')">'+
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6l4-2 6 2 8-2v14l-8 2-6-2-4 2V6z"/></svg>'+
+            'Roadmap</button>';
+  h +=     '<button class="t10-link-btn" onclick="_top10NavToPlan(\''+rowNameSafe+'\')">'+
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v11a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><path d="M9 5a2 2 0 002 2h2a2 2 0 002-2 2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>'+
+            'Plan</button>';
+  h +=     '<button class="t10-link-btn" onclick="_top10NavToG2M(\''+rowNameSafe+'\')">'+
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>'+
+            'G2M</button>';
+  h +=     '<button class="t10-link-btn" onclick="_top10NavToProducts()">'+
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>'+
+            'Products</button>';
+  h +=     '<button class="t10-link-btn" onclick="_top10NavToTodo(\''+rowNameSafe+'\')">'+
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v11a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>'+
+            'To-Do</button>';
+  h +=   '</div>';
+  h += '</div>';
+
   h += '</div>'; // .t10-card
   return h;
 }

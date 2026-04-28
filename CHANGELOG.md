@@ -1,5 +1,17 @@
 # Roadmap OS — Changelog
 
+## v1.48.7 — Top 10 Priorities: compact horizontal cards + Excel export
+
+The v1.48.6 cards stacked every section vertically, so each priority took ~360 px of height — you could only see two on screen at once. Rebuilt the card as a 6-column horizontal grid:
+
+`[drag] [rank] [Title + sub + badges] [Latest update + blockers] [Owner + Expected release] [Quick links]`
+
+All five fields now sit beside the title instead of below it. Each card is roughly one-third the previous height and uses the full width of the page (the 880 px max-width was removed). Long titles, sub-text, update bodies, and blocker text all clamp to 2-3 lines so cards stay rectangular.
+
+Below 1100 px, the meta + links columns wrap underneath title + status (still tighter than v1.48.6).
+
+**Export button** added to the toolbar (right side). Generates a single-sheet `.xlsx` with the 10 ordered priorities and every field — Rank, Initiative, Sub, Section, Priority, Status, Owner, Owner email, Expected release, Blockers, Latest update, Updated by, Updated at. Uses the already-bundled SheetJS via `XLSX.writeFile()`.
+
 ## v1.48.6 — Top 10 Priorities is now an editable status board
 
 The Top 10 page used to be five static rows of "name + priority + status + section" — useful at a glance, useless as a working surface. Rewritten to be the page a PM actually uses for stand-up.
