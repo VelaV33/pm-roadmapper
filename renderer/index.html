@@ -659,6 +659,14 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .rmctx-menu .rmctx-item:hover{background:var(--surface-low);color:var(--accent)}
 .rmctx-menu .rmctx-item svg{flex-shrink:0;color:var(--accent);width:14px;height:14px}
 .rmctx-menu .rmctx-sep{height:1px;background:var(--border);margin:4px 2px}
+.rmctx-menu .rmctx-item.rmctx-danger{color:#dc2626}
+.rmctx-menu .rmctx-item.rmctx-danger svg{color:#dc2626}
+.rmctx-menu .rmctx-item.rmctx-danger:hover{background:#fef2f2;color:#b91c1c}
+body.dark-mode .rmctx-menu .rmctx-item.rmctx-danger:hover{background:rgba(220,38,38,.18);color:#fca5a5}
+/* v1.48.3: section-header kebab button — replaces the row of unlabeled
+   icon buttons. Sits inside the existing .sec-actions float. */
+tr.sec-hdr td .sec-actions .sec-kebab-btn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;cursor:pointer;transition:all .12s}
+tr.sec-hdr td .sec-actions .sec-kebab-btn:hover{background:rgba(255,255,255,.28);border-color:rgba(255,255,255,.5)}
 /* v1.35.0 Fix 10 — opacity .55 made checked-task text invisible in light mode.
    Use .75 + a stronger muted foreground so the strikethrough is still legible. */
 .todo-item.done{opacity:.75;background:var(--surface-low)}
@@ -4049,7 +4057,7 @@ function buildDayOptions(mname,selectedDay){
 // v1.43.0 — single source of truth for the app version. Bump this with every
 // release alongside package.json. Used by the login footer, the JSON backup
 // metadata, and the in-app What's New modal (lastSeenAppVersion comparison).
-var APP_VERSION = 'v1.48.2';
+var APP_VERSION = 'v1.48.3';
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 var sections=[
@@ -4744,12 +4752,14 @@ function render(){
         '<span class="sec-name-wrap">'+
           '<span class="sec-name-text" ondblclick="editSectionName(\''+sec.id+'\',this)">'+sec.name+'</span>'+
         '</span>'+
+        // v1.48.3: collapse the row of unlabeled icon buttons (eye / edit /
+        // palette / X) into a single 3-dot kebab. Items live inside the
+        // popover and have explicit text labels, so users no longer have
+        // to guess what each icon does.
         '<span class="sec-actions">'+
-          '<button onclick="openAddRowModal(\''+sec.id+'\')" title="Add a new row to this section">+ Row</button>'+
-          '<button onclick="toggleSectionFollow(\''+sec.id+'\')" title="'+(_isSectionFollowed(sec.id)?'Stop following this section':'Follow this section to get alerts on changes')+'">'+svgIcon('eye',{size:14})+'</button>'+
-          '<button onclick="openEditSection(\''+sec.id+'\')" title="Edit section">'+svgIcon('edit',{size:14})+'</button>'+
-          '<button onclick="editSectionColor(\''+sec.id+'\')" title="Change section colour">'+svgIcon('palette',{size:14})+'</button>'+
-          '<button onclick="deleteSection(\''+sec.id+'\')" style="color:#fca5a5" title="Delete this entire section and all its rows">✕ Section</button>'+
+          '<button class="sec-kebab-btn" onclick="event.stopPropagation();openSectionKebab(event,\''+sec.id+'\')" title="Section options">'+
+            '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>'+
+          '</button>'+
         '</span>';
       sh.appendChild(std);
       // v14 Fix 7: allow dropping a row onto a section header to move it into
@@ -4835,7 +4845,19 @@ function render(){
     tr.appendChild(lbl);
 
     // ── Lane-packing: assign each bar to a lane so overlaps stack vertically ──
-    var sortedBars=row.bars.slice().sort(function(a,b){return a.s-b.s;});
+    // v1.48.3: while a bar in this row is being dragged, sort it LAST so
+    // the other bars keep the lane assignments they had before the drag
+    // started — they no longer visibly shuffle when the dragged bar
+    // crosses their range.
+    var sortedBars=row.bars.slice().sort(function(a,b){
+      if(barDrag.active && barDrag.rowId===row.id){
+        var aDrag=Math.abs(a.s-barDrag.barStart)<0.001;
+        var bDrag=Math.abs(b.s-barDrag.barStart)<0.001;
+        if(aDrag && !bDrag) return 1;
+        if(bDrag && !aDrag) return -1;
+      }
+      return a.s-b.s;
+    });
     var laneEnds=[];
     var barLaneMap={};
     sortedBars.forEach(function(bar){
@@ -4882,8 +4904,13 @@ function render(){
             'z-index:'+(10+lane)+';display:flex;align-items:center;';
           div.dataset.rowId=row.id;
           div.dataset.barStart=bar.s;
-          div.innerHTML='<span class="bar-txt" style="flex:1;overflow:hidden;text-overflow:ellipsis;pointer-events:none">'+bar.t+'</span>'+
-            '<span class="bar-resize-r" title="Drag to resize" style="position:absolute;right:0;top:0;bottom:0;width:7px;cursor:ew-resize;background:rgba(255,255,255,.3)"></span>';
+          // v1.48.3: pair the existing right-edge handle with a left-edge
+          // handle so the start date can be dragged earlier (or later) the
+          // same way the end date can be dragged. Body of the bar still
+          // moves the whole pill.
+          div.innerHTML='<span class="bar-resize-l" title="Drag to change start date" style="position:absolute;left:0;top:0;bottom:0;width:7px;cursor:ew-resize;background:rgba(255,255,255,.3);z-index:2"></span>'+
+            '<span class="bar-txt" style="flex:1;overflow:hidden;text-overflow:ellipsis;pointer-events:none;padding:0 8px">'+bar.t+'</span>'+
+            '<span class="bar-resize-r" title="Drag to change end date" style="position:absolute;right:0;top:0;bottom:0;width:7px;cursor:ew-resize;background:rgba(255,255,255,.3);z-index:2"></span>';
           div.addEventListener('mousedown',onBarMouseDown);
           host.appendChild(div);
         });
@@ -6740,12 +6767,15 @@ var barDrag={active:false,rowId:null,barStart:null,mode:null,startX:null,origS:n
 
 function onBarMouseDown(e){
   var bar=e.currentTarget;
-  var isResize=e.target.classList.contains('bar-resize-r');
-  if(isResize){
-    // Only resize handle — start resize immediately
+  var isResizeR=e.target.classList.contains('bar-resize-r');
+  var isResizeL=e.target.classList.contains('bar-resize-l');
+  if(isResizeR || isResizeL){
+    // Resize handle — start resize immediately. resize-r drags the END
+    // date, resize-l drags the START date (kept symmetrical so users can
+    // pull the bar earlier as well as later).
     barDrag.rowId=bar.dataset.rowId;
     barDrag.barStart=parseFloat(bar.dataset.barStart);
-    barDrag.mode='resize';
+    barDrag.mode= isResizeL ? 'resize-l' : 'resize';
     barDrag.startX=e.clientX;
     barDrag.didMove=false;
     var row=rows.find(function(r){return r.id===barDrag.rowId});
@@ -6779,14 +6809,29 @@ function onBarMouseMove(e){
   var row=rows.find(function(r){return r.id===barDrag.rowId});
   var b=row.bars.find(function(b){return Math.abs(b.s-barDrag.barStart)<0.001});
   if(barDrag.mode==='resize'){
+    // Right edge — change end date, keep start fixed.
     b.e=Math.min(NM,Math.max(b.s+1,barDrag.origE+dcols));
+  } else if(barDrag.mode==='resize-l'){
+    // Left edge — change start date, keep end fixed. Clamp so start
+    // can't pass end and can't go below 0.
+    var newS=Math.max(0,Math.min(barDrag.origE-1,barDrag.origS+dcols));
+    b.s=newS;
+    b.e=barDrag.origE;
+    barDrag.barStart=b.s;
   } else {
     var len=barDrag.origE-barDrag.origS;
     var ns=Math.max(0,Math.min(NM-len,barDrag.origS+dcols));
     b.s=ns; b.e=ns+len;
     barDrag.barStart=b.s;
   }
-  render();
+  // v1.48.3: Throttle the per-frame render so the dragged bar doesn't
+  // visibly jitter and other rows don't repaint on every mousemove.
+  if(!barDrag._raf){
+    barDrag._raf=requestAnimationFrame(function(){
+      barDrag._raf=null;
+      render();
+    });
+  }
 }
 function onBarMouseUp(){
   var wasDragged=barDrag.didMove;
@@ -6794,9 +6839,12 @@ function onBarMouseUp(){
   var barStart=barDrag.barStart;
   barDrag.active=false;
   barDrag.didMove=false;
+  // Drain any pending rAF so the final position renders without lag.
+  if(barDrag._raf){ cancelAnimationFrame(barDrag._raf); barDrag._raf=null; }
   document.removeEventListener('mousemove',onBarMouseMove);
   document.removeEventListener('mouseup',onBarMouseUp);
   if(wasDragged){
+    render();
     persistData();
   } else {
     // v14 Fix 2: clicking a pill/bar opens the FULL row editor (revenue,
@@ -7404,6 +7452,116 @@ function deleteSection(secId){
   rows=rows.filter(function(r){return r.sec!==secId});
   render();
   persistData();
+}
+
+// v1.48.3: Delete a section but PRESERVE its rows. Rows are reassigned to
+// the next remaining section in display order, or to an auto-created
+// "Uncategorised" section if this was the last one. Used by the section
+// kebab — the old "Delete Section" button used to drop the rows too,
+// which surprised users.
+function deleteSectionKeepRows(secId){
+  if(!canEdit('roadmap')){ showToast('Read-only access','error'); return; }
+  var sec=sections.find(function(s){return s.id===secId;});
+  if(!sec) return;
+  var affected=rows.filter(function(r){return r.sec===secId;});
+  var msg='Delete section "'+sec.name+'"?';
+  if(affected.length){
+    msg+='\n\nIts '+affected.length+' row(s) will be MOVED to another section, not deleted.';
+  }
+  if(!confirm(msg)) return;
+  var target=sections.find(function(s){return s.id!==secId;});
+  if(!target){
+    target={id:'sec_uncat_'+Date.now(), name:'Uncategorised', color:'#64748b'};
+    sections.push(target);
+  }
+  affected.forEach(function(r){ r.sec=target.id; });
+  sections=sections.filter(function(s){return s.id!==secId;});
+  render();
+  persistData();
+  if(typeof showToast==='function'){
+    showToast(affected.length
+      ? 'Section "'+sec.name+'" removed; '+affected.length+' row(s) moved to "'+target.name+'"'
+      : 'Section "'+sec.name+'" removed', 'success');
+  }
+}
+
+// v1.48.3: 3-dot kebab popover for section header actions. Replaces the
+// row of unlabeled icon buttons that previously sat next to each section
+// title. All actions in here have explicit text labels.
+function openSectionKebab(e, secId){
+  closeSectionKebab();
+  var sec=sections.find(function(s){return s.id===secId;});
+  if(!sec) return;
+  var followed = (typeof _isSectionFollowed==='function') && _isSectionFollowed(secId);
+  var menu=document.createElement('div');
+  menu.id='sectionKebabMenu';
+  menu.className='rmctx-menu';
+  menu.style.left='-9999px'; menu.style.top='-9999px';
+  menu.innerHTML=
+    '<button class="rmctx-item" type="button" data-act="rename">'+svgIcon('edit',{size:14})+'<span>Edit name</span></button>'+
+    '<button class="rmctx-item" type="button" data-act="addrow">'+svgIcon('plus',{size:14})+'<span>Add row</span></button>'+
+    '<button class="rmctx-item" type="button" data-act="follow">'+svgIcon('eye',{size:14})+'<span>'+(followed?'Unfollow section':'Follow section')+'</span></button>'+
+    '<button class="rmctx-item" type="button" data-act="color">'+svgIcon('palette',{size:14})+'<span>Change colour</span></button>'+
+    '<div class="rmctx-sep"></div>'+
+    '<button class="rmctx-item rmctx-danger" type="button" data-act="delete">'+svgIcon('trash',{size:14})+'<span>Delete section</span></button>';
+  document.body.appendChild(menu);
+  var btn=e.currentTarget || e.target;
+  var btnRect=btn.getBoundingClientRect();
+  var rect=menu.getBoundingClientRect();
+  var vw=window.innerWidth, vh=window.innerHeight;
+  // Anchor the menu's top-right corner near the kebab button, then nudge
+  // inward so it never clips the viewport.
+  var x=btnRect.right - rect.width;
+  var y=btnRect.bottom + 4;
+  menu.style.left=Math.max(4, Math.min(x, vw - rect.width - 6))+'px';
+  menu.style.top =Math.max(4, Math.min(y, vh - rect.height - 6))+'px';
+  menu.querySelectorAll('.rmctx-item').forEach(function(b){
+    b.addEventListener('click', function(){
+      var act=b.getAttribute('data-act');
+      closeSectionKebab();
+      if(act==='rename'){
+        // Inline-edit the section name in the header itself.
+        var hdr=null;
+        var hdrs=document.querySelectorAll('tr.sec-hdr');
+        for(var i=0;i<hdrs.length;i++){
+          if(hdrs[i].dataset && hdrs[i].dataset.secId===secId){ hdr=hdrs[i]; break; }
+        }
+        if(hdr){
+          var span=hdr.querySelector('.sec-name-text');
+          if(span && typeof editSectionName==='function') editSectionName(secId, span);
+        } else if(typeof openEditSection==='function'){
+          openEditSection(secId);
+        }
+      } else if(act==='addrow'){
+        if(typeof openAddRowModal==='function') openAddRowModal(secId);
+      } else if(act==='follow'){
+        if(typeof toggleSectionFollow==='function') toggleSectionFollow(secId);
+      } else if(act==='color'){
+        if(typeof editSectionColor==='function') editSectionColor(secId);
+      } else if(act==='delete'){
+        deleteSectionKeepRows(secId);
+      }
+    });
+  });
+  // Dismiss on outside click / scroll / blur.
+  setTimeout(function(){
+    var dismiss=function(ev){
+      if(ev && ev.target && menu.contains(ev.target)) return;
+      closeSectionKebab();
+      document.removeEventListener('mousedown', dismiss, true);
+      window.removeEventListener('scroll', dismissAny, true);
+      window.removeEventListener('blur', dismissAny);
+    };
+    var dismissAny=function(){ closeSectionKebab(); };
+    document.addEventListener('mousedown', dismiss, true);
+    window.addEventListener('scroll', dismissAny, {once:true, capture:true, passive:true});
+    window.addEventListener('blur', dismissAny, {once:true});
+  }, 0);
+}
+
+function closeSectionKebab(){
+  var m=document.getElementById('sectionKebabMenu');
+  if(m) m.remove();
 }
 
 // ── EXPORT BY QUARTER ─────────────────────────────────────────────────────────

@@ -1,5 +1,25 @@
 # Roadmap OS — Changelog
 
+## v1.48.3 — Bar drag (both directions) + section header kebab
+
+**Bar drag — start date is now draggable too.**
+The roadmap pill only had a right-edge handle (`bar-resize-r`) so users could push the end date later but couldn't pull the start date earlier — the bar effectively only grew/moved one way. Added a matching `bar-resize-l` handle on the left edge with symmetrical drag logic (`mode:'resize-l'` clamps to `[0, origE-1]`). Combined with the existing body-drag this gives full two-way control.
+
+**Bar drag — other initiatives stop visibly shuffling.**
+While dragging, the lane-packer is now told to sort the dragged bar LAST. That means other bars in the same row keep their lane assignment for the duration of the drag — they no longer hop between lanes when the dragged bar crosses their range. Render is also rAF-throttled during the drag so the bar slides smoothly instead of stuttering on every mousemove. A final unthrottled render runs on mouseup so the settle position is correct.
+
+**Section header — single 3-dot kebab replaces the icon row.**
+Each section header used to show five unlabeled icon buttons (`+ Row`, eye, edit, palette, X) jammed against the title — the user couldn't tell which one followed a section vs. changed colour. Replaced with a single `⋮` button that opens a labeled popover:
+
+- Edit name
+- Add row
+- Follow / Unfollow section
+- Change colour
+- Delete section
+
+**Delete section now keeps the rows.**
+The old delete dropped the section AND every row inside it. The new `deleteSectionKeepRows()` removes the section but reassigns its rows to the next remaining section (or auto-creates an "Uncategorised" section if it was the last one). Confirmation dialog explicitly says rows will be moved, not deleted.
+
 ## v1.48.2 — Right-click on the roadmap to add an initiative / product / section
 
 Right-clicking anywhere on the roadmap grid now pops a small context menu with three actions:
