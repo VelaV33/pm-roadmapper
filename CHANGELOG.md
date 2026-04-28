@@ -1,5 +1,17 @@
 # Roadmap OS — Changelog
 
+## v1.48.2 — Right-click on the roadmap to add an initiative / product / section
+
+Right-clicking anywhere on the roadmap grid now pops a small context menu with three actions:
+
+- **Add Initiative** — opens the Add Product modal (default section = the section the click landed in, or the first section)
+- **Add Product** — same modal (kept as a separate item to match the two existing buttons in the header / legend menu)
+- **Add Section** — opens the existing Add Section modal
+
+Section detection: if the click lands on a `tr.sec-hdr`, its `data-secId` is used directly; if it lands on a `tr.data-row`, the row's `sec` is read from `rows`; otherwise it falls back to `sections[0]`. The menu is suppressed when any modal/overlay is open (To-Do, KPI, CapacityIQ, Reports, etc.) so those pages keep their native right-click behaviour, and when the user is in read-only mode.
+
+The menu is anchored at the cursor, nudged inward if it would clip the viewport, and dismissed on the next mousedown / contextmenu / scroll / window blur. Wired once at first load via `_initRoadmapContextMenu()`.
+
 ## v1.48.1 — To-Do list polish: aligned columns + readable add-task inputs
 
 Two small but glaring UX issues on the To-Do list page.

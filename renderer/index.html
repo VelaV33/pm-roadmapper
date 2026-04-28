@@ -651,6 +651,14 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .todo-item .todo-actions{display:flex;align-items:center;gap:4px;justify-self:end}
 .todo-item .todo-hours-cell{display:flex;align-items:center;justify-content:center;gap:2px}
 .todo-item:hover{box-shadow:0 4px 12px rgba(0,0,0,.06);border-color:var(--accent)}
+/* v1.48.2: right-click context menu on the roadmap grid. Floating panel
+   anchored at cursor, dismissed on next mousedown / scroll / blur. */
+.rmctx-menu{position:fixed;z-index:99999;min-width:180px;background:var(--white);border:1px solid var(--border);border-radius:10px;box-shadow:0 10px 32px rgba(0,0,0,.18);padding:6px;display:flex;flex-direction:column;gap:2px;font-family:inherit;animation:rmctxIn .12s ease-out}
+@keyframes rmctxIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.rmctx-menu .rmctx-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border:none;background:transparent;border-radius:6px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;text-align:left;font-family:inherit;width:100%}
+.rmctx-menu .rmctx-item:hover{background:var(--surface-low);color:var(--accent)}
+.rmctx-menu .rmctx-item svg{flex-shrink:0;color:var(--accent);width:14px;height:14px}
+.rmctx-menu .rmctx-sep{height:1px;background:var(--border);margin:4px 2px}
 /* v1.35.0 Fix 10 — opacity .55 made checked-task text invisible in light mode.
    Use .75 + a stronger muted foreground so the strikethrough is still legible. */
 .todo-item.done{opacity:.75;background:var(--surface-low)}
@@ -4041,7 +4049,7 @@ function buildDayOptions(mname,selectedDay){
 // v1.43.0 — single source of truth for the app version. Bump this with every
 // release alongside package.json. Used by the login footer, the JSON backup
 // metadata, and the in-app What's New modal (lastSeenAppVersion comparison).
-var APP_VERSION = 'v1.48.1';
+var APP_VERSION = 'v1.48.2';
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 var sections=[
@@ -4951,6 +4959,91 @@ function openEditModal(rowId){
     }
   } catch(_err){}
   _editFocusBarStart = null;
+}
+
+// v1.48.2: Right-click anywhere on the roadmap grid to add a new
+// initiative/product without hunting for the "+" button. If the click
+// lands inside a section, the new row defaults to that section.
+function _initRoadmapContextMenu(){
+  var table = document.getElementById('roadmap');
+  if(!table || table._ctxBound) return;
+  table._ctxBound = true;
+  table.addEventListener('contextmenu', function(e){
+    // Don't hijack the native menu when an overlay is open \u2014 those
+    // pages have their own affordances and shouldn't be intercepted.
+    if(document.querySelector('.modal-overlay.open, #todoOverlay.open, #kpiOverlay.open, #capOverlay.open, #artOverlay.open, #ucrOverlay.open, #integrationsOverlay.open, #reportsOverlay.open, #adminOverlay.open, #platformAdminOverlay.open, #insightsOverlay.open')) return;
+    if(typeof canEdit === 'function' && !canEdit('roadmap')) return;
+    var secId = null;
+    var tr = e.target && e.target.closest && e.target.closest('tr');
+    if(tr){
+      if(tr.classList.contains('sec-hdr') && tr.dataset.secId){
+        secId = tr.dataset.secId;
+      } else if(tr.classList.contains('data-row') && tr.dataset.id){
+        var match = (typeof rows !== 'undefined') && rows.find(function(r){return r.id===tr.dataset.id;});
+        if(match) secId = match.sec;
+      }
+    }
+    if(!secId && typeof sections !== 'undefined' && sections.length) secId = sections[0].id;
+    e.preventDefault();
+    _showRoadmapCtxMenu(e.clientX, e.clientY, secId);
+  });
+}
+
+function _showRoadmapCtxMenu(x, y, secId){
+  _closeRoadmapCtxMenu();
+  var menu = document.createElement('div');
+  menu.id = 'roadmapCtxMenu';
+  menu.className = 'rmctx-menu';
+  menu.style.left = '-9999px';
+  menu.style.top  = '-9999px';
+  menu.innerHTML =
+    '<button class="rmctx-item" type="button" data-act="addInitiative">'+
+      svgIcon('plus',{size:14})+'<span>Add Initiative</span>'+
+    '</button>'+
+    '<button class="rmctx-item" type="button" data-act="addProduct">'+
+      svgIcon('plus',{size:14})+'<span>Add Product</span>'+
+    '</button>'+
+    '<div class="rmctx-sep"></div>'+
+    '<button class="rmctx-item" type="button" data-act="addSection">'+
+      svgIcon('plus',{size:14})+'<span>Add Section</span>'+
+    '</button>';
+  document.body.appendChild(menu);
+  // Anchor at cursor; nudge if it would clip the viewport edge.
+  var rect = menu.getBoundingClientRect();
+  var vw = window.innerWidth, vh = window.innerHeight;
+  menu.style.left = Math.max(4, Math.min(x, vw - rect.width  - 6)) + 'px';
+  menu.style.top  = Math.max(4, Math.min(y, vh - rect.height - 6)) + 'px';
+  menu.querySelectorAll('.rmctx-item').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var act = btn.getAttribute('data-act');
+      _closeRoadmapCtxMenu();
+      if(act === 'addSection'){
+        if(typeof toggleAddSection === 'function') toggleAddSection();
+        else if(typeof addSection === 'function') addSection();
+      } else {
+        openAddRowModal(secId);
+      }
+    });
+  });
+  // Dismiss on next interaction outside the menu.
+  setTimeout(function(){
+    var dismiss = function(){ _closeRoadmapCtxMenu(); };
+    document.addEventListener('mousedown', dismiss, {once:true});
+    document.addEventListener('contextmenu', dismiss, {once:true});
+    window.addEventListener('blur', dismiss, {once:true});
+    window.addEventListener('scroll', dismiss, {once:true, passive:true});
+  }, 0);
+}
+
+function _closeRoadmapCtxMenu(){
+  var m = document.getElementById('roadmapCtxMenu');
+  if(m) m.remove();
+}
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', _initRoadmapContextMenu);
+} else {
+  _initRoadmapContextMenu();
 }
 
 function openAddRowModal(secId){
