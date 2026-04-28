@@ -4057,7 +4057,7 @@ function buildDayOptions(mname,selectedDay){
 // v1.43.0 — single source of truth for the app version. Bump this with every
 // release alongside package.json. Used by the login footer, the JSON backup
 // metadata, and the in-app What's New modal (lastSeenAppVersion comparison).
-var APP_VERSION = 'v1.48.3';
+var APP_VERSION = 'v1.48.4';
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 var sections=[
@@ -15340,7 +15340,7 @@ function buildTodoItem(entry){
     '</div>'+
     '<div class="todo-due-cell">'+_formatDue(t.due)+'</div>'+
     kpiSelHtml+
-    '<span class="todo-tag" onclick="document.getElementById(\'todoFilterSelect\').value=\''+escapedInit+'\';renderTodo()">'+escHtml(entry.initiative)+'</span>'+
+    '<span class="todo-tag" onclick="event.stopPropagation();openTodoTagPicker(event,\''+escapedInit+'\',\''+escapedId+'\')" title="Click to move this task to another initiative">'+escHtml(entry.initiative)+'</span>'+
     '<div class="todo-actions">'+
       '<button class="todo-comment-btn" onclick="openEditTodoModal(\''+escapedInit+'\',\''+escapedId+'\')" title="Edit task">'+svgIcon('edit',{size:12})+'</button>'+
       '<button class="todo-comment-btn" onclick="addTodoLink(\''+escapedInit+'\',\''+escapedId+'\')" title="Add link">'+svgIcon('link',{size:12})+'</button>'+
@@ -15566,6 +15566,98 @@ function setTodoField(initiative,todoId,field,val){
   if(t) t[field]=val;
   persistData();
 }
+
+// v1.48.4: Click on a To-Do row's blue initiative tag opens this picker
+// to MOVE the task to a different initiative. The previous behaviour was
+// to set the global filter and re-render — which made every other task
+// disappear and surprised users. This is the dropdown they expected.
+function openTodoTagPicker(e, fromInit, todoId){
+  closeTodoTagPicker();
+  if(!canEdit('todo')){ showToast('Read-only access','error'); return; }
+  // Build the initiative list from the roadmap rows. De-dupe and sort
+  // alphabetically so the dropdown is predictable.
+  var initiatives = [];
+  if(typeof rows !== 'undefined' && Array.isArray(rows)){
+    rows.forEach(function(r){ if(r && r.name) initiatives.push(r.name); });
+  }
+  // Fold in any initiative names that already have todos but aren't in
+  // rows[] (legacy / orphan data) so the user doesn't lose the option to
+  // move TO them.
+  if(typeof todoAllData==='object' && todoAllData){
+    Object.keys(todoAllData).forEach(function(name){
+      if(name && initiatives.indexOf(name)<0) initiatives.push(name);
+    });
+  }
+  initiatives = initiatives.filter(function(n,i){return n && initiatives.indexOf(n)===i;});
+  initiatives.sort(function(a,b){return String(a).localeCompare(String(b));});
+  if(!initiatives.length){
+    showToast('No initiatives available — add one to the roadmap first','info');
+    return;
+  }
+  var menu = document.createElement('div');
+  menu.id = 'todoTagPicker';
+  menu.className = 'rmctx-menu';  // reuse the right-click context-menu styles
+  menu.style.left='-9999px'; menu.style.top='-9999px';
+  menu.style.minWidth='240px';
+  menu.style.maxHeight='320px';
+  menu.style.overflowY='auto';
+  var inner='<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:6px 10px 4px">Move to initiative</div>';
+  initiatives.forEach(function(init){
+    var isCurrent = init === fromInit;
+    var checkMark = isCurrent ? '<span style="margin-left:auto;color:var(--accent);font-weight:800">✓</span>' : '';
+    inner += '<button class="rmctx-item" type="button" data-init="'+escHtml(init)+'">'+
+      '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;text-align:left">'+escHtml(init)+'</span>'+
+      checkMark+
+    '</button>';
+  });
+  menu.innerHTML = inner;
+  document.body.appendChild(menu);
+  var btn = e.currentTarget || e.target;
+  var btnRect = btn.getBoundingClientRect();
+  var rect = menu.getBoundingClientRect();
+  var vw = window.innerWidth, vh = window.innerHeight;
+  var x = btnRect.left;
+  var y = btnRect.bottom + 4;
+  menu.style.left = Math.max(4, Math.min(x, vw - rect.width - 6)) + 'px';
+  menu.style.top  = Math.max(4, Math.min(y, vh - rect.height - 6)) + 'px';
+  menu.querySelectorAll('.rmctx-item').forEach(function(b){
+    b.addEventListener('click', function(){
+      var newInit = b.getAttribute('data-init');
+      closeTodoTagPicker();
+      if(newInit && newInit !== fromInit){
+        moveTodoToInitiative(fromInit, todoId, newInit);
+      }
+    });
+  });
+  setTimeout(function(){
+    var dismiss = function(ev){
+      if(menu.contains(ev.target)) return;
+      closeTodoTagPicker();
+      document.removeEventListener('mousedown', dismiss, true);
+      window.removeEventListener('scroll', dismiss, true);
+    };
+    document.addEventListener('mousedown', dismiss, true);
+    window.addEventListener('scroll', dismiss, {once:true, capture:true, passive:true});
+  }, 0);
+}
+function closeTodoTagPicker(){
+  var m = document.getElementById('todoTagPicker');
+  if(m) m.remove();
+}
+function moveTodoToInitiative(fromInit, todoId, toInit){
+  if(!canEdit('todo')){ showToast('Read-only access','error'); return; }
+  if(!todoAllData[fromInit]) return;
+  var idx = todoAllData[fromInit].findIndex(function(t){return t.id===todoId;});
+  if(idx < 0) return;
+  var task = todoAllData[fromInit][idx];
+  todoAllData[fromInit].splice(idx, 1);
+  if(!todoAllData[fromInit].length) delete todoAllData[fromInit];
+  if(!todoAllData[toInit]) todoAllData[toInit] = [];
+  todoAllData[toInit].push(task);
+  persistData();
+  renderTodo();
+  if(typeof showToast==='function') showToast('Moved to "'+toInit+'"','success');
+}
 function addTodoLink(initiative,todoId){
   var list=todoAllData[initiative]||[];
   var t=list.find(function(i){return i.id===todoId;});
@@ -15703,16 +15795,24 @@ function switchTodoTab(tab){
   var btns = document.querySelectorAll('#todoCrossTabs [data-todo-tab]');
   btns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-todo-tab') === tab); });
   if(tab === 'todo') return;
-  try { if(typeof closeTodo === 'function') closeTodo(); } catch(e){}
+  // v1.48.4: don't go through closeTodo() — it's wrapped by the history
+  // helpers and routes to history.back(), which fires a popstate that
+  // subsequently CLOSES the KPI overlay we're about to open. The user
+  // ended up looking at the underlying roadmap and thought the button
+  // was broken. Hide the overlay directly + reset the return flag, then
+  // open KPI in the timesheet view synchronously (no setTimeout race).
+  var todoOv = document.getElementById('todoOverlay');
+  if(todoOv) todoOv.classList.remove('open');
+  _todoReturnTo = '';
   if(tab === 'my-capacity'){
     if(typeof openCapacity === 'function'){ openCapacity(); return; }
     tab = 'timesheet';
   }
   if(typeof openKPI !== 'function'){ showToast('KPI Scorecard unavailable','error'); return; }
+  // Pre-set the view so openKPI's first render is already on Timesheet.
+  if(typeof _kpiView !== 'undefined') _kpiView = 'timesheet';
   openKPI();
-  setTimeout(function(){
-    if(typeof setKPIView === 'function') setKPIView('timesheet');
-  }, 30);
+  if(typeof setKPIView === 'function') setKPIView('timesheet');
 }
 
 // v1.36.0: Is `owner` (a display-name-or-email string) the current user?
@@ -21165,11 +21265,16 @@ function openExcelImportPicker(){
     showToast('File picker not available','error');
     return;
   }
+  // v1.48.4: accept MS Project XML alongside the spreadsheet formats.
+  // The user can save a Project plan as XML and import it here without
+  // first round-tripping through Excel.
   window.electronAPI.readFile({
-    title: 'Import tasks from Excel',
+    title: 'Import tasks from a project plan',
     filters: [
-      { name: 'Excel files', extensions: ['xlsx', 'xls', 'csv'] },
-      { name: 'All files', extensions: ['*'] }
+      { name: 'Project plans', extensions: ['xlsx', 'xls', 'csv', 'xml'] },
+      { name: 'Excel files',   extensions: ['xlsx', 'xls', 'csv'] },
+      { name: 'MS Project XML', extensions: ['xml'] },
+      { name: 'All files',     extensions: ['*'] }
     ]
   }).then(function(res){
     if(!res || !res.ok) return;
@@ -21178,6 +21283,28 @@ function openExcelImportPicker(){
       return;
     }
     try {
+      var ext = String(res.ext || res.name || '').toLowerCase();
+      // MS Project XML branch — convert <Task> nodes into the same aoa
+      // shape the Excel parser expects, then drop into the existing
+      // mapping/preview flow.
+      if(ext.indexOf('.xml')>=0 || /<Project[\s>]/i.test(res.text||'')){
+        var aoa = _parseMsProjectXml(res.text || (res.base64 ? atob(res.base64) : ''));
+        if(!aoa || aoa.length < 2){
+          showToast('No <Task> nodes found in this XML — is this an MS Project export?','error');
+          return;
+        }
+        _excelImportData = {
+          fileName: res.name || 'project.xml',
+          headers: aoa[0],
+          rows: aoa.slice(1),
+          mapping: aoa[0].map(function(h){ return _matchHeader(h); }),
+          headerRowIdx: 0,
+          rawAoa: aoa,
+          headerScore: aoa[0].length
+        };
+        openExcelImportPreview();
+        return;
+      }
       var wb;
       if(res.base64){
         wb = XLSX.read(res.base64, { type: 'base64', cellDates: true });
@@ -21250,12 +21377,73 @@ function openExcelImportPicker(){
       openExcelImportPreview();
     } catch(e){
       console.error('Excel parse error:', e);
-      showToast('Failed to parse the Excel file','error');
+      // v1.48.4: surface the actual error so a user who picked an
+      // unsupported file (or hit a corrupt sheet) gets a useful hint
+      // instead of a vague "Failed to parse" toast.
+      showToast('Could not parse this file: ' + (e && e.message ? e.message : 'unknown error'),'error');
     }
   }).catch(function(e){
     console.error('readFile error:', e);
-    showToast('Could not open the file picker','error');
+    showToast('Could not open the file picker: ' + (e && e.message ? e.message : 'unknown'),'error');
   });
+}
+
+// v1.48.4: Parse an MS Project XML export into an array-of-arrays so it
+// flows through the same preview/mapping UI as Excel imports. We pull
+// Name / Start / Finish / PercentComplete / Notes / Predecessor links
+// per <Task>. Outline summary tasks (those with sub-tasks) are kept too —
+// the user can ignore them in the column-mapping step if they want.
+function _parseMsProjectXml(xmlText){
+  if(!xmlText || typeof xmlText !== 'string') return null;
+  var doc;
+  try { doc = new DOMParser().parseFromString(xmlText, 'application/xml'); }
+  catch(_e){ return null; }
+  if(!doc || doc.getElementsByTagName('parsererror').length) return null;
+  // MS Project's namespace prefix varies; getElementsByTagName ignores
+  // the namespace so we can just walk <Task> directly.
+  var taskNodes = doc.getElementsByTagName('Task');
+  if(!taskNodes || !taskNodes.length) return null;
+  function pick(node, tag){
+    var els = node.getElementsByTagName(tag);
+    if(!els || !els.length) return '';
+    // Sometimes child Tasks have nested matching tags; restrict to the
+    // direct child to avoid grabbing a sub-task's value.
+    for(var i=0;i<els.length;i++){
+      if(els[i].parentNode === node) return (els[i].textContent || '').trim();
+    }
+    return (els[0].textContent || '').trim();
+  }
+  function fmtDate(s){
+    if(!s) return '';
+    // MS Project uses YYYY-MM-DDTHH:MM:SS — keep the date portion.
+    var m = String(s).match(/^(\d{4}-\d{2}-\d{2})/);
+    return m ? m[1] : String(s);
+  }
+  var headers = ['UID','Name','Start','Finish','% Complete','Notes','Predecessor UIDs'];
+  var rows = [];
+  for(var i=0;i<taskNodes.length;i++){
+    var t = taskNodes[i];
+    var name = pick(t,'Name');
+    if(!name) continue;
+    // Predecessors live in <PredecessorLink><PredecessorUID>n</PredecessorUID></PredecessorLink>.
+    var preds = [];
+    var links = t.getElementsByTagName('PredecessorLink');
+    for(var li=0; li<links.length; li++){
+      var pid = links[li].getElementsByTagName('PredecessorUID');
+      if(pid && pid.length) preds.push((pid[0].textContent||'').trim());
+    }
+    rows.push([
+      pick(t,'UID'),
+      name,
+      fmtDate(pick(t,'Start')),
+      fmtDate(pick(t,'Finish')),
+      pick(t,'PercentComplete'),
+      pick(t,'Notes'),
+      preds.join(',')
+    ]);
+  }
+  if(!rows.length) return null;
+  return [headers].concat(rows);
 }
 
 function openExcelImportPreview(){

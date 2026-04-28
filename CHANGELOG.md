@@ -1,5 +1,16 @@
 # Roadmap OS — Changelog
 
+## v1.48.4 — Three To-Do/Plans fixes
+
+**To-Do · the blue initiative tag now reassigns the task instead of filtering.**
+Clicking the blue initiative chip on a row used to set the global initiative filter and re-render the whole list, which made every other task vanish. It now opens a small dropdown of all initiatives (rows from the roadmap, plus any orphan initiative names that already have todos) and clicking one MOVES the task to that initiative. The current initiative is marked with a check. New helpers: `openTodoTagPicker()` / `closeTodoTagPicker()` / `moveTodoToInitiative()`.
+
+**To-Do · the Timesheet tab no longer kicks the user back to the roadmap.**
+`switchTodoTab('timesheet')` was calling `closeTodo()`, which is wrapped by the SPA history helpers. The wrapper invokes `history.back()`, whose async popstate then ran `_pmrCloseAnyOpenOverlay()` and tore down the KPI overlay we'd just opened. Now the To-Do overlay is hidden directly via `classList.remove('open')`, `_kpiView` is pre-set to `'timesheet'` so `openKPI()`'s first render is correct, and `setKPIView('timesheet')` runs synchronously instead of in a 30 ms timeout that races the popstate.
+
+**Plans · MS Project XML can now be imported.**
+The Plans page's "Upload Excel" button is now also wired for `.xml`. New `_parseMsProjectXml()` walks `<Task>` nodes, pulls Name / Start / Finish / % Complete / Notes / PredecessorUIDs, and feeds them into the same column-mapping preview as Excel imports. Errors from the parse step now bubble the actual exception message into the toast so a bad/corrupt file reports something useful instead of "Failed to parse the Excel file".
+
 ## v1.48.3 — Bar drag (both directions) + section header kebab
 
 **Bar drag — start date is now draggable too.**
