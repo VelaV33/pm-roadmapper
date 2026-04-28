@@ -1,5 +1,20 @@
 # Roadmap OS — Changelog
 
+## v1.48.5 — Plans Excel upload: rebuild the picker so it actually opens
+
+The "Upload Excel" button on the Plans page was funneling through the web shim's `readFile()`, which:
+1. Awaits a Supabase Storage upload to the `attachments` bucket — if that throws a permission error or the user is mid-auth, the promise can hang.
+2. Races a 300 ms focus-listener timeout that resolves with `[]` if `onchange` doesn't fire first.
+3. Hides any failure as a `console.warn` while the renderer just sits there.
+
+Net effect for the user: clicking Upload Excel did nothing, with no toast, no modal, no console error they could see.
+
+**Fix:** drive the picker directly off a hidden `<input type="file">` inside the renderer. No shim, no storage upload, no focus race. Read the picked file with `FileReader.readAsArrayBuffer` (XLSX/XLS), `readAsText` (CSV/XML), feed it into the existing column-mapping preview. The picker now also accepts `.xml` for MS Project exports (parsed by `_parseMsProjectXml` from v1.48.4).
+
+If no plan is selected, the "Pick or create a plan first" message is now an `alert()` — the previous toast was easy to miss. If the bundled XLSX library failed to load, the user gets a clear message rather than silence.
+
+Refactored: `openExcelImportPicker` (picker only), new `_readPlanImportFile(file)` (reads + dispatches by extension), new `_parsePlanImportWorkbook(name, wb)` (header detection + preview).
+
 ## v1.48.4 — Three To-Do/Plans fixes
 
 **To-Do · the blue initiative tag now reassigns the task instead of filtering.**

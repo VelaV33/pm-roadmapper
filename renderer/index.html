@@ -4057,7 +4057,7 @@ function buildDayOptions(mname,selectedDay){
 // v1.43.0 — single source of truth for the app version. Bump this with every
 // release alongside package.json. Used by the login footer, the JSON backup
 // metadata, and the in-app What's New modal (lastSeenAppVersion comparison).
-var APP_VERSION = 'v1.48.4';
+var APP_VERSION = 'v1.48.5';
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 var sections=[
@@ -21259,133 +21259,169 @@ function _parsePredecessorRefs(value){
 var _excelImportData = null;  // { headers, rows, mapping }
 
 function openExcelImportPicker(){
-  if(!getActivePlan()){ showToast('Pick or create a plan first','error'); return; }
-  // Use Electron's read-file IPC which already handles xlsx
-  if(!window.electronAPI || !window.electronAPI.readFile){
-    showToast('File picker not available','error');
+  if(!getActivePlan()){
+    // v1.48.5: when no plan is selected the original toast was easy to
+    // miss — users clicked Upload Excel, saw "nothing happen", and
+    // assumed the upload was broken. A confirm dialog is loud enough
+    // that the cause is unmistakeable.
+    alert('Pick or create a plan first.\n\nThe Upload Excel button only works when a plan is open. Use the plan picker on the left, or click "+ New plan" to create one.');
     return;
   }
-  // v1.48.4: accept MS Project XML alongside the spreadsheet formats.
-  // The user can save a Project plan as XML and import it here without
-  // first round-tripping through Excel.
-  window.electronAPI.readFile({
-    title: 'Import tasks from a project plan',
-    filters: [
-      { name: 'Project plans', extensions: ['xlsx', 'xls', 'csv', 'xml'] },
-      { name: 'Excel files',   extensions: ['xlsx', 'xls', 'csv'] },
-      { name: 'MS Project XML', extensions: ['xml'] },
-      { name: 'All files',     extensions: ['*'] }
-    ]
-  }).then(function(res){
-    if(!res || !res.ok) return;
-    if(!res.base64 && !res.text){
-      showToast('Could not read the file','error');
-      return;
-    }
-    try {
-      var ext = String(res.ext || res.name || '').toLowerCase();
-      // MS Project XML branch — convert <Task> nodes into the same aoa
-      // shape the Excel parser expects, then drop into the existing
-      // mapping/preview flow.
-      if(ext.indexOf('.xml')>=0 || /<Project[\s>]/i.test(res.text||'')){
-        var aoa = _parseMsProjectXml(res.text || (res.base64 ? atob(res.base64) : ''));
+  if(typeof XLSX === 'undefined'){
+    alert('Spreadsheet library failed to load. Please reload the page and try again.');
+    return;
+  }
+  // v1.48.5: drive the picker directly off a hidden <input type="file">
+  // so we don't depend on the shim's readFile() — which awaits a Supabase
+  // storage upload + races a 300 ms focus listener that could resolve the
+  // promise before onchange fired. With a direct input, the change event
+  // is the only path; no race, no required auth, no silent failures.
+  var inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = '.xlsx,.xls,.csv,.xml';
+  inp.style.cssText = 'position:fixed;left:-9999px;top:-9999px';
+  document.body.appendChild(inp);
+  inp.addEventListener('change', function(){
+    var file = inp.files && inp.files[0];
+    document.body.removeChild(inp);
+    if(!file){ return; }
+    _readPlanImportFile(file);
+  });
+  // Some browsers don't surface a "cancel" event reliably — clean up the
+  // hidden input on next tick if the user closes the dialog.
+  var cleanup = function(){
+    setTimeout(function(){
+      if(document.body.contains(inp) && (!inp.files || !inp.files.length)){
+        document.body.removeChild(inp);
+      }
+      window.removeEventListener('focus', cleanup);
+    }, 800);
+  };
+  window.addEventListener('focus', cleanup);
+  inp.click();
+}
+
+// v1.48.5: extracted from openExcelImportPicker so the parse path is
+// independent of the picker mechanism (and so a future drag-and-drop
+// could feed it the same File object). Errors here surface via toast
+// AND via console so the user gets a hint when something looks dead.
+function _readPlanImportFile(file){
+  var name = file.name || 'import';
+  var ext = ('.' + (name.split('.').pop() || '')).toLowerCase();
+  var reader = new FileReader();
+  reader.onerror = function(){
+    showToast('Could not read this file: ' + (reader.error && reader.error.message || 'unknown'), 'error');
+  };
+  // XML branch: read as text and feed _parseMsProjectXml.
+  if(ext === '.xml'){
+    reader.onload = function(){
+      try {
+        var aoa = _parseMsProjectXml(String(reader.result || ''));
         if(!aoa || aoa.length < 2){
           showToast('No <Task> nodes found in this XML — is this an MS Project export?','error');
           return;
         }
         _excelImportData = {
-          fileName: res.name || 'project.xml',
-          headers: aoa[0],
-          rows: aoa.slice(1),
+          fileName: name, headers: aoa[0], rows: aoa.slice(1),
           mapping: aoa[0].map(function(h){ return _matchHeader(h); }),
-          headerRowIdx: 0,
-          rawAoa: aoa,
-          headerScore: aoa[0].length
+          headerRowIdx: 0, rawAoa: aoa, headerScore: aoa[0].length
         };
         openExcelImportPreview();
-        return;
+      } catch(e){
+        console.error('[plans import] XML parse error:', e);
+        showToast('Could not parse XML: ' + (e && e.message ? e.message : 'unknown'),'error');
       }
-      var wb;
-      if(res.base64){
-        wb = XLSX.read(res.base64, { type: 'base64', cellDates: true });
-      } else {
-        wb = XLSX.read(res.text, { type: 'string', cellDates: true });
+    };
+    reader.readAsText(file);
+    return;
+  }
+  // CSV: text. XLSX/XLS: arrayBuffer.
+  if(ext === '.csv'){
+    reader.onload = function(){
+      try { _parsePlanImportWorkbook(name, XLSX.read(String(reader.result || ''), { type:'string', cellDates:true })); }
+      catch(e){
+        console.error('[plans import] CSV parse error:', e);
+        showToast('Could not parse CSV: ' + (e && e.message ? e.message : 'unknown'),'error');
       }
-      var sheetName = wb.SheetNames[0];
-      var sheet = wb.Sheets[sheetName];
-      // Convert to array of arrays so we can grab the header row separately
-      var aoa = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, dateNF: 'yyyy-mm-dd', defval: '' });
-      if(!aoa || aoa.length < 2){
-        showToast('The file is empty or has no data rows','error');
-        return;
-      }
-      // SMART HEADER ROW DETECTION
-      // Many tools (MS Project, MS Planner, Smartsheet) export a metadata
-      // block at the top of the sheet ("Project name", "Plan owner",
-      // "Start date", etc.) followed by a blank row and then the real
-      // headers ("Task name", "Assigned to", "Start", "Finish", ...).
-      //
-      // Score every candidate row by how many cells match a known header
-      // pattern. The row with the highest score wins. Tie-break: prefer
-      // the row with more total non-empty cells. Search the first 30 rows.
-      var bestRowIdx = 0;
-      var bestScore = -1;
-      var bestNonEmpty = -1;
-      var SEARCH_DEPTH = Math.min(30, aoa.length);
-      for(var i = 0; i < SEARCH_DEPTH; i++){
-        var row = aoa[i] || [];
-        var score = 0;
-        var nonEmpty = 0;
-        row.forEach(function(cell){
-          if(cell == null || cell === '') return;
-          nonEmpty++;
-          if(_isKnownHeader(cell)) score++;
-        });
-        // Need at least 2 known-header cells AND 3 non-empty cells to consider
-        // this a header row. Otherwise it's almost certainly metadata.
-        if(score >= 2 && nonEmpty >= 3){
-          if(score > bestScore || (score === bestScore && nonEmpty > bestNonEmpty)){
-            bestScore = score;
-            bestNonEmpty = nonEmpty;
-            bestRowIdx = i;
-          }
-        }
-      }
-      // Fallback: if no row scored 2+, pick the first row with 3+ non-empty cells.
-      if(bestScore < 2){
-        for(var k = 0; k < SEARCH_DEPTH; k++){
-          var nE = (aoa[k] || []).filter(function(c){ return c != null && c !== ''; }).length;
-          if(nE >= 3){ bestRowIdx = k; break; }
-        }
-      }
-
-      var headers = (aoa[bestRowIdx] || []).map(function(h){ return String(h || '').trim(); });
-      var dataRows = aoa.slice(bestRowIdx + 1).filter(function(r){
-        return (r || []).some(function(c){ return c != null && c !== ''; });
-      });
-      // Auto-detect mapping for each column
-      var mapping = headers.map(function(h){ return _matchHeader(h); });
-      _excelImportData = {
-        fileName: res.name || 'import.xlsx',
-        headers: headers,
-        rows: dataRows,
-        mapping: mapping,
-        headerRowIdx: bestRowIdx,
-        rawAoa: aoa,    // keep for "header row is wrong, pick another"
-        headerScore: bestScore
-      };
-      openExcelImportPreview();
+    };
+    reader.readAsText(file);
+    return;
+  }
+  // Default: xlsx / xls (or unknown — try as binary).
+  reader.onload = function(){
+    try {
+      var data = new Uint8Array(reader.result);
+      _parsePlanImportWorkbook(name, XLSX.read(data, { type:'array', cellDates:true }));
     } catch(e){
-      console.error('Excel parse error:', e);
-      // v1.48.4: surface the actual error so a user who picked an
-      // unsupported file (or hit a corrupt sheet) gets a useful hint
-      // instead of a vague "Failed to parse" toast.
-      showToast('Could not parse this file: ' + (e && e.message ? e.message : 'unknown error'),'error');
+      console.error('[plans import] workbook parse error:', e);
+      showToast('Could not parse this file: ' + (e && e.message ? e.message : 'unknown'),'error');
     }
-  }).catch(function(e){
-    console.error('readFile error:', e);
-    showToast('Could not open the file picker: ' + (e && e.message ? e.message : 'unknown'),'error');
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function _parsePlanImportWorkbook(fileName, wb){
+  if(!wb || !wb.SheetNames || !wb.SheetNames.length){
+    showToast('No sheets found in this workbook','error');
+    return;
+  }
+  var sheet = wb.Sheets[wb.SheetNames[0]];
+  var aoa = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, dateNF: 'yyyy-mm-dd', defval: '' });
+  if(!aoa || aoa.length < 2){
+    showToast('The file is empty or has no data rows','error');
+    return;
+  }
+  // SMART HEADER ROW DETECTION
+  // Many tools (MS Project, MS Planner, Smartsheet) export a metadata
+  // block at the top of the sheet ("Project name", "Plan owner", "Start
+  // date", etc.) followed by a blank row and then the real headers
+  // ("Task name", "Assigned to", "Start", "Finish", ...).
+  //
+  // Score every candidate row by how many cells match a known header
+  // pattern. The row with the highest score wins. Tie-break: prefer
+  // the row with more total non-empty cells. Search the first 30 rows.
+  var bestRowIdx = 0;
+  var bestScore = -1;
+  var bestNonEmpty = -1;
+  var SEARCH_DEPTH = Math.min(30, aoa.length);
+  for(var i = 0; i < SEARCH_DEPTH; i++){
+    var row = aoa[i] || [];
+    var score = 0;
+    var nonEmpty = 0;
+    row.forEach(function(cell){
+      if(cell == null || cell === '') return;
+      nonEmpty++;
+      if(_isKnownHeader(cell)) score++;
+    });
+    if(score >= 2 && nonEmpty >= 3){
+      if(score > bestScore || (score === bestScore && nonEmpty > bestNonEmpty)){
+        bestScore = score;
+        bestNonEmpty = nonEmpty;
+        bestRowIdx = i;
+      }
+    }
+  }
+  if(bestScore < 2){
+    for(var k = 0; k < SEARCH_DEPTH; k++){
+      var nE = (aoa[k] || []).filter(function(c){ return c != null && c !== ''; }).length;
+      if(nE >= 3){ bestRowIdx = k; break; }
+    }
+  }
+  var headers = (aoa[bestRowIdx] || []).map(function(h){ return String(h || '').trim(); });
+  var dataRows = aoa.slice(bestRowIdx + 1).filter(function(r){
+    return (r || []).some(function(c){ return c != null && c !== ''; });
   });
+  var mapping = headers.map(function(h){ return _matchHeader(h); });
+  _excelImportData = {
+    fileName: fileName,
+    headers: headers,
+    rows: dataRows,
+    mapping: mapping,
+    headerRowIdx: bestRowIdx,
+    rawAoa: aoa,
+    headerScore: bestScore
+  };
+  openExcelImportPreview();
 }
 
 // v1.48.4: Parse an MS Project XML export into an array-of-arrays so it
