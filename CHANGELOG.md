@@ -1,5 +1,15 @@
 # Roadmap OS — Changelog
 
+## v1.48.1 — To-Do list polish: aligned columns + readable add-task inputs
+
+Two small but glaring UX issues on the To-Do list page.
+
+**1. Row columns now line up.**
+`.todo-item` was using flex with conditional cell fragments — when one task had a due date and another didn't, or one had comments and another didn't, the downstream cells (KPI dropdown, initiative tag, action buttons) shifted left or right per row, so the list looked "all over the place". Switched to `display:grid` with explicit column tracks: `100px [status] | 1fr [text+meta] | 64px [hours] | 92px [due] | 132px [KPI] | 140px [initiative] | auto [actions]`. Added `.todo-due-cell` and `.todo-actions` wrappers in `buildTodoItem` so empty cells still occupy their grid column. Result: every row is straight, columns align, blank cells show as blank instead of collapsing.
+
+**2. Add-task inputs are now readable in light mode.**
+The inline add-task form (`#todoAddForm`) had inputs styled with `color:#fff` over a background that resolves to `var(--light-blue-bg)` — a *light* blue (`#d6e3ff`) in light mode. White text on near-white surface → unreadable. Replaced the hard-coded white-on-translucent styling with the standard `var(--white)` background + `var(--text)` text + `var(--border)` outline pattern used elsewhere. Both light and dark mode now read cleanly.
+
 ## v1.48.0 — Product page editability + Configure modal (V15 Fixes 14c/14d/14e/16)
 
 The Product page becomes a fully editable surface — every field on Overview / Commercial / Specs is inline-editable via a click-to-edit pencil pattern, and the dropdown vocabularies (industry, segment, channel, etc.) are now user-configurable from a single Configure modal instead of being hard-coded.

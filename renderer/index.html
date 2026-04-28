@@ -646,7 +646,10 @@ tr.add-row-tr:hover td .add-row-btn{display:block}
 .todo-header h2{color:var(--text);font-size:20px;font-weight:800;letter-spacing:-0.03em}
 .todo-toolbar{background:var(--white);padding:12px 32px;display:flex;align-items:center;gap:12px;flex-shrink:0;flex-wrap:wrap;border-bottom:1px solid var(--border)}
 .todo-body{flex:1;overflow-y:auto;padding:28px 32px 60px;background:var(--bg)}
-.todo-item{display:flex;align-items:flex-start;gap:12px;padding:14px 18px;background:var(--white);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;transition:all .15s;box-shadow:var(--shadow-card)}
+.todo-item{display:grid;grid-template-columns:100px minmax(0,1fr) 64px 92px 132px 140px auto;align-items:center;gap:10px;padding:12px 18px;background:var(--white);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;transition:all .15s;box-shadow:var(--shadow-card)}
+.todo-item .todo-due-cell{display:flex;align-items:center;justify-content:flex-start;min-height:18px}
+.todo-item .todo-actions{display:flex;align-items:center;gap:4px;justify-self:end}
+.todo-item .todo-hours-cell{display:flex;align-items:center;justify-content:center;gap:2px}
 .todo-item:hover{box-shadow:0 4px 12px rgba(0,0,0,.06);border-color:var(--accent)}
 /* v1.35.0 Fix 10 — opacity .55 made checked-task text invisible in light mode.
    Use .75 + a stronger muted foreground so the strikethrough is still legible. */
@@ -2873,16 +2876,20 @@ body.dark-mode .detail-field-editable .edit-pencil:hover{background:rgba(45,107,
     </select>
   </div>
   <!-- Inline add task form -->
+  <!-- v1.48.1: inputs/selects use var(--white) + var(--text) instead of
+       hard-coded white-on-translucent. Old style was unreadable in light
+       mode because the form background (var(--light-blue-bg)) is light
+       blue here, leaving white text on a near-white surface. -->
   <div id="todoAddForm" style="display:none;padding:12px 24px;background:var(--light-blue-bg);border-bottom:1px solid var(--border)">
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <div style="position:relative;flex:2;min-width:200px">
-        <input id="todoNewText" placeholder="Task description... (type to search library)" autocomplete="off" style="width:100%;padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:12px;background:rgba(255,255,255,.1);color:#fff;font-family:inherit;box-sizing:border-box" oninput="_todoLibAutocomplete(this)">
+        <input id="todoNewText" placeholder="Task description... (type to search library)" autocomplete="off" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--white);color:var(--text);font-family:inherit;box-sizing:border-box" oninput="_todoLibAutocomplete(this)">
         <div id="todoLibSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:100;background:var(--white);border:1px solid var(--border);border-radius:8px;max-height:180px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.15);margin-top:2px"></div>
       </div>
-      <select id="todoNewInit" style="flex:1;min-width:180px;padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:12px;background:#3b2d7c;color:#fff"></select>
-      <input id="todoNewDue" type="date" style="padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:12px;background:rgba(255,255,255,.1);color:#fff">
-      <input id="todoNewEstimate" type="number" min="0" step="0.5" placeholder="Est. hours" style="width:80px;padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:12px;background:rgba(255,255,255,.1);color:#fff">
-      <select id="todoNewKPI" style="padding:6px 10px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:11px;background:#3b2d7c;color:#fff;max-width:160px">
+      <select id="todoNewInit" style="flex:1;min-width:180px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--white);color:var(--text)"></select>
+      <input id="todoNewDue" type="date" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--white);color:var(--text)">
+      <input id="todoNewEstimate" type="number" min="0" step="0.5" placeholder="Est. hours" style="width:80px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--white);color:var(--text)">
+      <select id="todoNewKPI" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:11px;background:var(--white);color:var(--text);max-width:160px">
         <option value="" style="background:var(--white);color:var(--text)">— KPI —</option>
       </select>
       <button class="btn green" onclick="confirmAddTodo()" title="Save this task to the ToDo list" style="padding:6px 14px;font-size:11px">Add</button>
@@ -4034,7 +4041,7 @@ function buildDayOptions(mname,selectedDay){
 // v1.43.0 — single source of truth for the app version. Bump this with every
 // release alongside package.json. Used by the login footer, the JSON backup
 // metadata, and the in-app What's New modal (lastSeenAppVersion comparison).
-var APP_VERSION = 'v1.48.0';
+var APP_VERSION = 'v1.48.1';
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 var sections=[
@@ -15058,32 +15065,38 @@ function buildTodoItem(entry){
     todoLinksHtml+='<span class="g2m-link-chip" title="'+lnk.url+'"><span onclick="window.open(\''+lnk.url.replace(/'/g,"\\'")+'\')">'+(lnk.label||lnk.url).substring(0,20)+'</span><span class="g2m-link-rm" onclick="removeTodoLink(\''+escapedInit+'\',\''+escapedId+'\','+li+')">&times;</span></span>';
   });
 
+  // v1.48.1: Each grid column gets an explicit cell wrapper so columns
+  // line up across rows even when a value is blank (no due date, no KPI,
+  // etc.). Previously this used flex with conditional fragments which
+  // collapsed columns row-by-row and made the list look "all over the
+  // place". Layout grid:
+  //   [status] [text/meta] [hours] [due] [kpi] [initiative] [actions]
   div.innerHTML=
     '<select class="todo-status-sel" onchange="setTodoStatus(\''+escapedInit+'\',\''+escapedId+'\',this.value)" style="border-color:'+statusColor+'">'+
       '<option value="open"'+(status==='open'?' selected':'')+' style="background:var(--white);color:var(--text)">Open</option>'+
       '<option value="progress"'+(status==='progress'?' selected':'')+' style="background:#fff;color:#d97706">In Progress</option>'+
       '<option value="done"'+(status==='done'?' selected':'')+' style="background:#fff;color:#16a34a">Done</option>'+
     '</select>'+
-    '<div style="flex:1;min-width:0">'+
+    '<div style="min-width:0">'+
       '<div class="todo-text" id="todoText_'+escapedId+'" ondblclick="editTodoText(\''+escapedInit+'\',\''+escapedId+'\')">'+escHtml(t.text)+'</div>'+
       (t.comments?'<div style="font-size:10px;color:var(--muted);margin-top:2px">'+svgIcon('chat',{size:10})+' '+escHtml(String(t.comments).substring(0,80))+(t.comments.length>80?'...':'')+'</div>':'')+
       (kpiName?'<div style="font-size:9px;color:#7c3aed;margin-top:1px">'+svgIcon('chart-bar',{size:10})+' '+escHtml(kpiName)+'</div>':'')+
-      // Links/attachments row
       (todoLinksHtml?'<div style="margin-top:2px;display:flex;gap:2px;flex-wrap:wrap">'+todoLinksHtml+'</div>':'')+
     '</div>'+
-    // Time tracking compact
-    '<div style="display:flex;align-items:center;gap:3px;flex-shrink:0" title="Actual hours / Estimate">'+
-      '<input type="number" min="0" step="0.5" value="'+(t.actualHours||'')+'" placeholder="0" onchange="setTodoField(\''+escapedInit+'\',\''+escapedId+'\',\'actualHours\',this.value)" style="width:36px;padding:2px 3px;border:1px solid var(--border);border-radius:4px;font-size:10px;font-weight:700;text-align:center;color:'+hrsColor+'">'+
+    '<div class="todo-hours-cell" title="Actual hours / Estimate">'+
+      '<input type="number" min="0" step="0.5" value="'+(t.actualHours||'')+'" placeholder="0" onchange="setTodoField(\''+escapedInit+'\',\''+escapedId+'\',\'actualHours\',this.value)" style="width:36px;padding:2px 3px;border:1px solid var(--border);border-radius:4px;font-size:10px;font-weight:700;text-align:center;color:'+hrsColor+';background:var(--white)">'+
       '<span style="font-size:8px;color:var(--muted)">/'+estHrs+'h</span>'+
     '</div>'+
-    _formatDue(t.due)+
+    '<div class="todo-due-cell">'+_formatDue(t.due)+'</div>'+
     kpiSelHtml+
     '<span class="todo-tag" onclick="document.getElementById(\'todoFilterSelect\').value=\''+escapedInit+'\';renderTodo()">'+escHtml(entry.initiative)+'</span>'+
-    '<button class="todo-comment-btn" onclick="openEditTodoModal(\''+escapedInit+'\',\''+escapedId+'\')" title="Edit task">'+svgIcon('edit',{size:12})+'</button>'+
-    '<button class="todo-comment-btn" onclick="addTodoLink(\''+escapedInit+'\',\''+escapedId+'\')" title="Add link">'+svgIcon('link',{size:12})+'</button>'+
-    '<button class="todo-comment-btn" onclick="editTodoComment(\''+escapedInit+'\',\''+escapedId+'\')" title="Add/Edit comment">'+svgIcon('chat',{size:12})+'</button>'+
-    '<button class="todo-comment-btn" onclick="editTodoDue(\''+escapedInit+'\',\''+escapedId+'\')" title="Set due date">'+svgIcon('calendar',{size:12})+'</button>'+
-    '<button class="todo-del" onclick="deleteTodoItem(\''+escapedInit+'\',\''+escapedId+'\')" title="Delete">✕</button>';
+    '<div class="todo-actions">'+
+      '<button class="todo-comment-btn" onclick="openEditTodoModal(\''+escapedInit+'\',\''+escapedId+'\')" title="Edit task">'+svgIcon('edit',{size:12})+'</button>'+
+      '<button class="todo-comment-btn" onclick="addTodoLink(\''+escapedInit+'\',\''+escapedId+'\')" title="Add link">'+svgIcon('link',{size:12})+'</button>'+
+      '<button class="todo-comment-btn" onclick="editTodoComment(\''+escapedInit+'\',\''+escapedId+'\')" title="Add/Edit comment">'+svgIcon('chat',{size:12})+'</button>'+
+      '<button class="todo-comment-btn" onclick="editTodoDue(\''+escapedInit+'\',\''+escapedId+'\')" title="Set due date">'+svgIcon('calendar',{size:12})+'</button>'+
+      '<button class="todo-del" onclick="deleteTodoItem(\''+escapedInit+'\',\''+escapedId+'\')" title="Delete">✕</button>'+
+    '</div>';
   return div;
 }
 
